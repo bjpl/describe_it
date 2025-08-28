@@ -1,0 +1,1 @@
+export { DescriptionTabs } from './DescriptionTabs';

@@ -1,0 +1,1 @@
+export { PhraseExtractor } from './PhraseExtractor';
