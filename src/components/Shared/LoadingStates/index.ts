@@ -1,8 +1,6 @@
+export * from './LoadingSpinner';
 export { 
   LoadingSpinner, 
-  DotsSpinner, 
-  PulseSpinner, 
-  TextSkeleton, 
-  ImageSkeleton, 
-  CardSkeleton 
+  LoadingOverlay, 
+  PageLoader 
 } from './LoadingSpinner';

@@ -38,3 +38,7 @@ export {
   useQuickExport, 
   useExportStats 
 } from './useExport';
+
+// Learning hooks
+export * from './useProgressTracking';
+export * from './useVocabulary';

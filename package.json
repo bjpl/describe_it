@@ -8,9 +8,17 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
+    "test:e2e:staging": "playwright test --config=playwright-staging.config.ts",
+    "test:smoke": "playwright test --grep='@smoke'",
+    "test:perf": "node scripts/performance-test.js",
+    "test:vitals": "node scripts/web-vitals-test.js",
     "typecheck": "tsc --noEmit",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "analyze": "ANALYZE=true npm run build",
+    "sentry:sourcemaps": "sentry-cli releases files $npm_package_version upload-sourcemaps .next/static",
     "prepare": "husky install"
   },
   "dependencies": {

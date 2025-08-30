@@ -1,8 +1,11 @@
 {
+  "version": 2,
   "framework": "nextjs",
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
-  "installCommand": "npm install",
+  "installCommand": "npm ci",
+  "outputDirectory": ".next",
+  "regions": ["iad1", "sfo1"],
   "env": {
     "NEXT_PUBLIC_SUPABASE_URL": "@supabase_url",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "@supabase_anon_key",
@@ -12,7 +15,11 @@
     "KV_URL": "@kv_url",
     "KV_REST_API_URL": "@kv_rest_api_url",
     "KV_REST_API_TOKEN": "@kv_rest_api_token",
-    "BLOB_READ_WRITE_TOKEN": "@blob_read_write_token"
+    "BLOB_READ_WRITE_TOKEN": "@blob_read_write_token",
+    "SENTRY_DSN": "@sentry_dsn",
+    "SENTRY_ORG": "@sentry_org",
+    "SENTRY_PROJECT": "@sentry_project",
+    "NODE_ENV": "production"
   },
   "functions": {
     "src/app/api/descriptions/generate/route.ts": {
@@ -23,6 +30,12 @@
     },
     "src/app/api/phrases/extract/route.ts": {
       "maxDuration": 30
+    },
+    "src/app/api/images/search/route.ts": {
+      "maxDuration": 10
+    },
+    "src/app/api/health/route.ts": {
+      "maxDuration": 5
     }
   },
   "crons": [
@@ -30,5 +43,68 @@
       "path": "/api/cron/cleanup",
       "schedule": "0 2 * * *"
     }
-  ]
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "camera=(), microphone=(), geolocation=()"
+        }
+      ]
+    },
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "s-maxage=60, stale-while-revalidate=300"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|ico|svg|woff|woff2))",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/home",
+      "destination": "/",
+      "permanent": true
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/healthz",
+      "destination": "/api/health"
+    }
+  ],
+  "build": {
+    "env": {
+      "NEXT_TELEMETRY_DISABLED": "1"
+    }
+  }
 }

@@ -1,5 +1,13 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { Database } from '../../types/api';
+import { Database } from '../../types/database';
+import { 
+  UserProgress,
+  UserProgressInsert,
+  Phrase,
+  PhraseInsert,
+  Session,
+  SessionInsert
+} from '../../types/database';
 
 class SupabaseService {
   private client: SupabaseClient<Database>;
@@ -378,12 +386,408 @@ class SupabaseService {
 
       // This would depend on your specific cleanup needs
       // For example, you might want to clean up old temporary images
-      console.log(`Cleanup would remove data older than ${cutoffDate.toISOString()}`);
+      // console.log(`Cleanup would remove data older than ${cutoffDate.toISOString()}`);
       
       // Implementation would depend on your specific requirements
       return true;
     } catch (error) {
       console.error('Error during cleanup:', error);
+      throw error;
+    }
+  }
+
+  // =============================================================================
+  // USER PROGRESS METHODS
+  // =============================================================================
+
+  /**
+   * Create or update user progress
+   */
+  async upsertUserProgress(progressData: UserProgressInsert) {
+    try {
+      const { data, error } = await this.client
+        .from('user_progress')
+        .upsert(progressData, {
+          onConflict: 'user_id,progress_date,progress_type,skill_category'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to upsert user progress: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error upserting user progress:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user progress by type and date range
+   */
+  async getUserProgress(
+    userId: string,
+    progressType?: string,
+    startDate?: string,
+    endDate?: string,
+    skillCategory?: string
+  ) {
+    try {
+      let query = this.client
+        .from('user_progress')
+        .select('*')
+        .eq('user_id', userId)
+        .order('progress_date', { ascending: false });
+
+      if (progressType) {
+        query = query.eq('progress_type', progressType);
+      }
+      
+      if (startDate) {
+        query = query.gte('progress_date', startDate);
+      }
+      
+      if (endDate) {
+        query = query.lte('progress_date', endDate);
+      }
+      
+      if (skillCategory) {
+        query = query.eq('skill_category', skillCategory);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw new Error(`Failed to get user progress: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting user progress:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user progress summary
+   */
+  async getUserProgressSummary(userId: string, daysBack = 30) {
+    try {
+      const { data, error } = await this.client
+        .rpc('get_user_progress_summary', {
+          user_uuid: userId,
+          days_back: daysBack
+        });
+
+      if (error) {
+        throw new Error(`Failed to get progress summary: ${error.message}`);
+      }
+
+      return data?.[0] || null;
+    } catch (error) {
+      console.error('Error getting progress summary:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Calculate daily progress for user
+   */
+  async calculateDailyProgress(userId: string, targetDate?: string) {
+    try {
+      const { data, error } = await this.client
+        .rpc('calculate_daily_progress', {
+          user_uuid: userId,
+          target_date: targetDate
+        });
+
+      if (error) {
+        throw new Error(`Failed to calculate daily progress: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error calculating daily progress:', error);
+      throw error;
+    }
+  }
+
+  // =============================================================================
+  // VOCABULARY/PHRASES METHODS
+  // =============================================================================
+
+  /**
+   * Create a phrase
+   */
+  async createPhrase(phraseData: PhraseInsert) {
+    try {
+      const { data, error } = await this.client
+        .from('phrases')
+        .insert(phraseData)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to create phrase: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error creating phrase:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a phrase
+   */
+  async updatePhrase(id: string, updates: Partial<Phrase>) {
+    try {
+      const { data, error } = await this.client
+        .from('phrases')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to update phrase: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating phrase:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Delete a phrase
+   */
+  async deletePhrase(id: string) {
+    try {
+      const { error } = await this.client
+        .from('phrases')
+        .delete()
+        .eq('id', id);
+
+      if (error) {
+        throw new Error(`Failed to delete phrase: ${error.message}`);
+      }
+
+      return true;
+    } catch (error) {
+      console.error('Error deleting phrase:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user's phrases with filtering
+   */
+  async getUserPhrases(
+    userId: string,
+    options: {
+      category?: string;
+      difficulty?: string;
+      isUserSelected?: boolean;
+      isMastered?: boolean;
+      limit?: number;
+      offset?: number;
+    } = {}
+  ) {
+    try {
+      let query = this.client
+        .from('phrases')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+
+      if (options.category) {
+        query = query.eq('category', options.category);
+      }
+      
+      if (options.difficulty) {
+        query = query.eq('difficulty_level', options.difficulty);
+      }
+      
+      if (typeof options.isUserSelected === 'boolean') {
+        query = query.eq('is_user_selected', options.isUserSelected);
+      }
+      
+      if (typeof options.isMastered === 'boolean') {
+        query = query.eq('is_mastered', options.isMastered);
+      }
+      
+      if (options.limit) {
+        query = query.limit(options.limit);
+      }
+      
+      if (options.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 50) - 1);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        throw new Error(`Failed to get user phrases: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting user phrases:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get phrases for spaced repetition
+   */
+  async getPhrasesForReview(userId: string, limit = 20) {
+    try {
+      const { data, error } = await this.client
+        .from('phrases')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('is_user_selected', true)
+        .eq('is_mastered', false)
+        .not('last_studied_at', 'is', null)
+        .order('last_studied_at', { ascending: true })
+        .limit(limit);
+
+      if (error) {
+        throw new Error(`Failed to get phrases for review: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting phrases for review:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Mark phrase as studied
+   */
+  async markPhraseAsStudied(phraseId: string, wasCorrect: boolean) {
+    try {
+      const updates: Partial<Phrase> = {
+        study_count: (await this.getPhrase(phraseId))?.study_count + 1 || 1,
+        last_studied_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      if (wasCorrect) {
+        const currentPhrase = await this.getPhrase(phraseId);
+        updates.correct_count = (currentPhrase?.correct_count || 0) + 1;
+        
+        // Check if phrase should be marked as mastered
+        const accuracy = updates.correct_count / updates.study_count;
+        if (updates.study_count >= 5 && accuracy >= 0.8) {
+          updates.is_mastered = true;
+          updates.mastered_at = new Date().toISOString();
+        }
+      }
+
+      return await this.updatePhrase(phraseId, updates);
+    } catch (error) {
+      console.error('Error marking phrase as studied:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get a single phrase by ID
+   */
+  async getPhrase(id: string) {
+    try {
+      const { data, error } = await this.client
+        .from('phrases')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        throw new Error(`Failed to get phrase: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error getting phrase:', error);
+      throw error;
+    }
+  }
+
+  // =============================================================================
+  // SESSION METHODS
+  // =============================================================================
+
+  /**
+   * Create a new session
+   */
+  async createSession(sessionData: SessionInsert) {
+    try {
+      const { data, error } = await this.client
+        .from('sessions')
+        .insert(sessionData)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to create session: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error creating session:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update a session
+   */
+  async updateSession(id: string, updates: Partial<Session>) {
+    try {
+      const { data, error } = await this.client
+        .from('sessions')
+        .update(updates)
+        .eq('id', id)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to update session: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating session:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get user sessions
+   */
+  async getUserSessions(userId: string, limit = 20, offset = 0) {
+    try {
+      const { data, error } = await this.client
+        .from('sessions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('started_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) {
+        throw new Error(`Failed to get user sessions: ${error.message}`);
+      }
+
+      return data || [];
+    } catch (error) {
+      console.error('Error getting user sessions:', error);
       throw error;
     }
   }
