@@ -1,0 +1,37 @@
+[
+  {
+    "name": "Client bundle (JS)",
+    "path": ".next/static/chunks/pages/*.js",
+    "limit": "200 KB",
+    "webpack": false,
+    "gzip": true
+  },
+  {
+    "name": "Client bundle (CSS)", 
+    "path": ".next/static/css/*.css",
+    "limit": "50 KB",
+    "webpack": false,
+    "gzip": true
+  },
+  {
+    "name": "Home page",
+    "path": ".next/static/chunks/pages/index*.js",
+    "limit": "150 KB",
+    "webpack": false,
+    "gzip": true
+  },
+  {
+    "name": "Learn page",
+    "path": ".next/static/chunks/pages/learn*.js", 
+    "limit": "180 KB",
+    "webpack": false,
+    "gzip": true
+  },
+  {
+    "name": "Practice page",
+    "path": ".next/static/chunks/pages/practice*.js",
+    "limit": "160 KB", 
+    "webpack": false,
+    "gzip": true
+  }
+]

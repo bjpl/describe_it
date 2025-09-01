@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Describe It - Offline</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .offline-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+        
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            margin-bottom: 24px;
+            opacity: 0.9;
+        }
+        
+        .features {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 24px 0;
+            text-align: left;
+        }
+        
+        .features h3 {
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+        
+        .features ul {
+            list-style: none;
+        }
+        
+        .features li {
+            padding: 6px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .features li::before {
+            content: '✓';
+            margin-right: 10px;
+            color: #4ade80;
+            font-weight: bold;
+        }
+        
+        .retry-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        
+        .retry-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+        
+        .status {
+            margin-top: 30px;
+            font-size: 0.9rem;
+            opacity: 0.7;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .pulse {
+            width: 12px;
+            height: 12px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            h1 {
+                font-size: 1.5rem;
+            }
+            
+            .offline-icon {
+                font-size: 3rem;
+            }
+        }
+        
+        /* Dark mode friendly colors */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #1e3a8a 0%, #3730a3 100%);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="offline-icon">📡</div>
+        <h1>You're Offline</h1>
+        <p>
+            Don't worry! You can still use many features of Describe It while offline. 
+            Recently viewed content and cached data are available.
+        </p>
+        
+        <div class="features">
+            <h3>Available Offline:</h3>
+            <ul>
+                <li>Previously viewed images</li>
+                <li>Cached Spanish descriptions</li>
+                <li>Your learning progress</li>
+                <li>Saved vocabulary words</li>
+                <li>Offline study mode</li>
+            </ul>
+        </div>
+        
+        <a href="/" class="retry-btn" id="retryBtn">Try Again</a>
+        
+        <div class="status">
+            <div class="pulse"></div>
+            <span id="connectionStatus">Checking connection...</span>
+        </div>
+    </div>
+
+    <script>
+        // Monitor connection status
+        function updateConnectionStatus() {
+            const status = document.getElementById('connectionStatus');
+            const retryBtn = document.getElementById('retryBtn');
+            
+            if (navigator.onLine) {
+                status.textContent = 'Connection restored!';
+                retryBtn.textContent = 'Continue to App';
+                retryBtn.style.background = 'rgba(34, 197, 94, 0.8)';
+                document.querySelector('.pulse').style.background = '#22c55e';
+            } else {
+                status.textContent = 'Still offline';
+                retryBtn.textContent = 'Try Again';
+                retryBtn.style.background = 'rgba(255, 255, 255, 0.2)';
+                document.querySelector('.pulse').style.background = '#ef4444';
+            }
+        }
+        
+        // Check connection on load
+        updateConnectionStatus();
+        
+        // Listen for connection changes
+        window.addEventListener('online', updateConnectionStatus);
+        window.addEventListener('offline', updateConnectionStatus);
+        
+        // Auto-retry when connection is restored
+        window.addEventListener('online', () => {
+            setTimeout(() => {
+                window.location.href = '/';
+            }, 2000);
+        });
+        
+        // Retry button functionality
+        document.getElementById('retryBtn').addEventListener('click', (e) => {
+            if (!navigator.onLine) {
+                e.preventDefault();
+                // Show a brief message that we're still offline
+                const btn = e.target;
+                const originalText = btn.textContent;
+                btn.textContent = 'Still offline...';
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                }, 2000);
+            }
+        });
+        
+        // Check for service worker updates
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                if (event.data.type === 'UPDATE_AVAILABLE') {
+                    const status = document.getElementById('connectionStatus');
+                    status.textContent = 'App update available!';
+                    status.style.color = '#22c55e';
+                }
+            });
+        }
+        
+        // Preload critical resources when online
+        if (navigator.onLine && 'serviceWorker' in navigator) {
+            navigator.serviceWorker.ready.then(registration => {
+                registration.active?.postMessage({
+                    type: 'PRELOAD_ROUTES',
+                    routes: ['/', '/search', '/learn']
+                });
+            });
+        }
+    </script>
+</body>
+</html>

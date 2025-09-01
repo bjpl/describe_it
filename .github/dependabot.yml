@@ -1,0 +1,91 @@
+version: 2
+updates:
+  # Enable version updates for npm
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "02:00"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "your-username" # Replace with actual GitHub username
+    assignees:
+      - "your-username" # Replace with actual GitHub username
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"
+      include: "scope"
+    labels:
+      - "dependencies"
+      - "automated"
+    allow:
+      - dependency-type: "direct"
+      - dependency-type: "indirect"
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "jest"
+          - "vitest"
+          - "playwright"
+          - "@playwright/*"
+      ui:
+        patterns:
+          - "react"
+          - "react-dom"
+          - "@types/react"
+          - "@types/react-dom"
+          - "next"
+      dev-tools:
+        patterns:
+          - "eslint"
+          - "prettier"
+          - "typescript"
+          - "@types/*"
+      build-tools:
+        patterns:
+          - "webpack"
+          - "babel"
+          - "@babel/*"
+          - "postcss"
+          - "tailwindcss"
+
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "02:00"
+    reviewers:
+      - "your-username" # Replace with actual GitHub username
+    assignees:
+      - "your-username" # Replace with actual GitHub username
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    labels:
+      - "github-actions"
+      - "automated"
+
+  # Enable version updates for Docker
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "02:00"
+    reviewers:
+      - "your-username" # Replace with actual GitHub username
+    assignees:
+      - "your-username" # Replace with actual GitHub username
+    commit-message:
+      prefix: "docker"
+      include: "scope"
+    labels:
+      - "docker"
+      - "automated"
