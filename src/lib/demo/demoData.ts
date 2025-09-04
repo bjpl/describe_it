@@ -4,10 +4,8 @@ import { ProcessedImage } from "../../types/api";
 export const demoImages: ProcessedImage[] = [
   {
     id: "demo-1",
-    slug: "market-fruits-vegetables",
     created_at: "2024-01-15T10:30:00Z",
     updated_at: "2024-01-15T10:30:00Z",
-    promoted_at: null,
     width: 4000,
     height: 2667,
     color: "#d4c2a8",
@@ -15,7 +13,6 @@ export const demoImages: ProcessedImage[] = [
     description: "Fresh fruits and vegetables at a vibrant local market",
     alt_description:
       "Colorful display of fresh produce including oranges, tomatoes, and leafy greens at a market stall",
-    breadcrumbs: [],
     urls: {
       raw: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3",
       full: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&q=80&fm=jpg",
@@ -34,14 +31,8 @@ export const demoImages: ProcessedImage[] = [
       download: "https://unsplash.com/photos/demo-1/download",
       download_location: "https://api.unsplash.com/photos/demo-1/download",
     },
-    likes: 234,
-    liked_by_user: false,
-    current_user_collections: [],
-    sponsorship: null,
-    topic_submissions: {},
     user: {
       id: "demo-user-1",
-      updated_at: "2024-01-15T10:30:00Z",
       username: "demo_photographer",
       name: "Demo Photographer",
       first_name: "Demo",
@@ -56,8 +47,6 @@ export const demoImages: ProcessedImage[] = [
         photos: "https://api.unsplash.com/users/demo-user-1/photos",
         likes: "https://api.unsplash.com/users/demo-user-1/likes",
         portfolio: "https://api.unsplash.com/users/demo-user-1/portfolio",
-        following: "https://api.unsplash.com/users/demo-user-1/following",
-        followers: "https://api.unsplash.com/users/demo-user-1/followers",
       },
       profile_image: {
         small:
@@ -68,48 +57,18 @@ export const demoImages: ProcessedImage[] = [
           "https://images.unsplash.com/profile-1441298803695-accd94000cac?ixlib=rb-4.0.3&crop=faces&fit=crop&w=128&h=128",
       },
       instagram_username: null,
-      total_collections: 0,
       total_likes: 0,
       total_photos: 25,
       accepted_tos: true,
-      for_hire: false,
-      social: {
-        instagram_username: null,
-        portfolio_url: null,
-        twitter_username: null,
-        paypal_email: null,
-      },
     },
-    exif: {
-      make: "Canon",
-      model: "EOS 5D Mark IV",
-      name: "Canon, EOS 5D Mark IV",
-      exposure_time: "1/125",
-      aperture: "5.6",
-      focal_length: "50.0",
-      iso: 200,
-    },
-    location: {
-      name: "Local Market, Valencia, Spain",
-      city: "Valencia",
-      country: "Spain",
-      position: {
-        latitude: 39.4699,
-        longitude: -0.3763,
-      },
-    },
-    views: 1245,
-    downloads: 892,
     canonicalUrl:
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
     isDuplicate: false,
   },
   {
     id: "demo-2",
-    slug: "family-dinner-table",
     created_at: "2024-01-16T18:45:00Z",
     updated_at: "2024-01-16T18:45:00Z",
-    promoted_at: null,
     width: 3600,
     height: 2400,
     color: "#f4e6d3",
@@ -118,7 +77,6 @@ export const demoImages: ProcessedImage[] = [
       "Family gathered around dinner table sharing a traditional meal",
     alt_description:
       "Warm family scene with multiple generations sharing food and conversation at a wooden dining table",
-    breadcrumbs: [],
     urls: {
       raw: "https://images.unsplash.com/photo-1577303862012-f405cb017cf9?ixlib=rb-4.0.3",
       full: "https://images.unsplash.com/photo-1577303862012-f405cb017cf9?ixlib=rb-4.0.3&q=80&fm=jpg",
@@ -137,14 +95,8 @@ export const demoImages: ProcessedImage[] = [
       download: "https://unsplash.com/photos/demo-2/download",
       download_location: "https://api.unsplash.com/photos/demo-2/download",
     },
-    likes: 456,
-    liked_by_user: false,
-    current_user_collections: [],
-    sponsorship: null,
-    topic_submissions: {},
     user: {
       id: "demo-user-2",
-      updated_at: "2024-01-16T18:45:00Z",
       username: "family_photographer",
       name: "Family Photographer",
       first_name: "Family",
@@ -159,8 +111,6 @@ export const demoImages: ProcessedImage[] = [
         photos: "https://api.unsplash.com/users/demo-user-2/photos",
         likes: "https://api.unsplash.com/users/demo-user-2/likes",
         portfolio: "https://api.unsplash.com/users/demo-user-2/portfolio",
-        following: "https://api.unsplash.com/users/demo-user-2/following",
-        followers: "https://api.unsplash.com/users/demo-user-2/followers",
       },
       profile_image: {
         small:
@@ -171,48 +121,18 @@ export const demoImages: ProcessedImage[] = [
           "https://images.unsplash.com/profile-1441298803695-accd94000cac?ixlib=rb-4.0.3&crop=faces&fit=crop&w=128&h=128",
       },
       instagram_username: null,
-      total_collections: 12,
       total_likes: 89,
       total_photos: 156,
       accepted_tos: true,
-      for_hire: true,
-      social: {
-        instagram_username: null,
-        portfolio_url: null,
-        twitter_username: null,
-        paypal_email: null,
-      },
     },
-    exif: {
-      make: "Sony",
-      model: "A7 III",
-      name: "Sony, A7 III",
-      exposure_time: "1/60",
-      aperture: "2.8",
-      focal_length: "85.0",
-      iso: 400,
-    },
-    location: {
-      name: "Home Kitchen, Barcelona, Spain",
-      city: "Barcelona",
-      country: "Spain",
-      position: {
-        latitude: 41.3851,
-        longitude: 2.1734,
-      },
-    },
-    views: 2134,
-    downloads: 1567,
     canonicalUrl:
       "https://images.unsplash.com/photo-1577303862012-f405cb017cf9",
     isDuplicate: false,
   },
   {
     id: "demo-3",
-    slug: "spanish-classroom",
     created_at: "2024-01-17T09:15:00Z",
     updated_at: "2024-01-17T09:15:00Z",
-    promoted_at: null,
     width: 4500,
     height: 3000,
     color: "#e8f4f8",
@@ -220,7 +140,6 @@ export const demoImages: ProcessedImage[] = [
     description: "Modern classroom with students learning Spanish language",
     alt_description:
       "Bright classroom scene with students at desks, Spanish vocabulary on the whiteboard, teacher at front",
-    breadcrumbs: [],
     urls: {
       raw: "https://images.unsplash.com/photo-1497486751825-1233686d5d80?ixlib=rb-4.0.3",
       full: "https://images.unsplash.com/photo-1497486751825-1233686d5d80?ixlib=rb-4.0.3&q=80&fm=jpg",
@@ -239,14 +158,8 @@ export const demoImages: ProcessedImage[] = [
       download: "https://unsplash.com/photos/demo-3/download",
       download_location: "https://api.unsplash.com/photos/demo-3/download",
     },
-    likes: 789,
-    liked_by_user: false,
-    current_user_collections: [],
-    sponsorship: null,
-    topic_submissions: {},
     user: {
       id: "demo-user-3",
-      updated_at: "2024-01-17T09:15:00Z",
       username: "education_photos",
       name: "Education Photographer",
       first_name: "Education",
@@ -261,8 +174,6 @@ export const demoImages: ProcessedImage[] = [
         photos: "https://api.unsplash.com/users/demo-user-3/photos",
         likes: "https://api.unsplash.com/users/demo-user-3/likes",
         portfolio: "https://api.unsplash.com/users/demo-user-3/portfolio",
-        following: "https://api.unsplash.com/users/demo-user-3/following",
-        followers: "https://api.unsplash.com/users/demo-user-3/followers",
       },
       profile_image: {
         small:
@@ -273,38 +184,10 @@ export const demoImages: ProcessedImage[] = [
           "https://images.unsplash.com/profile-1441298803695-accd94000cac?ixlib=rb-4.0.3&crop=faces&fit=crop&w=128&h=128",
       },
       instagram_username: null,
-      total_collections: 8,
       total_likes: 234,
       total_photos: 89,
       accepted_tos: true,
-      for_hire: true,
-      social: {
-        instagram_username: null,
-        portfolio_url: null,
-        twitter_username: null,
-        paypal_email: null,
-      },
     },
-    exif: {
-      make: "Nikon",
-      model: "D850",
-      name: "Nikon, D850",
-      exposure_time: "1/80",
-      aperture: "4.0",
-      focal_length: "35.0",
-      iso: 320,
-    },
-    location: {
-      name: "Language School, Madrid, Spain",
-      city: "Madrid",
-      country: "Spain",
-      position: {
-        latitude: 40.4168,
-        longitude: -3.7038,
-      },
-    },
-    views: 3456,
-    downloads: 2789,
     canonicalUrl:
       "https://images.unsplash.com/photo-1497486751825-1233686d5d80",
     isDuplicate: false,
@@ -534,9 +417,8 @@ export class DemoDataProvider {
   ) {
     const filteredImages = demoImages.filter(
       (img) =>
-        img.description.toLowerCase().includes(query.toLowerCase()) ||
-        img.alt_description?.toLowerCase().includes(query.toLowerCase()) ||
-        img.slug.toLowerCase().includes(query.toLowerCase()),
+        img.description?.toLowerCase().includes(query.toLowerCase()) ||
+        img.alt_description?.toLowerCase().includes(query.toLowerCase()),
     );
 
     const start = (page - 1) * perPage;
