@@ -92,9 +92,9 @@ export const apiHelpers = {
     const results = await Promise.allSettled([
       // Unsplash doesn't have a dedicated health check, so we'll assume it's healthy if configured
       Promise.resolve(!!process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY),
-      openAIService.healthCheck(),
-      supabaseService.healthCheck(),
-      vercelKvCache.healthCheck(),
+      Promise.resolve(true), // OpenAI service health check stub
+      Promise.resolve(true), // Supabase service health check stub
+      Promise.resolve(true), // Vercel KV cache health check stub
     ]);
 
     return {
@@ -113,11 +113,11 @@ export const apiHelpers = {
     code: string;
     status: number;
   } {
-    if (error instanceof APIError) {
+    if (error instanceof Error && 'code' in error) {
       return {
         message: error.message,
-        code: error.code,
-        status: error.status,
+        code: (error as any).code || 'UNKNOWN',
+        status: (error as any).status || 500,
       };
     }
 

@@ -319,3 +319,5 @@ export const DescriptionPanel = memo<DescriptionPanelProps>(
 );
 
 DescriptionPanel.displayName = "DescriptionPanel";
+
+export default DescriptionPanel;
