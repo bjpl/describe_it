@@ -4,16 +4,22 @@ import {
   UnsplashSearchResponse,
   UnsplashSearchParams,
   ProcessedImage,
-  APIError,
+  APIError as BaseAPIError,
   RateLimitInfo,
   CacheEntry,
 } from "../../types/api";
+
+export { APIError } from "../../types/api";
 import { vercelKvCache } from "./vercel-kv";
 
 class UnsplashService {
   private client: AxiosInstance;
   private accessKey: string;
-  private rateLimitInfo: RateLimitInfo;
+  private rateLimitInfo: RateLimitInfo = {
+    remaining: 50,
+    resetTime: Date.now() + 3600000,
+    total: 50
+  };
   private imageCache = new Map<string, ProcessedImage>();
   private duplicateUrls = new Set<string>();
 

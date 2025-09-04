@@ -72,7 +72,7 @@ export const SpacedRepetitionUtils = {
   createCard: (id: string, content: string): ReviewCard => ({
     id,
     imageId: id,
-    difficulty: "medium",
+    difficulty: "medium" as "easy" | "medium" | "hard",
     interval: 1,
     easeFactor: 2.5,
     nextReviewDate: new Date(),

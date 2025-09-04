@@ -4,7 +4,11 @@ import {
   DescriptionRequest,
   APIError,
   RetryConfig,
-} from "@/types/api";
+  QAGeneration,
+  GeneratedDescription,
+  PhraseCategories,
+  TranslationRequest,
+} from "../../types/api";
 import { vercelKvCache } from "./vercel-kv";
 
 class OpenAIService {
@@ -13,6 +17,17 @@ class OpenAIService {
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
+
+    // Initialize retryConfig first
+    this.retryConfig = {
+      maxRetries: 3,
+      baseDelay: 1000,
+      maxDelay: 10000,
+      backoffFactor: 2,
+      retryCondition: (error: APIError) => {
+        return error.status >= 500 || error.status === 429;
+      },
+    };
 
     if (!apiKey) {
       // OPENAI_API_KEY not configured - demo mode enabled (structured logging)
@@ -25,16 +40,6 @@ class OpenAIService {
       apiKey,
       timeout: 60000, // 60 seconds
     });
-
-    this.retryConfig = {
-      maxRetries: 3,
-      baseDelay: 1000,
-      maxDelay: 10000,
-      backoffFactor: 2,
-      retryCondition: (error: APIError) => {
-        return error.status >= 500 || error.status === 429;
-      },
-    };
   }
 
   /**
@@ -241,7 +246,7 @@ class OpenAIService {
         code: "UNKNOWN_ERROR",
         message: "Unknown error occurred",
         status: 500,
-        details: null,
+        details: undefined,
       });
     }
 
@@ -295,7 +300,7 @@ class OpenAIService {
       message,
       status,
       details:
-        error && typeof error === "object" ? error.error || error : error,
+        error && typeof error === "object" ? error.error || error : undefined,
     });
   }
 
@@ -403,6 +408,14 @@ class OpenAIService {
       const systemPrompt = `${stylePrompt} ${lengthInstruction}`;
 
       const response = await this.withRetry(async () => {
+        if (!this.client) {
+          throw new APIError({
+            code: "NO_CLIENT",
+            message: "OpenAI client not initialized",
+            status: 500,
+            details: undefined,
+          });
+        }
         return await this.client.chat.completions.create({
           model: "gpt-4o",
           messages: [
@@ -517,6 +530,14 @@ class OpenAIService {
            ]`;
 
       const response = await this.withRetry(async () => {
+        if (!this.client) {
+          throw new APIError({
+            code: "NO_CLIENT",
+            message: "OpenAI client not initialized",
+            status: 500,
+            details: undefined,
+          });
+        }
         return await this.client.chat.completions.create({
           model: "gpt-4",
           messages: [
@@ -613,6 +634,14 @@ class OpenAIService {
            }`;
 
       const response = await this.withRetry(async () => {
+        if (!this.client) {
+          throw new APIError({
+            code: "NO_CLIENT",
+            message: "OpenAI client not initialized",
+            status: 500,
+            details: undefined,
+          });
+        }
         return await this.client.chat.completions.create({
           model: "gpt-4",
           messages: [
@@ -685,6 +714,14 @@ class OpenAIService {
                      Text to translate: ${text}`;
 
       const response = await this.withRetry(async () => {
+        if (!this.client) {
+          throw new APIError({
+            code: "NO_CLIENT",
+            message: "OpenAI client not initialized",
+            status: 500,
+            details: undefined,
+          });
+        }
         return await this.client.chat.completions.create({
           model: "gpt-4",
           messages: [
@@ -720,12 +757,17 @@ class OpenAIService {
   async generateMultipleDescriptions(
     imageUrl: string,
     styles: DescriptionStyle[],
-    language: string = "es",
+    language: "es" | "en" = "es",
     maxLength: number = 300,
   ): Promise<GeneratedDescription[]> {
     try {
       const promises = styles.map((style) =>
-        this.generateDescription({ imageUrl, style, language, maxLength }),
+        this.generateDescription({ 
+          imageUrl, 
+          style, 
+          language: language as "es" | "en", 
+          maxLength 
+        }),
       );
 
       const results = await Promise.allSettled(promises);
@@ -746,6 +788,9 @@ class OpenAIService {
    */
   async healthCheck(): Promise<boolean> {
     try {
+      if (!this.client) {
+        return false;
+      }
       await this.client.chat.completions.create({
         model: "gpt-3.5-turbo",
         messages: [

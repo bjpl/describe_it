@@ -469,3 +469,105 @@ export class APICacheUtils {
     return configs[cacheType];
   }
 }
+
+// API helper functions
+export function buildApiUrl(endpoint: string, params?: Record<string, any>): string {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || '';
+  const url = new URL(endpoint, baseUrl || window.location.origin);
+  
+  if (params) {
+    Object.entries(params).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        url.searchParams.set(key, String(value));
+      }
+    });
+  }
+  
+  return url.toString();
+}
+
+export async function handleApiError(error: any, context?: string): Promise<never> {
+  console.error(`API Error${context ? ` in ${context}` : ''}:`, error);
+  
+  if (error.response) {
+    // Server responded with error status
+    const message = error.response.data?.message || error.response.statusText || 'Server error';
+    throw new Error(`${message} (${error.response.status})`);
+  } else if (error.request) {
+    // Request was made but no response received
+    throw new Error('Network error: No response received');
+  } else {
+    // Something else happened
+    throw new Error(error.message || 'Unknown API error');
+  }
+}
+
+export async function retryApiCall<T>(
+  fn: () => Promise<T>,
+  maxRetries: number = 3,
+  delayMs: number = 1000
+): Promise<T> {
+  let lastError: Error;
+  
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      
+      if (attempt === maxRetries) {
+        break;
+      }
+      
+      // Check if error is retryable
+      const isRetryable = 
+        lastError.message.includes('timeout') ||
+        lastError.message.includes('503') ||
+        lastError.message.includes('502') ||
+        lastError.message.includes('ECONNRESET');
+        
+      if (!isRetryable) {
+        break;
+      }
+      
+      // Wait before retry with exponential backoff
+      await new Promise(resolve => setTimeout(resolve, delayMs * Math.pow(2, attempt)));
+    }
+  }
+  
+  throw lastError;
+}
+
+export function validateApiResponse(response: any, expectedSchema?: any): boolean {
+  if (!response || typeof response !== 'object') {
+    return false;
+  }
+  
+  // Basic validation
+  if (response.error) {
+    throw new Error(response.message || 'API returned an error');
+  }
+  
+  // If expectedSchema is provided, validate against it
+  if (expectedSchema) {
+    if (Array.isArray(expectedSchema)) {
+      // Validate array response
+      if (!Array.isArray(response)) {
+        return false;
+      }
+      return response.every(item => 
+        expectedSchema[0] ? validateApiResponse(item, expectedSchema[0]) : true
+      );
+    } else if (typeof expectedSchema === 'object') {
+      // Validate object response
+      return Object.keys(expectedSchema).every(key => {
+        if (expectedSchema[key] === 'required') {
+          return key in response;
+        }
+        return true;
+      });
+    }
+  }
+  
+  return true;
+}

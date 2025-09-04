@@ -1,12 +1,16 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { Database } from "../../types/database";
-import {
+import type {
+  Database,
   UserProgress,
   UserProgressInsert,
   Phrase,
   PhraseInsert,
   Session,
   SessionInsert,
+  ImageRecord,
+  ImageInsert,
+  DescriptionRecord,
+  DescriptionInsert,
 } from "../../types/database";
 import { featureFlags, getServiceConfig } from "../../config/environment";
 
@@ -18,11 +22,11 @@ class LocalStorageAdapter {
     return `${this.prefix}${table}${id ? `_${id}` : ""}`;
   }
 
-  private mockResponse<T>(data: T, error: any = null) {
+  private mockResponse<T>(data: T, error: unknown = null) {
     return Promise.resolve({ data, error });
   }
 
-  async saveItem(table: string, item: any): Promise<{ data: any; error: any }> {
+  async saveItem(table: string, item: Record<string, unknown>): Promise<{ data: unknown; error: unknown }> {
     try {
       const id =
         item.id ||
@@ -53,7 +57,7 @@ class LocalStorageAdapter {
     }
   }
 
-  async getItem(table: string, id: string): Promise<{ data: any; error: any }> {
+  async getItem(table: string, id: string): Promise<{ data: unknown; error: unknown }> {
     try {
       const item = localStorage.getItem(this.getKey(table, id));
       if (!item) {
@@ -73,8 +77,8 @@ class LocalStorageAdapter {
 
   async getItems(
     table: string,
-    filters: any = {},
-  ): Promise<{ data: any[]; error: any }> {
+    filters: Record<string, unknown> = {},
+  ): Promise<{ data: unknown[]; error: unknown }> {
     try {
       const indexKey = this.getKey(`${table}_index`);
       const index = JSON.parse(localStorage.getItem(indexKey) || "[]");
@@ -84,7 +88,7 @@ class LocalStorageAdapter {
           const item = localStorage.getItem(this.getKey(table, id));
           return item ? JSON.parse(item) : null;
         })
-        .filter(Boolean);
+        .filter((item: unknown): item is NonNullable<typeof item> => Boolean(item));
 
       // Apply basic filtering (simplified)
       let filteredItems = items;
@@ -108,8 +112,8 @@ class LocalStorageAdapter {
   async updateItem(
     table: string,
     id: string,
-    updates: any,
-  ): Promise<{ data: any; error: any }> {
+    updates: Record<string, unknown>,
+  ): Promise<{ data: unknown; error: unknown }> {
     try {
       const existingItem = localStorage.getItem(this.getKey(table, id));
       if (!existingItem) {
@@ -133,7 +137,7 @@ class LocalStorageAdapter {
     }
   }
 
-  async deleteItem(table: string, id: string): Promise<{ error: any }> {
+  async deleteItem(table: string, id: string): Promise<{ error: unknown }> {
     try {
       localStorage.removeItem(this.getKey(table, id));
 
@@ -153,7 +157,7 @@ class LocalStorageAdapter {
 
   async getStats(): Promise<{
     data: { totalImages: number; totalDescriptions: number };
-    error: any;
+    error: unknown;
   }> {
     try {
       const imagesIndex = JSON.parse(
@@ -186,7 +190,7 @@ class LocalStorageAdapter {
 }
 
 class SupabaseService {
-  private client: SupabaseClient<Database> | null = null;
+  private client: SupabaseClient | null = null;
   private localStorage: LocalStorageAdapter;
   private isDemo: boolean;
   private url: string;
@@ -215,7 +219,7 @@ class SupabaseService {
 
     if (!this.isDemo) {
       try {
-        this.client = createClient<Database>(this.url, this.anonKey, {
+        this.client = createClient(this.url, this.anonKey, {
           auth: {
             persistSession: true,
             autoRefreshToken: true,
@@ -247,14 +251,14 @@ class SupabaseService {
   /**
    * Get the Supabase client instance
    */
-  getClient(): SupabaseClient<Database> | null {
+  getClient(): SupabaseClient | null {
     return this.client;
   }
 
   /**
    * Save an image to the database
    */
-  async saveImage(imageData: Database["public"]["Tables"]["images"]["Insert"]) {
+  async saveImage(imageData: ImageInsert) {
     try {
       if (this.isDemo) {
         const { data, error } = await this.localStorage.saveItem(
@@ -262,7 +266,10 @@ class SupabaseService {
           imageData,
         );
         if (error) {
-          throw new Error(`Failed to save image: ${error.message}`);
+          const errorMsg = typeof error === 'object' && error !== null && 'message' in error 
+            ? (error as { message: string }).message 
+            : 'Unknown error';
+          throw new Error(`Failed to save image: ${errorMsg}`);
         }
         return data;
       }
@@ -273,7 +280,7 @@ class SupabaseService {
 
       const { data, error } = await this.client
         .from("images")
-        .insert(imageData)
+        .insert(imageData as never)
         .select()
         .single();
 
@@ -293,6 +300,10 @@ class SupabaseService {
    */
   async getImageByUnsplashId(unsplashId: string) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("images")
         .select("*")
@@ -314,13 +325,15 @@ class SupabaseService {
   /**
    * Save a description to the database
    */
-  async saveDescription(
-    descriptionData: Database["public"]["Tables"]["descriptions"]["Insert"],
-  ) {
+  async saveDescription(descriptionData: DescriptionInsert) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("descriptions")
-        .insert(descriptionData)
+        .insert(descriptionData as never)
         .select()
         .single();
 
@@ -340,6 +353,10 @@ class SupabaseService {
    */
   async getDescriptions(imageId: string) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("descriptions")
         .select("*")
@@ -362,9 +379,13 @@ class SupabaseService {
    */
   async getDescriptionByStyle(
     imageId: string,
-    style: Database["public"]["Enums"]["description_style"],
+    style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil',
   ) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("descriptions")
         .select("*")
@@ -389,12 +410,16 @@ class SupabaseService {
    */
   async updateImage(
     id: string,
-    updates: Database["public"]["Tables"]["images"]["Update"],
+    updates: Partial<ImageRecord>,
   ) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("images")
-        .update(updates)
+        .update(updates as never)
         .eq("id", id)
         .select()
         .single();
@@ -415,6 +440,10 @@ class SupabaseService {
    */
   async deleteImage(id: string) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       // First delete related descriptions
       const { error: descriptionsError } = await this.client
         .from("descriptions")
@@ -449,6 +478,10 @@ class SupabaseService {
    */
   async searchImages(query: string, limit = 20, offset = 0) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("images")
         .select("*")
@@ -472,6 +505,10 @@ class SupabaseService {
    */
   async getRecentImages(limit = 20) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("images")
         .select("*")
@@ -494,6 +531,10 @@ class SupabaseService {
    */
   async getImageWithDescriptions(id: string) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("images")
         .select(
@@ -521,13 +562,15 @@ class SupabaseService {
   /**
    * Bulk insert images
    */
-  async bulkInsertImages(
-    images: Database["public"]["Tables"]["images"]["Insert"][],
-  ) {
+  async bulkInsertImages(images: ImageInsert[]) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("images")
-        .insert(images)
+        .insert(images as never)
         .select();
 
       if (error) {
@@ -546,6 +589,10 @@ class SupabaseService {
    */
   async getStats() {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const [imagesResponse, descriptionsResponse] = await Promise.all([
         this.client.from("images").select("id", { count: "exact", head: true }),
         this.client
@@ -599,6 +646,10 @@ class SupabaseService {
    * Set up real-time subscription for images
    */
   subscribeToImages(callback: (payload: any) => void) {
+    if (!this.client) {
+      throw new Error("Supabase client not available");
+    }
+
     return this.client
       .channel("images_changes")
       .on(
@@ -617,6 +668,10 @@ class SupabaseService {
    * Set up real-time subscription for descriptions
    */
   subscribeToDescriptions(imageId: string, callback: (payload: any) => void) {
+    if (!this.client) {
+      throw new Error("Supabase client not available");
+    }
+
     return this.client
       .channel(`descriptions_${imageId}`)
       .on(
@@ -661,10 +716,14 @@ class SupabaseService {
    */
   async upsertUserProgress(progressData: UserProgressInsert) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("user_progress")
-        .upsert(progressData, {
-          onConflict: "user_id,progress_date,progress_type,skill_category",
+        .upsert(progressData as never, {
+          onConflict: "user_id,vocabulary_item_id",
         })
         .select()
         .single();
@@ -685,32 +744,26 @@ class SupabaseService {
    */
   async getUserProgress(
     userId: string,
-    progressType?: string,
     startDate?: string,
     endDate?: string,
-    skillCategory?: string,
   ) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       let query = this.client
         .from("user_progress")
         .select("*")
         .eq("user_id", userId)
-        .order("progress_date", { ascending: false });
-
-      if (progressType) {
-        query = query.eq("progress_type", progressType);
-      }
+        .order("last_reviewed", { ascending: false });
 
       if (startDate) {
-        query = query.gte("progress_date", startDate);
+        query = query.gte("last_reviewed", startDate);
       }
 
       if (endDate) {
-        query = query.lte("progress_date", endDate);
-      }
-
-      if (skillCategory) {
-        query = query.eq("skill_category", skillCategory);
+        query = query.lte("last_reviewed", endDate);
       }
 
       const { data, error } = await query;
@@ -731,12 +784,16 @@ class SupabaseService {
    */
   async getUserProgressSummary(userId: string, daysBack = 30) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client.rpc(
         "get_user_progress_summary",
         {
           user_uuid: userId,
           days_back: daysBack,
-        },
+        } as never,
       );
 
       if (error) {
@@ -755,12 +812,16 @@ class SupabaseService {
    */
   async calculateDailyProgress(userId: string, targetDate?: string) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client.rpc(
         "calculate_daily_progress",
         {
           user_uuid: userId,
           target_date: targetDate,
-        },
+        } as never,
       );
 
       if (error) {
@@ -783,9 +844,13 @@ class SupabaseService {
    */
   async createPhrase(phraseData: PhraseInsert) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("phrases")
-        .insert(phraseData)
+        .insert(phraseData as never)
         .select()
         .single();
 
@@ -805,9 +870,13 @@ class SupabaseService {
    */
   async updatePhrase(id: string, updates: Partial<Phrase>) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("phrases")
-        .update(updates)
+        .update(updates as never)
         .eq("id", id)
         .select()
         .single();
@@ -828,6 +897,10 @@ class SupabaseService {
    */
   async deletePhrase(id: string) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { error } = await this.client.from("phrases").delete().eq("id", id);
 
       if (error) {
@@ -856,6 +929,10 @@ class SupabaseService {
     } = {},
   ) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       let query = this.client
         .from("phrases")
         .select("*")
@@ -907,6 +984,10 @@ class SupabaseService {
    */
   async getPhrasesForReview(userId: string, limit = 20) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("phrases")
         .select("*")
@@ -933,15 +1014,19 @@ class SupabaseService {
    */
   async markPhraseAsStudied(phraseId: string, wasCorrect: boolean) {
     try {
+      const currentPhrase = await this.getPhrase(phraseId);
+      if (!currentPhrase) {
+        throw new Error("Phrase not found");
+      }
+
       const updates: Partial<Phrase> = {
-        study_count: (await this.getPhrase(phraseId))?.study_count + 1 || 1,
+        study_count: currentPhrase.study_count + 1,
         last_studied_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       };
 
       if (wasCorrect) {
-        const currentPhrase = await this.getPhrase(phraseId);
-        updates.correct_count = (currentPhrase?.correct_count || 0) + 1;
+        updates.correct_count = (currentPhrase.correct_count || 0) + 1;
 
         // Check if phrase should be marked as mastered
         const accuracy = updates.correct_count / updates.study_count;
@@ -963,6 +1048,10 @@ class SupabaseService {
    */
   async getPhrase(id: string) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("phrases")
         .select("*")
@@ -989,9 +1078,13 @@ class SupabaseService {
    */
   async createSession(sessionData: SessionInsert) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("sessions")
-        .insert(sessionData)
+        .insert(sessionData as never)
         .select()
         .single();
 
@@ -1011,9 +1104,13 @@ class SupabaseService {
    */
   async updateSession(id: string, updates: Partial<Session>) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("sessions")
-        .update(updates)
+        .update(updates as never)
         .eq("id", id)
         .select()
         .single();
@@ -1034,6 +1131,10 @@ class SupabaseService {
    */
   async getUserSessions(userId: string, limit = 20, offset = 0) {
     try {
+      if (!this.client) {
+        throw new Error("Supabase client not available");
+      }
+
       const { data, error } = await this.client
         .from("sessions")
         .select("*")

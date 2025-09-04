@@ -445,3 +445,29 @@ export function parseJSONWithKeys<T = any>(
 
   return fallbackValue || null;
 }
+
+/**
+ * Safe JSON parsing function with fallback
+ */
+export function safeJsonParse<T = any>(
+  content: string,
+  fallbackValue?: T,
+  options?: { logging?: boolean }
+): T | null {
+  const result = RobustJSONParser.parse<T>(content, {
+    fallbackValue,
+    logging: options?.logging ?? false
+  });
+  
+  return result.success ? result.data! : (fallbackValue ?? null);
+}
+
+/**
+ * Validate JSON structure against expected keys
+ */
+export function validateJsonStructure(
+  data: any,
+  expectedKeys?: string[]
+): boolean {
+  return RobustJSONParser.validateStructure(data, expectedKeys);
+}

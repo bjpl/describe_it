@@ -163,6 +163,110 @@ export interface StudyStats {
   by_session_type: Record<string, number>;
 }
 
+// Simplified Database interface - use generic types for flexibility
+export interface Database {
+  public: {
+    Tables: Record<string, {
+      Row: Record<string, unknown>;
+      Insert: Record<string, unknown>;
+      Update: Record<string, unknown>;
+    }>;
+    Enums: {
+      description_style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
+    };
+  };
+}
+
+export type UserProgressInsert = Omit<UserProgress, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export interface Phrase {
+  id: string;
+  user_id: string;
+  phrase_text: string;
+  translation?: string;
+  definition?: string;
+  category: string;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  is_user_selected: boolean;
+  is_mastered: boolean;
+  study_count: number;
+  correct_count: number;
+  last_studied_at?: string;
+  mastered_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type PhraseInsert = Omit<Phrase, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export interface Session {
+  id: string;
+  user_id: string;
+  session_type: 'flashcards' | 'quiz' | 'matching' | 'writing';
+  vocabulary_items: string[];
+  score: number;
+  accuracy: number;
+  time_spent: number;
+  session_data: any;
+  started_at: string;
+  completed_at?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type SessionInsert = Omit<Session, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+// Image and Description types for database tables
+export interface ImageRecord {
+  id: string;
+  unsplash_id: string;
+  url: string;
+  alt_description?: string;
+  description?: string;
+  width: number;
+  height: number;
+  color?: string;
+  likes: number;
+  photographer: string;
+  photographer_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ImageInsert = Omit<ImageRecord, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export interface DescriptionRecord {
+  id: string;
+  image_id: string;
+  style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
+  description_english: string;
+  description_spanish: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type DescriptionInsert = Omit<DescriptionRecord, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
 // Export types for convenience
 export type DatabaseTables =
   | "vocabulary_items"

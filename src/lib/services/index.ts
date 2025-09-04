@@ -6,7 +6,7 @@
 // Import all services
 export { openaiService, OpenAIService } from "./openaiService";
 export { translationService, TranslationService } from "./translationService";
-export { vocabularyService } from "./vocabularyService"; // Original service
+export { vocabularyService, VocabularyService } from "./vocabularyService"; // Original service
 export {
   enhancedVocabularyService,
   EnhancedVocabularyService,

@@ -240,3 +240,217 @@ export function getCategoryColor(category: string): string {
       return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300";
   }
 }
+
+/**
+ * Extract key phrases from text
+ */
+export function extractKeyPhrases(
+  text: string,
+  maxPhrases: number = 10
+): string[] {
+  if (!text || typeof text !== 'string') {
+    return [];
+  }
+
+  // Simple extraction based on common patterns
+  const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  const phrases: string[] = [];
+  
+  sentences.forEach(sentence => {
+    const words = sentence.trim().split(/\s+/).filter(w => w.length > 2);
+    
+    // Extract noun phrases (basic pattern matching)
+    for (let i = 0; i < words.length - 1; i++) {
+      const phrase = words.slice(i, i + 2).join(' ').toLowerCase();
+      if (phrase.length > 4 && !phrases.includes(phrase)) {
+        phrases.push(phrase);
+      }
+    }
+    
+    // Extract longer phrases
+    for (let i = 0; i < words.length - 2; i++) {
+      const phrase = words.slice(i, i + 3).join(' ').toLowerCase();
+      if (phrase.length > 8 && !phrases.includes(phrase)) {
+        phrases.push(phrase);
+      }
+    }
+  });
+  
+  return phrases.slice(0, maxPhrases);
+}
+
+/**
+ * Analyze sentiment of text (basic implementation)
+ */
+export function analyzeSentiment(
+  text: string
+): { score: number; label: 'positive' | 'negative' | 'neutral' } {
+  if (!text || typeof text !== 'string') {
+    return { score: 0, label: 'neutral' };
+  }
+
+  const positiveWords = [
+    'bueno', 'bien', 'excelente', 'fantástico', 'perfecto', 'increíble',
+    'hermoso', 'maravilloso', 'genial', 'feliz', 'alegre', 'contento'
+  ];
+  
+  const negativeWords = [
+    'malo', 'terrible', 'horrible', 'triste', 'enojado', 'molesto',
+    'difícil', 'problemático', 'feo', 'desagradable', 'aburrido'
+  ];
+  
+  const words = text.toLowerCase().split(/\s+/);
+  let score = 0;
+  
+  words.forEach(word => {
+    if (positiveWords.includes(word)) {
+      score += 1;
+    } else if (negativeWords.includes(word)) {
+      score -= 1;
+    }
+  });
+  
+  // Normalize score
+  const normalizedScore = Math.max(-1, Math.min(1, score / words.length * 10));
+  
+  let label: 'positive' | 'negative' | 'neutral';
+  if (normalizedScore > 0.1) {
+    label = 'positive';
+  } else if (normalizedScore < -0.1) {
+    label = 'negative';
+  } else {
+    label = 'neutral';
+  }
+  
+  return { score: normalizedScore, label };
+}
+
+/**
+ * Get difficulty level based on word characteristics
+ */
+export function getDifficultyLevel(
+  phrase: string,
+  context?: string
+): 'beginner' | 'intermediate' | 'advanced' {
+  if (!phrase || typeof phrase !== 'string') {
+    return 'beginner';
+  }
+  
+  const words = phrase.split(/\s+/);
+  let difficultyScore = 0;
+  
+  // Length factor
+  if (words.length > 3) difficultyScore += 1;
+  if (phrase.length > 15) difficultyScore += 1;
+  
+  // Common beginnerWords
+  const beginnerWords = [
+    'el', 'la', 'y', 'de', 'que', 'a', 'en', 'un', 'es', 'se',
+    'no', 'te', 'lo', 'le', 'da', 'su', 'por', 'son', 'con', 'para',
+    'casa', 'gato', 'perro', 'agua', 'comida', 'familia', 'amigo'
+  ];
+  
+  // Check for beginner words
+  const hasBeginnerWords = words.some(word => 
+    beginnerWords.includes(word.toLowerCase())
+  );
+  
+  if (!hasBeginnerWords) difficultyScore += 2;
+  
+  // Complex grammar patterns
+  if (phrase.includes('que') && phrase.includes('se')) difficultyScore += 1;
+  if (phrase.includes('habría') || phrase.includes('hubiera')) difficultyScore += 2;
+  
+  // Context complexity
+  if (context && context.length > 100) difficultyScore += 1;
+  
+  if (difficultyScore >= 4) return 'advanced';
+  if (difficultyScore >= 2) return 'intermediate';
+  return 'beginner';
+}
+
+/**
+ * Generate context sentence for a phrase
+ */
+export function generateContextSentence(
+  phrase: string,
+  baseContext?: string
+): string {
+  if (!phrase || typeof phrase !== 'string') {
+    return '';
+  }
+  
+  // If we have base context, try to extract a relevant sentence
+  if (baseContext) {
+    const sentences = baseContext.split(/[.!?]+/);
+    const relevantSentence = sentences.find(sentence => 
+      sentence.toLowerCase().includes(phrase.toLowerCase())
+    );
+    
+    if (relevantSentence && relevantSentence.trim().length > 0) {
+      return relevantSentence.trim();
+    }
+  }
+  
+  // Generate a basic context sentence
+  const templates = [
+    `En esta imagen podemos ver ${phrase}.`,
+    `La imagen muestra ${phrase} claramente.`,
+    `Se puede observar ${phrase} en la fotografía.`,
+    `${phrase} aparece en la imagen.`,
+    `La foto presenta ${phrase} de manera evidente.`
+  ];
+  
+  const randomTemplate = templates[Math.floor(Math.random() * templates.length)];
+  return randomTemplate;
+}
+
+/**
+ * Categorize phrase based on its characteristics
+ */
+export function categorizePhrase(
+  phrase: string,
+  partOfSpeech?: string
+): string {
+  if (!phrase || typeof phrase !== 'string') {
+    return 'frasesClaves';
+  }
+  
+  // Use part of speech if provided
+  if (partOfSpeech) {
+    return inferCategory(partOfSpeech);
+  }
+  
+  // Basic categorization based on phrase structure
+  const lower = phrase.toLowerCase().trim();
+  
+  // Check for verb patterns
+  const verbEndings = ['ar', 'er', 'ir', 'ando', 'iendo', 'ado', 'ido'];
+  const hasVerbEnding = verbEndings.some(ending => 
+    lower.endsWith(ending) || lower.includes(` ${ending}`)
+  );
+  
+  if (hasVerbEnding || lower.includes('se ') || lower.startsWith('es ') || lower.startsWith('está ')) {
+    return 'verbos';
+  }
+  
+  // Check for adjective patterns
+  if (lower.includes('muy ') || lower.includes('más ') || lower.includes('menos ')) {
+    return 'adjetivos';
+  }
+  
+  // Check for adverb patterns
+  if (lower.endsWith('mente') || lower.includes('muy') || lower.includes('bien') || lower.includes('mal')) {
+    return 'adverbios';
+  }
+  
+  // Check for noun patterns (articles)
+  if (lower.startsWith('el ') || lower.startsWith('la ') || 
+      lower.startsWith('los ') || lower.startsWith('las ') ||
+      lower.startsWith('un ') || lower.startsWith('una ')) {
+    return 'sustantivos';
+  }
+  
+  // Default to key phrases
+  return 'frasesClaves';
+}

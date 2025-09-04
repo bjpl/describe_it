@@ -128,7 +128,7 @@ class OptimizedSupabaseClient {
         };
 
         this.recordMetrics(table, metrics);
-        return { data: cached as T[], error: null, metrics };
+        return { data: cached as unknown as T[], error: null, metrics };
       }
     }
 

@@ -278,7 +278,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
               </Badge>
               <Badge className="bg-gray-100 text-gray-800 border-gray-200">
                 {SpacedRepetitionUtils.getDifficultyDescription(
-                  currentCard.easeFactor || currentCard.difficulty,
+                  currentCard.easiness_factor,
                 )}
               </Badge>
             </div>

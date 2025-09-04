@@ -293,4 +293,5 @@ class VocabularyService {
 }
 
 export const vocabularyService = new VocabularyService();
+export { VocabularyService };
 export default vocabularyService;

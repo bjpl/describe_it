@@ -7,6 +7,9 @@ export { openAIService } from "./openai";
 export { supabaseService } from "./supabase";
 export { vercelKvCache } from "./vercel-kv";
 
+// Import for internal use
+import type { DescriptionStyle } from "../../types/api";
+
 // Types
 export type {
   UnsplashImage,

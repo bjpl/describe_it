@@ -326,7 +326,7 @@ class TranslatorService {
             code: "TRANSLATION_FAILED",
             message: `Unable to translate "${text}" from ${fromLanguage} to ${toLanguage}`,
             status: 500,
-            details: openAIError,
+            details: openAIError as Record<string, unknown>,
           });
         }
       }

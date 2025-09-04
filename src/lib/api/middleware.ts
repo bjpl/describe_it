@@ -84,8 +84,14 @@ export async function withAuth(
  */
 export function withRateLimit(
   type: keyof typeof RATE_LIMITS,
-  handler: (req: NextRequest) => Promise<NextResponse>,
+  handler?: (req: NextRequest) => Promise<NextResponse>,
 ) {
+  // Support both curried and direct usage
+  if (!handler) {
+    return (handler: (req: NextRequest) => Promise<NextResponse>) => 
+      withRateLimit(type, handler);
+  }
+  
   return async (req: NextRequest) => {
     try {
       const ip = req.ip || req.headers.get("x-forwarded-for") || "anonymous";
@@ -349,6 +355,7 @@ export const withCacheAndAuth = (
   compose(
     withErrorHandler,
     withCors,
-    withCache(cacheKey, generateKey),
     withAuth,
+    (handler: (req: AuthenticatedRequest) => Promise<NextResponse>) => 
+      withCache(cacheKey, generateKey, handler),
   );
