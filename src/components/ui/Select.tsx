@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from "react";
 
 interface SelectProps {
   value: string;
@@ -24,19 +24,26 @@ interface SelectValueProps {
   placeholder?: string;
 }
 
-export const Select: React.FC<SelectProps> = ({ value, onValueChange, children }) => {
+export const Select: React.FC<SelectProps> = ({
+  value,
+  onValueChange,
+  children,
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const selectRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (selectRef.current && !selectRef.current.contains(event.target as Node)) {
+      if (
+        selectRef.current &&
+        !selectRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   return (
@@ -54,13 +61,16 @@ const SelectContext = React.createContext<{
   isOpen: boolean;
   setIsOpen: (open: boolean) => void;
 }>({
-  value: '',
+  value: "",
   onValueChange: () => {},
   isOpen: false,
   setIsOpen: () => {},
 });
 
-export const SelectTrigger: React.FC<SelectTriggerProps> = ({ children, className = '' }) => {
+export const SelectTrigger: React.FC<SelectTriggerProps> = ({
+  children,
+  className = "",
+}) => {
   const { isOpen, setIsOpen } = React.useContext(SelectContext);
 
   return (
@@ -71,13 +81,18 @@ export const SelectTrigger: React.FC<SelectTriggerProps> = ({ children, classNam
     >
       {children}
       <svg
-        className={`h-4 w-4 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+        className={`h-4 w-4 transition-transform ${isOpen ? "rotate-180" : ""}`}
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
         stroke="currentColor"
       >
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={2}
+          d="M19 9l-7 7-7-7"
+        />
       </svg>
     </button>
   );
@@ -96,7 +111,11 @@ export const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
 };
 
 export const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
-  const { value: selectedValue, onValueChange, setIsOpen } = React.useContext(SelectContext);
+  const {
+    value: selectedValue,
+    onValueChange,
+    setIsOpen,
+  } = React.useContext(SelectContext);
   const isSelected = value === selectedValue;
 
   return (
@@ -106,7 +125,7 @@ export const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
         setIsOpen(false);
       }}
       className={`relative flex cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground ${
-        isSelected ? 'bg-accent' : ''
+        isSelected ? "bg-accent" : ""
       }`}
     >
       {children}
@@ -118,19 +137,22 @@ export const SelectItem: React.FC<SelectItemProps> = ({ value, children }) => {
           viewBox="0 0 24 24"
           stroke="currentColor"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M5 13l4 4L19 7"
+          />
         </svg>
       )}
     </div>
   );
 };
 
-export const SelectValue: React.FC<SelectValueProps> = ({ placeholder = 'Select an option' }) => {
+export const SelectValue: React.FC<SelectValueProps> = ({
+  placeholder = "Select an option",
+}) => {
   const { value } = React.useContext(SelectContext);
-  
-  return (
-    <span className="block truncate">
-      {value || placeholder}
-    </span>
-  );
+
+  return <span className="block truncate">{value || placeholder}</span>;
 };

@@ -3,20 +3,20 @@
  * Handles vocabulary CRUD operations and spaced repetition
  */
 
-import React, { useState, useMemo, useEffect } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { Badge } from '../ui/Badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../ui/Tabs';
-import { 
+import React, { useState, useMemo, useEffect } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { Badge } from "../ui/Badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/Tabs";
+import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../ui/Select';
-import { 
+} from "../ui/Select";
+import {
   Search,
   Filter,
   Plus,
@@ -28,20 +28,20 @@ import {
   CheckCircle,
   Clock,
   TrendingUp,
-  Target
-} from 'lucide-react';
-import { 
+  Target,
+} from "lucide-react";
+import {
   useUserPhrases,
   useVocabularyStats,
   useUpdatePhrase,
   useDeletePhrase,
   useTogglePhraseSelection,
   useBulkUpdatePhraseSelection,
-  usePhrasesByCategory
-} from '../../hooks/useVocabulary';
-import { useDebounce } from '../../hooks/useDebounce';
-import { LoadingSpinner } from '../Shared/LoadingStates';
-import { Phrase } from '../../types/database';
+  usePhrasesByCategory,
+} from "../../hooks/useVocabulary";
+import { useDebounce } from "../../hooks/useDebounce";
+import { LoadingSpinner } from "../Shared/LoadingStates";
+import { Phrase } from "../../types/database";
 
 interface VocabularyManagerProps {
   className?: string;
@@ -52,16 +52,16 @@ interface VocabularyManagerProps {
 }
 
 export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
-  className = '',
+  className = "",
   showStats = true,
   allowEdit = true,
   compact = false,
   onVocabularyUpdate,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedDifficulty, setSelectedDifficulty] = useState<string>('all');
-  const [selectedFilter, setSelectedFilter] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [selectedDifficulty, setSelectedDifficulty] = useState<string>("all");
+  const [selectedFilter, setSelectedFilter] = useState<string>("all");
   const [selectedPhrases, setSelectedPhrases] = useState<string[]>([]);
   const [editingPhrase, setEditingPhrase] = useState<string | null>(null);
 
@@ -70,13 +70,13 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
   // Build filters object
   const filters = useMemo(() => {
     const filterObj: any = {};
-    
-    if (selectedCategory !== 'all') filterObj.category = selectedCategory;
-    if (selectedDifficulty !== 'all') filterObj.difficulty = selectedDifficulty;
-    if (selectedFilter === 'selected') filterObj.isUserSelected = true;
-    if (selectedFilter === 'mastered') filterObj.isMastered = true;
+
+    if (selectedCategory !== "all") filterObj.category = selectedCategory;
+    if (selectedDifficulty !== "all") filterObj.difficulty = selectedDifficulty;
+    if (selectedFilter === "selected") filterObj.isUserSelected = true;
+    if (selectedFilter === "mastered") filterObj.isMastered = true;
     if (debouncedSearch) filterObj.search_query = debouncedSearch;
-    
+
     return filterObj;
   }, [selectedCategory, selectedDifficulty, selectedFilter, debouncedSearch]);
 
@@ -84,7 +84,7 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
   const { data: phrases, isLoading: phrasesLoading } = useUserPhrases(filters);
   const { data: stats, isLoading: statsLoading } = useVocabularyStats();
   const { data: categorizedPhrases } = usePhrasesByCategory();
-  
+
   // Notify parent component when vocabulary changes
   useEffect(() => {
     if (phrases && onVocabularyUpdate) {
@@ -99,31 +99,39 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
   const bulkUpdateSelection = useBulkUpdatePhraseSelection();
 
   const handlePhraseSelect = (phraseId: string) => {
-    setSelectedPhrases(prev => 
-      prev.includes(phraseId) 
-        ? prev.filter(id => id !== phraseId)
-        : [...prev, phraseId]
+    setSelectedPhrases((prev) =>
+      prev.includes(phraseId)
+        ? prev.filter((id) => id !== phraseId)
+        : [...prev, phraseId],
     );
   };
 
-  const handleBulkAction = async (action: 'select' | 'deselect' | 'delete') => {
+  const handleBulkAction = async (action: "select" | "deselect" | "delete") => {
     if (selectedPhrases.length === 0) return;
 
     try {
       switch (action) {
-        case 'select':
-          await bulkUpdateSelection.mutateAsync({ phraseIds: selectedPhrases, isSelected: true });
+        case "select":
+          await bulkUpdateSelection.mutateAsync({
+            phraseIds: selectedPhrases,
+            isSelected: true,
+          });
           break;
-        case 'deselect':
-          await bulkUpdateSelection.mutateAsync({ phraseIds: selectedPhrases, isSelected: false });
+        case "deselect":
+          await bulkUpdateSelection.mutateAsync({
+            phraseIds: selectedPhrases,
+            isSelected: false,
+          });
           break;
-        case 'delete':
-          await Promise.all(selectedPhrases.map(id => deletePhrase.mutateAsync(id)));
+        case "delete":
+          await Promise.all(
+            selectedPhrases.map((id) => deletePhrase.mutateAsync(id)),
+          );
           break;
       }
       setSelectedPhrases([]);
     } catch (error) {
-      console.error('Bulk action failed:', error);
+      console.error("Bulk action failed:", error);
     }
   };
 
@@ -134,34 +142,37 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
         isSelected: !phrase.is_user_selected,
       });
     } catch (error) {
-      console.error('Failed to toggle phrase selection:', error);
+      console.error("Failed to toggle phrase selection:", error);
     }
   };
 
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
-      case 'beginner':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'advanced':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case "beginner":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "intermediate":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "advanced":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getCategoryColor = (category: string) => {
     const colors = {
-      vocabulary: 'bg-blue-100 text-blue-800 border-blue-200',
-      expression: 'bg-purple-100 text-purple-800 border-purple-200',
-      idiom: 'bg-pink-100 text-pink-800 border-pink-200',
-      phrase: 'bg-indigo-100 text-indigo-800 border-indigo-200',
-      grammar_pattern: 'bg-orange-100 text-orange-800 border-orange-200',
-      verb_conjugation: 'bg-teal-100 text-teal-800 border-teal-200',
-      cultural_reference: 'bg-cyan-100 text-cyan-800 border-cyan-200',
+      vocabulary: "bg-blue-100 text-blue-800 border-blue-200",
+      expression: "bg-purple-100 text-purple-800 border-purple-200",
+      idiom: "bg-pink-100 text-pink-800 border-pink-200",
+      phrase: "bg-indigo-100 text-indigo-800 border-indigo-200",
+      grammar_pattern: "bg-orange-100 text-orange-800 border-orange-200",
+      verb_conjugation: "bg-teal-100 text-teal-800 border-teal-200",
+      cultural_reference: "bg-cyan-100 text-cyan-800 border-cyan-200",
     };
-    return colors[category as keyof typeof colors] || 'bg-gray-100 text-gray-800 border-gray-200';
+    return (
+      colors[category as keyof typeof colors] ||
+      "bg-gray-100 text-gray-800 border-gray-200"
+    );
   };
 
   if (phrasesLoading || (showStats && statsLoading)) {
@@ -218,7 +229,9 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-orange-500" />
                 <div>
-                  <div className="text-lg font-semibold">{Math.round(stats.mastery_rate * 100)}%</div>
+                  <div className="text-lg font-semibold">
+                    {Math.round(stats.mastery_rate * 100)}%
+                  </div>
                   <div className="text-sm text-gray-600">Mastery Rate</div>
                 </div>
               </div>
@@ -240,21 +253,21 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleBulkAction('select')}
+                  onClick={() => handleBulkAction("select")}
                 >
                   Select for Study
                 </Button>
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => handleBulkAction('deselect')}
+                  onClick={() => handleBulkAction("deselect")}
                 >
                   Deselect
                 </Button>
                 <Button
                   variant="destructive"
                   size="sm"
-                  onClick={() => handleBulkAction('delete')}
+                  onClick={() => handleBulkAction("delete")}
                 >
                   Delete ({selectedPhrases.length})
                 </Button>
@@ -277,21 +290,27 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
 
             {/* Filter Controls */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select
+                value={selectedCategory}
+                onValueChange={setSelectedCategory}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All Categories" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Categories</SelectItem>
-                  {categorizedPhrases?.map(cat => (
+                  {categorizedPhrases?.map((cat) => (
                     <SelectItem key={cat.category} value={cat.category}>
-                      {cat.category.replace('_', ' ')} ({cat.count})
+                      {cat.category.replace("_", " ")} ({cat.count})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
-              <Select value={selectedDifficulty} onValueChange={setSelectedDifficulty}>
+              <Select
+                value={selectedDifficulty}
+                onValueChange={setSelectedDifficulty}
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="All Levels" />
                 </SelectTrigger>
@@ -322,9 +341,14 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
       <div className="space-y-4">
         {phrases && phrases.length > 0 ? (
           phrases.map((phrase) => (
-            <Card key={phrase.id} className={`transition-all duration-200 ${
-              selectedPhrases.includes(phrase.id) ? 'ring-2 ring-blue-500 ring-opacity-50' : ''
-            }`}>
+            <Card
+              key={phrase.id}
+              className={`transition-all duration-200 ${
+                selectedPhrases.includes(phrase.id)
+                  ? "ring-2 ring-blue-500 ring-opacity-50"
+                  : ""
+              }`}
+            >
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-4">
                   {/* Phrase Content */}
@@ -338,7 +362,9 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
                       />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-lg">{phrase.spanish_text}</h3>
+                          <h3 className="font-medium text-lg">
+                            {phrase.spanish_text}
+                          </h3>
                           {phrase.is_user_selected && (
                             <Star className="w-4 h-4 text-yellow-500 fill-current" />
                           )}
@@ -346,32 +372,40 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
                             <CheckCircle className="w-4 h-4 text-green-500 fill-current" />
                           )}
                         </div>
-                        <p className="text-gray-600 mb-2">{phrase.english_translation}</p>
-                        
+                        <p className="text-gray-600 mb-2">
+                          {phrase.english_translation}
+                        </p>
+
                         {/* Context sentences */}
                         {phrase.context_sentence_spanish && (
                           <div className="text-sm bg-gray-50 p-2 rounded">
-                            <p className="italic text-gray-700">{phrase.context_sentence_spanish}</p>
+                            <p className="italic text-gray-700">
+                              {phrase.context_sentence_spanish}
+                            </p>
                             {phrase.context_sentence_english && (
-                              <p className="text-gray-500 mt-1">{phrase.context_sentence_english}</p>
+                              <p className="text-gray-500 mt-1">
+                                {phrase.context_sentence_english}
+                              </p>
                             )}
                           </div>
                         )}
 
                         {/* Badges */}
                         <div className="flex flex-wrap gap-2 mt-2">
-                          <Badge className={getDifficultyColor(phrase.difficulty_level)}>
+                          <Badge
+                            className={getDifficultyColor(
+                              phrase.difficulty_level,
+                            )}
+                          >
                             {phrase.difficulty_level}
                           </Badge>
                           <Badge className={getCategoryColor(phrase.category)}>
-                            {phrase.category.replace('_', ' ')}
+                            {phrase.category.replace("_", " ")}
                           </Badge>
                           {phrase.word_type && (
-                            <Badge variant="outline">
-                              {phrase.word_type}
-                            </Badge>
+                            <Badge variant="outline">{phrase.word_type}</Badge>
                           )}
-                          {phrase.formality_level !== 'neutral' && (
+                          {phrase.formality_level !== "neutral" && (
                             <Badge variant="outline">
                               {phrase.formality_level}
                             </Badge>
@@ -383,13 +417,22 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
                           <div className="flex items-center gap-4 text-xs text-gray-500 mt-2">
                             <span>Studied {phrase.study_count} times</span>
                             <span>
-                              Accuracy: {phrase.study_count > 0 
-                                ? Math.round((phrase.correct_count / phrase.study_count) * 100)
-                                : 0}%
+                              Accuracy:{" "}
+                              {phrase.study_count > 0
+                                ? Math.round(
+                                    (phrase.correct_count /
+                                      phrase.study_count) *
+                                      100,
+                                  )
+                                : 0}
+                              %
                             </span>
                             {phrase.last_studied_at && (
                               <span>
-                                Last: {new Date(phrase.last_studied_at).toLocaleDateString()}
+                                Last:{" "}
+                                {new Date(
+                                  phrase.last_studied_at,
+                                ).toLocaleDateString()}
                               </span>
                             )}
                           </div>
@@ -412,7 +455,9 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
                         variant="outline"
                         size="sm"
                         onClick={() => handleToggleSelection(phrase)}
-                        className={phrase.is_user_selected ? 'bg-yellow-50' : ''}
+                        className={
+                          phrase.is_user_selected ? "bg-yellow-50" : ""
+                        }
                       >
                         {phrase.is_user_selected ? (
                           <>
@@ -426,7 +471,7 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
                           </>
                         )}
                       </Button>
-                      
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -458,12 +503,15 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
           <Card>
             <CardContent className="p-8 text-center">
               <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-400" />
-              <h3 className="text-lg font-medium text-gray-600 mb-2">No phrases found</h3>
+              <h3 className="text-lg font-medium text-gray-600 mb-2">
+                No phrases found
+              </h3>
               <p className="text-gray-500">
-                {debouncedSearch || selectedCategory !== 'all' || selectedDifficulty !== 'all'
-                  ? 'Try adjusting your filters'
-                  : 'Start extracting phrases from images to build your vocabulary'
-                }
+                {debouncedSearch ||
+                selectedCategory !== "all" ||
+                selectedDifficulty !== "all"
+                  ? "Try adjusting your filters"
+                  : "Start extracting phrases from images to build your vocabulary"}
               </p>
             </CardContent>
           </Card>

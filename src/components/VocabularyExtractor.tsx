@@ -1,21 +1,40 @@
-'use client';
+"use client";
 
 /**
  * Vocabulary Extractor Component - Agent Gamma-3 Implementation
  * Enhanced phrase extraction with 5-category system and click-to-add functionality
  */
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
-import { BookOpen, Plus, Download, Filter, Search, ChevronDown, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
-import { CategorizedPhrase } from '@/types/api';
-import { PhraseExtractor, PhraseCategory } from '@/lib/services/phraseExtractor';
-import { VocabularyManager, ClickToAddOptions } from '@/lib/services/vocabularyManager';
-import { getDifficultyColor, getCategoryColor } from '@/lib/utils/phrase-helpers';
+import { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  BookOpen,
+  Plus,
+  Download,
+  Filter,
+  Search,
+  ChevronDown,
+  AlertCircle,
+  CheckCircle2,
+  Loader2,
+} from "lucide-react";
+import { CategorizedPhrase } from "@/types/api";
+import {
+  PhraseExtractor,
+  PhraseCategory,
+} from "@/lib/services/phraseExtractor";
+import {
+  VocabularyManager,
+  ClickToAddOptions,
+} from "@/lib/services/vocabularyManager";
+import {
+  getDifficultyColor,
+  getCategoryColor,
+} from "@/lib/utils/phrase-helpers";
 
 interface VocabularyExtractorProps {
   selectedImage: any;
   descriptionText: string | null;
-  style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
+  style: "narrativo" | "poetico" | "academico" | "conversacional" | "infantil";
   onPhrasesUpdated?: (phrases: CategorizedPhrase[]) => void;
 }
 
@@ -32,7 +51,7 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
   selectedImage,
   descriptionText,
   style,
-  onPhrasesUpdated
+  onPhrasesUpdated,
 }) => {
   const [state, setState] = useState<ExtractionState>({
     isExtracting: false,
@@ -42,14 +61,22 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
       verbos: [],
       adjetivos: [],
       adverbios: [],
-      frasesClaves: []
+      frasesClaves: [],
     },
     selectedPhrases: new Set(),
-    activeCategories: new Set(['sustantivos', 'verbos', 'adjetivos', 'adverbios', 'frasesClaves']),
-    searchTerm: ''
+    activeCategories: new Set([
+      "sustantivos",
+      "verbos",
+      "adjetivos",
+      "adverbios",
+      "frasesClaves",
+    ]),
+    searchTerm: "",
   });
 
-  const [difficulty, setDifficulty] = useState<'beginner' | 'intermediate' | 'advanced'>('intermediate');
+  const [difficulty, setDifficulty] = useState<
+    "beginner" | "intermediate" | "advanced"
+  >("intermediate");
   const [maxPhrases, setMaxPhrases] = useState(15);
   const [vocabularyManager] = useState(() => new VocabularyManager());
   const [addedPhrases, setAddedPhrases] = useState<Set<string>>(new Set());
@@ -57,42 +84,53 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
   // Extract phrases when dependencies change
   const extractPhrases = useCallback(async () => {
     if (!selectedImage || !descriptionText) {
-      setState(prev => ({ ...prev, error: 'No image or description available for extraction' }));
+      setState((prev) => ({
+        ...prev,
+        error: "No image or description available for extraction",
+      }));
       return;
     }
 
-    setState(prev => ({ ...prev, isExtracting: true, error: null }));
+    setState((prev) => ({ ...prev, isExtracting: true, error: null }));
 
     try {
       const imageUrl = selectedImage.urls?.regular;
-      const categorizedPhrases = await PhraseExtractor.extractCategorizedPhrases({
-        description: descriptionText,
-        imageUrl,
-        targetLevel: difficulty,
-        maxPhrases,
-        categories: Array.from(state.activeCategories)
-      });
+      const categorizedPhrases =
+        await PhraseExtractor.extractCategorizedPhrases({
+          description: descriptionText,
+          imageUrl,
+          targetLevel: difficulty,
+          maxPhrases,
+          categories: Array.from(state.activeCategories),
+        });
 
-      setState(prev => ({
+      setState((prev) => ({
         ...prev,
         categorizedPhrases,
         isExtracting: false,
-        selectedPhrases: new Set()
+        selectedPhrases: new Set(),
       }));
 
       // Notify parent component
       const allPhrases = Object.values(categorizedPhrases).flat();
       onPhrasesUpdated?.(allPhrases);
-
     } catch (error) {
-      console.error('Phrase extraction error:', error);
-      setState(prev => ({
+      console.error("Phrase extraction error:", error);
+      setState((prev) => ({
         ...prev,
         isExtracting: false,
-        error: error instanceof Error ? error.message : 'Failed to extract phrases'
+        error:
+          error instanceof Error ? error.message : "Failed to extract phrases",
       }));
     }
-  }, [selectedImage, descriptionText, difficulty, maxPhrases, state.activeCategories, onPhrasesUpdated]);
+  }, [
+    selectedImage,
+    descriptionText,
+    difficulty,
+    maxPhrases,
+    state.activeCategories,
+    onPhrasesUpdated,
+  ]);
 
   // Auto-extract when dependencies change
   useEffect(() => {
@@ -104,82 +142,84 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
 
   // Handle phrase selection
   const togglePhraseSelection = useCallback((phraseId: string) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       selectedPhrases: new Set(
         prev.selectedPhrases.has(phraseId)
-          ? [...prev.selectedPhrases].filter(id => id !== phraseId)
-          : [...prev.selectedPhrases, phraseId]
-      )
+          ? [...prev.selectedPhrases].filter((id) => id !== phraseId)
+          : [...prev.selectedPhrases, phraseId],
+      ),
     }));
   }, []);
 
   // Handle category filter toggle
   const toggleCategory = useCallback((category: PhraseCategory) => {
-    setState(prev => ({
+    setState((prev) => ({
       ...prev,
       activeCategories: new Set(
         prev.activeCategories.has(category)
-          ? [...prev.activeCategories].filter(cat => cat !== category)
-          : [...prev.activeCategories, category]
-      )
+          ? [...prev.activeCategories].filter((cat) => cat !== category)
+          : [...prev.activeCategories, category],
+      ),
     }));
   }, []);
 
   // Click-to-add phrase to vocabulary
-  const addPhraseToVocabulary = useCallback(async (
-    phrase: CategorizedPhrase,
-    options: ClickToAddOptions = {}
-  ) => {
-    try {
-      await vocabularyManager.addPhraseWithClick(phrase, {
-        autoTranslate: true,
-        markAsNew: true,
-        ...options
-      });
+  const addPhraseToVocabulary = useCallback(
+    async (phrase: CategorizedPhrase, options: ClickToAddOptions = {}) => {
+      try {
+        await vocabularyManager.addPhraseWithClick(phrase, {
+          autoTranslate: true,
+          markAsNew: true,
+          ...options,
+        });
 
-      setAddedPhrases(prev => new Set([...prev, phrase.id]));
-      
-      // Visual feedback
-      const button = document.querySelector(`[data-phrase-id="${phrase.id}"]`);
-      if (button) {
-        button.classList.add('animate-pulse');
-        setTimeout(() => button.classList.remove('animate-pulse'), 1000);
+        setAddedPhrases((prev) => new Set([...prev, phrase.id]));
+
+        // Visual feedback
+        const button = document.querySelector(
+          `[data-phrase-id="${phrase.id}"]`,
+        );
+        if (button) {
+          button.classList.add("animate-pulse");
+          setTimeout(() => button.classList.remove("animate-pulse"), 1000);
+        }
+      } catch (error) {
+        console.error("Error adding phrase to vocabulary:", error);
+        alert("Error adding phrase to vocabulary. Please try again.");
       }
-
-    } catch (error) {
-      console.error('Error adding phrase to vocabulary:', error);
-      alert('Error adding phrase to vocabulary. Please try again.');
-    }
-  }, [vocabularyManager]);
+    },
+    [vocabularyManager],
+  );
 
   // Add selected phrases to vocabulary
   const addSelectedPhrases = useCallback(async () => {
     const selectedPhraseObjects = Object.values(state.categorizedPhrases)
       .flat()
-      .filter(phrase => state.selectedPhrases.has(phrase.id));
+      .filter((phrase) => state.selectedPhrases.has(phrase.id));
 
     if (selectedPhraseObjects.length === 0) {
-      alert('Please select phrases to add to vocabulary');
+      alert("Please select phrases to add to vocabulary");
       return;
     }
 
     try {
       await vocabularyManager.addMultiplePhrases(selectedPhraseObjects, {
         autoTranslate: true,
-        markAsNew: true
+        markAsNew: true,
       });
 
-      selectedPhraseObjects.forEach(phrase => {
-        setAddedPhrases(prev => new Set([...prev, phrase.id]));
+      selectedPhraseObjects.forEach((phrase) => {
+        setAddedPhrases((prev) => new Set([...prev, phrase.id]));
       });
 
-      setState(prev => ({ ...prev, selectedPhrases: new Set() }));
-      alert(`Successfully added ${selectedPhraseObjects.length} phrases to vocabulary!`);
-
+      setState((prev) => ({ ...prev, selectedPhrases: new Set() }));
+      alert(
+        `Successfully added ${selectedPhraseObjects.length} phrases to vocabulary!`,
+      );
     } catch (error) {
-      console.error('Error adding selected phrases:', error);
-      alert('Error adding phrases to vocabulary. Please try again.');
+      console.error("Error adding selected phrases:", error);
+      alert("Error adding phrases to vocabulary. Please try again.");
     }
   }, [state.categorizedPhrases, state.selectedPhrases, vocabularyManager]);
 
@@ -187,10 +227,10 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
   const exportVocabulary = useCallback(async () => {
     try {
       await vocabularyManager.downloadTargetWordList(undefined, true);
-      alert('Vocabulary exported successfully!');
+      alert("Vocabulary exported successfully!");
     } catch (error) {
-      console.error('Export error:', error);
-      alert('Error exporting vocabulary. Please try again.');
+      console.error("Export error:", error);
+      alert("Error exporting vocabulary. Please try again.");
     }
   }, [vocabularyManager]);
 
@@ -203,14 +243,19 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
       verbos: [],
       adjetivos: [],
       adverbios: [],
-      frasesClaves: []
+      frasesClaves: [],
     };
 
     Object.entries(state.categorizedPhrases).forEach(([category, phrases]) => {
-      filtered[category as PhraseCategory] = phrases.filter(phrase =>
-        phrase.phrase.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-        phrase.definition.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-        phrase.context.toLowerCase().includes(state.searchTerm.toLowerCase())
+      filtered[category as PhraseCategory] = phrases.filter(
+        (phrase) =>
+          phrase.phrase
+            .toLowerCase()
+            .includes(state.searchTerm.toLowerCase()) ||
+          phrase.definition
+            .toLowerCase()
+            .includes(state.searchTerm.toLowerCase()) ||
+          phrase.context.toLowerCase().includes(state.searchTerm.toLowerCase()),
       );
     });
 
@@ -221,9 +266,13 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
   const categoryConfigs = useMemo(() => PhraseExtractor.getAllCategories(), []);
 
   // Count total phrases
-  const totalPhrases = useMemo(() => 
-    Object.values(state.categorizedPhrases).reduce((sum, phrases) => sum + phrases.length, 0),
-    [state.categorizedPhrases]
+  const totalPhrases = useMemo(
+    () =>
+      Object.values(state.categorizedPhrases).reduce(
+        (sum, phrases) => sum + phrases.length,
+        0,
+      ),
+    [state.categorizedPhrases],
   );
 
   if (!selectedImage) {
@@ -249,7 +298,8 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
                 Description Required
               </h3>
               <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-                Please generate a description first. The vocabulary will be extracted from the description content.
+                Please generate a description first. The vocabulary will be
+                extracted from the description content.
               </p>
             </div>
           </div>
@@ -263,13 +313,15 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
       {/* Header with Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-2xl font-bold">Vocabulary Extractor</h2>
-        
+
         <div className="flex flex-wrap items-center gap-3">
           {/* Difficulty Selector */}
           <div className="relative">
             <select
               value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as typeof difficulty)}
+              onChange={(e) =>
+                setDifficulty(e.target.value as typeof difficulty)
+              }
               className="appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={state.isExtracting}
             >
@@ -322,22 +374,26 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
               type="text"
               placeholder="Search phrases..."
               value={state.searchTerm}
-              onChange={(e) => setState(prev => ({ ...prev, searchTerm: e.target.value }))}
+              onChange={(e) =>
+                setState((prev) => ({ ...prev, searchTerm: e.target.value }))
+              }
               className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
             />
           </div>
 
           {/* Category Filters */}
           <div className="flex flex-wrap gap-2">
-            <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">Categories:</span>
-            {categoryConfigs.map(config => (
+            <span className="text-sm text-gray-600 dark:text-gray-400 mr-2">
+              Categories:
+            </span>
+            {categoryConfigs.map((config) => (
               <button
                 key={config.name}
                 onClick={() => toggleCategory(config.name)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
                   state.activeCategories.has(config.name)
                     ? config.color
-                    : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400'
+                    : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400"
                 }`}
               >
                 {config.displayName}
@@ -361,7 +417,7 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
                 </button>
               )}
             </div>
-            
+
             <button
               onClick={exportVocabulary}
               className="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm flex items-center gap-1"
@@ -400,15 +456,15 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
               Extracting vocabulary from description...
             </span>
           </div>
-          
+
           {/* Skeleton loading for categories */}
-          {categoryConfigs.map(config => (
+          {categoryConfigs.map((config) => (
             <div key={config.name} className="space-y-3">
               <h3 className="text-lg font-semibold text-gray-300 animate-pulse">
                 {config.displayName}
               </h3>
               <div className="grid gap-3">
-                {[1, 2, 3].map(i => (
+                {[1, 2, 3].map((i) => (
                   <div
                     key={i}
                     className="bg-gray-100 dark:bg-gray-700 rounded-lg p-4 animate-pulse"
@@ -426,15 +482,21 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
       {/* Categorized Phrases Display */}
       {!state.isExtracting && totalPhrases > 0 && (
         <div className="space-y-6">
-          {categoryConfigs.map(config => {
+          {categoryConfigs.map((config) => {
             const phrases = filteredCategories[config.name];
-            if (!state.activeCategories.has(config.name) || phrases.length === 0) return null;
+            if (
+              !state.activeCategories.has(config.name) ||
+              phrases.length === 0
+            )
+              return null;
 
             return (
               <div key={config.name} className="space-y-3">
                 <div className="flex items-center justify-between">
                   <h3 className="text-lg font-semibold flex items-center gap-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${config.color}`}
+                    >
                       {phrases.length}
                     </span>
                     {config.displayName}
@@ -442,7 +504,7 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
                 </div>
 
                 <div className="grid gap-3">
-                  {phrases.map(phrase => {
+                  {phrases.map((phrase) => {
                     const isSelected = state.selectedPhrases.has(phrase.id);
                     const isAdded = addedPhrases.has(phrase.id);
 
@@ -451,9 +513,9 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
                         key={phrase.id}
                         className={`border rounded-lg p-4 transition-all hover:shadow-md ${
                           isSelected
-                            ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                            : 'border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800'
-                        } ${isAdded ? 'opacity-70' : ''}`}
+                            ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                            : "border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800"
+                        } ${isAdded ? "opacity-70" : ""}`}
                       >
                         <div className="space-y-3">
                           {/* Phrase Header */}
@@ -483,15 +545,19 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
                             </div>
 
                             <div className="flex items-center gap-2 ml-4">
-                              <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(phrase.difficulty)}`}>
+                              <span
+                                className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(phrase.difficulty)}`}
+                              >
                                 {phrase.difficulty}
                               </span>
-                              
+
                               {/* Selection checkbox */}
                               <input
                                 type="checkbox"
                                 checked={isSelected}
-                                onChange={() => togglePhraseSelection(phrase.id)}
+                                onChange={() =>
+                                  togglePhraseSelection(phrase.id)
+                                }
                                 className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                               />
 
@@ -502,10 +568,14 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
                                 disabled={isAdded}
                                 className={`p-1.5 rounded-lg transition-colors ${
                                   isAdded
-                                    ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 cursor-not-allowed'
-                                    : 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50'
+                                    ? "bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 cursor-not-allowed"
+                                    : "bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/50"
                                 }`}
-                                title={isAdded ? 'Added to vocabulary' : 'Add to vocabulary'}
+                                title={
+                                  isAdded
+                                    ? "Added to vocabulary"
+                                    : "Add to vocabulary"
+                                }
                               >
                                 {isAdded ? (
                                   <CheckCircle2 className="h-4 w-4" />

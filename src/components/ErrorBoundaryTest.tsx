@@ -1,32 +1,35 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { ErrorBoundary } from './ErrorBoundary';
-import { SectionErrorBoundary } from './SectionErrorBoundary';
+import React, { useState } from "react";
+import { ErrorBoundary } from "./ErrorBoundary";
+import { SectionErrorBoundary } from "./SectionErrorBoundary";
 
 /**
  * Test component that throws errors for testing error boundaries
  */
-function ThrowError({ shouldThrow = false, errorType = 'default' }: { 
-  shouldThrow?: boolean; 
-  errorType?: 'default' | 'async' | 'render' | 'effect';
+function ThrowError({
+  shouldThrow = false,
+  errorType = "default",
+}: {
+  shouldThrow?: boolean;
+  errorType?: "default" | "async" | "render" | "effect";
 }) {
   const [, forceUpdate] = useState({});
 
   React.useEffect(() => {
-    if (shouldThrow && errorType === 'effect') {
-      throw new Error('Test effect error for error boundary testing');
+    if (shouldThrow && errorType === "effect") {
+      throw new Error("Test effect error for error boundary testing");
     }
   }, [shouldThrow, errorType]);
 
-  if (shouldThrow && errorType === 'render') {
-    throw new Error('Test render error for error boundary testing');
+  if (shouldThrow && errorType === "render") {
+    throw new Error("Test render error for error boundary testing");
   }
 
   const handleAsyncError = async () => {
-    if (errorType === 'async') {
+    if (errorType === "async") {
       try {
-        throw new Error('Test async error for error boundary testing');
+        throw new Error("Test async error for error boundary testing");
       } catch (error) {
         // Simulate an unhandled promise rejection
         setTimeout(() => {
@@ -36,12 +39,12 @@ function ThrowError({ shouldThrow = false, errorType = 'default' }: {
     }
   };
 
-  if (shouldThrow && errorType === 'async') {
+  if (shouldThrow && errorType === "async") {
     handleAsyncError();
   }
 
-  if (shouldThrow && errorType === 'default') {
-    throw new Error('Test default error for error boundary testing');
+  if (shouldThrow && errorType === "default") {
+    throw new Error("Test default error for error boundary testing");
   }
 
   return (
@@ -66,51 +69,50 @@ function ThrowError({ shouldThrow = false, errorType = 'default' }: {
 export function ErrorBoundaryTest() {
   const [errorConfig, setErrorConfig] = useState({
     shouldThrow: false,
-    errorType: 'default' as 'default' | 'async' | 'render' | 'effect',
-    boundaryType: 'global' as 'global' | 'section'
+    errorType: "default" as "default" | "async" | "render" | "effect",
+    boundaryType: "global" as "global" | "section",
   });
 
   const triggerError = (type: typeof errorConfig.errorType) => {
     setErrorConfig({
       ...errorConfig,
       shouldThrow: true,
-      errorType: type
+      errorType: type,
     });
   };
 
   const resetError = () => {
     setErrorConfig({
       ...errorConfig,
-      shouldThrow: false
+      shouldThrow: false,
     });
   };
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV === "production") {
     return null; // Don't show in production
   }
 
-  const TestWrapper = errorConfig.boundaryType === 'section' ? 
-    ({ children }: { children: React.ReactNode }) => (
-      <SectionErrorBoundary 
-        sectionName="Test Section" 
-        sectionType="general"
-        onRetry={resetError}
-      >
-        {children}
-      </SectionErrorBoundary>
-    ) :
-    ({ children }: { children: React.ReactNode }) => (
-      <ErrorBoundary>
-        {children}
-      </ErrorBoundary>
-    );
+  const TestWrapper =
+    errorConfig.boundaryType === "section"
+      ? ({ children }: { children: React.ReactNode }) => (
+          <SectionErrorBoundary
+            sectionName="Test Section"
+            sectionType="general"
+            onRetry={resetError}
+          >
+            {children}
+          </SectionErrorBoundary>
+        )
+      : ({ children }: { children: React.ReactNode }) => (
+          <ErrorBoundary>{children}</ErrorBoundary>
+        );
 
   return (
     <div className="fixed bottom-4 right-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-50 max-w-sm">
       <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">
         Error Boundary Test Panel
       </h3>
-      
+
       <div className="space-y-3">
         <div>
           <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -118,10 +120,12 @@ export function ErrorBoundaryTest() {
           </label>
           <select
             value={errorConfig.boundaryType}
-            onChange={(e) => setErrorConfig({
-              ...errorConfig,
-              boundaryType: e.target.value as 'global' | 'section'
-            })}
+            onChange={(e) =>
+              setErrorConfig({
+                ...errorConfig,
+                boundaryType: e.target.value as "global" | "section",
+              })
+            }
             className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700 dark:text-white"
           >
             <option value="global">Global Error Boundary</option>
@@ -131,19 +135,19 @@ export function ErrorBoundaryTest() {
 
         <div className="flex flex-wrap gap-1">
           <button
-            onClick={() => triggerError('render')}
+            onClick={() => triggerError("render")}
             className="px-2 py-1 bg-red-600 text-white text-xs rounded hover:bg-red-700 transition-colors"
           >
             Render Error
           </button>
           <button
-            onClick={() => triggerError('effect')}
+            onClick={() => triggerError("effect")}
             className="px-2 py-1 bg-orange-600 text-white text-xs rounded hover:bg-orange-700 transition-colors"
           >
             Effect Error
           </button>
           <button
-            onClick={() => triggerError('default')}
+            onClick={() => triggerError("default")}
             className="px-2 py-1 bg-purple-600 text-white text-xs rounded hover:bg-purple-700 transition-colors"
           >
             Default Error

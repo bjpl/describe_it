@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState, memo, forwardRef } from 'react';
-import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ImageOff, Loader2 } from 'lucide-react';
+import React, { useState, memo, forwardRef } from "react";
+import Image from "next/image";
+import { motion, AnimatePresence } from "framer-motion";
+import { ImageOff, Loader2 } from "lucide-react";
 
 interface OptimizedImageProps {
   src: string;
@@ -15,19 +15,19 @@ interface OptimizedImageProps {
   sizes?: string;
   fill?: boolean;
   quality?: number;
-  placeholder?: 'blur' | 'empty';
+  placeholder?: "blur" | "empty";
   blurDataURL?: string;
   onLoad?: () => void;
   onError?: () => void;
-  aspectRatio?: 'square' | 'video' | 'portrait' | 'wide';
+  aspectRatio?: "square" | "video" | "portrait" | "wide";
   lazy?: boolean;
 }
 
 const aspectRatioClasses = {
-  square: 'aspect-square',
-  video: 'aspect-video',
-  portrait: 'aspect-[3/4]',
-  wide: 'aspect-[21/9]'
+  square: "aspect-square",
+  video: "aspect-video",
+  portrait: "aspect-[3/4]",
+  wide: "aspect-[21/9]",
 };
 
 // Generate blur placeholder for better loading experience
@@ -46,124 +46,133 @@ const shimmer = (w: number, h: number) => `
 </svg>`;
 
 const toBase64 = (str: string) =>
-  typeof window === 'undefined'
-    ? Buffer.from(str).toString('base64')
+  typeof window === "undefined"
+    ? Buffer.from(str).toString("base64")
     : window.btoa(str);
 
-export const OptimizedImage = memo(forwardRef<HTMLDivElement, OptimizedImageProps>(({
-  src,
-  alt,
-  width = 800,
-  height = 600,
-  className = '',
-  priority = false,
-  sizes = '(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw',
-  fill = false,
-  quality = 85,
-  placeholder = 'blur',
-  blurDataURL,
-  onLoad,
-  onError,
-  aspectRatio,
-  lazy = true
-}, ref) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [loadStartTime] = useState(Date.now());
+export const OptimizedImage = memo(
+  forwardRef<HTMLDivElement, OptimizedImageProps>(
+    (
+      {
+        src,
+        alt,
+        width = 800,
+        height = 600,
+        className = "",
+        priority = false,
+        sizes = "(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw",
+        fill = false,
+        quality = 85,
+        placeholder = "blur",
+        blurDataURL,
+        onLoad,
+        onError,
+        aspectRatio,
+        lazy = true,
+      },
+      ref,
+    ) => {
+      const [isLoading, setIsLoading] = useState(true);
+      const [hasError, setHasError] = useState(false);
+      const [loadStartTime] = useState(Date.now());
 
-  const handleLoad = () => {
-    setIsLoading(false);
-    const loadTime = Date.now() - loadStartTime;
-    
-    // Performance monitoring
-    if (typeof window !== 'undefined' && window.performance) {
-      window.performance.mark('image-loaded');
-      console.debug(`Image loaded in ${loadTime}ms:`, src);
-    }
-    
-    onLoad?.();
-  };
+      const handleLoad = () => {
+        setIsLoading(false);
+        const loadTime = Date.now() - loadStartTime;
 
-  const handleError = () => {
-    setIsLoading(false);
-    setHasError(true);
-    onError?.();
-  };
+        // Performance monitoring
+        if (typeof window !== "undefined" && window.performance) {
+          window.performance.mark("image-loaded");
+          console.debug(`Image loaded in ${loadTime}ms:`, src);
+        }
 
-  const containerClasses = `
+        onLoad?.();
+      };
+
+      const handleError = () => {
+        setIsLoading(false);
+        setHasError(true);
+        onError?.();
+      };
+
+      const containerClasses = `
     relative overflow-hidden bg-gray-100 dark:bg-gray-800 
-    ${aspectRatio ? aspectRatioClasses[aspectRatio] : ''}
+    ${aspectRatio ? aspectRatioClasses[aspectRatio] : ""}
     ${className}
   `.trim();
 
-  // Error fallback
-  if (hasError) {
-    return (
-      <div ref={ref} className={containerClasses}>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500"
-        >
-          <ImageOff className="w-8 h-8 mb-2" />
-          <span className="text-sm">Failed to load image</span>
-        </motion.div>
-      </div>
-    );
-  }
-
-  const imageProps = {
-    src,
-    alt,
-    onLoad: handleLoad,
-    onError: handleError,
-    className: 'object-cover transition-opacity duration-300',
-    quality,
-    placeholder: placeholder as any,
-    blurDataURL: blurDataURL || `data:image/svg+xml;base64,${toBase64(shimmer(width, height))}`,
-    sizes,
-    priority,
-    ...(fill ? { fill: true } : { width, height })
-  };
-
-  return (
-    <div ref={ref} className={containerClasses}>
-      {/* Loading overlay */}
-      <AnimatePresence>
-        {isLoading && (
-          <motion.div
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="absolute inset-0 z-10 flex items-center justify-center bg-gray-100 dark:bg-gray-800"
-          >
+      // Error fallback
+      if (hasError) {
+        return (
+          <div ref={ref} className={containerClasses}>
             <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500"
             >
-              <Loader2 className="w-6 h-6 text-gray-400" />
+              <ImageOff className="w-8 h-8 mb-2" />
+              <span className="text-sm">Failed to load image</span>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          </div>
+        );
+      }
 
-      {/* Optimized Next.js Image */}
-      <Image {...imageProps} />
-    </div>
-  );
-}));
+      const imageProps = {
+        src,
+        alt,
+        onLoad: handleLoad,
+        onError: handleError,
+        className: "object-cover transition-opacity duration-300",
+        quality,
+        placeholder: placeholder as any,
+        blurDataURL:
+          blurDataURL ||
+          `data:image/svg+xml;base64,${toBase64(shimmer(width, height))}`,
+        sizes,
+        priority,
+        ...(fill ? { fill: true } : { width, height }),
+      };
 
-OptimizedImage.displayName = 'OptimizedImage';
+      return (
+        <div ref={ref} className={containerClasses}>
+          {/* Loading overlay */}
+          <AnimatePresence>
+            {isLoading && (
+              <motion.div
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="absolute inset-0 z-10 flex items-center justify-center bg-gray-100 dark:bg-gray-800"
+              >
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                >
+                  <Loader2 className="w-6 h-6 text-gray-400" />
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Optimized Next.js Image */}
+          <Image {...imageProps} />
+        </div>
+      );
+    },
+  ),
+);
+
+OptimizedImage.displayName = "OptimizedImage";
 
 // Preloader component for critical images
 export const ImagePreloader = memo(({ urls }: { urls: string[] }) => {
   React.useEffect(() => {
     // Only run in browser environment
-    if (typeof window !== 'undefined') {
-      urls.forEach(url => {
-        const link = document.createElement('link');
-        link.rel = 'prefetch';
+    if (typeof window !== "undefined") {
+      urls.forEach((url) => {
+        const link = document.createElement("link");
+        link.rel = "prefetch";
         link.href = url;
-        link.as = 'image';
+        link.as = "image";
         document.head.appendChild(link);
       });
     }
@@ -172,7 +181,7 @@ export const ImagePreloader = memo(({ urls }: { urls: string[] }) => {
   return null;
 });
 
-ImagePreloader.displayName = 'ImagePreloader';
+ImagePreloader.displayName = "ImagePreloader";
 
 // Hook for image performance monitoring
 export const useImagePerformance = () => {
@@ -180,19 +189,23 @@ export const useImagePerformance = () => {
     totalImages: 0,
     loadedImages: 0,
     failedImages: 0,
-    averageLoadTime: 0
+    averageLoadTime: 0,
   });
 
-  const recordImageLoad = React.useCallback((loadTime: number, success: boolean) => {
-    setMetrics(prev => ({
-      totalImages: prev.totalImages + 1,
-      loadedImages: success ? prev.loadedImages + 1 : prev.loadedImages,
-      failedImages: success ? prev.failedImages : prev.failedImages + 1,
-      averageLoadTime: success 
-        ? (prev.averageLoadTime * prev.loadedImages + loadTime) / (prev.loadedImages + 1)
-        : prev.averageLoadTime
-    }));
-  }, []);
+  const recordImageLoad = React.useCallback(
+    (loadTime: number, success: boolean) => {
+      setMetrics((prev) => ({
+        totalImages: prev.totalImages + 1,
+        loadedImages: success ? prev.loadedImages + 1 : prev.loadedImages,
+        failedImages: success ? prev.failedImages : prev.failedImages + 1,
+        averageLoadTime: success
+          ? (prev.averageLoadTime * prev.loadedImages + loadTime) /
+            (prev.loadedImages + 1)
+          : prev.averageLoadTime,
+      }));
+    },
+    [],
+  );
 
   return { metrics, recordImageLoad };
 };

@@ -1,10 +1,10 @@
-'use client'
+"use client";
 
-import { useEffect, useState, ReactNode } from 'react'
+import { useEffect, useState, ReactNode } from "react";
 
 interface NoSSRProps {
-  children: ReactNode
-  fallback?: ReactNode
+  children: ReactNode;
+  fallback?: ReactNode;
 }
 
 /**
@@ -12,17 +12,17 @@ interface NoSSRProps {
  * Only renders children on the client side after hydration
  */
 export function NoSSR({ children, fallback = null }: NoSSRProps) {
-  const [hasMounted, setHasMounted] = useState(false)
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
-    setHasMounted(true)
-  }, [])
+    setHasMounted(true);
+  }, []);
 
   if (!hasMounted) {
-    return <>{fallback}</>
+    return <>{fallback}</>;
   }
 
-  return <>{children}</>
+  return <>{children}</>;
 }
 
 /**
@@ -30,15 +30,15 @@ export function NoSSR({ children, fallback = null }: NoSSRProps) {
  */
 export function withNoSSR<P extends object>(
   Component: React.ComponentType<P>,
-  fallback?: ReactNode
+  fallback?: ReactNode,
 ) {
   const WrappedComponent = (props: P) => (
     <NoSSR fallback={fallback}>
       <Component {...props} />
     </NoSSR>
-  )
+  );
 
-  WrappedComponent.displayName = `withNoSSR(${Component.displayName || Component.name})`
-  
-  return WrappedComponent
+  WrappedComponent.displayName = `withNoSSR(${Component.displayName || Component.name})`;
+
+  return WrappedComponent;
 }

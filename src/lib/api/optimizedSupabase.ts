@@ -1,5 +1,5 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { cacheManager } from '@/components/Performance/AdvancedCaching';
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { cacheManager } from "@/components/Performance/AdvancedCaching";
 
 interface QueryConfig {
   cacheable?: boolean;
@@ -20,31 +20,45 @@ interface QueryMetrics {
 class OptimizedSupabaseClient {
   private client: SupabaseClient;
   private queryMetrics: Map<string, QueryMetrics[]> = new Map();
-  private batchQueue: Array<{ query: () => Promise<any>; resolve: Function; reject: Function }> = [];
+  private batchQueue: Array<{
+    query: () => Promise<any>;
+    resolve: Function;
+    reject: Function;
+  }> = [];
   private batchTimer: NodeJS.Timeout | null = null;
 
   constructor() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.warn('Supabase credentials not found. Some features will use demo mode.');
+      // Create a mock client for demo mode
+      this.client = null as any;
+      return;
+    }
+
     this.client = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      supabaseUrl,
+      supabaseKey,
       {
         // Connection pooling and performance optimizations
         db: {
-          schema: 'public'
+          schema: "public",
         },
         realtime: {
           // Optimize realtime connections
           params: {
-            eventsPerSecond: 10
-          }
+            eventsPerSecond: 10,
+          },
         },
         auth: {
           // Optimize auth flow
           persistSession: true,
           autoRefreshToken: true,
-          detectSessionInUrl: true
-        }
-      }
+          detectSessionInUrl: true,
+        },
+      },
     );
 
     this.setupConnectionOptimizations();
@@ -63,23 +77,23 @@ class OptimizedSupabaseClient {
   private async warmConnection() {
     try {
       // Simple query to establish connection
-      await this.client.from('user_preferences').select('count').limit(1);
+      await this.client.from("user_preferences").select("count").limit(1);
     } catch (error) {
-      console.debug('Connection warming failed:', error);
+      console.debug("Connection warming failed:", error);
     }
   }
 
   private async healthCheck() {
     try {
       const start = performance.now();
-      await this.client.from('user_preferences').select('count').limit(1);
+      await this.client.from("user_preferences").select("count").limit(1);
       const latency = performance.now() - start;
-      
+
       if (latency > 2000) {
-        console.warn('High database latency detected:', latency, 'ms');
+        console.warn("High database latency detected:", latency, "ms");
       }
     } catch (error) {
-      console.error('Database health check failed:', error);
+      console.error("Database health check failed:", error);
     }
   }
 
@@ -87,7 +101,7 @@ class OptimizedSupabaseClient {
   async select<T = any>(
     table: string,
     query: string,
-    config: QueryConfig = {}
+    config: QueryConfig = {},
   ): Promise<{ data: T[] | null; error: any; metrics: QueryMetrics }> {
     const {
       cacheable = true,
@@ -95,7 +109,7 @@ class OptimizedSupabaseClient {
       cacheTTL = 5 * 60 * 1000, // 5 minutes
       timeout = 10000,
       retries = 3,
-      batch = false
+      batch = false,
     } = config;
 
     const startTime = performance.now();
@@ -104,13 +118,13 @@ class OptimizedSupabaseClient {
 
     // Check cache first
     if (cacheable) {
-      const cached = cacheManager.get('api', cacheKey);
+      const cached = cacheManager.get("api", cacheKey);
       if (cached) {
         const metrics: QueryMetrics = {
           queryTime: performance.now() - startTime,
           cacheHit: true,
           resultSize: this.estimateSize(cached),
-          retryCount: 0
+          retryCount: 0,
         };
 
         this.recordMetrics(table, metrics);
@@ -118,14 +132,15 @@ class OptimizedSupabaseClient {
       }
     }
 
-    const executeQuery = async (): Promise<{ data: T[] | null; error: any }> => {
-      const queryPromise = this.client
-        .from(table)
-        .select(query);
+    const executeQuery = async (): Promise<{
+      data: T[] | null;
+      error: any;
+    }> => {
+      const queryPromise = this.client.from(table).select(query);
 
       // Add timeout
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Query timeout')), timeout);
+        setTimeout(() => reject(new Error("Query timeout")), timeout);
       });
 
       try {
@@ -141,17 +156,17 @@ class OptimizedSupabaseClient {
     for (retryCount = 0; retryCount <= retries; retryCount++) {
       try {
         const result = await executeQuery();
-        
+
         // Cache successful results
         if (cacheable && result.data && !result.error) {
-          cacheManager.set('api', cacheKey, result.data, cacheTTL);
+          cacheManager.set("api", cacheKey, result.data, cacheTTL);
         }
 
         const metrics: QueryMetrics = {
           queryTime: performance.now() - startTime,
           cacheHit,
           resultSize: this.estimateSize(result.data),
-          retryCount
+          retryCount,
         };
 
         this.recordMetrics(table, metrics);
@@ -168,7 +183,7 @@ class OptimizedSupabaseClient {
       queryTime: performance.now() - startTime,
       cacheHit,
       resultSize: 0,
-      retryCount
+      retryCount,
     };
 
     this.recordMetrics(table, metrics);
@@ -179,7 +194,7 @@ class OptimizedSupabaseClient {
   async insert<T = any>(
     table: string,
     data: T | T[],
-    config: QueryConfig = {}
+    config: QueryConfig = {},
   ): Promise<{ data: T[] | null; error: any; metrics: QueryMetrics }> {
     const startTime = performance.now();
     const { timeout = 10000, batch = true } = config;
@@ -195,7 +210,7 @@ class OptimizedSupabaseClient {
 
     try {
       const result = await executeInsert();
-      
+
       // Invalidate related caches
       this.invalidateTableCache(table);
 
@@ -203,7 +218,7 @@ class OptimizedSupabaseClient {
         queryTime: performance.now() - startTime,
         cacheHit: false,
         resultSize: this.estimateSize(result.data),
-        retryCount: 0
+        retryCount: 0,
       };
 
       this.recordMetrics(table, metrics);
@@ -213,7 +228,7 @@ class OptimizedSupabaseClient {
         queryTime: performance.now() - startTime,
         cacheHit: false,
         resultSize: 0,
-        retryCount: 0
+        retryCount: 0,
       };
 
       this.recordMetrics(table, metrics);
@@ -230,7 +245,7 @@ class OptimizedSupabaseClient {
       const batch = data.slice(i, i + batchSize);
       const batchPromise = this.client.from(table).insert(batch);
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Batch insert timeout')), timeout);
+        setTimeout(() => reject(new Error("Batch insert timeout")), timeout);
       });
 
       const result = await Promise.race([batchPromise, timeoutPromise]);
@@ -238,8 +253,8 @@ class OptimizedSupabaseClient {
     }
 
     return {
-      data: results.flatMap(r => r.data || []),
-      error: results.find(r => r.error)?.error || null
+      data: results.flatMap((r) => r.data || []),
+      error: results.find((r) => r.error)?.error || null,
     };
   }
 
@@ -248,7 +263,7 @@ class OptimizedSupabaseClient {
     table: string,
     data: Partial<T>,
     conditions: Record<string, any>,
-    config: QueryConfig = {}
+    config: QueryConfig = {},
   ): Promise<{ data: T[] | null; error: any; metrics: QueryMetrics }> {
     const startTime = performance.now();
     const { timeout = 10000 } = config;
@@ -262,11 +277,11 @@ class OptimizedSupabaseClient {
       });
 
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Update timeout')), timeout);
+        setTimeout(() => reject(new Error("Update timeout")), timeout);
       });
 
       const result = await Promise.race([query, timeoutPromise]);
-      
+
       // Invalidate related caches
       this.invalidateTableCache(table);
 
@@ -274,7 +289,7 @@ class OptimizedSupabaseClient {
         queryTime: performance.now() - startTime,
         cacheHit: false,
         resultSize: this.estimateSize(result.data),
-        retryCount: 0
+        retryCount: 0,
       };
 
       this.recordMetrics(table, metrics);
@@ -284,7 +299,7 @@ class OptimizedSupabaseClient {
         queryTime: performance.now() - startTime,
         cacheHit: false,
         resultSize: 0,
-        retryCount: 0
+        retryCount: 0,
       };
 
       this.recordMetrics(table, metrics);
@@ -296,7 +311,7 @@ class OptimizedSupabaseClient {
   async delete(
     table: string,
     conditions: Record<string, any>,
-    config: QueryConfig = {}
+    config: QueryConfig = {},
   ): Promise<{ data: any[] | null; error: any; metrics: QueryMetrics }> {
     const startTime = performance.now();
     const { timeout = 10000 } = config;
@@ -314,11 +329,11 @@ class OptimizedSupabaseClient {
       });
 
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('Delete timeout')), timeout);
+        setTimeout(() => reject(new Error("Delete timeout")), timeout);
       });
 
       const result = await Promise.race([query, timeoutPromise]);
-      
+
       // Invalidate related caches
       this.invalidateTableCache(table);
 
@@ -326,7 +341,7 @@ class OptimizedSupabaseClient {
         queryTime: performance.now() - startTime,
         cacheHit: false,
         resultSize: 0,
-        retryCount: 0
+        retryCount: 0,
       };
 
       this.recordMetrics(table, metrics);
@@ -336,7 +351,7 @@ class OptimizedSupabaseClient {
         queryTime: performance.now() - startTime,
         cacheHit: false,
         resultSize: 0,
-        retryCount: 0
+        retryCount: 0,
       };
 
       this.recordMetrics(table, metrics);
@@ -348,13 +363,13 @@ class OptimizedSupabaseClient {
   async rpc<T = any>(
     functionName: string,
     params: Record<string, any> = {},
-    config: QueryConfig = {}
+    config: QueryConfig = {},
   ): Promise<{ data: T | null; error: any; metrics: QueryMetrics }> {
     const {
       cacheable = false,
       cacheKey = `rpc:${functionName}:${JSON.stringify(params)}`,
       cacheTTL = 5 * 60 * 1000,
-      timeout = 15000
+      timeout = 15000,
     } = config;
 
     const startTime = performance.now();
@@ -362,13 +377,13 @@ class OptimizedSupabaseClient {
 
     // Check cache for RPC calls
     if (cacheable) {
-      const cached = cacheManager.get('api', cacheKey);
+      const cached = cacheManager.get("api", cacheKey);
       if (cached) {
         const metrics: QueryMetrics = {
           queryTime: performance.now() - startTime,
           cacheHit: true,
           resultSize: this.estimateSize(cached),
-          retryCount: 0
+          retryCount: 0,
         };
 
         return { data: cached as T, error: null, metrics };
@@ -378,21 +393,21 @@ class OptimizedSupabaseClient {
     try {
       const rpcPromise = this.client.rpc(functionName, params);
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(() => reject(new Error('RPC timeout')), timeout);
+        setTimeout(() => reject(new Error("RPC timeout")), timeout);
       });
 
       const result = await Promise.race([rpcPromise, timeoutPromise]);
 
       // Cache successful RPC results
       if (cacheable && result.data && !result.error) {
-        cacheManager.set('api', cacheKey, result.data, cacheTTL);
+        cacheManager.set("api", cacheKey, result.data, cacheTTL);
       }
 
       const metrics: QueryMetrics = {
         queryTime: performance.now() - startTime,
         cacheHit,
         resultSize: this.estimateSize(result.data),
-        retryCount: 0
+        retryCount: 0,
       };
 
       return { ...result, metrics };
@@ -401,7 +416,7 @@ class OptimizedSupabaseClient {
         queryTime: performance.now() - startTime,
         cacheHit,
         resultSize: 0,
-        retryCount: 0
+        retryCount: 0,
       };
 
       return { data: null, error, metrics };
@@ -414,7 +429,7 @@ class OptimizedSupabaseClient {
       isConnected: true, // Would check actual connection in real implementation
       latency: this.getAverageLatency(),
       cacheHitRate: this.getCacheHitRate(),
-      totalQueries: this.getTotalQueries()
+      totalQueries: this.getTotalQueries(),
     };
   }
 
@@ -425,22 +440,24 @@ class OptimizedSupabaseClient {
       averageQueryTime: 0,
       cacheHitRate: 0,
       slowQueries: [] as Array<{ table: string; time: number }>,
-      tableStats: {} as Record<string, { queries: number; avgTime: number }>
+      tableStats: {} as Record<string, { queries: number; avgTime: number }>,
     };
 
     for (const [table, tableMetrics] of this.queryMetrics) {
       metrics.totalQueries += tableMetrics.length;
-      
-      const avgTime = tableMetrics.reduce((sum, m) => sum + m.queryTime, 0) / tableMetrics.length;
-      const cacheHits = tableMetrics.filter(m => m.cacheHit).length;
-      
+
+      const avgTime =
+        tableMetrics.reduce((sum, m) => sum + m.queryTime, 0) /
+        tableMetrics.length;
+      const cacheHits = tableMetrics.filter((m) => m.cacheHit).length;
+
       metrics.tableStats[table] = {
         queries: tableMetrics.length,
-        avgTime
+        avgTime,
       };
 
       // Find slow queries (>2s)
-      tableMetrics.forEach(metric => {
+      tableMetrics.forEach((metric) => {
         if (metric.queryTime > 2000) {
           metrics.slowQueries.push({ table, time: metric.queryTime });
         }
@@ -451,7 +468,8 @@ class OptimizedSupabaseClient {
     }
 
     metrics.averageQueryTime /= metrics.totalQueries || 1;
-    metrics.cacheHitRate = (metrics.cacheHitRate / metrics.totalQueries || 0) * 100;
+    metrics.cacheHitRate =
+      (metrics.cacheHitRate / metrics.totalQueries || 0) * 100;
 
     return metrics;
   }
@@ -461,10 +479,10 @@ class OptimizedSupabaseClient {
     if (!this.queryMetrics.has(table)) {
       this.queryMetrics.set(table, []);
     }
-    
+
     const tableMetrics = this.queryMetrics.get(table)!;
     tableMetrics.push(metrics);
-    
+
     // Keep only last 100 metrics per table
     if (tableMetrics.length > 100) {
       tableMetrics.shift();
@@ -474,9 +492,9 @@ class OptimizedSupabaseClient {
   private invalidateTableCache(table: string) {
     // Clear all cache entries related to this table
     const stats = cacheManager.getStats();
-    stats.entries.forEach(entry => {
+    stats.entries.forEach((entry) => {
       if (entry.key.startsWith(`${table}:`)) {
-        cacheManager.delete('api', entry.key);
+        cacheManager.delete("api", entry.key);
       }
     });
   }
@@ -490,24 +508,29 @@ class OptimizedSupabaseClient {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private getAverageLatency(): number {
     const allMetrics = Array.from(this.queryMetrics.values()).flat();
     if (allMetrics.length === 0) return 0;
-    return allMetrics.reduce((sum, m) => sum + m.queryTime, 0) / allMetrics.length;
+    return (
+      allMetrics.reduce((sum, m) => sum + m.queryTime, 0) / allMetrics.length
+    );
   }
 
   private getCacheHitRate(): number {
     const allMetrics = Array.from(this.queryMetrics.values()).flat();
     if (allMetrics.length === 0) return 0;
-    const cacheHits = allMetrics.filter(m => m.cacheHit).length;
+    const cacheHits = allMetrics.filter((m) => m.cacheHit).length;
     return (cacheHits / allMetrics.length) * 100;
   }
 
   private getTotalQueries(): number {
-    return Array.from(this.queryMetrics.values()).reduce((sum, metrics) => sum + metrics.length, 0);
+    return Array.from(this.queryMetrics.values()).reduce(
+      (sum, metrics) => sum + metrics.length,
+      0,
+    );
   }
 
   // Expose the raw client for edge cases

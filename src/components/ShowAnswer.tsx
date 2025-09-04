@@ -1,18 +1,18 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Eye, 
-  EyeOff, 
-  Lightbulb, 
-  Volume2, 
-  Copy, 
-  Check, 
+import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Eye,
+  EyeOff,
+  Lightbulb,
+  Volume2,
+  Copy,
+  Check,
   BookOpen,
   AlertCircle,
-  Target
-} from 'lucide-react';
+  Target,
+} from "lucide-react";
 
 interface ShowAnswerProps {
   questionId: string;
@@ -20,7 +20,7 @@ interface ShowAnswerProps {
   explanation?: string;
   hints?: string[];
   pronunciation?: string;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  difficulty?: "beginner" | "intermediate" | "advanced";
   category?: string;
   isRevealed: boolean;
   onReveal: () => void;
@@ -34,12 +34,12 @@ export function ShowAnswer({
   explanation,
   hints = [],
   pronunciation,
-  difficulty = 'intermediate',
+  difficulty = "intermediate",
   category,
   isRevealed,
   onReveal,
   onHide,
-  className = ''
+  className = "",
 }: ShowAnswerProps) {
   const [showHints, setShowHints] = useState(false);
   const [copiedAnswer, setCopiedAnswer] = useState(false);
@@ -50,14 +50,14 @@ export function ShowAnswer({
       setCopiedAnswer(true);
       setTimeout(() => setCopiedAnswer(false), 2000);
     } catch (error) {
-      console.error('Failed to copy answer:', error);
+      console.error("Failed to copy answer:", error);
     }
   };
 
   const handleSpeak = () => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(answer);
-      utterance.lang = 'es-ES'; // Spanish pronunciation
+      utterance.lang = "es-ES"; // Spanish pronunciation
       utterance.rate = 0.8; // Slightly slower for learning
       speechSynthesis.speak(utterance);
     }
@@ -65,33 +65,37 @@ export function ShowAnswer({
 
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
-      case 'beginner':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'advanced':
-        return 'bg-red-100 text-red-800 border-red-200';
+      case "beginner":
+        return "bg-green-100 text-green-800 border-green-200";
+      case "intermediate":
+        return "bg-yellow-100 text-yellow-800 border-yellow-200";
+      case "advanced":
+        return "bg-red-100 text-red-800 border-red-200";
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return "bg-gray-100 text-gray-800 border-gray-200";
     }
   };
 
   const getCategoryColor = (cat?: string) => {
-    if (!cat) return 'bg-gray-100 text-gray-800 border-gray-200';
-    
+    if (!cat) return "bg-gray-100 text-gray-800 border-gray-200";
+
     const colors: Record<string, string> = {
-      vocabulary: 'bg-blue-100 text-blue-800 border-blue-200',
-      grammar: 'bg-purple-100 text-purple-800 border-purple-200',
-      culture: 'bg-orange-100 text-orange-800 border-orange-200',
-      conversation: 'bg-green-100 text-green-800 border-green-200',
-      listening: 'bg-pink-100 text-pink-800 border-pink-200',
+      vocabulary: "bg-blue-100 text-blue-800 border-blue-200",
+      grammar: "bg-purple-100 text-purple-800 border-purple-200",
+      culture: "bg-orange-100 text-orange-800 border-orange-200",
+      conversation: "bg-green-100 text-green-800 border-green-200",
+      listening: "bg-pink-100 text-pink-800 border-pink-200",
     };
-    
-    return colors[cat.toLowerCase()] || 'bg-gray-100 text-gray-800 border-gray-200';
+
+    return (
+      colors[cat.toLowerCase()] || "bg-gray-100 text-gray-800 border-gray-200"
+    );
   };
 
   return (
-    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}>
+    <div
+      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden ${className}`}
+    >
       {/* Header */}
       <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
@@ -102,15 +106,19 @@ export function ShowAnswer({
                 Answer & Explanation
               </h3>
             </div>
-            
+
             {/* Badges */}
             <div className="flex items-center gap-2">
-              <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(difficulty)}`}>
+              <span
+                className={`px-2 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(difficulty)}`}
+              >
                 {difficulty}
               </span>
-              
+
               {category && (
-                <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(category)}`}>
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium border ${getCategoryColor(category)}`}
+                >
                   {category}
                 </span>
               )}
@@ -122,8 +130,8 @@ export function ShowAnswer({
             onClick={isRevealed ? onHide : onReveal}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               isRevealed
-                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
-                : 'bg-blue-600 text-white hover:bg-blue-700'
+                ? "bg-gray-100 text-gray-700 hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+                : "bg-blue-600 text-white hover:bg-blue-700"
             }`}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -148,7 +156,7 @@ export function ShowAnswer({
         {isRevealed && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
             className="overflow-hidden"
@@ -164,11 +172,11 @@ export function ShowAnswer({
                         Correct Answer
                       </span>
                     </div>
-                    
+
                     <p className="text-lg font-semibold text-green-900 dark:text-green-100 mb-2">
                       {answer}
                     </p>
-                    
+
                     {pronunciation && (
                       <p className="text-sm text-green-700 dark:text-green-300 italic">
                         Pronunciation: {pronunciation}
@@ -230,14 +238,14 @@ export function ShowAnswer({
                     className="flex items-center gap-2 text-sm font-medium text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
                   >
                     <Lightbulb className="w-4 h-4" />
-                    {showHints ? 'Hide Hints' : `Show Hints (${hints.length})`}
+                    {showHints ? "Hide Hints" : `Show Hints (${hints.length})`}
                   </button>
 
                   <AnimatePresence>
                     {showHints && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
+                        animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"

@@ -25,8 +25,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -50,7 +50,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod --confirm'
+          vercel-args: "--prod --confirm"
           alias-domains: |
             describe-it-staging.vercel.app
 
@@ -93,8 +93,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -120,7 +120,7 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--prod --confirm'
+          vercel-args: "--prod --confirm"
           alias-domains: |
             describe-it.vercel.app
             www.describe-it.com
@@ -146,7 +146,7 @@ jobs:
         with:
           status: success
           fields: repo,message,commit,author,action,eventName,ref,workflow
-          text: '🚀 Successfully deployed to production!'
+          text: "🚀 Successfully deployed to production!"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
@@ -164,13 +164,13 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--rollback'
+          vercel-args: "--rollback"
 
       - name: Notify team of rollback
         uses: 8398a7/action-slack@v3
         with:
           status: failure
           fields: repo,message,commit,author,action,eventName,ref,workflow
-          text: '⚠️ Production deployment failed and was rolled back!'
+          text: "⚠️ Production deployment failed and was rolled back!"
         env:
           SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

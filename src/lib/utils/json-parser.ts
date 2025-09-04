@@ -27,16 +27,21 @@ export class RobustJSONParser {
    * Main parsing method with multiple fallback strategies
    */
   static parse<T = any>(
-    content: string, 
-    options: JSONParserOptions = {}
+    content: string,
+    options: JSONParserOptions = {},
   ): ParseResult<T> {
-    const { logging = true, fallbackValue, maxRetries = 3, strictMode = false } = options;
-    
-    if (!content || typeof content !== 'string') {
+    const {
+      logging = true,
+      fallbackValue,
+      maxRetries = 3,
+      strictMode = false,
+    } = options;
+
+    if (!content || typeof content !== "string") {
       return {
         success: false,
-        error: 'Invalid or empty content provided',
-        originalContent: content
+        error: "Invalid or empty content provided",
+        originalContent: content,
       };
     }
 
@@ -45,30 +50,37 @@ export class RobustJSONParser {
       () => this.parseFromMarkdownBlocks(content),
       () => this.extractAndParseJSON(content),
       () => this.parseWithCleaning(content),
-      () => this.parseWithRepairs(content)
+      () => this.parseWithRepairs(content),
     ];
 
     if (!strictMode) {
       strategies.push(() => this.parseWithAggressiveCleaning(content));
     }
 
-    let lastError = '';
-    
-    for (let attempt = 0; attempt < Math.min(maxRetries, strategies.length); attempt++) {
+    let lastError = "";
+
+    for (
+      let attempt = 0;
+      attempt < Math.min(maxRetries, strategies.length);
+      attempt++
+    ) {
       try {
         const strategy = strategies[attempt];
         const result = strategy();
-        
+
         if (result.success) {
           if (logging) {
-            console.log(`✅ JSON parsed successfully using method: ${result.method}`);
+            console.log(
+              `✅ JSON parsed successfully using method: ${result.method}`,
+            );
           }
           return result as ParseResult<T>;
         }
-        
-        lastError = result.error || 'Unknown parsing error';
+
+        lastError = result.error || "Unknown parsing error";
       } catch (error) {
-        lastError = error instanceof Error ? error.message : 'Parsing strategy failed';
+        lastError =
+          error instanceof Error ? error.message : "Parsing strategy failed";
         if (logging) {
           console.warn(`❌ Strategy ${attempt + 1} failed:`, lastError);
         }
@@ -78,20 +90,20 @@ export class RobustJSONParser {
     // Final fallback
     if (fallbackValue !== undefined) {
       if (logging) {
-        console.warn('🔄 Using fallback value due to parsing failure');
+        console.warn("🔄 Using fallback value due to parsing failure");
       }
       return {
         success: true,
         data: fallbackValue,
-        method: 'fallback',
-        originalContent: content
+        method: "fallback",
+        originalContent: content,
       };
     }
 
     return {
       success: false,
       error: `All parsing strategies failed. Last error: ${lastError}`,
-      originalContent: content
+      originalContent: content,
     };
   }
 
@@ -105,13 +117,13 @@ export class RobustJSONParser {
       return {
         success: true,
         data: parsed,
-        method: 'direct'
+        method: "direct",
       };
     } catch (error) {
       return {
         success: false,
-        error: `Direct JSON parse failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        method: 'direct'
+        error: `Direct JSON parse failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        method: "direct",
       };
     }
   }
@@ -124,12 +136,12 @@ export class RobustJSONParser {
       // Reset regex lastIndex to ensure fresh search
       this.JSON_BLOCK_REGEX.lastIndex = 0;
       const matches = Array.from(content.matchAll(this.JSON_BLOCK_REGEX));
-      
+
       if (matches.length === 0) {
         return {
           success: false,
-          error: 'No markdown code blocks found',
-          method: 'markdown'
+          error: "No markdown code blocks found",
+          method: "markdown",
         };
       }
 
@@ -142,7 +154,7 @@ export class RobustJSONParser {
             return {
               success: true,
               data: parsed,
-              method: 'markdown'
+              method: "markdown",
             };
           } catch (error) {
             continue; // Try next block
@@ -152,14 +164,14 @@ export class RobustJSONParser {
 
       return {
         success: false,
-        error: 'Found code blocks but none contained valid JSON',
-        method: 'markdown'
+        error: "Found code blocks but none contained valid JSON",
+        method: "markdown",
       };
     } catch (error) {
       return {
         success: false,
-        error: `Markdown extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        method: 'markdown'
+        error: `Markdown extraction failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        method: "markdown",
       };
     }
   }
@@ -177,7 +189,7 @@ export class RobustJSONParser {
           return {
             success: true,
             data: parsed,
-            method: 'extraction-object'
+            method: "extraction-object",
           };
         } catch (error) {
           // Continue to array extraction
@@ -192,7 +204,7 @@ export class RobustJSONParser {
           return {
             success: true,
             data: parsed,
-            method: 'extraction-array'
+            method: "extraction-array",
           };
         } catch (error) {
           // Continue to next strategy
@@ -201,14 +213,14 @@ export class RobustJSONParser {
 
       return {
         success: false,
-        error: 'No valid JSON objects or arrays found in content',
-        method: 'extraction'
+        error: "No valid JSON objects or arrays found in content",
+        method: "extraction",
       };
     } catch (error) {
       return {
         success: false,
-        error: `JSON extraction failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        method: 'extraction'
+        error: `JSON extraction failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        method: "extraction",
       };
     }
   }
@@ -219,25 +231,25 @@ export class RobustJSONParser {
   private static parseWithCleaning<T>(content: string): ParseResult<T> {
     try {
       let cleaned = content.trim();
-      
+
       // Remove common prefixes/suffixes
-      cleaned = cleaned.replace(/^[^{[]*([{[])/, '$1');
-      cleaned = cleaned.replace(/([}\]])[^}\]]*$/, '$1');
-      
+      cleaned = cleaned.replace(/^[^{[]*([{[])/, "$1");
+      cleaned = cleaned.replace(/([}\]])[^}\]]*$/, "$1");
+
       // Fix common JSON issues
       cleaned = this.fixCommonJSONIssues(cleaned);
-      
+
       const parsed = JSON.parse(cleaned);
       return {
         success: true,
         data: parsed,
-        method: 'cleaned'
+        method: "cleaned",
       };
     } catch (error) {
       return {
         success: false,
-        error: `Cleaning strategy failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        method: 'cleaned'
+        error: `Cleaning strategy failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        method: "cleaned",
       };
     }
   }
@@ -248,27 +260,27 @@ export class RobustJSONParser {
   private static parseWithRepairs<T>(content: string): ParseResult<T> {
     try {
       let repaired = content.trim();
-      
+
       // Extract potential JSON from content
       const jsonMatch = repaired.match(/[{[][\s\S]*[}\]]/);
       if (jsonMatch) {
         repaired = jsonMatch[0];
       }
-      
+
       // Apply repairs
       repaired = this.repairJSON(repaired);
-      
+
       const parsed = JSON.parse(repaired);
       return {
         success: true,
         data: parsed,
-        method: 'repaired'
+        method: "repaired",
       };
     } catch (error) {
       return {
         success: false,
-        error: `Repair strategy failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        method: 'repaired'
+        error: `Repair strategy failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        method: "repaired",
       };
     }
   }
@@ -276,30 +288,32 @@ export class RobustJSONParser {
   /**
    * Strategy 6: Aggressive cleaning (only in non-strict mode)
    */
-  private static parseWithAggressiveCleaning<T>(content: string): ParseResult<T> {
+  private static parseWithAggressiveCleaning<T>(
+    content: string,
+  ): ParseResult<T> {
     try {
       let aggressive = content.trim();
-      
+
       // Remove all non-JSON characters before first { or [
-      aggressive = aggressive.replace(/^[^{[]*/, '');
+      aggressive = aggressive.replace(/^[^{[]*/, "");
       // Remove all non-JSON characters after last } or ]
-      aggressive = aggressive.replace(/[^}\]]*$/, '');
-      
+      aggressive = aggressive.replace(/[^}\]]*$/, "");
+
       // Apply all fixes
       aggressive = this.fixCommonJSONIssues(aggressive);
       aggressive = this.repairJSON(aggressive);
-      
+
       const parsed = JSON.parse(aggressive);
       return {
         success: true,
         data: parsed,
-        method: 'aggressive'
+        method: "aggressive",
       };
     } catch (error) {
       return {
         success: false,
-        error: `Aggressive cleaning failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
-        method: 'aggressive'
+        error: `Aggressive cleaning failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+        method: "aggressive",
       };
     }
   }
@@ -309,23 +323,23 @@ export class RobustJSONParser {
    */
   private static fixCommonJSONIssues(json: string): string {
     let fixed = json;
-    
+
     // Remove trailing commas
-    fixed = fixed.replace(/,(\s*[}\]])/g, '$1');
-    
+    fixed = fixed.replace(/,(\s*[}\]])/g, "$1");
+
     // Fix single quotes to double quotes (basic case)
     fixed = fixed.replace(/'([^']*)':/g, '"$1":');
     fixed = fixed.replace(/:(\s*)'([^']*)'/g, ': "$2"');
-    
+
     // Remove comments (basic /* */ and // styles)
-    fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, '');
-    fixed = fixed.replace(/\/\/.*$/gm, '');
-    
+    fixed = fixed.replace(/\/\*[\s\S]*?\*\//g, "");
+    fixed = fixed.replace(/\/\/.*$/gm, "");
+
     // Fix common escape sequences
-    fixed = fixed.replace(/\n/g, '\\n');
-    fixed = fixed.replace(/\r/g, '\\r');
-    fixed = fixed.replace(/\t/g, '\\t');
-    
+    fixed = fixed.replace(/\n/g, "\\n");
+    fixed = fixed.replace(/\r/g, "\\r");
+    fixed = fixed.replace(/\t/g, "\\t");
+
     return fixed;
   }
 
@@ -334,23 +348,23 @@ export class RobustJSONParser {
    */
   private static repairJSON(json: string): string {
     let repaired = json;
-    
+
     // Ensure proper brackets
     const openBraces = (repaired.match(/\{/g) || []).length;
     const closeBraces = (repaired.match(/\}/g) || []).length;
     const openBrackets = (repaired.match(/\[/g) || []).length;
     const closeBrackets = (repaired.match(/\]/g) || []).length;
-    
+
     // Add missing closing braces
     if (openBraces > closeBraces) {
-      repaired += '}'.repeat(openBraces - closeBraces);
+      repaired += "}".repeat(openBraces - closeBraces);
     }
-    
+
     // Add missing closing brackets
     if (openBrackets > closeBrackets) {
-      repaired += ']'.repeat(openBrackets - closeBrackets);
+      repaired += "]".repeat(openBrackets - closeBrackets);
     }
-    
+
     return repaired;
   }
 
@@ -358,14 +372,14 @@ export class RobustJSONParser {
    * Validate JSON structure after parsing
    */
   static validateStructure(data: any, expectedKeys?: string[]): boolean {
-    if (!data || typeof data !== 'object') {
+    if (!data || typeof data !== "object") {
       return false;
     }
-    
+
     if (expectedKeys) {
-      return expectedKeys.every(key => key in data);
+      return expectedKeys.every((key) => key in data);
     }
-    
+
     return true;
   }
 
@@ -373,24 +387,24 @@ export class RobustJSONParser {
    * Convenience method for parsing with type safety
    */
   static parseWithSchema<T>(
-    content: string, 
+    content: string,
     validator: (data: any) => data is T,
-    options: JSONParserOptions = {}
+    options: JSONParserOptions = {},
   ): ParseResult<T> {
     const result = this.parse<T>(content, options);
-    
+
     if (result.success && result.data) {
       if (validator(result.data)) {
         return result;
       } else {
         return {
           success: false,
-          error: 'Parsed data does not match expected schema',
-          originalContent: content
+          error: "Parsed data does not match expected schema",
+          originalContent: content,
         };
       }
     }
-    
+
     return result;
   }
 }
@@ -399,15 +413,15 @@ export class RobustJSONParser {
  * Convenience function for simple JSON parsing with fallback
  */
 export function parseJSON<T = any>(
-  content: string, 
-  fallbackValue?: T, 
-  options: JSONParserOptions = {}
+  content: string,
+  fallbackValue?: T,
+  options: JSONParserOptions = {},
 ): T | null {
   const result = RobustJSONParser.parse<T>(content, {
     ...options,
-    fallbackValue
+    fallbackValue,
   });
-  
+
   return result.success ? result.data! : null;
 }
 
@@ -417,14 +431,17 @@ export function parseJSON<T = any>(
 export function parseJSONWithKeys<T = any>(
   content: string,
   expectedKeys: string[],
-  fallbackValue?: T
+  fallbackValue?: T,
 ): T | null {
   const result = RobustJSONParser.parse<T>(content, { fallbackValue });
-  
+
   if (result.success && result.data) {
-    const isValid = RobustJSONParser.validateStructure(result.data, expectedKeys);
+    const isValid = RobustJSONParser.validateStructure(
+      result.data,
+      expectedKeys,
+    );
     return isValid ? result.data : fallbackValue || null;
   }
-  
+
   return fallbackValue || null;
 }

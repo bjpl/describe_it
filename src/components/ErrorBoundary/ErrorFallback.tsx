@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { AlertTriangle, RefreshCw, Wifi, WifiOff } from 'lucide-react';
+import React from "react";
+import { AlertTriangle, RefreshCw, Wifi, WifiOff } from "lucide-react";
 
 interface ErrorFallbackProps {
   error?: Error;
-  errorType?: 'network' | 'server' | 'timeout' | 'validation' | 'unknown';
+  errorType?: "network" | "server" | "timeout" | "validation" | "unknown";
   onRetry?: () => void;
   onReset?: () => void;
   retryCount?: number;
@@ -19,7 +19,7 @@ interface ErrorFallbackProps {
 
 export function ErrorFallback({
   error,
-  errorType = 'unknown',
+  errorType = "unknown",
   onRetry,
   onReset,
   retryCount = 0,
@@ -28,15 +28,15 @@ export function ErrorFallback({
   title,
   message,
   showDetails = false,
-  compact = false
+  compact = false,
 }: ErrorFallbackProps) {
   const getErrorIcon = () => {
     switch (errorType) {
-      case 'network':
+      case "network":
         return <WifiOff className="w-8 h-8 text-red-500" />;
-      case 'timeout':
+      case "timeout":
         return <WifiOff className="w-8 h-8 text-orange-500" />;
-      case 'server':
+      case "server":
         return <AlertTriangle className="w-8 h-8 text-red-500" />;
       default:
         return <AlertTriangle className="w-8 h-8 text-red-500" />;
@@ -45,46 +45,49 @@ export function ErrorFallback({
 
   const getErrorTitle = () => {
     if (title) return title;
-    
+
     switch (errorType) {
-      case 'network':
-        return 'Connection Failed';
-      case 'timeout':
-        return 'Request Timed Out';
-      case 'server':
-        return 'Service Unavailable';
-      case 'validation':
-        return 'Invalid Input';
+      case "network":
+        return "Connection Failed";
+      case "timeout":
+        return "Request Timed Out";
+      case "server":
+        return "Service Unavailable";
+      case "validation":
+        return "Invalid Input";
       default:
-        return 'Something went wrong';
+        return "Something went wrong";
     }
   };
 
   const getErrorMessage = () => {
     if (message) return message;
-    
+
     switch (errorType) {
-      case 'network':
-        return 'Unable to connect to the server. Please check your internet connection and try again.';
-      case 'timeout':
-        return 'The request took too long to complete. This may be due to high server load or a slow connection.';
-      case 'server':
-        return 'The service is temporarily unavailable. Please try again in a few moments.';
-      case 'validation':
-        return 'The provided information is invalid. Please check your input and try again.';
+      case "network":
+        return "Unable to connect to the server. Please check your internet connection and try again.";
+      case "timeout":
+        return "The request took too long to complete. This may be due to high server load or a slow connection.";
+      case "server":
+        return "The service is temporarily unavailable. Please try again in a few moments.";
+      case "validation":
+        return "The provided information is invalid. Please check your input and try again.";
       default:
-        return error?.message || 'An unexpected error occurred. Please try again.';
+        return (
+          error?.message || "An unexpected error occurred. Please try again."
+        );
     }
   };
 
-  const canRetry = onRetry && errorType !== 'validation' && retryCount < maxRetries;
+  const canRetry =
+    onRetry && errorType !== "validation" && retryCount < maxRetries;
   const showRetryInfo = retryCount > 0 && maxRetries > 0;
 
   if (compact) {
     return (
       <div className="flex items-center gap-3 p-4 bg-red-50 border border-red-200 rounded-lg">
         <div className="flex-shrink-0">
-          {errorType === 'network' ? (
+          {errorType === "network" ? (
             <WifiOff className="w-5 h-5 text-red-500" />
           ) : (
             <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -103,7 +106,7 @@ export function ErrorFallback({
             {isRetrying ? (
               <RefreshCw className="w-4 h-4 animate-spin" />
             ) : (
-              'Retry'
+              "Retry"
             )}
           </button>
         )}
@@ -115,9 +118,7 @@ export function ErrorFallback({
     <div className="flex flex-col items-center justify-center min-h-[200px] p-6 bg-white border-2 border-dashed border-gray-200 rounded-lg">
       <div className="text-center">
         {/* Icon */}
-        <div className="flex justify-center mb-4">
-          {getErrorIcon()}
-        </div>
+        <div className="flex justify-center mb-4">{getErrorIcon()}</div>
 
         {/* Title */}
         <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -125,16 +126,16 @@ export function ErrorFallback({
         </h3>
 
         {/* Message */}
-        <p className="text-gray-600 mb-6 max-w-md">
-          {getErrorMessage()}
-        </p>
+        <p className="text-gray-600 mb-6 max-w-md">{getErrorMessage()}</p>
 
         {/* Retry Information */}
         {showRetryInfo && (
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-sm text-yellow-800">
-              Attempt {retryCount} of {maxRetries} failed. 
-              {canRetry ? ' Trying again...' : ' Maximum retry attempts reached.'}
+              Attempt {retryCount} of {maxRetries} failed.
+              {canRetry
+                ? " Trying again..."
+                : " Maximum retry attempts reached."}
             </p>
           </div>
         )}
@@ -186,7 +187,7 @@ export function ErrorFallback({
         </div>
 
         {/* Network Status Hint */}
-        {errorType === 'network' && (
+        {errorType === "network" && (
           <div className="mt-4 flex items-center justify-center gap-2 text-sm text-gray-500">
             <Wifi className="w-4 h-4" />
             <span>Check your internet connection</span>

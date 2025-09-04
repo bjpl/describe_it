@@ -1,10 +1,10 @@
-import { NextRequest } from 'next/server';
-import { descriptionsCache } from '@/lib/cache/tiered-cache';
+import { NextRequest } from "next/server";
+import { descriptionsCache } from "@/lib/cache/tiered-cache";
 
 // Rate limiting configuration
 interface RateLimitConfig {
-  windowMs: number;      // Time window in milliseconds
-  maxRequests: number;   // Maximum requests per window
+  windowMs: number; // Time window in milliseconds
+  maxRequests: number; // Maximum requests per window
   keyGenerator?: (req: NextRequest) => string;
   skipSuccessfulRequests?: boolean;
   skipFailedRequests?: boolean;
@@ -14,39 +14,39 @@ interface RateLimitConfig {
 export const RATE_LIMITS = {
   // Conservative limits for resource-intensive operations
   AI_GENERATION: {
-    windowMs: 60 * 1000,    // 1 minute
-    maxRequests: 10,        // 10 requests per minute
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 10, // 10 requests per minute
   },
-  
+
   // Moderate limits for data operations
   DATA_OPERATIONS: {
-    windowMs: 60 * 1000,    // 1 minute
-    maxRequests: 30,        // 30 requests per minute
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 30, // 30 requests per minute
   },
-  
+
   // Generous limits for read operations
   READ_OPERATIONS: {
-    windowMs: 60 * 1000,    // 1 minute
-    maxRequests: 100,       // 100 requests per minute
+    windowMs: 60 * 1000, // 1 minute
+    maxRequests: 100, // 100 requests per minute
   },
-  
+
   // Strict limits for heavy operations
   EXPORT_OPERATIONS: {
     windowMs: 5 * 60 * 1000, // 5 minutes
-    maxRequests: 5,          // 5 requests per 5 minutes
-  }
+    maxRequests: 5, // 5 requests per 5 minutes
+  },
 } as const;
 
 // Rate limiter class
 export class RateLimiter {
   private config: RateLimitConfig;
-  
+
   constructor(config: RateLimitConfig) {
     this.config = {
       keyGenerator: (req) => this.getClientIdentifier(req),
       skipSuccessfulRequests: false,
       skipFailedRequests: false,
-      ...config
+      ...config,
     };
   }
 
@@ -59,61 +59,62 @@ export class RateLimiter {
     const key = this.config.keyGenerator!(request);
     const now = Date.now();
     const windowStart = now - this.config.windowMs;
-    
+
     // Create rate limit key
     const rateLimitKey = `rate_limit:${key}:${Math.floor(now / this.config.windowMs)}`;
-    
+
     try {
       // Get current count from cache
-      let requestCount = await descriptionsCache.get(rateLimitKey) || 0;
-      
+      let requestCount = (await descriptionsCache.get(rateLimitKey)) || 0;
+
       // Increment count
       requestCount++;
-      
+
       // Store updated count with TTL
       await descriptionsCache.set(rateLimitKey, requestCount, {
         kvTTL: Math.ceil(this.config.windowMs / 1000),
         memoryTTL: Math.ceil(this.config.windowMs / 1000),
-        sessionTTL: Math.ceil(this.config.windowMs / 1000)
+        sessionTTL: Math.ceil(this.config.windowMs / 1000),
       });
-      
+
       const allowed = requestCount <= this.config.maxRequests;
       const remaining = Math.max(0, this.config.maxRequests - requestCount);
-      const resetTime = Math.floor(now / this.config.windowMs) * this.config.windowMs + this.config.windowMs;
-      
+      const resetTime =
+        Math.floor(now / this.config.windowMs) * this.config.windowMs +
+        this.config.windowMs;
+
       return {
         allowed,
         remaining,
         resetTime,
-        totalRequests: requestCount
+        totalRequests: requestCount,
       };
-      
     } catch (error) {
-      console.warn('Rate limiting check failed:', error);
+      console.warn("Rate limiting check failed:", error);
       // Allow request if rate limiting check fails
       return {
         allowed: true,
         remaining: this.config.maxRequests - 1,
         resetTime: now + this.config.windowMs,
-        totalRequests: 1
+        totalRequests: 1,
       };
     }
   }
 
   private getClientIdentifier(request: NextRequest): string {
     // Try to get various identifiers in order of preference
-    const forwarded = request.headers.get('x-forwarded-for');
-    const realIP = request.headers.get('x-real-ip');
-    const userAgent = request.headers.get('user-agent') || 'unknown';
-    
+    const forwarded = request.headers.get("x-forwarded-for");
+    const realIP = request.headers.get("x-real-ip");
+    const userAgent = request.headers.get("user-agent") || "unknown";
+
     // Use IP address if available
-    let clientIP = 'unknown';
+    let clientIP = "unknown";
     if (forwarded) {
-      clientIP = forwarded.split(',')[0].trim();
+      clientIP = forwarded.split(",")[0].trim();
     } else if (realIP) {
       clientIP = realIP;
     }
-    
+
     // Create a composite key for better identification
     const userAgentHash = this.simpleHash(userAgent);
     return `${clientIP}_${userAgentHash}`;
@@ -123,7 +124,7 @@ export class RateLimiter {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32bit integer
     }
     return hash.toString(36);
@@ -135,47 +136,48 @@ export class InputValidator {
   static validateImageUrl(url: string): { valid: boolean; error?: string } {
     try {
       const parsedUrl = new URL(url);
-      
+
       // Check protocol
-      if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-        return { valid: false, error: 'URL must use HTTP or HTTPS protocol' };
+      if (!["http:", "https:"].includes(parsedUrl.protocol)) {
+        return { valid: false, error: "URL must use HTTP or HTTPS protocol" };
       }
-      
+
       // Check for suspicious patterns
       const suspicious = [
-        'localhost',
-        '127.0.0.1',
-        '0.0.0.0',
-        'file://',
-        'data:',
-        'javascript:',
-        'vbscript:'
+        "localhost",
+        "127.0.0.1",
+        "0.0.0.0",
+        "file://",
+        "data:",
+        "javascript:",
+        "vbscript:",
       ];
-      
+
       const urlString = url.toLowerCase();
       for (const pattern of suspicious) {
         if (urlString.includes(pattern)) {
-          return { valid: false, error: 'Invalid or potentially unsafe URL' };
+          return { valid: false, error: "Invalid or potentially unsafe URL" };
         }
       }
-      
+
       return { valid: true };
-      
     } catch (error) {
-      return { valid: false, error: 'Invalid URL format' };
+      return { valid: false, error: "Invalid URL format" };
     }
   }
 
   static sanitizeText(text: string, maxLength: number = 5000): string {
-    if (!text || typeof text !== 'string') return '';
-    
-    return text
-      .trim()
-      .slice(0, maxLength)
-      // Remove potentially dangerous characters
-      .replace(/[<>\"']/g, '')
-      // Normalize whitespace
-      .replace(/\s+/g, ' ');
+    if (!text || typeof text !== "string") return "";
+
+    return (
+      text
+        .trim()
+        .slice(0, maxLength)
+        // Remove potentially dangerous characters
+        .replace(/[<>\"']/g, "")
+        // Normalize whitespace
+        .replace(/\s+/g, " ")
+    );
   }
 
   static validateLanguageCode(code: string): boolean {
@@ -184,23 +186,34 @@ export class InputValidator {
     return validCodes.test(code);
   }
 
-  static validateUserId(userId: string): { valid: boolean; sanitized: string; error?: string } {
+  static validateUserId(userId: string): {
+    valid: boolean;
+    sanitized: string;
+    error?: string;
+  } {
     if (!userId) {
-      return { valid: true, sanitized: 'anonymous' };
+      return { valid: true, sanitized: "anonymous" };
     }
-    
+
     // Basic sanitization and validation
-    const sanitized = userId.replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 64);
-    
+    const sanitized = userId.replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 64);
+
     if (sanitized.length < 1) {
-      return { valid: false, sanitized: 'anonymous', error: 'Invalid user ID format' };
+      return {
+        valid: false,
+        sanitized: "anonymous",
+        error: "Invalid user ID format",
+      };
     }
-    
+
     return { valid: true, sanitized };
   }
 
-  static validateRequestSize(request: NextRequest, maxSizeBytes: number = 1024 * 1024): boolean {
-    const contentLength = request.headers.get('content-length');
+  static validateRequestSize(
+    request: NextRequest,
+    maxSizeBytes: number = 1024 * 1024,
+  ): boolean {
+    const contentLength = request.headers.get("content-length");
     if (contentLength) {
       return parseInt(contentLength) <= maxSizeBytes;
     }
@@ -217,14 +230,14 @@ export class SecurityUtils {
   static sanitizeHeaders(headers: Headers): Record<string, string> {
     const safeHeaders: Record<string, string> = {};
     const allowedHeaders = [
-      'content-type',
-      'user-agent',
-      'accept',
-      'accept-language',
-      'cache-control'
+      "content-type",
+      "user-agent",
+      "accept",
+      "accept-language",
+      "cache-control",
     ];
 
-    allowedHeaders.forEach(header => {
+    allowedHeaders.forEach((header) => {
       const value = headers.get(header);
       if (value) {
         safeHeaders[header] = value.slice(0, 200); // Limit header length
@@ -234,14 +247,17 @@ export class SecurityUtils {
     return safeHeaders;
   }
 
-  static isValidOrigin(origin: string | null, allowedOrigins: string[]): boolean {
+  static isValidOrigin(
+    origin: string | null,
+    allowedOrigins: string[],
+  ): boolean {
     if (!origin) return true; // Allow requests without origin (like API clients)
-    
+
     try {
       const url = new URL(origin);
-      return allowedOrigins.some(allowed => {
-        if (allowed === '*') return true;
-        if (allowed.startsWith('*.')) {
+      return allowedOrigins.some((allowed) => {
+        if (allowed === "*") return true;
+        if (allowed.startsWith("*.")) {
           const domain = allowed.slice(2);
           return url.hostname === domain || url.hostname.endsWith(`.${domain}`);
         }
@@ -271,10 +287,15 @@ export class PerformanceMonitor {
     return `${this.getResponseTime().toFixed(2)}ms`;
   }
 
-  async recordMetrics(endpoint: string, method: string, statusCode: number, additional?: Record<string, any>) {
+  async recordMetrics(
+    endpoint: string,
+    method: string,
+    statusCode: number,
+    additional?: Record<string, any>,
+  ) {
     const responseTime = this.getResponseTime();
     const timestamp = new Date().toISOString();
-    
+
     const metrics = {
       requestId: this.requestId,
       endpoint,
@@ -282,32 +303,41 @@ export class PerformanceMonitor {
       statusCode,
       responseTime,
       timestamp,
-      ...additional
+      ...additional,
     };
 
     try {
       // Store metrics for analysis
-      const metricsKey = `metrics:${endpoint.replace(/\//g, '_')}:${Date.now()}`;
+      const metricsKey = `metrics:${endpoint.replace(/\//g, "_")}:${Date.now()}`;
       await descriptionsCache.set(metricsKey, metrics, {
-        kvTTL: 86400 * 7,  // 7 days
-        memoryTTL: 0,      // Don't cache in memory
-        sessionTTL: 0      // Don't cache in session
+        kvTTL: 86400 * 7, // 7 days
+        memoryTTL: 0, // Don't cache in memory
+        sessionTTL: 0, // Don't cache in session
       });
-      
+
       // Update aggregated metrics
-      await this.updateAggregatedMetrics(endpoint, method, statusCode, responseTime);
-      
+      await this.updateAggregatedMetrics(
+        endpoint,
+        method,
+        statusCode,
+        responseTime,
+      );
     } catch (error) {
-      console.warn('Failed to record metrics:', error);
+      console.warn("Failed to record metrics:", error);
     }
   }
 
-  private async updateAggregatedMetrics(endpoint: string, method: string, statusCode: number, responseTime: number) {
-    const date = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-    const aggregateKey = `metrics:aggregate:${endpoint.replace(/\//g, '_')}:${date}`;
-    
+  private async updateAggregatedMetrics(
+    endpoint: string,
+    method: string,
+    statusCode: number,
+    responseTime: number,
+  ) {
+    const date = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+    const aggregateKey = `metrics:aggregate:${endpoint.replace(/\//g, "_")}:${date}`;
+
     try {
-      const existing = await descriptionsCache.get(aggregateKey) || {
+      const existing = (await descriptionsCache.get(aggregateKey)) || {
         endpoint,
         method,
         date,
@@ -315,26 +345,27 @@ export class PerformanceMonitor {
         totalResponseTime: 0,
         averageResponseTime: 0,
         statusCodes: {},
-        errors: 0
+        errors: 0,
       };
-      
+
       existing.totalRequests++;
       existing.totalResponseTime += responseTime;
-      existing.averageResponseTime = existing.totalResponseTime / existing.totalRequests;
-      existing.statusCodes[statusCode] = (existing.statusCodes[statusCode] || 0) + 1;
-      
+      existing.averageResponseTime =
+        existing.totalResponseTime / existing.totalRequests;
+      existing.statusCodes[statusCode] =
+        (existing.statusCodes[statusCode] || 0) + 1;
+
       if (statusCode >= 400) {
         existing.errors++;
       }
-      
+
       await descriptionsCache.set(aggregateKey, existing, {
-        kvTTL: 86400 * 30,  // 30 days
-        memoryTTL: 0,       // Don't cache in memory
-        sessionTTL: 0       // Don't cache in session
+        kvTTL: 86400 * 30, // 30 days
+        memoryTTL: 0, // Don't cache in memory
+        sessionTTL: 0, // Don't cache in session
       });
-      
     } catch (error) {
-      console.warn('Failed to update aggregated metrics:', error);
+      console.warn("Failed to update aggregated metrics:", error);
     }
   }
 }
@@ -345,51 +376,51 @@ export class ErrorResponseUtils {
     error: any,
     statusCode: number = 500,
     requestId?: string,
-    responseTime?: string
+    responseTime?: string,
   ) {
-    const isProduction = process.env.NODE_ENV === 'production';
-    
+    const isProduction = process.env.NODE_ENV === "production";
+
     return {
       error: true,
-      message: error.message || 'An error occurred',
-      code: error.code || 'INTERNAL_ERROR',
+      message: error.message || "An error occurred",
+      code: error.code || "INTERNAL_ERROR",
       requestId: requestId || SecurityUtils.generateRequestId(),
       timestamp: new Date().toISOString(),
       ...(responseTime && { responseTime }),
       // Include stack trace only in development
-      ...((!isProduction && error.stack) && { stack: error.stack })
+      ...(!isProduction && error.stack && { stack: error.stack }),
     };
   }
 
   static createValidationErrorResponse(
     validationErrors: any[],
     requestId?: string,
-    responseTime?: string
+    responseTime?: string,
   ) {
     return {
       error: true,
-      message: 'Validation failed',
-      code: 'VALIDATION_ERROR',
+      message: "Validation failed",
+      code: "VALIDATION_ERROR",
       details: validationErrors,
       requestId: requestId || SecurityUtils.generateRequestId(),
       timestamp: new Date().toISOString(),
-      ...(responseTime && { responseTime })
+      ...(responseTime && { responseTime }),
     };
   }
 
   static createRateLimitResponse(
     resetTime: number,
     remaining: number,
-    requestId?: string
+    requestId?: string,
   ) {
     return {
       error: true,
-      message: 'Rate limit exceeded',
-      code: 'RATE_LIMIT_EXCEEDED',
+      message: "Rate limit exceeded",
+      code: "RATE_LIMIT_EXCEEDED",
       resetTime: new Date(resetTime).toISOString(),
       remaining,
       requestId: requestId || SecurityUtils.generateRequestId(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
   }
 }
@@ -400,9 +431,9 @@ export class APICacheUtils {
     // Sort parameters for consistent cache keys
     const sortedParams = Object.keys(params)
       .sort()
-      .map(key => `${key}:${params[key]}`)
-      .join('|');
-    
+      .map((key) => `${key}:${params[key]}`)
+      .join("|");
+
     return `${prefix}:${this.hashString(sortedParams)}`;
   }
 
@@ -410,31 +441,31 @@ export class APICacheUtils {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
     return Math.abs(hash).toString(36);
   }
 
-  static getCacheTTLConfig(cacheType: 'short' | 'medium' | 'long' = 'medium') {
+  static getCacheTTLConfig(cacheType: "short" | "medium" | "long" = "medium") {
     const configs = {
       short: {
-        kvTTL: 300,      // 5 minutes
-        memoryTTL: 180,  // 3 minutes
-        sessionTTL: 120  // 2 minutes
+        kvTTL: 300, // 5 minutes
+        memoryTTL: 180, // 3 minutes
+        sessionTTL: 120, // 2 minutes
       },
       medium: {
-        kvTTL: 3600,     // 1 hour
+        kvTTL: 3600, // 1 hour
         memoryTTL: 1800, // 30 minutes
-        sessionTTL: 900  // 15 minutes
+        sessionTTL: 900, // 15 minutes
       },
       long: {
-        kvTTL: 86400,    // 24 hours
+        kvTTL: 86400, // 24 hours
         memoryTTL: 7200, // 2 hours
-        sessionTTL: 3600 // 1 hour
-      }
+        sessionTTL: 3600, // 1 hour
+      },
     };
-    
+
     return configs[cacheType];
   }
 }

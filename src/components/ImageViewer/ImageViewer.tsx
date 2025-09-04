@@ -1,9 +1,9 @@
 "use client";
 
-import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { UnsplashImage } from '@/types';
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { UnsplashImage } from "@/types";
 
 interface ImageViewerProps {
   image: UnsplashImage | null;
@@ -14,8 +14,8 @@ interface ImageViewerProps {
 export function ImageViewer({ image, isOpen, onClose }: ImageViewerProps) {
   const [scale, setScale] = React.useState(1);
 
-  const handleZoomIn = () => setScale(prev => Math.min(prev * 1.2, 3));
-  const handleZoomOut = () => setScale(prev => Math.max(prev / 1.2, 0.5));
+  const handleZoomIn = () => setScale((prev) => Math.min(prev * 1.2, 3));
+  const handleZoomOut = () => setScale((prev) => Math.max(prev / 1.2, 0.5));
   const handleReset = () => setScale(1);
 
   if (!image) return null;
@@ -75,10 +75,10 @@ export function ImageViewer({ image, isOpen, onClose }: ImageViewerProps) {
           >
             <motion.img
               src={image.urls.regular}
-              alt={image.alt_description || 'Image viewer'}
+              alt={image.alt_description || "Image viewer"}
               className="max-w-full max-h-full object-contain"
               style={{ scale }}
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+              transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
           </motion.div>
 

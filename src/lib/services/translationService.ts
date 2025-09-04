@@ -1,5 +1,5 @@
-import { withRetry, RetryConfig } from '@/lib/utils/error-retry';
-import { openAIService } from './openaiService';
+import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
+import { openAIService } from "./openaiService";
 
 interface CachedTranslation {
   translation: string;
@@ -20,12 +20,12 @@ interface TranslationResponse {
   confidence: number;
   detectedLanguage: string;
   cached: boolean;
-  provider: 'openai' | 'fallback';
+  provider: "openai" | "fallback";
 }
 
 interface BatchTranslationRequest {
   items: TranslationRequest[];
-  priority?: 'low' | 'normal' | 'high';
+  priority?: "low" | "normal" | "high";
 }
 
 interface BatchTranslationResponse {
@@ -46,8 +46,19 @@ export class TranslationService {
   private readonly maxCacheSize = 5000;
   private readonly defaultTTL = 604800000; // 7 days
   private rateLimitTracker = new Map<string, number[]>();
-  private readonly supportedLanguages = ['en', 'es', 'fr', 'de', 'it', 'pt', 'ru', 'ja', 'ko', 'zh'];
-  
+  private readonly supportedLanguages = [
+    "en",
+    "es",
+    "fr",
+    "de",
+    "it",
+    "pt",
+    "ru",
+    "ja",
+    "ko",
+    "zh",
+  ];
+
   private retryConfig: RetryConfig = {
     maxRetries: 2,
     baseDelay: 1500,
@@ -56,10 +67,10 @@ export class TranslationService {
     shouldRetry: (error: Error) => {
       const message = error.message.toLowerCase();
       return (
-        message.includes('503') ||
-        message.includes('502') ||
-        message.includes('429') ||
-        message.includes('timeout')
+        message.includes("503") ||
+        message.includes("502") ||
+        message.includes("429") ||
+        message.includes("timeout")
       );
     },
   };
@@ -67,13 +78,15 @@ export class TranslationService {
   /**
    * Translate single text
    */
-  public async translate(request: TranslationRequest): Promise<TranslationResponse> {
+  public async translate(
+    request: TranslationRequest,
+  ): Promise<TranslationResponse> {
     // Validate input
     this.validateTranslationRequest(request);
-    
+
     // Generate cache key
     const cacheKey = this.generateCacheKey(request);
-    
+
     // Check cache first
     const cached = this.getFromCache(cacheKey);
     if (cached) {
@@ -82,7 +95,7 @@ export class TranslationService {
         confidence: cached.confidence,
         detectedLanguage: request.fromLanguage,
         cached: true,
-        provider: 'openai',
+        provider: "openai",
       };
     }
 
@@ -93,7 +106,7 @@ export class TranslationService {
         confidence: 1.0,
         detectedLanguage: request.fromLanguage,
         cached: false,
-        provider: 'fallback' as const,
+        provider: "fallback" as const,
       };
       this.setCache(cacheKey, {
         translation: response.translation,
@@ -113,19 +126,19 @@ export class TranslationService {
           confidence: 0.95,
           detectedLanguage: request.fromLanguage,
           cached: false,
-          provider: 'openai' as const,
+          provider: "openai" as const,
         };
-        
+
         this.setCache(cacheKey, {
           translation: response.translation,
           confidence: response.confidence,
           timestamp: Date.now(),
           ttl: this.defaultTTL,
         });
-        
+
         return response;
       } catch (error) {
-        console.warn('OpenAI translation failed, using fallback:', error);
+        console.warn("OpenAI translation failed, using fallback:", error);
       }
     }
 
@@ -136,24 +149,29 @@ export class TranslationService {
       confidence: 0.7,
       detectedLanguage: request.fromLanguage,
       cached: false,
-      provider: 'fallback' as const,
+      provider: "fallback" as const,
     };
-    
+
     this.setCache(cacheKey, {
       translation: response.translation,
       confidence: response.confidence,
       timestamp: Date.now(),
       ttl: this.defaultTTL,
     });
-    
+
     return response;
   }
 
   /**
    * Batch translate multiple texts
    */
-  public async translateBatch(request: BatchTranslationRequest): Promise<BatchTranslationResponse> {
-    const results: (TranslationResponse | { error: string; originalText: string })[] = [];
+  public async translateBatch(
+    request: BatchTranslationRequest,
+  ): Promise<BatchTranslationResponse> {
+    const results: (
+      | TranslationResponse
+      | { error: string; originalText: string }
+    )[] = [];
     const summary = {
       total: request.items.length,
       successful: 0,
@@ -162,7 +180,8 @@ export class TranslationService {
     };
 
     // Process in chunks to avoid rate limits
-    const chunkSize = request.priority === 'high' ? 10 : request.priority === 'low' ? 3 : 5;
+    const chunkSize =
+      request.priority === "high" ? 10 : request.priority === "low" ? 3 : 5;
     const chunks = this.chunkArray(request.items, chunkSize);
 
     for (const chunk of chunks) {
@@ -175,29 +194,30 @@ export class TranslationService {
         } catch (error) {
           summary.failed++;
           return {
-            error: error instanceof Error ? error.message : 'Translation failed',
+            error:
+              error instanceof Error ? error.message : "Translation failed",
             originalText: item.text,
           };
         }
       });
 
       const chunkResults = await Promise.allSettled(chunkPromises);
-      
+
       chunkResults.forEach((result) => {
-        if (result.status === 'fulfilled') {
+        if (result.status === "fulfilled") {
           results.push(result.value);
         } else {
           summary.failed++;
           results.push({
-            error: result.reason?.message || 'Unknown error',
-            originalText: 'Unknown',
+            error: result.reason?.message || "Unknown error",
+            originalText: "Unknown",
           });
         }
       });
 
       // Add delay between chunks to respect rate limits
       if (chunks.indexOf(chunk) < chunks.length - 1) {
-        await this.delay(request.priority === 'high' ? 500 : 1000);
+        await this.delay(request.priority === "high" ? 500 : 1000);
       }
     }
 
@@ -207,23 +227,25 @@ export class TranslationService {
   /**
    * Detect language of text
    */
-  public async detectLanguage(text: string): Promise<{ language: string; confidence: number }> {
+  public async detectLanguage(
+    text: string,
+  ): Promise<{ language: string; confidence: number }> {
     if (openAIService.isAvailable()) {
       try {
         const result = await withRetry(async () => {
           return await openAIService.translateText({
             text: `Detect the language of this text and respond with just the language code (en, es, fr, etc.): "${text.slice(0, 200)}"`,
-            fromLanguage: 'auto',
-            toLanguage: 'en',
+            fromLanguage: "auto",
+            toLanguage: "en",
           });
         }, this.retryConfig);
-        
+
         const detected = result.toLowerCase().trim();
         if (this.supportedLanguages.includes(detected)) {
           return { language: detected, confidence: 0.9 };
         }
       } catch (error) {
-        console.warn('Language detection failed:', error);
+        console.warn("Language detection failed:", error);
       }
     }
 
@@ -234,27 +256,35 @@ export class TranslationService {
   /**
    * Get supported languages
    */
-  public getSupportedLanguages(): { code: string; name: string; native: string }[] {
+  public getSupportedLanguages(): {
+    code: string;
+    name: string;
+    native: string;
+  }[] {
     const languages = [
-      { code: 'en', name: 'English', native: 'English' },
-      { code: 'es', name: 'Spanish', native: 'Español' },
-      { code: 'fr', name: 'French', native: 'Français' },
-      { code: 'de', name: 'German', native: 'Deutsch' },
-      { code: 'it', name: 'Italian', native: 'Italiano' },
-      { code: 'pt', name: 'Portuguese', native: 'Português' },
-      { code: 'ru', name: 'Russian', native: 'Русский' },
-      { code: 'ja', name: 'Japanese', native: '日本語' },
-      { code: 'ko', name: 'Korean', native: '한국어' },
-      { code: 'zh', name: 'Chinese', native: '中文' },
+      { code: "en", name: "English", native: "English" },
+      { code: "es", name: "Spanish", native: "Español" },
+      { code: "fr", name: "French", native: "Français" },
+      { code: "de", name: "German", native: "Deutsch" },
+      { code: "it", name: "Italian", native: "Italiano" },
+      { code: "pt", name: "Portuguese", native: "Português" },
+      { code: "ru", name: "Russian", native: "Русский" },
+      { code: "ja", name: "Japanese", native: "日本語" },
+      { code: "ko", name: "Korean", native: "한국어" },
+      { code: "zh", name: "Chinese", native: "中文" },
     ];
-    
+
     return languages;
   }
 
   /**
    * Validate translation quality
    */
-  public async validateTranslation(original: string, translation: string, expectedLanguage: string): Promise<{
+  public async validateTranslation(
+    original: string,
+    translation: string,
+    expectedLanguage: string,
+  ): Promise<{
     isValid: boolean;
     confidence: number;
     issues: string[];
@@ -264,30 +294,30 @@ export class TranslationService {
 
     // Basic validation checks
     if (!translation || translation.trim().length === 0) {
-      issues.push('Translation is empty');
+      issues.push("Translation is empty");
       confidence = 0;
     }
 
     if (translation === original) {
-      issues.push('Translation identical to original');
+      issues.push("Translation identical to original");
       confidence *= 0.3;
     }
 
-    if (translation.includes('[translation not available]')) {
-      issues.push('Translation service unavailable');
+    if (translation.includes("[translation not available]")) {
+      issues.push("Translation service unavailable");
       confidence *= 0.1;
     }
 
     // Length ratio check (translations shouldn't be extremely different in length)
     const lengthRatio = translation.length / original.length;
     if (lengthRatio > 3 || lengthRatio < 0.3) {
-      issues.push('Unusual length ratio between original and translation');
+      issues.push("Unusual length ratio between original and translation");
       confidence *= 0.7;
     }
 
     // Character encoding check
-    if (translation.includes('�') || translation.includes('???')) {
-      issues.push('Character encoding issues detected');
+    if (translation.includes("�") || translation.includes("???")) {
+      issues.push("Character encoding issues detected");
       confidence *= 0.5;
     }
 
@@ -311,7 +341,7 @@ export class TranslationService {
   public getCacheStats() {
     let expired = 0;
     const now = Date.now();
-    
+
     this.cache.forEach((value) => {
       if (now > value.timestamp + value.ttl) {
         expired++;
@@ -333,25 +363,25 @@ export class TranslationService {
   public cleanExpiredCache(): number {
     const now = Date.now();
     let removed = 0;
-    
+
     this.cache.forEach((value, key) => {
       if (now > value.timestamp + value.ttl) {
         this.cache.delete(key);
         removed++;
       }
     });
-    
+
     return removed;
   }
 
   // Private helper methods
   private validateTranslationRequest(request: TranslationRequest): void {
     if (!request.text || request.text.trim().length === 0) {
-      throw new Error('Text is required for translation');
+      throw new Error("Text is required for translation");
     }
 
     if (!request.fromLanguage || !request.toLanguage) {
-      throw new Error('Source and target languages are required');
+      throw new Error("Source and target languages are required");
     }
 
     if (!this.supportedLanguages.includes(request.fromLanguage)) {
@@ -363,11 +393,13 @@ export class TranslationService {
     }
 
     if (request.text.length > 5000) {
-      throw new Error('Text too long for translation (max 5000 characters)');
+      throw new Error("Text too long for translation (max 5000 characters)");
     }
   }
 
-  private async translateWithOpenAI(request: TranslationRequest): Promise<string> {
+  private async translateWithOpenAI(
+    request: TranslationRequest,
+  ): Promise<string> {
     const result = await withRetry(async () => {
       return await openAIService.translateText({
         text: request.text,
@@ -375,28 +407,53 @@ export class TranslationService {
         toLanguage: request.toLanguage,
       });
     }, this.retryConfig);
-    
+
     return result;
   }
 
-  private async getFallbackTranslation(request: TranslationRequest): Promise<string> {
+  private async getFallbackTranslation(
+    request: TranslationRequest,
+  ): Promise<string> {
     // Use the existing dictionary from the API route
     const spanishToEnglishDict: Record<string, string> = {
       // Common nouns
-      'casa': 'house', 'gato': 'cat', 'perro': 'dog', 'agua': 'water', 'libro': 'book',
-      'mesa': 'table', 'silla': 'chair', 'árbol': 'tree', 'flor': 'flower', 'sol': 'sun',
-      
+      casa: "house",
+      gato: "cat",
+      perro: "dog",
+      agua: "water",
+      libro: "book",
+      mesa: "table",
+      silla: "chair",
+      árbol: "tree",
+      flor: "flower",
+      sol: "sun",
+
       // Common verbs
-      'ser': 'to be', 'estar': 'to be', 'tener': 'to have', 'hacer': 'to do/make',
-      'ir': 'to go', 'venir': 'to come', 'ver': 'to see', 'decir': 'to say',
-      
+      ser: "to be",
+      estar: "to be",
+      tener: "to have",
+      hacer: "to do/make",
+      ir: "to go",
+      venir: "to come",
+      ver: "to see",
+      decir: "to say",
+
       // Common adjectives
-      'grande': 'big/large', 'pequeño': 'small', 'bueno': 'good', 'malo': 'bad',
-      'nuevo': 'new', 'viejo': 'old', 'bonito': 'pretty', 'feo': 'ugly',
-      
+      grande: "big/large",
+      pequeño: "small",
+      bueno: "good",
+      malo: "bad",
+      nuevo: "new",
+      viejo: "old",
+      bonito: "pretty",
+      feo: "ugly",
+
       // Common phrases
-      'buenos días': 'good morning', 'buenas tardes': 'good afternoon',
-      'buenas noches': 'good night', 'por favor': 'please', 'gracias': 'thank you',
+      "buenos días": "good morning",
+      "buenas tardes": "good afternoon",
+      "buenas noches": "good night",
+      "por favor": "please",
+      gracias: "thank you",
     };
 
     const englishToSpanishDict: Record<string, string> = {};
@@ -405,45 +462,54 @@ export class TranslationService {
     });
 
     const text = request.text.toLowerCase().trim();
-    
+
     // Direct lookup
-    if (request.fromLanguage === 'es' && request.toLanguage === 'en') {
+    if (request.fromLanguage === "es" && request.toLanguage === "en") {
       if (spanishToEnglishDict[text]) {
         return spanishToEnglishDict[text];
       }
-    } else if (request.fromLanguage === 'en' && request.toLanguage === 'es') {
+    } else if (request.fromLanguage === "en" && request.toLanguage === "es") {
       if (englishToSpanishDict[text]) {
         return englishToSpanishDict[text];
       }
     }
 
     // Pattern-based transformations for Spanish to English
-    if (request.fromLanguage === 'es' && request.toLanguage === 'en') {
-      if (text.endsWith('ción')) return text.replace('ción', 'tion');
-      if (text.endsWith('dad')) return text.replace('dad', 'ty');
-      if (text.endsWith('mente')) return text.replace('mente', 'ly');
+    if (request.fromLanguage === "es" && request.toLanguage === "en") {
+      if (text.endsWith("ción")) return text.replace("ción", "tion");
+      if (text.endsWith("dad")) return text.replace("dad", "ty");
+      if (text.endsWith("mente")) return text.replace("mente", "ly");
     }
 
     // If no translation found, return original with note
     return `${request.text} [translation not available]`;
   }
 
-  private detectLanguageFallback(text: string): { language: string; confidence: number } {
+  private detectLanguageFallback(text: string): {
+    language: string;
+    confidence: number;
+  } {
     const patterns = {
-      es: [/ñ/, /¿/, /¡/, /[áéíóúü]/, /\b(el|la|los|las|un|una|de|en|y|es|que)\b/i],
+      es: [
+        /ñ/,
+        /¿/,
+        /¡/,
+        /[áéíóúü]/,
+        /\b(el|la|los|las|un|una|de|en|y|es|que)\b/i,
+      ],
       en: [/\b(the|and|or|of|to|in|is|that|it|with|for)\b/i],
       fr: [/[àâäéèêëîïôöùûüÿç]/, /\b(le|la|les|un|une|de|en|et|est|que)\b/i],
       de: [/[äöüß]/, /\b(der|die|das|und|oder|von|zu|in|ist|dass)\b/i],
     };
 
-    let bestMatch = { language: 'en', confidence: 0.1 };
-    
+    let bestMatch = { language: "en", confidence: 0.1 };
+
     Object.entries(patterns).forEach(([lang, langPatterns]) => {
       let matches = 0;
-      langPatterns.forEach(pattern => {
+      langPatterns.forEach((pattern) => {
         if (pattern.test(text)) matches++;
       });
-      
+
       const confidence = matches / langPatterns.length;
       if (confidence > bestMatch.confidence) {
         bestMatch = { language: lang, confidence };
@@ -454,19 +520,19 @@ export class TranslationService {
   }
 
   private generateCacheKey(request: TranslationRequest): string {
-    const contextHash = request.context ? this.hashString(request.context) : '';
+    const contextHash = request.context ? this.hashString(request.context) : "";
     return `${this.hashString(request.text)}_${request.fromLanguage}_${request.toLanguage}_${contextHash}`;
   }
 
   private getFromCache(key: string): CachedTranslation | null {
     const cached = this.cache.get(key);
     if (!cached) return null;
-    
+
     if (Date.now() > cached.timestamp + cached.ttl) {
       this.cache.delete(key);
       return null;
     }
-    
+
     return cached;
   }
 
@@ -475,7 +541,7 @@ export class TranslationService {
       const firstKey = this.cache.keys().next().value;
       if (firstKey) this.cache.delete(firstKey);
     }
-    
+
     this.cache.set(key, value);
   }
 
@@ -483,7 +549,7 @@ export class TranslationService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
     return Math.abs(hash).toString(36);
@@ -498,7 +564,7 @@ export class TranslationService {
   }
 
   private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 

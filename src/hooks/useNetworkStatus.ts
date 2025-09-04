@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from "react";
 
 interface NetworkStatus {
   isOnline: boolean;
@@ -9,10 +9,10 @@ interface NetworkStatus {
 
 export function useNetworkStatus() {
   const [networkStatus, setNetworkStatus] = useState<NetworkStatus>({
-    isOnline: typeof navigator !== 'undefined' ? navigator.onLine : true,
+    isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
     isConnecting: false,
     lastOffline: null,
-    connectionType: null
+    connectionType: null,
   });
 
   const checkConnection = useCallback(async (): Promise<boolean> => {
@@ -22,12 +22,12 @@ export function useNetworkStatus() {
 
     try {
       // Try to fetch a small resource to verify actual connectivity
-      const response = await fetch('/api/health', {
-        method: 'HEAD',
-        cache: 'no-cache',
-        signal: AbortSignal.timeout(5000)
+      const response = await fetch("/api/health", {
+        method: "HEAD",
+        cache: "no-cache",
+        signal: AbortSignal.timeout(5000),
       });
-      
+
       return response.ok;
     } catch {
       return false;
@@ -35,33 +35,33 @@ export function useNetworkStatus() {
   }, []);
 
   const handleOnline = useCallback(async () => {
-    setNetworkStatus(prev => ({
+    setNetworkStatus((prev) => ({
       ...prev,
-      isConnecting: true
+      isConnecting: true,
     }));
 
     // Verify actual connectivity
     const isActuallyOnline = await checkConnection();
-    
-    setNetworkStatus(prev => ({
+
+    setNetworkStatus((prev) => ({
       ...prev,
       isOnline: isActuallyOnline,
       isConnecting: false,
-      lastOffline: isActuallyOnline ? null : prev.lastOffline
+      lastOffline: isActuallyOnline ? null : prev.lastOffline,
     }));
   }, [checkConnection]);
 
   const handleOffline = useCallback(() => {
-    setNetworkStatus(prev => ({
+    setNetworkStatus((prev) => ({
       ...prev,
       isOnline: false,
       isConnecting: false,
-      lastOffline: new Date()
+      lastOffline: new Date(),
     }));
   }, []);
 
   const getConnectionType = useCallback((): string | null => {
-    if ('connection' in navigator) {
+    if ("connection" in navigator) {
       const connection = (navigator as any).connection;
       return connection?.effectiveType || connection?.type || null;
     }
@@ -70,37 +70,37 @@ export function useNetworkStatus() {
 
   useEffect(() => {
     // Set initial connection type
-    setNetworkStatus(prev => ({
+    setNetworkStatus((prev) => ({
       ...prev,
-      connectionType: getConnectionType()
+      connectionType: getConnectionType(),
     }));
 
     // Add event listeners
-    window.addEventListener('online', handleOnline);
-    window.addEventListener('offline', handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
 
     // Monitor connection changes if supported
-    if ('connection' in navigator) {
+    if ("connection" in navigator) {
       const connection = (navigator as any).connection;
       const handleConnectionChange = () => {
-        setNetworkStatus(prev => ({
+        setNetworkStatus((prev) => ({
           ...prev,
-          connectionType: getConnectionType()
+          connectionType: getConnectionType(),
         }));
       };
-      
-      connection?.addEventListener('change', handleConnectionChange);
-      
+
+      connection?.addEventListener("change", handleConnectionChange);
+
       return () => {
-        window.removeEventListener('online', handleOnline);
-        window.removeEventListener('offline', handleOffline);
-        connection?.removeEventListener('change', handleConnectionChange);
+        window.removeEventListener("online", handleOnline);
+        window.removeEventListener("offline", handleOffline);
+        connection?.removeEventListener("change", handleConnectionChange);
       };
     }
 
     return () => {
-      window.removeEventListener('online', handleOnline);
-      window.removeEventListener('offline', handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
     };
   }, [handleOnline, handleOffline, getConnectionType]);
 
@@ -111,10 +111,10 @@ export function useNetworkStatus() {
     const interval = setInterval(async () => {
       const isStillOnline = await checkConnection();
       if (!isStillOnline) {
-        setNetworkStatus(prev => ({
+        setNetworkStatus((prev) => ({
           ...prev,
           isOnline: false,
-          lastOffline: new Date()
+          lastOffline: new Date(),
         }));
       }
     }, 30000); // Check every 30 seconds
@@ -125,6 +125,6 @@ export function useNetworkStatus() {
   return {
     ...networkStatus,
     retry: handleOnline,
-    checkConnection
+    checkConnection,
   };
 }

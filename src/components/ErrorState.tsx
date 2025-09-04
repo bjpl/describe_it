@@ -1,7 +1,14 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { AlertTriangle, RefreshCw, ArrowLeft, Home, Wifi, WifiOff } from 'lucide-react';
+import React from "react";
+import {
+  AlertTriangle,
+  RefreshCw,
+  ArrowLeft,
+  Home,
+  Wifi,
+  WifiOff,
+} from "lucide-react";
 
 export interface ErrorStateProps {
   /**
@@ -55,7 +62,7 @@ export interface ErrorStateProps {
   /**
    * Size of the error state
    */
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
 }
 
 /**
@@ -63,8 +70,8 @@ export interface ErrorStateProps {
  * Consolidates all error display functionality from multiple implementations.
  */
 export function ErrorState({
-  title = 'Something went wrong',
-  message = 'An unexpected error occurred. Please try again.',
+  title = "Something went wrong",
+  message = "An unexpected error occurred. Please try again.",
   code,
   onRetry,
   retrying = false,
@@ -73,23 +80,45 @@ export function ErrorState({
   showNavigation = false,
   showRetry = true,
   centered = true,
-  className = '',
-  size = 'md',
-  children
+  className = "",
+  size = "md",
+  children,
 }: ErrorStateProps) {
   const sizeClasses = {
-    sm: { icon: 'w-8 h-8', title: 'text-lg', message: 'text-sm', container: 'p-4' },
-    md: { icon: 'w-12 h-12', title: 'text-xl', message: 'text-base', container: 'p-6' },
-    lg: { icon: 'w-16 h-16', title: 'text-2xl', message: 'text-lg', container: 'p-8' }
+    sm: {
+      icon: "w-8 h-8",
+      title: "text-lg",
+      message: "text-sm",
+      container: "p-4",
+    },
+    md: {
+      icon: "w-12 h-12",
+      title: "text-xl",
+      message: "text-base",
+      container: "p-6",
+    },
+    lg: {
+      icon: "w-16 h-16",
+      title: "text-2xl",
+      message: "text-lg",
+      container: "p-8",
+    },
   };
 
-  const { icon: iconSize, title: titleSize, message: messageSize, container: containerPadding } = sizeClasses[size];
+  const {
+    icon: iconSize,
+    title: titleSize,
+    message: messageSize,
+    container: containerPadding,
+  } = sizeClasses[size];
 
   const content = (
-    <div className={`flex flex-col items-center text-center space-y-4 max-w-md w-full ${containerPadding} ${className}`}>
+    <div
+      className={`flex flex-col items-center text-center space-y-4 max-w-md w-full ${containerPadding} ${className}`}
+    >
       {/* Custom children content */}
       {children}
-      
+
       {/* Error Icon - only show if no children */}
       {!children && (
         <div className="flex justify-center">
@@ -100,9 +129,7 @@ export function ErrorState({
       )}
 
       {/* Error Title */}
-      <h2 className={`font-semibold text-gray-900 ${titleSize}`}>
-        {title}
-      </h2>
+      <h2 className={`font-semibold text-gray-900 ${titleSize}`}>{title}</h2>
 
       {/* Error Message */}
       <p className={`text-gray-600 ${messageSize} leading-relaxed`}>
@@ -129,8 +156,10 @@ export function ErrorState({
               transition-colors
             "
           >
-            <RefreshCw className={`w-4 h-4 ${retrying ? 'animate-spin' : ''}`} />
-            {retrying ? 'Retrying...' : 'Try Again'}
+            <RefreshCw
+              className={`w-4 h-4 ${retrying ? "animate-spin" : ""}`}
+            />
+            {retrying ? "Retrying..." : "Try Again"}
           </button>
         )}
 
@@ -180,9 +209,9 @@ export function ErrorState({
  * Inline error state for smaller spaces
  */
 export function InlineErrorState({
-  message = 'Error occurred',
+  message = "Error occurred",
   onRetry,
-  className = ''
+  className = "",
 }: {
   message?: string;
   onRetry?: () => void;
@@ -210,7 +239,7 @@ export function InlineErrorState({
  */
 export function NetworkErrorState({
   onRetry,
-  className = ''
+  className = "",
 }: {
   onRetry?: () => void;
   className?: string;

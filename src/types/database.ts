@@ -1,9 +1,9 @@
 // Database types for Supabase or other database integration
 // Import unified types to ensure consistency
-import type { VocabularyItem } from './unified';
+import type { VocabularyItem } from "./unified";
 
 // Re-export unified VocabularyItem as the primary database type
-export type { VocabularyItem } from './unified';
+export type { VocabularyItem } from "./unified";
 
 export interface VocabularyList {
   id: string;
@@ -37,7 +37,7 @@ export interface UserProgress {
 export interface StudySession {
   id: string;
   user_id: string;
-  session_type: 'flashcards' | 'quiz' | 'matching' | 'writing';
+  session_type: "flashcards" | "quiz" | "matching" | "writing";
   vocabulary_items: string[]; // Array of vocabulary item IDs
   score: number;
   accuracy: number;
@@ -50,11 +50,11 @@ export interface StudySession {
 export interface UserSettings {
   id: string;
   user_id: string;
-  language_level: 'beginner' | 'intermediate' | 'advanced';
+  language_level: "beginner" | "intermediate" | "advanced";
   daily_goal: number; // words per day
   reminder_enabled: boolean;
   reminder_time: string;
-  theme_preference: 'light' | 'dark' | 'auto';
+  theme_preference: "light" | "dark" | "auto";
   created_at: string;
   updated_at: string;
 }
@@ -88,7 +88,7 @@ export interface QAQuestion {
   question: string;
   answer: string;
   options?: string[];
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   category: string;
   explanation?: string;
 }
@@ -118,7 +118,7 @@ export interface PaginatedResponse<T> {
 }
 
 // Filter and search types - use unified VocabularyFilters instead
-export type { VocabularyFilters } from './unified';
+export type { VocabularyFilters } from "./unified";
 
 // Legacy database-specific filters (deprecated)
 // @deprecated Use VocabularyFilters from unified types
@@ -164,12 +164,12 @@ export interface StudyStats {
 }
 
 // Export types for convenience
-export type DatabaseTables = 
-  | 'vocabulary_items'
-  | 'vocabulary_lists'
-  | 'vocabulary_list_items'
-  | 'user_progress'
-  | 'study_sessions'
-  | 'user_settings'
-  | 'image_descriptions'
-  | 'qa_sessions';
+export type DatabaseTables =
+  | "vocabulary_items"
+  | "vocabulary_lists"
+  | "vocabulary_list_items"
+  | "user_progress"
+  | "study_sessions"
+  | "user_settings"
+  | "image_descriptions"
+  | "qa_sessions";

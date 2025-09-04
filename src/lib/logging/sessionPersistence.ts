@@ -1,16 +1,16 @@
 // Session Persistence - Handle localStorage/sessionStorage for session data
-import { SessionStorage, SessionSummary, SessionReport } from '@/types/session';
+import { SessionStorage, SessionSummary, SessionReport } from "@/types/session";
 
 export class SessionPersistence {
-  private readonly storagePrefix = 'describe_it_session_';
-  private readonly summaryPrefix = 'describe_it_summary_';
-  private readonly settingsKey = 'describe_it_settings';
+  private readonly storagePrefix = "describe_it_session_";
+  private readonly summaryPrefix = "describe_it_summary_";
+  private readonly settingsKey = "describe_it_settings";
   private readonly maxSessions = 10; // Keep only last 10 sessions
 
   constructor(private useSessionStorage = false) {}
 
   private getStorage(): Storage {
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       // Mock storage for SSR
       return {
         getItem: () => null,
@@ -18,10 +18,10 @@ export class SessionPersistence {
         removeItem: () => {},
         clear: () => {},
         key: () => null,
-        length: 0
+        length: 0,
       };
     }
-    
+
     return this.useSessionStorage ? sessionStorage : localStorage;
   }
 
@@ -30,18 +30,18 @@ export class SessionPersistence {
     try {
       const storage = this.getStorage();
       const key = this.storagePrefix + sessionId;
-      
+
       // Add compression for large datasets
       const compressedData = this.compressData(data);
       storage.setItem(key, JSON.stringify(compressedData));
-      
+
       // Update session list
       await this.updateSessionList(sessionId);
-      
-      console.debug('Session data saved:', sessionId);
+
+      console.debug("Session data saved:", sessionId);
     } catch (error) {
-      console.error('Failed to save session data:', error);
-      
+      console.error("Failed to save session data:", error);
+
       // Try to clear old data if storage is full
       if (this.isStorageQuotaExceeded(error)) {
         await this.cleanup();
@@ -52,7 +52,10 @@ export class SessionPersistence {
           const compressedData = this.compressData(data);
           storage.setItem(key, JSON.stringify(compressedData));
         } catch (retryError) {
-          console.error('Failed to save session data after cleanup:', retryError);
+          console.error(
+            "Failed to save session data after cleanup:",
+            retryError,
+          );
         }
       }
     }
@@ -63,18 +66,18 @@ export class SessionPersistence {
       const storage = this.getStorage();
       const key = this.storagePrefix + sessionId;
       const stored = storage.getItem(key);
-      
+
       if (!stored) {
         return null;
       }
 
       const parsed = JSON.parse(stored);
       const decompressed = this.decompressData(parsed);
-      
-      console.debug('Session data loaded:', sessionId);
+
+      console.debug("Session data loaded:", sessionId);
       return decompressed;
     } catch (error) {
-      console.error('Failed to load session data:', error);
+      console.error("Failed to load session data:", error);
       return null;
     }
   }
@@ -84,21 +87,21 @@ export class SessionPersistence {
       const storage = this.getStorage();
       const key = this.storagePrefix + sessionId;
       storage.removeItem(key);
-      
+
       // Remove from session list
       await this.removeFromSessionList(sessionId);
-      
-      console.debug('Session data cleared:', sessionId);
+
+      console.debug("Session data cleared:", sessionId);
     } catch (error) {
-      console.error('Failed to clear session data:', error);
+      console.error("Failed to clear session data:", error);
     }
   }
 
   public async list(): Promise<string[]> {
     try {
       const storage = this.getStorage();
-      const sessionList = storage.getItem('session_list');
-      
+      const sessionList = storage.getItem("session_list");
+
       if (!sessionList) {
         return [];
       }
@@ -106,21 +109,24 @@ export class SessionPersistence {
       const parsed = JSON.parse(sessionList);
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      console.error('Failed to list sessions:', error);
+      console.error("Failed to list sessions:", error);
       return [];
     }
   }
 
   // Session summary methods (for quick access)
-  public async saveSummary(sessionId: string, summary: SessionSummary): Promise<void> {
+  public async saveSummary(
+    sessionId: string,
+    summary: SessionSummary,
+  ): Promise<void> {
     try {
       const storage = this.getStorage();
       const key = this.summaryPrefix + sessionId;
       storage.setItem(key, JSON.stringify(summary));
-      
-      console.debug('Session summary saved:', sessionId);
+
+      console.debug("Session summary saved:", sessionId);
     } catch (error) {
-      console.error('Failed to save session summary:', error);
+      console.error("Failed to save session summary:", error);
     }
   }
 
@@ -129,14 +135,14 @@ export class SessionPersistence {
       const storage = this.getStorage();
       const key = this.summaryPrefix + sessionId;
       const stored = storage.getItem(key);
-      
+
       if (!stored) {
         return null;
       }
 
       return JSON.parse(stored);
     } catch (error) {
-      console.error('Failed to load session summary:', error);
+      console.error("Failed to load session summary:", error);
       return null;
     }
   }
@@ -145,24 +151,27 @@ export class SessionPersistence {
     try {
       const sessionIds = await this.list();
       const summaries: SessionSummary[] = [];
-      
+
       for (const sessionId of sessionIds) {
         const summary = await this.loadSummary(sessionId);
         if (summary) {
           summaries.push(summary);
         }
       }
-      
+
       // Sort by start time (most recent first)
       return summaries.sort((a, b) => b.startTime - a.startTime);
     } catch (error) {
-      console.error('Failed to load all summaries:', error);
+      console.error("Failed to load all summaries:", error);
       return [];
     }
   }
 
   // Export functionality
-  public async export(sessionId: string, format: 'json' | 'text' | 'csv'): Promise<string> {
+  public async export(
+    sessionId: string,
+    format: "json" | "text" | "csv",
+  ): Promise<string> {
     try {
       const sessionData = await this.load(sessionId);
       if (!sessionData) {
@@ -185,38 +194,38 @@ export class SessionPersistence {
           repetitionPatterns: {},
           difficultyProgression: [],
           focusAreas: [],
-          improvementSuggestions: []
+          improvementSuggestions: [],
         },
         recommendations: [],
         exportFormat: format,
-        generatedAt: Date.now()
+        generatedAt: Date.now(),
       };
 
       switch (format) {
-        case 'json':
+        case "json":
           return JSON.stringify(report, null, 2);
-        case 'text':
+        case "text":
           return this.formatAsText(report);
-        case 'csv':
+        case "csv":
           return this.formatAsCSV(report);
         default:
           return JSON.stringify(report, null, 2);
       }
     } catch (error) {
-      console.error('Failed to export session:', error);
+      console.error("Failed to export session:", error);
       throw error;
     }
   }
 
   // Bulk export
-  public async exportAll(format: 'json' | 'text' | 'csv'): Promise<string> {
+  public async exportAll(format: "json" | "text" | "csv"): Promise<string> {
     try {
       const sessionIds = await this.list();
       const allReports: SessionReport[] = [];
-      
+
       for (const sessionId of sessionIds) {
         try {
-          const reportData = await this.export(sessionId, 'json');
+          const reportData = await this.export(sessionId, "json");
           const report: SessionReport = JSON.parse(reportData);
           allReports.push(report);
         } catch (error) {
@@ -225,21 +234,25 @@ export class SessionPersistence {
       }
 
       switch (format) {
-        case 'json':
-          return JSON.stringify({
-            exportedAt: Date.now(),
-            sessionCount: allReports.length,
-            sessions: allReports
-          }, null, 2);
-        case 'text':
+        case "json":
+          return JSON.stringify(
+            {
+              exportedAt: Date.now(),
+              sessionCount: allReports.length,
+              sessions: allReports,
+            },
+            null,
+            2,
+          );
+        case "text":
           return this.formatAllAsText(allReports);
-        case 'csv':
+        case "csv":
           return this.formatAllAsCSV(allReports);
         default:
           return JSON.stringify(allReports, null, 2);
       }
     } catch (error) {
-      console.error('Failed to export all sessions:', error);
+      console.error("Failed to export all sessions:", error);
       throw error;
     }
   }
@@ -250,7 +263,7 @@ export class SessionPersistence {
       const storage = this.getStorage();
       storage.setItem(this.settingsKey, JSON.stringify(settings));
     } catch (error) {
-      console.error('Failed to save settings:', error);
+      console.error("Failed to save settings:", error);
     }
   }
 
@@ -258,14 +271,14 @@ export class SessionPersistence {
     try {
       const storage = this.getStorage();
       const stored = storage.getItem(this.settingsKey);
-      
+
       if (!stored) {
         return null;
       }
 
       return JSON.parse(stored);
     } catch (error) {
-      console.error('Failed to load settings:', error);
+      console.error("Failed to load settings:", error);
       return null;
     }
   }
@@ -281,7 +294,7 @@ export class SessionPersistence {
     try {
       const storage = this.getStorage();
       const sessionIds = await this.list();
-      
+
       let used = 0;
       let oldestSession: string | null = null;
       let newestSession: string | null = null;
@@ -295,10 +308,10 @@ export class SessionPersistence {
           const value = storage.getItem(key);
           if (value) {
             used += value.length;
-            
-            const sessionId = key.replace(this.storagePrefix, '');
+
+            const sessionId = key.replace(this.storagePrefix, "");
             const summary = await this.loadSummary(sessionId);
-            
+
             if (summary) {
               if (summary.startTime < oldestTime) {
                 oldestTime = summary.startTime;
@@ -322,16 +335,16 @@ export class SessionPersistence {
         available,
         sessionCount: sessionIds.length,
         oldestSession,
-        newestSession
+        newestSession,
       };
     } catch (error) {
-      console.error('Failed to get storage info:', error);
+      console.error("Failed to get storage info:", error);
       return {
         used: 0,
         available: 0,
         sessionCount: 0,
         oldestSession: null,
-        newestSession: null
+        newestSession: null,
       };
     }
   }
@@ -339,7 +352,7 @@ export class SessionPersistence {
   public async cleanup(): Promise<void> {
     try {
       const sessionIds = await this.list();
-      
+
       // Keep only the most recent sessions
       if (sessionIds.length > this.maxSessions) {
         const summaries = await this.loadAllSummaries();
@@ -355,28 +368,28 @@ export class SessionPersistence {
         console.log(`Cleaned up ${sortedSessions.length} old sessions`);
       }
     } catch (error) {
-      console.error('Failed to cleanup storage:', error);
+      console.error("Failed to cleanup storage:", error);
     }
   }
 
   // Private helper methods
   private async updateSessionList(sessionId: string): Promise<void> {
     const sessionIds = await this.list();
-    
+
     if (!sessionIds.includes(sessionId)) {
       sessionIds.push(sessionId);
-      
+
       const storage = this.getStorage();
-      storage.setItem('session_list', JSON.stringify(sessionIds));
+      storage.setItem("session_list", JSON.stringify(sessionIds));
     }
   }
 
   private async removeFromSessionList(sessionId: string): Promise<void> {
     const sessionIds = await this.list();
-    const filtered = sessionIds.filter(id => id !== sessionId);
-    
+    const filtered = sessionIds.filter((id) => id !== sessionId);
+
     const storage = this.getStorage();
-    storage.setItem('session_list', JSON.stringify(filtered));
+    storage.setItem("session_list", JSON.stringify(filtered));
   }
 
   private async clearSummary(sessionId: string): Promise<void> {
@@ -385,7 +398,7 @@ export class SessionPersistence {
       const key = this.summaryPrefix + sessionId;
       storage.removeItem(key);
     } catch (error) {
-      console.error('Failed to clear session summary:', error);
+      console.error("Failed to clear session summary:", error);
     }
   }
 
@@ -393,12 +406,12 @@ export class SessionPersistence {
     // Simple compression: remove redundant metadata
     const compressed = {
       ...data,
-      interactions: data.interactions.map(interaction => ({
+      interactions: data.interactions.map((interaction) => ({
         ...interaction,
-        metadata: undefined // Remove redundant metadata
-      }))
+        metadata: undefined, // Remove redundant metadata
+      })),
     };
-    
+
     return compressed;
   }
 
@@ -407,25 +420,26 @@ export class SessionPersistence {
     if (data.currentSession) {
       data.interactions = data.interactions.map((interaction: any) => ({
         ...interaction,
-        metadata: data.currentSession
+        metadata: data.currentSession,
       }));
     }
-    
+
     return data;
   }
 
   private isStorageQuotaExceeded(error: any): boolean {
-    return error instanceof DOMException && (
-      error.code === 22 || // QUOTA_EXCEEDED_ERR
-      error.code === 1014 || // NS_ERROR_DOM_QUOTA_REACHED (Firefox)
-      error.name === 'QuotaExceededError' ||
-      error.name === 'NS_ERROR_DOM_QUOTA_REACHED'
+    return (
+      error instanceof DOMException &&
+      (error.code === 22 || // QUOTA_EXCEEDED_ERR
+        error.code === 1014 || // NS_ERROR_DOM_QUOTA_REACHED (Firefox)
+        error.name === "QuotaExceededError" ||
+        error.name === "NS_ERROR_DOM_QUOTA_REACHED")
     );
   }
 
   private formatAsText(report: SessionReport): string {
     const duration = Math.round(report.summary.totalDuration / 1000 / 60);
-    
+
     return `
 SESSION REPORT
 ==============
@@ -447,14 +461,14 @@ Generated: ${new Date(report.generatedAt).toLocaleString()}
   }
 
   private formatAsCSV(report: SessionReport): string {
-    const headers = ['timestamp', 'type', 'data'];
-    const rows = report.interactions.map(interaction => [
+    const headers = ["timestamp", "type", "data"];
+    const rows = report.interactions.map((interaction) => [
       new Date(interaction.timestamp).toISOString(),
       interaction.type,
-      JSON.stringify(interaction.data)
+      JSON.stringify(interaction.data),
     ]);
 
-    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
   }
 
   private formatAllAsText(reports: SessionReport[]): string {
@@ -466,26 +480,36 @@ Generated: ${new Date().toLocaleString()}
 
 `;
 
-    const sessionSummaries = reports.map((report, index) => {
-      const duration = Math.round(report.summary.totalDuration / 1000 / 60);
-      
-      return `
+    const sessionSummaries = reports
+      .map((report, index) => {
+        const duration = Math.round(report.summary.totalDuration / 1000 / 60);
+
+        return `
 SESSION ${index + 1}: ${report.summary.sessionId}
 Duration: ${duration} minutes | Score: ${report.summary.learningScore}/100
 Activities: ${report.summary.totalInteractions} interactions
       `.trim();
-    }).join('\n\n');
+      })
+      .join("\n\n");
 
     return header + sessionSummaries;
   }
 
   private formatAllAsCSV(reports: SessionReport[]): string {
     const headers = [
-      'session_id', 'start_time', 'duration', 'interactions', 
-      'learning_score', 'searches', 'images', 'descriptions', 'questions', 'vocabulary'
+      "session_id",
+      "start_time",
+      "duration",
+      "interactions",
+      "learning_score",
+      "searches",
+      "images",
+      "descriptions",
+      "questions",
+      "vocabulary",
     ];
 
-    const rows = reports.map(report => [
+    const rows = reports.map((report) => [
       report.summary.sessionId,
       new Date(report.summary.startTime).toISOString(),
       Math.round(report.summary.totalDuration / 1000 / 60),
@@ -495,14 +519,16 @@ Activities: ${report.summary.totalInteractions} interactions
       report.summary.imagesViewed,
       report.summary.descriptionsGenerated,
       report.summary.questionsGenerated,
-      report.summary.vocabularySelected
+      report.summary.vocabularySelected,
     ]);
 
-    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
   }
 }
 
 // Factory function
-export function createSessionPersistence(useSessionStorage = false): SessionPersistence {
+export function createSessionPersistence(
+  useSessionStorage = false,
+): SessionPersistence {
   return new SessionPersistence(useSessionStorage);
 }

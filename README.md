@@ -5,6 +5,7 @@ A comprehensive Next.js 14 application that combines visual learning with AI-pow
 ## 🌟 Features
 
 ### Core Functionality
+
 - **Multi-style Image Descriptions**: Generate descriptions in 5 different styles (Narrativo, Poético, Académico, Conversacional, Infantil)
 - **Interactive Q&A System**: Context-aware questions with difficulty levels and confidence scoring
 - **Smart Phrase Extraction**: Categorized vocabulary extraction with learning features
@@ -12,6 +13,7 @@ A comprehensive Next.js 14 application that combines visual learning with AI-pow
 - **Real-time Collaboration**: Live updates and shared learning sessions
 
 ### Technical Features
+
 - **Next.js 14 App Router** with TypeScript strict mode
 - **Supabase Integration** for auth, database, and real-time features
 - **Vercel KV** for Redis caching and session management
@@ -25,6 +27,7 @@ A comprehensive Next.js 14 application that combines visual learning with AI-pow
 ## 🚀 Getting Started
 
 ### Prerequisites
+
 - Node.js 18+ and npm/pnpm
 - Supabase account
 - OpenAI API key
@@ -34,22 +37,26 @@ A comprehensive Next.js 14 application that combines visual learning with AI-pow
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone https://github.com/yourusername/describe-it.git
 cd describe-it
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Copy environment variables:
+
 ```bash
 cp .env.example .env.local
 ```
 
 4. Configure environment variables in `.env.local`:
+
 ```env
 # Supabase
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
@@ -69,11 +76,13 @@ KV_REST_API_TOKEN=your_kv_rest_api_token
 ```
 
 5. Run database migrations:
+
 ```bash
 npx supabase migration up
 ```
 
 6. Start development server:
+
 ```bash
 npm run dev
 ```
@@ -110,12 +119,14 @@ describe-it/
 ## 🔧 Development
 
 ### Running Tests
+
 ```bash
 npm run test           # Unit tests with Vitest
 npm run test:e2e       # E2E tests with Playwright
 ```
 
 ### Linting & Formatting
+
 ```bash
 npm run lint           # ESLint
 npm run typecheck      # TypeScript checking
@@ -123,6 +134,7 @@ npm run format         # Prettier formatting
 ```
 
 ### Building for Production
+
 ```bash
 npm run build
 npm run start
@@ -149,6 +161,7 @@ npm run start
    - Token will be auto-added to environment
 
 5. Deploy:
+
 ```bash
 vercel --prod
 ```
@@ -172,6 +185,7 @@ vercel --prod
 ## 📊 Database Schema
 
 ### Core Tables
+
 - **users**: User profiles and preferences
 - **sessions**: Learning session tracking
 - **images**: Unsplash image metadata
@@ -213,6 +227,7 @@ MIT License - see LICENSE file for details
 ## 📧 Support
 
 For issues and questions:
+
 - Create an issue on GitHub
 - Contact: your-email@example.com
 

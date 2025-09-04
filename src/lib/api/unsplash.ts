@@ -1,14 +1,14 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
-import { 
-  UnsplashImage, 
-  UnsplashSearchResponse, 
-  UnsplashSearchParams, 
+import axios, { AxiosInstance, AxiosError } from "axios";
+import {
+  UnsplashImage,
+  UnsplashSearchResponse,
+  UnsplashSearchParams,
   ProcessedImage,
   APIError,
   RateLimitInfo,
-  CacheEntry
-} from '../../types/api';
-import { vercelKvCache } from './vercel-kv';
+  CacheEntry,
+} from "../../types/api";
+import { vercelKvCache } from "./vercel-kv";
 
 class UnsplashService {
   private client: AxiosInstance;
@@ -18,21 +18,23 @@ class UnsplashService {
   private duplicateUrls = new Set<string>();
 
   constructor() {
-    this.accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || '';
-    
+    this.accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || "";
+
     if (!this.accessKey) {
-      console.warn('NEXT_PUBLIC_UNSPLASH_ACCESS_KEY not configured. Using demo mode.');
-      this.accessKey = 'demo';
+      console.warn(
+        "NEXT_PUBLIC_UNSPLASH_ACCESS_KEY not configured. Using demo mode.",
+      );
+      this.accessKey = "demo";
       this.initializeDemoMode();
       return;
     }
 
     this.client = axios.create({
-      baseURL: 'https://api.unsplash.com',
+      baseURL: "https://api.unsplash.com",
       timeout: 30000,
       headers: {
-        'Accept-Version': 'v1',
-        'Authorization': `Client-ID ${this.accessKey}`,
+        "Accept-Version": "v1",
+        Authorization: `Client-ID ${this.accessKey}`,
       },
     });
 
@@ -51,8 +53,8 @@ class UnsplashService {
     this.client.interceptors.request.use((config) => {
       if (this.rateLimitInfo.isBlocked) {
         throw new APIError({
-          code: 'RATE_LIMIT_EXCEEDED',
-          message: 'Rate limit exceeded. Please try again later.',
+          code: "RATE_LIMIT_EXCEEDED",
+          message: "Rate limit exceeded. Please try again later.",
           status: 429,
           retryAfter: Math.ceil((this.rateLimitInfo.reset - Date.now()) / 1000),
         });
@@ -71,54 +73,54 @@ class UnsplashService {
           this.updateRateLimitInfo(error.response.headers);
         }
         throw this.transformError(error);
-      }
+      },
     );
   }
 
   private updateRateLimitInfo(headers: any): void {
-    if (headers['x-ratelimit-remaining']) {
-      this.rateLimitInfo.remaining = parseInt(headers['x-ratelimit-remaining']);
+    if (headers["x-ratelimit-remaining"]) {
+      this.rateLimitInfo.remaining = parseInt(headers["x-ratelimit-remaining"]);
     }
-    if (headers['x-ratelimit-limit']) {
-      this.rateLimitInfo.limit = parseInt(headers['x-ratelimit-limit']);
+    if (headers["x-ratelimit-limit"]) {
+      this.rateLimitInfo.limit = parseInt(headers["x-ratelimit-limit"]);
     }
-    
+
     this.rateLimitInfo.isBlocked = this.rateLimitInfo.remaining <= 0;
-    
-    if (this.rateLimitInfo.isBlocked && headers['x-ratelimit-reset']) {
-      this.rateLimitInfo.reset = parseInt(headers['x-ratelimit-reset']) * 1000;
+
+    if (this.rateLimitInfo.isBlocked && headers["x-ratelimit-reset"]) {
+      this.rateLimitInfo.reset = parseInt(headers["x-ratelimit-reset"]) * 1000;
     }
   }
 
   private transformError(error: AxiosError): APIError {
     const status = error.response?.status || 500;
     let message = error.message;
-    let code = 'UNKNOWN_ERROR';
+    let code = "UNKNOWN_ERROR";
 
     switch (status) {
       case 400:
-        code = 'BAD_REQUEST';
-        message = 'Invalid search parameters provided';
+        code = "BAD_REQUEST";
+        message = "Invalid search parameters provided";
         break;
       case 401:
-        code = 'UNAUTHORIZED';
-        message = 'Invalid or missing API key';
+        code = "UNAUTHORIZED";
+        message = "Invalid or missing API key";
         break;
       case 403:
-        code = 'FORBIDDEN';
-        message = 'Access forbidden. Check API key permissions';
+        code = "FORBIDDEN";
+        message = "Access forbidden. Check API key permissions";
         break;
       case 404:
-        code = 'NOT_FOUND';
-        message = 'Resource not found';
+        code = "NOT_FOUND";
+        message = "Resource not found";
         break;
       case 429:
-        code = 'RATE_LIMIT_EXCEEDED';
-        message = 'Rate limit exceeded';
+        code = "RATE_LIMIT_EXCEEDED";
+        message = "Rate limit exceeded";
         break;
       case 500:
-        code = 'SERVER_ERROR';
-        message = 'Unsplash server error';
+        code = "SERVER_ERROR";
+        message = "Unsplash server error";
         break;
       default:
         message = `HTTP ${status}: ${error.message}`;
@@ -139,16 +141,16 @@ class UnsplashService {
     try {
       const urlObj = new URL(url);
       // Remove all query parameters except essential ones
-      const allowedParams = ['ixid', 'ixlib'];
+      const allowedParams = ["ixid", "ixlib"];
       const newUrl = new URL(urlObj.origin + urlObj.pathname);
-      
-      allowedParams.forEach(param => {
+
+      allowedParams.forEach((param) => {
         const value = urlObj.searchParams.get(param);
         if (value) {
           newUrl.searchParams.set(param, value);
         }
       });
-      
+
       return newUrl.toString();
     } catch {
       return url;
@@ -158,13 +160,16 @@ class UnsplashService {
   /**
    * Checks if an image is a duplicate based on canonical URL
    */
-  private checkDuplicate(image: UnsplashImage): { isDuplicate: boolean; duplicateOf?: string } {
+  private checkDuplicate(image: UnsplashImage): {
+    isDuplicate: boolean;
+    duplicateOf?: string;
+  } {
     const canonicalUrl = this.canonicalizeUrl(image.urls.regular);
-    
+
     if (this.duplicateUrls.has(canonicalUrl)) {
       return { isDuplicate: true, duplicateOf: canonicalUrl };
     }
-    
+
     this.duplicateUrls.add(canonicalUrl);
     return { isDuplicate: false };
   }
@@ -173,16 +178,18 @@ class UnsplashService {
    * Processes raw images from Unsplash API
    */
   private processImages(images: UnsplashImage[]): ProcessedImage[] {
-    return images.map(image => {
-      const canonicalUrl = this.canonicalizeUrl(image.urls.regular);
-      const duplicateCheck = this.checkDuplicate(image);
-      
-      return {
-        ...image,
-        canonicalUrl,
-        ...duplicateCheck,
-      };
-    }).filter(image => !image.isDuplicate); // Remove duplicates
+    return images
+      .map((image) => {
+        const canonicalUrl = this.canonicalizeUrl(image.urls.regular);
+        const duplicateCheck = this.checkDuplicate(image);
+
+        return {
+          ...image,
+          canonicalUrl,
+          ...duplicateCheck,
+        };
+      })
+      .filter((image) => !image.isDuplicate); // Remove duplicates
   }
 
   /**
@@ -204,13 +211,13 @@ class UnsplashService {
   } {
     const demoImages: ProcessedImage[] = [
       {
-        id: 'demo-1',
+        id: "demo-1",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         width: 1920,
         height: 1080,
-        color: '#4a90e2',
-        blur_hash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
+        color: "#4a90e2",
+        blur_hash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
         description: `Demo image for "${params.query}"`,
         alt_description: `A beautiful scene related to ${params.query}`,
         urls: {
@@ -219,52 +226,52 @@ class UnsplashService {
           regular: `https://picsum.photos/1080/720?random=1&${encodeURIComponent(params.query)}`,
           small: `https://picsum.photos/400/300?random=1&${encodeURIComponent(params.query)}`,
           thumb: `https://picsum.photos/200/150?random=1&${encodeURIComponent(params.query)}`,
-          small_s3: `https://picsum.photos/400/300?random=1&${encodeURIComponent(params.query)}`
+          small_s3: `https://picsum.photos/400/300?random=1&${encodeURIComponent(params.query)}`,
         },
         links: {
           self: `https://api.unsplash.com/photos/demo-1`,
           html: `https://unsplash.com/photos/demo-1`,
           download: `https://picsum.photos/1920/1080?random=1&${encodeURIComponent(params.query)}`,
-          download_location: `https://api.unsplash.com/photos/demo-1/download`
+          download_location: `https://api.unsplash.com/photos/demo-1/download`,
         },
         user: {
-          id: 'demo-user',
-          username: 'demo_user',
-          name: 'Demo User',
-          first_name: 'Demo',
-          last_name: 'User',
+          id: "demo-user",
+          username: "demo_user",
+          name: "Demo User",
+          first_name: "Demo",
+          last_name: "User",
           instagram_username: null,
           twitter_username: null,
           portfolio_url: null,
-          bio: 'Demo user for testing purposes',
-          location: 'Demo Land',
+          bio: "Demo user for testing purposes",
+          location: "Demo Land",
           total_likes: 100,
           total_photos: 50,
           accepted_tos: true,
           profile_image: {
-            small: 'https://picsum.photos/32/32?random=user',
-            medium: 'https://picsum.photos/64/64?random=user',
-            large: 'https://picsum.photos/128/128?random=user'
+            small: "https://picsum.photos/32/32?random=user",
+            medium: "https://picsum.photos/64/64?random=user",
+            large: "https://picsum.photos/128/128?random=user",
           },
           links: {
-            self: 'https://api.unsplash.com/users/demo_user',
-            html: 'https://unsplash.com/@demo_user',
-            photos: 'https://api.unsplash.com/users/demo_user/photos',
-            likes: 'https://api.unsplash.com/users/demo_user/likes',
-            portfolio: 'https://unsplash.com/@demo_user/portfolio'
-          }
+            self: "https://api.unsplash.com/users/demo_user",
+            html: "https://unsplash.com/@demo_user",
+            photos: "https://api.unsplash.com/users/demo_user/photos",
+            likes: "https://api.unsplash.com/users/demo_user/likes",
+            portfolio: "https://unsplash.com/@demo_user/portfolio",
+          },
         },
         canonicalUrl: `https://picsum.photos/1080/720?random=1&${encodeURIComponent(params.query)}`,
-        isDuplicate: false
+        isDuplicate: false,
       },
       {
-        id: 'demo-2',
+        id: "demo-2",
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         width: 1920,
         height: 1080,
-        color: '#e74c3c',
-        blur_hash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
+        color: "#e74c3c",
+        blur_hash: "LEHV6nWB2yk8pyo0adR*.7kCMdnj",
         description: `Another demo image for "${params.query}"`,
         alt_description: `Another beautiful scene related to ${params.query}`,
         urls: {
@@ -273,57 +280,57 @@ class UnsplashService {
           regular: `https://picsum.photos/1080/720?random=2&${encodeURIComponent(params.query)}`,
           small: `https://picsum.photos/400/300?random=2&${encodeURIComponent(params.query)}`,
           thumb: `https://picsum.photos/200/150?random=2&${encodeURIComponent(params.query)}`,
-          small_s3: `https://picsum.photos/400/300?random=2&${encodeURIComponent(params.query)}`
+          small_s3: `https://picsum.photos/400/300?random=2&${encodeURIComponent(params.query)}`,
         },
         links: {
           self: `https://api.unsplash.com/photos/demo-2`,
           html: `https://unsplash.com/photos/demo-2`,
           download: `https://picsum.photos/1920/1080?random=2&${encodeURIComponent(params.query)}`,
-          download_location: `https://api.unsplash.com/photos/demo-2/download`
+          download_location: `https://api.unsplash.com/photos/demo-2/download`,
         },
         user: {
-          id: 'demo-user-2',
-          username: 'demo_user_2',
-          name: 'Demo User 2',
-          first_name: 'Demo',
-          last_name: 'User 2',
+          id: "demo-user-2",
+          username: "demo_user_2",
+          name: "Demo User 2",
+          first_name: "Demo",
+          last_name: "User 2",
           instagram_username: null,
           twitter_username: null,
           portfolio_url: null,
-          bio: 'Another demo user for testing purposes',
-          location: 'Demo City',
+          bio: "Another demo user for testing purposes",
+          location: "Demo City",
           total_likes: 200,
           total_photos: 75,
           accepted_tos: true,
           profile_image: {
-            small: 'https://picsum.photos/32/32?random=user2',
-            medium: 'https://picsum.photos/64/64?random=user2',
-            large: 'https://picsum.photos/128/128?random=user2'
+            small: "https://picsum.photos/32/32?random=user2",
+            medium: "https://picsum.photos/64/64?random=user2",
+            large: "https://picsum.photos/128/128?random=user2",
           },
           links: {
-            self: 'https://api.unsplash.com/users/demo_user_2',
-            html: 'https://unsplash.com/@demo_user_2',
-            photos: 'https://api.unsplash.com/users/demo_user_2/photos',
-            likes: 'https://api.unsplash.com/users/demo_user_2/likes',
-            portfolio: 'https://unsplash.com/@demo_user_2/portfolio'
-          }
+            self: "https://api.unsplash.com/users/demo_user_2",
+            html: "https://unsplash.com/@demo_user_2",
+            photos: "https://api.unsplash.com/users/demo_user_2/photos",
+            likes: "https://api.unsplash.com/users/demo_user_2/likes",
+            portfolio: "https://unsplash.com/@demo_user_2/portfolio",
+          },
         },
         canonicalUrl: `https://picsum.photos/1080/720?random=2&${encodeURIComponent(params.query)}`,
-        isDuplicate: false
-      }
+        isDuplicate: false,
+      },
     ];
 
     const page = params.page || 1;
     const perPage = params.per_page || 20;
     const total = 50; // Demo total
     const totalPages = Math.ceil(total / perPage);
-    
+
     return {
       images: demoImages.slice(0, Math.min(perPage, demoImages.length)),
       total,
       totalPages,
       currentPage: page,
-      hasNextPage: page < totalPages
+      hasNextPage: page < totalPages,
     };
   }
 
@@ -334,8 +341,8 @@ class UnsplashService {
     const sortedParams = Object.entries(params)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([key, value]) => `${key}=${value}`)
-      .join('&');
-    return `unsplash:search:${Buffer.from(sortedParams).toString('base64')}`;
+      .join("&");
+    return `unsplash:search:${Buffer.from(sortedParams).toString("base64")}`;
   }
 
   /**
@@ -349,12 +356,12 @@ class UnsplashService {
     hasNextPage: boolean;
   }> {
     // Return demo data if no API key
-    if (this.accessKey === 'demo') {
+    if (this.accessKey === "demo") {
       return this.generateDemoImages(params);
     }
 
     const cacheKey = this.generateCacheKey(params);
-    
+
     try {
       // Check cache first
       const cached = await vercelKvCache.get<UnsplashSearchResponse>(cacheKey);
@@ -370,18 +377,21 @@ class UnsplashService {
       }
 
       // Make API request
-      const response = await this.client.get<UnsplashSearchResponse>('/search/photos', {
-        params: {
-          query: params.query,
-          page: params.page || 1,
-          per_page: Math.min(params.per_page || 30, 30), // Limit to 30 per page
-          order_by: params.order_by || 'relevant',
-          collections: params.collections,
-          content_filter: params.content_filter || 'low',
-          color: params.color,
-          orientation: params.orientation,
+      const response = await this.client.get<UnsplashSearchResponse>(
+        "/search/photos",
+        {
+          params: {
+            query: params.query,
+            page: params.page || 1,
+            per_page: Math.min(params.per_page || 30, 30), // Limit to 30 per page
+            order_by: params.order_by || "relevant",
+            collections: params.collections,
+            content_filter: params.content_filter || "low",
+            color: params.color,
+            orientation: params.orientation,
+          },
         },
-      });
+      );
 
       const data = response.data;
 
@@ -397,10 +407,9 @@ class UnsplashService {
         currentPage: params.page || 1,
         hasNextPage: (params.page || 1) < data.total_pages,
       };
-
     } catch (error) {
       // Fallback to demo data on error
-      console.warn('Unsplash API error, falling back to demo mode:', error);
+      console.warn("Unsplash API error, falling back to demo mode:", error);
       return this.generateDemoImages(params);
     }
   }
@@ -410,7 +419,7 @@ class UnsplashService {
    */
   async getImage(id: string): Promise<ProcessedImage> {
     const cacheKey = `unsplash:image:${id}`;
-    
+
     try {
       // Check cache first
       const cached = await vercelKvCache.get<UnsplashImage>(cacheKey);
@@ -427,7 +436,6 @@ class UnsplashService {
 
       const [processedImage] = this.processImages([image]);
       return processedImage;
-
     } catch (error) {
       if (error instanceof APIError) {
         throw error;
@@ -469,13 +477,16 @@ class UnsplashService {
   /**
    * Gets popular images with caching
    */
-  async getPopularImages(page = 1, perPage = 30): Promise<{
+  async getPopularImages(
+    page = 1,
+    perPage = 30,
+  ): Promise<{
     images: ProcessedImage[];
     currentPage: number;
     hasNextPage: boolean;
   }> {
     const cacheKey = `unsplash:popular:${page}:${perPage}`;
-    
+
     try {
       // Check cache first
       const cached = await vercelKvCache.get<UnsplashImage[]>(cacheKey);
@@ -488,11 +499,11 @@ class UnsplashService {
         };
       }
 
-      const response = await this.client.get<UnsplashImage[]>('/photos', {
+      const response = await this.client.get<UnsplashImage[]>("/photos", {
         params: {
           page,
           per_page: Math.min(perPage, 30),
-          order_by: 'popular',
+          order_by: "popular",
         },
       });
 
@@ -508,7 +519,6 @@ class UnsplashService {
         currentPage: page,
         hasNextPage: images.length === perPage,
       };
-
     } catch (error) {
       if (error instanceof APIError) {
         throw error;
@@ -525,7 +535,13 @@ class APIError extends Error {
   details?: any;
   retryAfter?: number;
 
-  constructor({ code, message, status, details, retryAfter }: {
+  constructor({
+    code,
+    message,
+    status,
+    details,
+    retryAfter,
+  }: {
     code: string;
     message: string;
     status: number;
@@ -533,7 +549,7 @@ class APIError extends Error {
     retryAfter?: number;
   }) {
     super(message);
-    this.name = 'APIError';
+    this.name = "APIError";
     this.code = code;
     this.status = status;
     this.details = details;

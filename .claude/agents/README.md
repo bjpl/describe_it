@@ -62,6 +62,7 @@ Agent files follow this naming pattern:
 `[type]-[specialization]-[capability].agent.yaml`
 
 Examples:
+
 - `dev-backend-api.agent.yaml`
 - `test-unit-jest.agent.yaml`
 - `arch-cloud-aws.agent.yaml`
@@ -70,6 +71,7 @@ Examples:
 ## Automatic Delegation Triggers
 
 Claude Code automatically delegates to agents based on:
+
 1. **Keywords in user request**: "test", "deploy", "document", "review"
 2. **File patterns**: `*.test.js` → testing agent, `*.tf` → infrastructure agent
 3. **Task complexity**: Multi-step tasks spawn coordinator agents
@@ -78,6 +80,7 @@ Claude Code automatically delegates to agents based on:
 ## Tool Restrictions
 
 Each agent type has specific tool access:
+
 - **Development agents**: Full file system access, code execution
 - **Testing agents**: Test runners, coverage tools, limited write access
 - **Architecture agents**: Read-only access, diagram generation

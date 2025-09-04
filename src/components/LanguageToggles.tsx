@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Eye, EyeOff } from 'lucide-react';
-import { LanguageVisibility } from '@/types';
+import React from "react";
+import { motion } from "framer-motion";
+import { Eye, EyeOff } from "lucide-react";
+import { LanguageVisibility } from "@/types";
 
 interface LanguageTogglesProps {
   visibility: LanguageVisibility;
@@ -14,19 +14,19 @@ interface LanguageTogglesProps {
 export function LanguageToggles({
   visibility,
   onVisibilityChange,
-  className = ''
+  className = "",
 }: LanguageTogglesProps) {
   const toggleEnglish = () => {
     onVisibilityChange({
       ...visibility,
-      showEnglish: !visibility.showEnglish
+      showEnglish: !visibility.showEnglish,
     });
   };
 
   const toggleSpanish = () => {
     onVisibilityChange({
       ...visibility,
-      showSpanish: !visibility.showSpanish
+      showSpanish: !visibility.showSpanish,
     });
   };
 
@@ -35,14 +35,14 @@ export function LanguageToggles({
       <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
         Show:
       </span>
-      
+
       {/* English Toggle */}
       <motion.button
         onClick={toggleEnglish}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${
           visibility.showEnglish
-            ? 'bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-300'
-            : 'bg-gray-100 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
+            ? "bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-300"
+            : "bg-gray-100 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400"
         }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -61,8 +61,8 @@ export function LanguageToggles({
         onClick={toggleSpanish}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${
           visibility.showSpanish
-            ? 'bg-green-100 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-600 dark:text-green-300'
-            : 'bg-gray-100 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
+            ? "bg-green-100 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-600 dark:text-green-300"
+            : "bg-gray-100 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400"
         }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
@@ -79,14 +79,18 @@ export function LanguageToggles({
       {/* Quick Actions */}
       <div className="border-l border-gray-300 dark:border-gray-600 pl-2 ml-2">
         <button
-          onClick={() => onVisibilityChange({ showEnglish: true, showSpanish: true })}
+          onClick={() =>
+            onVisibilityChange({ showEnglish: true, showSpanish: true })
+          }
           className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
         >
           Show All
         </button>
         <span className="mx-1 text-gray-300 dark:text-gray-600">•</span>
         <button
-          onClick={() => onVisibilityChange({ showEnglish: false, showSpanish: true })}
+          onClick={() =>
+            onVisibilityChange({ showEnglish: false, showSpanish: true })
+          }
           className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
         >
           ES Only

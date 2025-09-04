@@ -1,11 +1,11 @@
 // Re-export all validation schemas for centralized access
-export * from './auth';
-export * from './vocabulary';
-export * from './sessions';
-export * from './progress';
+export * from "./auth";
+export * from "./vocabulary";
+export * from "./sessions";
+export * from "./progress";
 
 // Common validation utilities
-import { z } from 'zod';
+import { z } from "zod";
 
 export const paginationSchema = z.object({
   limit: z.number().min(1).max(100).default(20),
@@ -15,7 +15,7 @@ export const paginationSchema = z.object({
 
 export const sortingSchema = z.object({
   sort_by: z.string().min(1),
-  sort_order: z.enum(['asc', 'desc']).default('desc'),
+  sort_order: z.enum(["asc", "desc"]).default("desc"),
 });
 
 export const dateRangeSchema = z.object({
@@ -36,13 +36,15 @@ export const apiResponseSchema = z.object({
   data: z.any().nullable(),
   error: z.string().nullable(),
   message: z.string().optional(),
-  meta: z.object({
-    total: z.number().optional(),
-    page: z.number().optional(),
-    limit: z.number().optional(),
-    has_more: z.boolean().optional(),
-    pages: z.number().optional(),
-  }).optional(),
+  meta: z
+    .object({
+      total: z.number().optional(),
+      page: z.number().optional(),
+      limit: z.number().optional(),
+      has_more: z.boolean().optional(),
+      pages: z.number().optional(),
+    })
+    .optional(),
 });
 
 export type PaginationRequest = z.infer<typeof paginationSchema>;

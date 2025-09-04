@@ -1,8 +1,15 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Package, Zap, AlertTriangle, TrendingUp, FileText, Layers } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Package,
+  Zap,
+  AlertTriangle,
+  TrendingUp,
+  FileText,
+  Layers,
+} from "lucide-react";
 
 interface BundleStats {
   totalSize: number;
@@ -11,7 +18,7 @@ interface BundleStats {
     name: string;
     size: number;
     modules: number;
-    type: 'main' | 'vendor' | 'async';
+    type: "main" | "vendor" | "async";
   }>;
   modules: Array<{
     name: string;
@@ -24,9 +31,9 @@ interface BundleStats {
     totalSize: number;
   }>;
   suggestions: Array<{
-    type: 'warning' | 'info' | 'error';
+    type: "warning" | "info" | "error";
     message: string;
-    impact: 'high' | 'medium' | 'low';
+    impact: "high" | "medium" | "low";
   }>;
 }
 
@@ -36,8 +43,8 @@ interface BundleAnalyzerProps {
 }
 
 export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
-  enabled = process.env.NODE_ENV === 'development',
-  onOptimizationSuggestion
+  enabled = process.env.NODE_ENV === "development",
+  onOptimizationSuggestion,
 }) => {
   const [stats, setStats] = useState<BundleStats | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -57,56 +64,56 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
       // Simulate bundle analysis (in real implementation, this would call webpack-bundle-analyzer API)
       const mockStats: BundleStats = await simulateBundleAnalysis();
       setStats(mockStats);
-      
+
       // Generate optimization suggestions
       generateOptimizationSuggestions(mockStats);
     } catch (error) {
-      console.error('Bundle analysis failed:', error);
+      console.error("Bundle analysis failed:", error);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
   const simulateBundleAnalysis = (): Promise<BundleStats> => {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       setTimeout(() => {
         resolve({
           totalSize: 1250000, // 1.25MB
           gzippedSize: 420000, // 420KB
           chunks: [
-            { name: 'main', size: 450000, modules: 125, type: 'main' },
-            { name: 'vendors', size: 650000, modules: 280, type: 'vendor' },
-            { name: 'ui-libs', size: 100000, modules: 35, type: 'async' },
-            { name: 'animations', size: 50000, modules: 12, type: 'async' }
+            { name: "main", size: 450000, modules: 125, type: "main" },
+            { name: "vendors", size: 650000, modules: 280, type: "vendor" },
+            { name: "ui-libs", size: 100000, modules: 35, type: "async" },
+            { name: "animations", size: 50000, modules: 12, type: "async" },
           ],
           modules: [
-            { name: 'framer-motion', size: 180000, optimizable: true },
-            { name: 'react-query', size: 125000, optimizable: false },
-            { name: 'lucide-react', size: 95000, optimizable: true },
-            { name: 'lodash-es', size: 85000, optimizable: true },
-            { name: '@radix-ui/react-*', size: 150000, optimizable: false }
+            { name: "framer-motion", size: 180000, optimizable: true },
+            { name: "react-query", size: 125000, optimizable: false },
+            { name: "lucide-react", size: 95000, optimizable: true },
+            { name: "lodash-es", size: 85000, optimizable: true },
+            { name: "@radix-ui/react-*", size: 150000, optimizable: false },
           ],
           duplicates: [
-            { module: 'react', count: 2, totalSize: 85000 },
-            { module: 'tslib', count: 3, totalSize: 45000 }
+            { module: "react", count: 2, totalSize: 85000 },
+            { module: "tslib", count: 3, totalSize: 45000 },
           ],
           suggestions: [
             {
-              type: 'warning',
-              message: 'Consider code splitting for framer-motion (180KB)',
-              impact: 'high'
+              type: "warning",
+              message: "Consider code splitting for framer-motion (180KB)",
+              impact: "high",
             },
             {
-              type: 'info',
-              message: 'Tree-shake lucide-react icons (potential 40KB savings)',
-              impact: 'medium'
+              type: "info",
+              message: "Tree-shake lucide-react icons (potential 40KB savings)",
+              impact: "medium",
             },
             {
-              type: 'error',
-              message: 'Duplicate React instances found - check dependencies',
-              impact: 'high'
-            }
-          ]
+              type: "error",
+              message: "Duplicate React instances found - check dependencies",
+              impact: "high",
+            },
+          ],
         });
       }, 1500);
     });
@@ -114,36 +121,39 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
 
   const generateOptimizationSuggestions = (bundleStats: BundleStats) => {
     const suggestions = bundleStats.suggestions;
-    
-    suggestions.forEach(suggestion => {
-      if (suggestion.impact === 'high') {
+
+    suggestions.forEach((suggestion) => {
+      if (suggestion.impact === "high") {
         onOptimizationSuggestion?.(suggestion.message);
       }
     });
   };
 
   const formatSize = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
+    if (bytes === 0) return "0 Bytes";
     const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const sizes = ["Bytes", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   const getBundleScore = useMemo(() => {
     if (!stats) return 0;
-    
-    const sizeScore = Math.max(0, 100 - (stats.gzippedSize / 10000)); // Penalty for size > 1MB
-    const duplicateScore = Math.max(0, 100 - (stats.duplicates.length * 20));
-    const optimizationScore = stats.modules.filter(m => !m.optimizable).length / stats.modules.length * 100;
-    
+
+    const sizeScore = Math.max(0, 100 - stats.gzippedSize / 10000); // Penalty for size > 1MB
+    const duplicateScore = Math.max(0, 100 - stats.duplicates.length * 20);
+    const optimizationScore =
+      (stats.modules.filter((m) => !m.optimizable).length /
+        stats.modules.length) *
+      100;
+
     return Math.round((sizeScore + duplicateScore + optimizationScore) / 3);
   }, [stats]);
 
   const getScoreColor = (score: number) => {
-    if (score >= 80) return 'text-green-500';
-    if (score >= 60) return 'text-yellow-500';
-    return 'text-red-500';
+    if (score >= 80) return "text-green-500";
+    if (score >= 60) return "text-yellow-500";
+    return "text-red-500";
   };
 
   if (!enabled) return null;
@@ -166,10 +176,10 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
               onClick={() => setShowDetails(!showDetails)}
               className="text-white hover:text-gray-200 transition-colors"
             >
-              {showDetails ? '−' : '+'}
+              {showDetails ? "−" : "+"}
             </button>
           </div>
-          
+
           {stats && (
             <div className="mt-2 flex items-center justify-between text-sm">
               <span>{formatSize(stats.gzippedSize)} gzipped</span>
@@ -199,7 +209,7 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
           {showDetails && stats && !isAnalyzing && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
@@ -212,12 +222,20 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
                   </h4>
                   <div className="grid grid-cols-2 gap-2 text-sm">
                     <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                      <div className="text-gray-600 dark:text-gray-400">Total</div>
-                      <div className="font-medium">{formatSize(stats.totalSize)}</div>
+                      <div className="text-gray-600 dark:text-gray-400">
+                        Total
+                      </div>
+                      <div className="font-medium">
+                        {formatSize(stats.totalSize)}
+                      </div>
                     </div>
                     <div className="bg-gray-50 dark:bg-gray-700 p-2 rounded">
-                      <div className="text-gray-600 dark:text-gray-400">Gzipped</div>
-                      <div className="font-medium">{formatSize(stats.gzippedSize)}</div>
+                      <div className="text-gray-600 dark:text-gray-400">
+                        Gzipped
+                      </div>
+                      <div className="font-medium">
+                        {formatSize(stats.gzippedSize)}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -226,23 +244,31 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
                 <div className="mb-4">
                   <h4 className="font-medium mb-2">Chunks</h4>
                   <div className="space-y-1">
-                    {stats.chunks.map(chunk => (
+                    {stats.chunks.map((chunk) => (
                       <div
                         key={chunk.name}
                         className={`p-2 rounded text-sm cursor-pointer transition-colors ${
                           selectedChunk === chunk.name
-                            ? 'bg-blue-100 dark:bg-blue-900'
-                            : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
+                            ? "bg-blue-100 dark:bg-blue-900"
+                            : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
                         }`}
-                        onClick={() => setSelectedChunk(selectedChunk === chunk.name ? null : chunk.name)}
+                        onClick={() =>
+                          setSelectedChunk(
+                            selectedChunk === chunk.name ? null : chunk.name,
+                          )
+                        }
                       >
                         <div className="flex justify-between items-center">
                           <span className="font-medium">{chunk.name}</span>
-                          <span className={`px-1 text-xs rounded ${
-                            chunk.type === 'main' ? 'bg-red-100 text-red-700' :
-                            chunk.type === 'vendor' ? 'bg-yellow-100 text-yellow-700' :
-                            'bg-green-100 text-green-700'
-                          }`}>
+                          <span
+                            className={`px-1 text-xs rounded ${
+                              chunk.type === "main"
+                                ? "bg-red-100 text-red-700"
+                                : chunk.type === "vendor"
+                                  ? "bg-yellow-100 text-yellow-700"
+                                  : "bg-green-100 text-green-700"
+                            }`}
+                          >
                             {chunk.type}
                           </span>
                         </div>
@@ -266,17 +292,19 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
                       <div
                         key={index}
                         className={`p-2 rounded-lg text-sm border-l-4 ${
-                          suggestion.type === 'error'
-                            ? 'bg-red-50 dark:bg-red-900/20 border-red-500'
-                            : suggestion.type === 'warning'
-                            ? 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500'
-                            : 'bg-blue-50 dark:bg-blue-900/20 border-blue-500'
+                          suggestion.type === "error"
+                            ? "bg-red-50 dark:bg-red-900/20 border-red-500"
+                            : suggestion.type === "warning"
+                              ? "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-500"
+                              : "bg-blue-50 dark:bg-blue-900/20 border-blue-500"
                         }`}
                       >
                         <div className="flex items-start gap-2">
                           <AlertTriangle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                           <div className="flex-1">
-                            <div className="font-medium">{suggestion.message}</div>
+                            <div className="font-medium">
+                              {suggestion.message}
+                            </div>
                             <div className="text-xs text-gray-600 dark:text-gray-400 mt-1">
                               Impact: {suggestion.impact}
                             </div>
@@ -295,14 +323,15 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
                       Duplicate Modules
                     </h4>
                     <div className="space-y-1">
-                      {stats.duplicates.map(duplicate => (
+                      {stats.duplicates.map((duplicate) => (
                         <div
                           key={duplicate.module}
                           className="p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded text-sm"
                         >
                           <div className="font-medium">{duplicate.module}</div>
                           <div className="text-yellow-700 dark:text-yellow-300 text-xs">
-                            {duplicate.count} instances • {formatSize(duplicate.totalSize)} total
+                            {duplicate.count} instances •{" "}
+                            {formatSize(duplicate.totalSize)} total
                           </div>
                         </div>
                       ))}
@@ -354,26 +383,33 @@ Overview:
 - Compression Ratio: ${((1 - stats.gzippedSize / stats.totalSize) * 100).toFixed(1)}%
 
 Chunks:
-${stats.chunks.map(chunk => 
-  `- ${chunk.name} (${chunk.type}): ${formatSize(chunk.size)} (${chunk.modules} modules)`
-).join('\n')}
+${stats.chunks
+  .map(
+    (chunk) =>
+      `- ${chunk.name} (${chunk.type}): ${formatSize(chunk.size)} (${chunk.modules} modules)`,
+  )
+  .join("\n")}
 
 Optimization Suggestions:
-${stats.suggestions.map(s => `- [${s.type.toUpperCase()}] ${s.message} (Impact: ${s.impact})`).join('\n')}
+${stats.suggestions.map((s) => `- [${s.type.toUpperCase()}] ${s.message} (Impact: ${s.impact})`).join("\n")}
 
-${stats.duplicates.length > 0 ? `
+${
+  stats.duplicates.length > 0
+    ? `
 Duplicate Modules:
-${stats.duplicates.map(d => `- ${d.module}: ${d.count} instances, ${formatSize(d.totalSize)}`).join('\n')}
-` : ''}
+${stats.duplicates.map((d) => `- ${d.module}: ${d.count} instances, ${formatSize(d.totalSize)}`).join("\n")}
+`
+    : ""
+}
 
 Generated: ${new Date().toLocaleString()}
   `.trim();
 };
 
 function formatSize(bytes: number): string {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return "0 Bytes";
   const k = 1024;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
 }

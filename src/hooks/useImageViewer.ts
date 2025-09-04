@@ -1,5 +1,5 @@
-import { useState, useCallback } from 'react';
-import { Image } from '@/types';
+import { useState, useCallback } from "react";
+import { Image } from "@/types";
 
 export function useImageViewer() {
   const [currentImage, setCurrentImage] = useState<Image | null>(null);
@@ -19,11 +19,11 @@ export function useImageViewer() {
   }, []);
 
   const zoomIn = useCallback(() => {
-    setScale(prev => Math.min(prev * 1.2, 3));
+    setScale((prev) => Math.min(prev * 1.2, 3));
   }, []);
 
   const zoomOut = useCallback(() => {
-    setScale(prev => Math.max(prev / 1.2, 0.5));
+    setScale((prev) => Math.max(prev / 1.2, 0.5));
   }, []);
 
   const resetZoom = useCallback(() => {
@@ -38,6 +38,6 @@ export function useImageViewer() {
     closeImage,
     zoomIn,
     zoomOut,
-    resetZoom
+    resetZoom,
   };
 }

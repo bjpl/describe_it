@@ -1,16 +1,16 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  Download, 
-  BarChart3, 
-  Clock, 
-  Target, 
-  CheckCircle, 
+import React, { useState, useCallback, useMemo, memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Download,
+  BarChart3,
+  Clock,
+  Target,
+  CheckCircle,
   XCircle,
   AlertCircle,
   Lightbulb,
@@ -19,9 +19,9 @@ import {
   Timer,
   Brain,
   BookOpen,
-  Volume2
-} from 'lucide-react';
-import { useQASystem } from '@/hooks/useQASystem';
+  Volume2,
+} from "lucide-react";
+import { useQASystem } from "@/hooks/useQASystem";
 
 interface Question {
   id: string;
@@ -29,7 +29,7 @@ interface Question {
   options: string[];
   correctAnswer: number;
   explanation: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   category: string;
   timeLimit?: number;
 }
@@ -48,29 +48,35 @@ interface QASessionData {
 interface EnhancedQASystemProps {
   imageUrl: string;
   description: string;
-  language?: 'es' | 'en';
-  difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'mixed';
+  language?: "es" | "en";
+  difficulty?: "beginner" | "intermediate" | "advanced" | "mixed";
   questionCount?: number;
   timeLimit?: number;
   showHints?: boolean;
   allowSkip?: boolean;
   onSessionComplete?: (sessionData: QASessionData) => void;
-  onQuestionAnswered?: (questionId: string, isCorrect: boolean, timeSpent: number) => void;
+  onQuestionAnswered?: (
+    questionId: string,
+    isCorrect: boolean,
+    timeSpent: number,
+  ) => void;
 }
 
 const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
   imageUrl,
   description,
-  language = 'es',
-  difficulty = 'mixed',
+  language = "es",
+  difficulty = "mixed",
   questionCount = 10,
   timeLimit = 30,
   showHints = true,
   allowSkip = false,
   onSessionComplete,
-  onQuestionAnswered
+  onQuestionAnswered,
 }) => {
-  const [sessionState, setSessionState] = useState<'setup' | 'active' | 'paused' | 'completed'>('setup');
+  const [sessionState, setSessionState] = useState<
+    "setup" | "active" | "paused" | "completed"
+  >("setup");
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
@@ -84,7 +90,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
     averageTime: 0,
     accuracy: 0,
     streak: 0,
-    maxStreak: 0
+    maxStreak: 0,
   });
   const [showHint, setShowHint] = useState(false);
   const [questionAnswered, setQuestionAnswered] = useState(false);
@@ -93,53 +99,82 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
   const questions = useMemo<Question[]>(() => {
     const baseQuestions: Question[] = [
       {
-        id: '1',
-        question: language === 'es' 
-          ? '¿Cuál es el elemento principal que se describe en la imagen?' 
-          : 'What is the main element described in the image?',
-        options: language === 'es'
-          ? ['Un paisaje natural', 'Un edificio moderno', 'Una persona', 'Un objeto cotidiano']
-          : ['A natural landscape', 'A modern building', 'A person', 'An everyday object'],
+        id: "1",
+        question:
+          language === "es"
+            ? "¿Cuál es el elemento principal que se describe en la imagen?"
+            : "What is the main element described in the image?",
+        options:
+          language === "es"
+            ? [
+                "Un paisaje natural",
+                "Un edificio moderno",
+                "Una persona",
+                "Un objeto cotidiano",
+              ]
+            : [
+                "A natural landscape",
+                "A modern building",
+                "A person",
+                "An everyday object",
+              ],
         correctAnswer: 0,
-        explanation: language === 'es'
-          ? 'La descripción indica principalmente elementos naturales en la imagen.'
-          : 'The description primarily indicates natural elements in the image.',
-        difficulty: 'beginner',
-        category: 'comprehension',
-        timeLimit
+        explanation:
+          language === "es"
+            ? "La descripción indica principalmente elementos naturales en la imagen."
+            : "The description primarily indicates natural elements in the image.",
+        difficulty: "beginner",
+        category: "comprehension",
+        timeLimit,
       },
       {
-        id: '2',
-        question: language === 'es'
-          ? '¿Qué sentimiento evoca principalmente la imagen según la descripción?'
-          : 'What feeling does the image primarily evoke according to the description?',
-        options: language === 'es'
-          ? ['Tranquilidad', 'Energía', 'Misterio', 'Nostalgia']
-          : ['Tranquility', 'Energy', 'Mystery', 'Nostalgia'],
+        id: "2",
+        question:
+          language === "es"
+            ? "¿Qué sentimiento evoca principalmente la imagen según la descripción?"
+            : "What feeling does the image primarily evoke according to the description?",
+        options:
+          language === "es"
+            ? ["Tranquilidad", "Energía", "Misterio", "Nostalgia"]
+            : ["Tranquility", "Energy", "Mystery", "Nostalgia"],
         correctAnswer: 0,
-        explanation: language === 'es'
-          ? 'Las descripciones suelen evocar sensaciones de tranquilidad en paisajes naturales.'
-          : 'Descriptions usually evoke feelings of tranquility in natural landscapes.',
-        difficulty: 'intermediate',
-        category: 'interpretation',
-        timeLimit
+        explanation:
+          language === "es"
+            ? "Las descripciones suelen evocar sensaciones de tranquilidad en paisajes naturales."
+            : "Descriptions usually evoke feelings of tranquility in natural landscapes.",
+        difficulty: "intermediate",
+        category: "interpretation",
+        timeLimit,
       },
       {
-        id: '3',
-        question: language === 'es'
-          ? '¿Cuál sería la mejor traducción para el contexto de esta imagen?'
-          : 'What would be the best translation for the context of this image?',
-        options: language === 'es'
-          ? ['Hermoso paisaje → Beautiful landscape', 'Ciudad moderna → Modern city', 'Vida urbana → Urban life', 'Arte contemporáneo → Contemporary art']
-          : ['Beautiful landscape → Hermoso paisaje', 'Modern city → Ciudad moderna', 'Urban life → Vida urbana', 'Contemporary art → Arte contemporáneo'],
+        id: "3",
+        question:
+          language === "es"
+            ? "¿Cuál sería la mejor traducción para el contexto de esta imagen?"
+            : "What would be the best translation for the context of this image?",
+        options:
+          language === "es"
+            ? [
+                "Hermoso paisaje → Beautiful landscape",
+                "Ciudad moderna → Modern city",
+                "Vida urbana → Urban life",
+                "Arte contemporáneo → Contemporary art",
+              ]
+            : [
+                "Beautiful landscape → Hermoso paisaje",
+                "Modern city → Ciudad moderna",
+                "Urban life → Vida urbana",
+                "Contemporary art → Arte contemporáneo",
+              ],
         correctAnswer: 0,
-        explanation: language === 'es'
-          ? 'La traducción debe reflejar el contexto visual de la imagen.'
-          : 'The translation should reflect the visual context of the image.',
-        difficulty: 'advanced',
-        category: 'translation',
-        timeLimit: timeLimit + 10
-      }
+        explanation:
+          language === "es"
+            ? "La traducción debe reflejar el contexto visual de la imagen."
+            : "The translation should reflect the visual context of the image.",
+        difficulty: "advanced",
+        category: "translation",
+        timeLimit: timeLimit + 10,
+      },
     ];
 
     return baseQuestions.slice(0, questionCount);
@@ -147,14 +182,16 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 
   const currentQuestion = questions[currentQuestionIndex];
   const isLastQuestion = currentQuestionIndex === questions.length - 1;
-  const progress = ((currentQuestionIndex + (questionAnswered ? 1 : 0)) / questions.length) * 100;
+  const progress =
+    ((currentQuestionIndex + (questionAnswered ? 1 : 0)) / questions.length) *
+    100;
 
   // Timer effect
   React.useEffect(() => {
-    if (sessionState !== 'active' || questionAnswered) return;
+    if (sessionState !== "active" || questionAnswered) return;
 
     const interval = setInterval(() => {
-      setTimeRemaining(prev => {
+      setTimeRemaining((prev) => {
         if (prev <= 1) {
           // Time's up - auto-answer incorrectly
           handleAnswerSubmit(null, true);
@@ -168,21 +205,21 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
   }, [sessionState, questionAnswered, timeLimit]);
 
   const startSession = useCallback(() => {
-    setSessionState('active');
+    setSessionState("active");
     setStartTime(Date.now());
     setTimeRemaining(timeLimit);
   }, [timeLimit]);
 
   const pauseSession = useCallback(() => {
-    setSessionState('paused');
+    setSessionState("paused");
   }, []);
 
   const resumeSession = useCallback(() => {
-    setSessionState('active');
+    setSessionState("active");
   }, []);
 
   const resetSession = useCallback(() => {
-    setSessionState('setup');
+    setSessionState("setup");
     setCurrentQuestionIndex(0);
     setSelectedAnswer(null);
     setShowExplanation(false);
@@ -195,64 +232,79 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
       averageTime: 0,
       accuracy: 0,
       streak: 0,
-      maxStreak: 0
+      maxStreak: 0,
     });
     setShowHint(false);
     setQuestionAnswered(false);
   }, [questionCount, timeLimit]);
 
-  const handleAnswerSelect = useCallback((answerIndex: number) => {
-    if (questionAnswered) return;
-    setSelectedAnswer(answerIndex);
-  }, [questionAnswered]);
+  const handleAnswerSelect = useCallback(
+    (answerIndex: number) => {
+      if (questionAnswered) return;
+      setSelectedAnswer(answerIndex);
+    },
+    [questionAnswered],
+  );
 
-  const handleAnswerSubmit = useCallback((answer: number | null = selectedAnswer, timeUp = false) => {
-    if (questionAnswered) return;
+  const handleAnswerSubmit = useCallback(
+    (answer: number | null = selectedAnswer, timeUp = false) => {
+      if (questionAnswered) return;
 
-    const questionTime = timeLimit - timeRemaining;
-    const isCorrect = answer === currentQuestion.correctAnswer;
-    
-    setQuestionAnswered(true);
-    setShowExplanation(true);
+      const questionTime = timeLimit - timeRemaining;
+      const isCorrect = answer === currentQuestion.correctAnswer;
 
-    // Update session data
-    setSessionData(prev => {
-      const newAnsweredCount = prev.answeredQuestions + 1;
-      const newCorrectCount = isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers;
-      const newStreak = isCorrect ? prev.streak + 1 : 0;
-      const newMaxStreak = Math.max(prev.maxStreak, newStreak);
-      const newTotalTime = prev.totalTime + questionTime;
-      const newAverageTime = newTotalTime / newAnsweredCount;
-      const accuracy = Math.round((newCorrectCount / newAnsweredCount) * 100);
+      setQuestionAnswered(true);
+      setShowExplanation(true);
 
-      return {
-        totalQuestions: prev.totalQuestions,
-        answeredQuestions: newAnsweredCount,
-        correctAnswers: newCorrectCount,
-        totalTime: newTotalTime,
-        averageTime: newAverageTime,
-        accuracy,
-        streak: newStreak,
-        maxStreak: newMaxStreak
-      };
-    });
+      // Update session data
+      setSessionData((prev) => {
+        const newAnsweredCount = prev.answeredQuestions + 1;
+        const newCorrectCount = isCorrect
+          ? prev.correctAnswers + 1
+          : prev.correctAnswers;
+        const newStreak = isCorrect ? prev.streak + 1 : 0;
+        const newMaxStreak = Math.max(prev.maxStreak, newStreak);
+        const newTotalTime = prev.totalTime + questionTime;
+        const newAverageTime = newTotalTime / newAnsweredCount;
+        const accuracy = Math.round((newCorrectCount / newAnsweredCount) * 100);
 
-    // Call callback if provided
-    if (onQuestionAnswered) {
-      onQuestionAnswered(currentQuestion.id, isCorrect, questionTime);
-    }
-  }, [selectedAnswer, questionAnswered, timeLimit, timeRemaining, currentQuestion, onQuestionAnswered]);
+        return {
+          totalQuestions: prev.totalQuestions,
+          answeredQuestions: newAnsweredCount,
+          correctAnswers: newCorrectCount,
+          totalTime: newTotalTime,
+          averageTime: newAverageTime,
+          accuracy,
+          streak: newStreak,
+          maxStreak: newMaxStreak,
+        };
+      });
+
+      // Call callback if provided
+      if (onQuestionAnswered) {
+        onQuestionAnswered(currentQuestion.id, isCorrect, questionTime);
+      }
+    },
+    [
+      selectedAnswer,
+      questionAnswered,
+      timeLimit,
+      timeRemaining,
+      currentQuestion,
+      onQuestionAnswered,
+    ],
+  );
 
   const handleNextQuestion = useCallback(() => {
     if (isLastQuestion) {
       // Complete session
-      setSessionState('completed');
+      setSessionState("completed");
       if (onSessionComplete) {
         onSessionComplete(sessionData);
       }
     } else {
       // Move to next question
-      setCurrentQuestionIndex(prev => prev + 1);
+      setCurrentQuestionIndex((prev) => prev + 1);
       setSelectedAnswer(null);
       setShowExplanation(false);
       setTimeRemaining(timeLimit);
@@ -267,27 +319,31 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
   }, [allowSkip, handleAnswerSubmit]);
 
   const toggleHint = useCallback(() => {
-    setShowHint(prev => !prev);
+    setShowHint((prev) => !prev);
   }, []);
 
   const getDifficultyColor = (diff: string) => {
     switch (diff) {
-      case 'beginner': return 'text-green-600 bg-green-100';
-      case 'intermediate': return 'text-yellow-600 bg-yellow-100';
-      case 'advanced': return 'text-red-600 bg-red-100';
-      default: return 'text-gray-600 bg-gray-100';
+      case "beginner":
+        return "text-green-600 bg-green-100";
+      case "intermediate":
+        return "text-yellow-600 bg-yellow-100";
+      case "advanced":
+        return "text-red-600 bg-red-100";
+      default:
+        return "text-gray-600 bg-gray-100";
     }
   };
 
   const getTimeColor = (time: number, limit: number) => {
     const ratio = time / limit;
-    if (ratio > 0.5) return 'text-green-600';
-    if (ratio > 0.25) return 'text-yellow-600';
-    return 'text-red-600';
+    if (ratio > 0.5) return "text-green-600";
+    if (ratio > 0.25) return "text-yellow-600";
+    return "text-red-600";
   };
 
   // Setup screen
-  if (sessionState === 'setup') {
+  if (sessionState === "setup") {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -297,29 +353,34 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
         <div className="w-20 h-20 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-6">
           <Brain className="h-10 w-10 text-blue-600" />
         </div>
-        
+
         <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-          {language === 'es' ? 'Sistema de Preguntas Avanzado' : 'Advanced Q&A System'}
+          {language === "es"
+            ? "Sistema de Preguntas Avanzado"
+            : "Advanced Q&A System"}
         </h2>
-        
+
         <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-          {language === 'es' 
+          {language === "es"
             ? `Responde ${questionCount} preguntas sobre la imagen. Cada pregunta tiene ${timeLimit} segundos.`
-            : `Answer ${questionCount} questions about the image. Each question has ${timeLimit} seconds.`
-          }
+            : `Answer ${questionCount} questions about the image. Each question has ${timeLimit} seconds.`}
         </p>
 
         <div className="grid grid-cols-2 gap-4 mb-6 max-w-md mx-auto">
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-            <div className="text-2xl font-bold text-blue-600">{questionCount}</div>
+            <div className="text-2xl font-bold text-blue-600">
+              {questionCount}
+            </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {language === 'es' ? 'Preguntas' : 'Questions'}
+              {language === "es" ? "Preguntas" : "Questions"}
             </div>
           </div>
           <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-3">
-            <div className="text-2xl font-bold text-green-600">{timeLimit}s</div>
+            <div className="text-2xl font-bold text-green-600">
+              {timeLimit}s
+            </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {language === 'es' ? 'Por pregunta' : 'Per question'}
+              {language === "es" ? "Por pregunta" : "Per question"}
             </div>
           </div>
         </div>
@@ -331,14 +392,14 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
           whileTap={{ scale: 0.95 }}
         >
           <Play className="h-5 w-5" />
-          {language === 'es' ? 'Comenzar Quiz' : 'Start Quiz'}
+          {language === "es" ? "Comenzar Quiz" : "Start Quiz"}
         </motion.button>
       </motion.div>
     );
   }
 
   // Completed screen
-  if (sessionState === 'completed') {
+  if (sessionState === "completed") {
     return (
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -349,10 +410,11 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
         <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl p-8 text-center">
           <Trophy className="h-16 w-16 mx-auto mb-4" />
           <h2 className="text-3xl font-bold mb-2">
-            {language === 'es' ? '¡Quiz Completado!' : 'Quiz Complete!'}
+            {language === "es" ? "¡Quiz Completado!" : "Quiz Complete!"}
           </h2>
           <p className="text-xl opacity-90">
-            {sessionData.accuracy}% {language === 'es' ? 'de precisión' : 'accuracy'}
+            {sessionData.accuracy}%{" "}
+            {language === "es" ? "de precisión" : "accuracy"}
           </p>
         </div>
 
@@ -364,7 +426,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
               {sessionData.correctAnswers}/{sessionData.totalQuestions}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {language === 'es' ? 'Correctas' : 'Correct'}
+              {language === "es" ? "Correctas" : "Correct"}
             </div>
           </div>
 
@@ -374,7 +436,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
               {Math.round(sessionData.averageTime)}s
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {language === 'es' ? 'Promedio' : 'Average'}
+              {language === "es" ? "Promedio" : "Average"}
             </div>
           </div>
 
@@ -384,7 +446,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
               {sessionData.maxStreak}
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {language === 'es' ? 'Mejor Racha' : 'Best Streak'}
+              {language === "es" ? "Mejor Racha" : "Best Streak"}
             </div>
           </div>
 
@@ -394,7 +456,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
               {Math.round(sessionData.totalTime)}s
             </div>
             <div className="text-sm text-gray-600 dark:text-gray-400">
-              {language === 'es' ? 'Total' : 'Total'}
+              {language === "es" ? "Total" : "Total"}
             </div>
           </div>
         </div>
@@ -408,17 +470,19 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
             whileTap={{ scale: 0.95 }}
           >
             <RotateCcw className="h-4 w-4" />
-            {language === 'es' ? 'Nuevo Quiz' : 'New Quiz'}
+            {language === "es" ? "Nuevo Quiz" : "New Quiz"}
           </motion.button>
 
           <motion.button
-            onClick={() => {/* Export functionality */}}
+            onClick={() => {
+              /* Export functionality */
+            }}
             className="flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <Download className="h-4 w-4" />
-            {language === 'es' ? 'Exportar' : 'Export'}
+            {language === "es" ? "Exportar" : "Export"}
           </motion.button>
         </div>
       </motion.div>
@@ -433,25 +497,39 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
-              {language === 'es' ? 'Pregunta' : 'Question'} {currentQuestionIndex + 1} {language === 'es' ? 'de' : 'of'} {questions.length}
+              {language === "es" ? "Pregunta" : "Question"}{" "}
+              {currentQuestionIndex + 1} {language === "es" ? "de" : "of"}{" "}
+              {questions.length}
             </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}>
+            <span
+              className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(currentQuestion.difficulty)}`}
+            >
               {currentQuestion.difficulty}
             </span>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className={`flex items-center gap-2 ${getTimeColor(timeRemaining, timeLimit)}`}>
+            <div
+              className={`flex items-center gap-2 ${getTimeColor(timeRemaining, timeLimit)}`}
+            >
               <Timer className="h-4 w-4" />
-              <span className="font-mono text-lg font-bold">{timeRemaining}s</span>
+              <span className="font-mono text-lg font-bold">
+                {timeRemaining}s
+              </span>
             </div>
 
-            {sessionState === 'active' ? (
-              <button onClick={pauseSession} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+            {sessionState === "active" ? (
+              <button
+                onClick={pauseSession}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
                 <Pause className="h-4 w-4" />
               </button>
             ) : (
-              <button onClick={resumeSession} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+              <button
+                onClick={resumeSession}
+                className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+              >
                 <Play className="h-4 w-4" />
               </button>
             )}
@@ -460,7 +538,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <motion.div 
+          <motion.div
             className="bg-blue-600 h-2 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
@@ -470,8 +548,13 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 
         {/* Stats */}
         <div className="flex justify-between mt-4 text-sm text-gray-600 dark:text-gray-400">
-          <span>{sessionData.accuracy}% {language === 'es' ? 'precisión' : 'accuracy'}</span>
-          <span>{language === 'es' ? 'Racha' : 'Streak'}: {sessionData.streak}</span>
+          <span>
+            {sessionData.accuracy}%{" "}
+            {language === "es" ? "precisión" : "accuracy"}
+          </span>
+          <span>
+            {language === "es" ? "Racha" : "Streak"}: {sessionData.streak}
+          </span>
         </div>
       </div>
 
@@ -497,22 +580,27 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                     className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700"
                   >
                     <Lightbulb className="h-4 w-4" />
-                    {showHint ? (language === 'es' ? 'Ocultar pista' : 'Hide hint') : (language === 'es' ? 'Mostrar pista' : 'Show hint')}
+                    {showHint
+                      ? language === "es"
+                        ? "Ocultar pista"
+                        : "Hide hint"
+                      : language === "es"
+                        ? "Mostrar pista"
+                        : "Show hint"}
                   </button>
-                  
+
                   <AnimatePresence>
                     {showHint && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
+                        animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800"
                       >
                         <p className="text-sm text-blue-800 dark:text-blue-200">
-                          {language === 'es' 
-                            ? 'Piensa en el contexto de la imagen y las palabras clave en la descripción.'
-                            : 'Think about the image context and key words in the description.'
-                          }
+                          {language === "es"
+                            ? "Piensa en el contexto de la imagen y las palabras clave en la descripción."
+                            : "Think about the image context and key words in the description."}
                         </p>
                       </motion.div>
                     )}
@@ -528,21 +616,27 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                 const isCorrect = index === currentQuestion.correctAnswer;
                 const showResult = questionAnswered;
 
-                let buttonClass = 'w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ';
-                
+                let buttonClass =
+                  "w-full text-left p-4 rounded-lg border-2 transition-all duration-200 ";
+
                 if (showResult) {
                   if (isCorrect) {
-                    buttonClass += 'border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200';
+                    buttonClass +=
+                      "border-green-500 bg-green-50 dark:bg-green-900/20 text-green-800 dark:text-green-200";
                   } else if (isSelected && !isCorrect) {
-                    buttonClass += 'border-red-500 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200';
+                    buttonClass +=
+                      "border-red-500 bg-red-50 dark:bg-red-900/20 text-red-800 dark:text-red-200";
                   } else {
-                    buttonClass += 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700';
+                    buttonClass +=
+                      "border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700";
                   }
                 } else {
                   if (isSelected) {
-                    buttonClass += 'border-blue-500 bg-blue-50 dark:bg-blue-900/20';
+                    buttonClass +=
+                      "border-blue-500 bg-blue-50 dark:bg-blue-900/20";
                   } else {
-                    buttonClass += 'border-gray-200 dark:border-gray-600 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10';
+                    buttonClass +=
+                      "border-gray-200 dark:border-gray-600 hover:border-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/10";
                   }
                 }
 
@@ -550,7 +644,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                   <motion.button
                     key={index}
                     onClick={() => handleAnswerSelect(index)}
-                    disabled={questionAnswered || sessionState !== 'active'}
+                    disabled={questionAnswered || sessionState !== "active"}
                     className={buttonClass}
                     whileHover={{ scale: questionAnswered ? 1 : 1.02 }}
                     whileTap={{ scale: questionAnswered ? 1 : 0.98 }}
@@ -559,8 +653,12 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                       <span className="flex-1">{option}</span>
                       {showResult && (
                         <div>
-                          {isCorrect && <CheckCircle className="h-5 w-5 text-green-600" />}
-                          {isSelected && !isCorrect && <XCircle className="h-5 w-5 text-red-600" />}
+                          {isCorrect && (
+                            <CheckCircle className="h-5 w-5 text-green-600" />
+                          )}
+                          {isSelected && !isCorrect && (
+                            <XCircle className="h-5 w-5 text-red-600" />
+                          )}
                         </div>
                       )}
                     </div>
@@ -577,7 +675,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                     onClick={handleSkipQuestion}
                     className="px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    {language === 'es' ? 'Saltar' : 'Skip'}
+                    {language === "es" ? "Saltar" : "Skip"}
                   </button>
                 )}
               </div>
@@ -586,12 +684,14 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                 {!questionAnswered ? (
                   <motion.button
                     onClick={() => handleAnswerSubmit()}
-                    disabled={selectedAnswer === null || sessionState !== 'active'}
+                    disabled={
+                      selectedAnswer === null || sessionState !== "active"
+                    }
                     className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {language === 'es' ? 'Confirmar' : 'Submit'}
+                    {language === "es" ? "Confirmar" : "Submit"}
                   </motion.button>
                 ) : (
                   <motion.button
@@ -600,10 +700,13 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
-                    {isLastQuestion 
-                      ? (language === 'es' ? 'Finalizar' : 'Finish')
-                      : (language === 'es' ? 'Siguiente' : 'Next')
-                    }
+                    {isLastQuestion
+                      ? language === "es"
+                        ? "Finalizar"
+                        : "Finish"
+                      : language === "es"
+                        ? "Siguiente"
+                        : "Next"}
                   </motion.button>
                 )}
               </div>
@@ -614,7 +717,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
               {showExplanation && (
                 <motion.div
                   initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
+                  animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
                   className="border-t border-gray-200 dark:border-gray-600 pt-4"
                 >
@@ -623,7 +726,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                       <BookOpen className="h-5 w-5 text-blue-600 mt-0.5" />
                       <div>
                         <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">
-                          {language === 'es' ? 'Explicación' : 'Explanation'}
+                          {language === "es" ? "Explicación" : "Explanation"}
                         </h4>
                         <p className="text-gray-600 dark:text-gray-400">
                           {currentQuestion.explanation}

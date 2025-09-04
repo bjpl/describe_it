@@ -1,1 +1,1 @@
-export { NoSSR, withNoSSR } from './NoSSR'
+export { NoSSR, withNoSSR } from "./NoSSR";

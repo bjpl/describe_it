@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Database, Trash2, RefreshCw, HardDrive, Zap } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Database, Trash2, RefreshCw, HardDrive, Zap } from "lucide-react";
 
 interface CacheEntry {
   key: string;
@@ -10,7 +10,7 @@ interface CacheEntry {
   createdAt: number;
   lastAccessed: number;
   hitCount: number;
-  type: 'api' | 'image' | 'static' | 'computed';
+  type: "api" | "image" | "static" | "computed";
   ttl?: number;
 }
 
@@ -41,15 +41,15 @@ class AdvancedCacheManager {
   }
 
   private initializeCaches() {
-    this.caches.set('api', new Map());
-    this.caches.set('image', new Map());
-    this.caches.set('static', new Map());
-    this.caches.set('computed', new Map());
+    this.caches.set("api", new Map());
+    this.caches.set("image", new Map());
+    this.caches.set("static", new Map());
+    this.caches.set("computed", new Map());
 
-    this.stats.set('api', { hits: 0, misses: 0 });
-    this.stats.set('image', { hits: 0, misses: 0 });
-    this.stats.set('static', { hits: 0, misses: 0 });
-    this.stats.set('computed', { hits: 0, misses: 0 });
+    this.stats.set("api", { hits: 0, misses: 0 });
+    this.stats.set("image", { hits: 0, misses: 0 });
+    this.stats.set("static", { hits: 0, misses: 0 });
+    this.stats.set("computed", { hits: 0, misses: 0 });
   }
 
   // LRU (Least Recently Used) strategy
@@ -59,7 +59,7 @@ class AdvancedCacheManager {
 
     const entries = Array.from(cache.entries());
     entries.sort((a, b) => a[1].lastAccessed - b[1].lastAccessed);
-    
+
     // Remove oldest 25% of entries
     const toRemove = Math.ceil(entries.length * 0.25);
     for (let i = 0; i < toRemove; i++) {
@@ -70,7 +70,7 @@ class AdvancedCacheManager {
   // Time-based expiration
   private evictExpired() {
     const now = Date.now();
-    
+
     for (const [cacheType, cache] of this.caches) {
       for (const [key, entry] of cache) {
         if (entry.ttl && now - entry.createdAt > entry.ttl) {
@@ -87,11 +87,16 @@ class AdvancedCacheManager {
 
     if (totalSize > this.maxSize || totalEntries > this.maxEntries) {
       // Evict from largest cache first
-      const cacheSizes = Array.from(this.caches.entries()).map(([type, cache]) => ({
-        type,
-        size: Array.from(cache.values()).reduce((sum, entry) => sum + entry.size, 0)
-      }));
-      
+      const cacheSizes = Array.from(this.caches.entries()).map(
+        ([type, cache]) => ({
+          type,
+          size: Array.from(cache.values()).reduce(
+            (sum, entry) => sum + entry.size,
+            0,
+          ),
+        }),
+      );
+
       cacheSizes.sort((a, b) => b.size - a.size);
       this.evictLRU(cacheSizes[0].type);
     }
@@ -109,7 +114,7 @@ class AdvancedCacheManager {
       lastAccessed: Date.now(),
       hitCount: 0,
       type: cacheType as any,
-      ttl
+      ttl,
     };
 
     cache.set(key, entry);
@@ -119,7 +124,7 @@ class AdvancedCacheManager {
   get(cacheType: string, key: string): CacheEntry | null {
     const cache = this.caches.get(cacheType);
     const stats = this.stats.get(cacheType);
-    
+
     if (!cache || !stats) return null;
 
     const entry = cache.get(key);
@@ -152,8 +157,10 @@ class AdvancedCacheManager {
       this.caches.get(cacheType)?.clear();
       this.stats.set(cacheType, { hits: 0, misses: 0 });
     } else {
-      this.caches.forEach(cache => cache.clear());
-      this.stats.forEach((_, key) => this.stats.set(key, { hits: 0, misses: 0 }));
+      this.caches.forEach((cache) => cache.clear());
+      this.stats.forEach((_, key) =>
+        this.stats.set(key, { hits: 0, misses: 0 }),
+      );
     }
   }
 
@@ -173,7 +180,7 @@ class AdvancedCacheManager {
 
       typeStats[cacheType] = {
         count: cacheEntries.length,
-        size: cacheEntries.reduce((sum, entry) => sum + entry.size, 0)
+        size: cacheEntries.reduce((sum, entry) => sum + entry.size, 0),
       };
     }
 
@@ -185,7 +192,7 @@ class AdvancedCacheManager {
       hitRate: totalRequests > 0 ? (totalHits / totalRequests) * 100 : 0,
       missRate: totalRequests > 0 ? (totalMisses / totalRequests) * 100 : 0,
       entries,
-      typeStats
+      typeStats,
     };
   }
 
@@ -228,12 +235,12 @@ const cacheManager = new AdvancedCacheManager();
 
 export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
   enabled = true,
-  onCacheAction
+  onCacheAction,
 }) => {
   const [stats, setStats] = useState<CacheStats | null>(null);
   const [showDetails, setShowDetails] = useState(false);
-  const [selectedType, setSelectedType] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<'size' | 'age' | 'hits'>('size');
+  const [selectedType, setSelectedType] = useState<string>("all");
+  const [sortBy, setSortBy] = useState<"size" | "age" | "hits">("size");
 
   useEffect(() => {
     if (!enabled) return;
@@ -251,17 +258,18 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
   const filteredEntries = useMemo(() => {
     if (!stats) return [];
 
-    let entries = selectedType === 'all' 
-      ? stats.entries 
-      : stats.entries.filter(entry => entry.type === selectedType);
+    let entries =
+      selectedType === "all"
+        ? stats.entries
+        : stats.entries.filter((entry) => entry.type === selectedType);
 
     return entries.sort((a, b) => {
       switch (sortBy) {
-        case 'size':
+        case "size":
           return b.size - a.size;
-        case 'age':
+        case "age":
           return b.createdAt - a.createdAt;
-        case 'hits':
+        case "hits":
           return b.hitCount - a.hitCount;
         default:
           return 0;
@@ -270,8 +278,8 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
   }, [stats, selectedType, sortBy]);
 
   const formatSize = (bytes: number) => {
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    if (bytes === 0) return '0 B';
+    const sizes = ["B", "KB", "MB", "GB"];
+    if (bytes === 0) return "0 B";
     const i = Math.floor(Math.log(bytes) / Math.log(1024));
     return `${(bytes / Math.pow(1024, i)).toFixed(1)} ${sizes[i]}`;
   };
@@ -290,13 +298,13 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
   const handleClearCache = (type?: string) => {
     cacheManager.clear(type);
     setStats(cacheManager.getStats());
-    onCacheAction?.('clear', type);
+    onCacheAction?.("clear", type);
   };
 
   const handleDeleteEntry = (cacheType: string, key: string) => {
     cacheManager.delete(cacheType, key);
     setStats(cacheManager.getStats());
-    onCacheAction?.('delete', key);
+    onCacheAction?.("delete", key);
   };
 
   if (!enabled || !stats) return null;
@@ -319,7 +327,7 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
               onClick={() => setShowDetails(!showDetails)}
               className="text-white hover:text-gray-200 transition-colors"
             >
-              {showDetails ? '−' : '+'}
+              {showDetails ? "−" : "+"}
             </button>
           </div>
 
@@ -344,7 +352,7 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
           {showDetails && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
@@ -353,22 +361,31 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
                 <div className="mb-4">
                   <h4 className="font-medium mb-2">Cache Types</h4>
                   <div className="grid grid-cols-2 gap-2">
-                    {Object.entries(stats.typeStats).map(([type, typeStats]) => (
-                      <div
-                        key={type}
-                        className={`p-2 rounded cursor-pointer transition-colors ${
-                          selectedType === type
-                            ? 'bg-green-100 dark:bg-green-900'
-                            : 'bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600'
-                        }`}
-                        onClick={() => setSelectedType(selectedType === type ? 'all' : type)}
-                      >
-                        <div className="font-medium text-sm capitalize">{type}</div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400">
-                          {typeStats.count} items • {formatSize(typeStats.size)}
+                    {Object.entries(stats.typeStats).map(
+                      ([type, typeStats]) => (
+                        <div
+                          key={type}
+                          className={`p-2 rounded cursor-pointer transition-colors ${
+                            selectedType === type
+                              ? "bg-green-100 dark:bg-green-900"
+                              : "bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          }`}
+                          onClick={() =>
+                            setSelectedType(
+                              selectedType === type ? "all" : type,
+                            )
+                          }
+                        >
+                          <div className="font-medium text-sm capitalize">
+                            {type}
+                          </div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">
+                            {typeStats.count} items •{" "}
+                            {formatSize(typeStats.size)}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ),
+                    )}
                   </div>
                 </div>
 
@@ -401,16 +418,26 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
                     >
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="font-medium truncate" title={entry.key}>
-                            {entry.key.length > 30 ? `...${entry.key.slice(-27)}` : entry.key}
+                          <div
+                            className="font-medium truncate"
+                            title={entry.key}
+                          >
+                            {entry.key.length > 30
+                              ? `...${entry.key.slice(-27)}`
+                              : entry.key}
                           </div>
                           <div className="flex items-center gap-3 text-xs text-gray-600 dark:text-gray-400">
-                            <span className={`px-1 rounded ${
-                              entry.type === 'api' ? 'bg-blue-100 text-blue-700' :
-                              entry.type === 'image' ? 'bg-purple-100 text-purple-700' :
-                              entry.type === 'static' ? 'bg-gray-100 text-gray-700' :
-                              'bg-orange-100 text-orange-700'
-                            }`}>
+                            <span
+                              className={`px-1 rounded ${
+                                entry.type === "api"
+                                  ? "bg-blue-100 text-blue-700"
+                                  : entry.type === "image"
+                                    ? "bg-purple-100 text-purple-700"
+                                    : entry.type === "static"
+                                      ? "bg-gray-100 text-gray-700"
+                                      : "bg-orange-100 text-orange-700"
+                              }`}
+                            >
                               {entry.type}
                             </span>
                             <span>{formatSize(entry.size)}</span>
@@ -419,7 +446,9 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
                           </div>
                         </div>
                         <button
-                          onClick={() => handleDeleteEntry(entry.type, entry.key)}
+                          onClick={() =>
+                            handleDeleteEntry(entry.type, entry.key)
+                          }
                           className="text-red-500 hover:text-red-700 p-1 rounded transition-colors"
                           title="Delete entry"
                         >
@@ -428,13 +457,13 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
                       </div>
                     </div>
                   ))}
-                  
+
                   {filteredEntries.length > 20 && (
                     <div className="text-center text-xs text-gray-500 py-2">
                       ... and {filteredEntries.length - 20} more entries
                     </div>
                   )}
-                  
+
                   {filteredEntries.length === 0 && (
                     <div className="text-center text-gray-500 py-4">
                       No cache entries found
@@ -454,11 +483,15 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
                     Refresh
                   </button>
                   <button
-                    onClick={() => handleClearCache(selectedType === 'all' ? undefined : selectedType)}
+                    onClick={() =>
+                      handleClearCache(
+                        selectedType === "all" ? undefined : selectedType,
+                      )
+                    }
                     className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm font-medium transition-colors"
                   >
                     <Trash2 className="w-3 h-3 inline mr-1" />
-                    Clear {selectedType === 'all' ? 'All' : selectedType}
+                    Clear {selectedType === "all" ? "All" : selectedType}
                   </button>
                 </div>
               </div>
@@ -474,7 +507,9 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
 export { cacheManager };
 
 // Hook for using the cache manager
-export const useAdvancedCache = (cacheType: 'api' | 'image' | 'static' | 'computed') => {
+export const useAdvancedCache = (
+  cacheType: "api" | "image" | "static" | "computed",
+) => {
   const set = (key: string, data: any, ttl?: number) => {
     cacheManager.set(cacheType, key, data, ttl);
   };

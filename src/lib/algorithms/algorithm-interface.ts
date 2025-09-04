@@ -27,7 +27,7 @@ export interface LearningSession {
 export interface ReviewCard {
   id: string;
   imageId: string;
-  difficulty: 'easy' | 'medium' | 'hard';
+  difficulty: "easy" | "medium" | "hard";
   interval: number;
   easeFactor: number;
   nextReviewDate: Date;
@@ -37,7 +37,7 @@ export interface ReviewCard {
 
 export abstract class BaseAlgorithm {
   protected config: AlgorithmConfig;
-  
+
   constructor(config: AlgorithmConfig) {
     this.config = config;
   }
@@ -45,7 +45,7 @@ export abstract class BaseAlgorithm {
   abstract calculateNextInterval(
     currentInterval: number,
     quality: number,
-    easeFactor: number
+    easeFactor: number,
   ): number;
 
   abstract updateEaseFactor(currentFactor: number, quality: number): number;

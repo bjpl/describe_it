@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useMemo, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
   TrendingDown,
@@ -24,8 +24,8 @@ import {
   Globe,
   Filter,
   Download,
-  RefreshCw
-} from 'lucide-react';
+  RefreshCw,
+} from "lucide-react";
 
 interface LearningSession {
   id: string;
@@ -35,7 +35,7 @@ interface LearningSession {
   correctAnswers: number;
   accuracy: number;
   topic: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   streak: number;
 }
 
@@ -59,8 +59,8 @@ interface ProgressGoal {
   title: string;
   target: number;
   current: number;
-  type: 'sessions' | 'accuracy' | 'time' | 'vocabulary';
-  period: 'daily' | 'weekly' | 'monthly';
+  type: "sessions" | "accuracy" | "time" | "vocabulary";
+  period: "daily" | "weekly" | "monthly";
   deadline: Date;
 }
 
@@ -77,10 +77,14 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
   stats,
   goals = [],
   showDetailedCharts = true,
-  className = ''
+  className = "",
 }) => {
-  const [timeFilter, setTimeFilter] = useState<'week' | 'month' | 'year'>('week');
-  const [selectedMetric, setSelectedMetric] = useState<'accuracy' | 'sessions' | 'time'>('accuracy');
+  const [timeFilter, setTimeFilter] = useState<"week" | "month" | "year">(
+    "week",
+  );
+  const [selectedMetric, setSelectedMetric] = useState<
+    "accuracy" | "sessions" | "time"
+  >("accuracy");
   const [showGoals, setShowGoals] = useState(true);
 
   // Mock data if not provided
@@ -96,37 +100,37 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
     vocabularyLearned: 156,
     conceptsMastered: 23,
     weeklyGoalProgress: 85,
-    monthlyGoalProgress: 67
+    monthlyGoalProgress: 67,
   };
 
   const mockGoals: ProgressGoal[] = [
     {
-      id: '1',
-      title: 'Daily Practice',
+      id: "1",
+      title: "Daily Practice",
       target: 1,
       current: 1,
-      type: 'sessions',
-      period: 'daily',
-      deadline: new Date(Date.now() + 24 * 60 * 60 * 1000)
+      type: "sessions",
+      period: "daily",
+      deadline: new Date(Date.now() + 24 * 60 * 60 * 1000),
     },
     {
-      id: '2',
-      title: 'Weekly Accuracy',
+      id: "2",
+      title: "Weekly Accuracy",
       target: 85,
       current: 82,
-      type: 'accuracy',
-      period: 'weekly',
-      deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)
+      type: "accuracy",
+      period: "weekly",
+      deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     },
     {
-      id: '3',
-      title: 'Monthly Vocabulary',
+      id: "3",
+      title: "Monthly Vocabulary",
       target: 200,
       current: 156,
-      type: 'vocabulary',
-      period: 'monthly',
-      deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000)
-    }
+      type: "vocabulary",
+      period: "monthly",
+      deadline: new Date(Date.now() + 15 * 24 * 60 * 60 * 1000),
+    },
   ];
 
   const displayStats = stats || mockStats;
@@ -136,38 +140,42 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
   const trendData = useMemo(() => {
     const days = 7;
     const data = [];
-    
+
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
-      const sessionsForDay = sessions.filter(s => 
-        s.date.toDateString() === date.toDateString()
+      const sessionsForDay = sessions.filter(
+        (s) => s.date.toDateString() === date.toDateString(),
       );
-      
+
       data.push({
         date,
         sessions: sessionsForDay.length,
-        accuracy: sessionsForDay.length > 0 
-          ? Math.round(sessionsForDay.reduce((acc, s) => acc + s.accuracy, 0) / sessionsForDay.length)
-          : 0,
-        time: sessionsForDay.reduce((acc, s) => acc + s.duration, 0)
+        accuracy:
+          sessionsForDay.length > 0
+            ? Math.round(
+                sessionsForDay.reduce((acc, s) => acc + s.accuracy, 0) /
+                  sessionsForDay.length,
+              )
+            : 0,
+        time: sessionsForDay.reduce((acc, s) => acc + s.duration, 0),
       });
     }
-    
+
     return data;
   }, [sessions, timeFilter]);
 
   const getStreakColor = (streak: number) => {
-    if (streak >= 10) return 'text-purple-600';
-    if (streak >= 5) return 'text-orange-600';
-    if (streak >= 3) return 'text-yellow-600';
-    return 'text-green-600';
+    if (streak >= 10) return "text-purple-600";
+    if (streak >= 5) return "text-orange-600";
+    if (streak >= 3) return "text-yellow-600";
+    return "text-green-600";
   };
 
   const getAccuracyColor = (accuracy: number) => {
-    if (accuracy >= 90) return 'text-green-600';
-    if (accuracy >= 80) return 'text-blue-600';
-    if (accuracy >= 70) return 'text-yellow-600';
-    return 'text-red-600';
+    if (accuracy >= 90) return "text-green-600";
+    if (accuracy >= 80) return "text-blue-600";
+    if (accuracy >= 70) return "text-yellow-600";
+    return "text-red-600";
   };
 
   const formatTime = (minutes: number) => {
@@ -184,25 +192,40 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
     title: string;
     value: string | number;
     subtitle?: string;
-    trend?: 'up' | 'down' | 'neutral';
+    trend?: "up" | "down" | "neutral";
     trendValue?: string;
     color?: string;
-  }> = ({ icon, title, value, subtitle, trend, trendValue, color = 'blue' }) => (
+  }> = ({
+    icon,
+    title,
+    value,
+    subtitle,
+    trend,
+    trendValue,
+    color = "blue",
+  }) => (
     <motion.div
       whileHover={{ scale: 1.02, y: -2 }}
       className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
     >
       <div className="flex items-start justify-between">
-        <div className={`w-12 h-12 rounded-lg bg-${color}-100 dark:bg-${color}-900/30 flex items-center justify-center`}>
+        <div
+          className={`w-12 h-12 rounded-lg bg-${color}-100 dark:bg-${color}-900/30 flex items-center justify-center`}
+        >
           {icon}
         </div>
         {trend && trendValue && (
-          <div className={`flex items-center gap-1 text-sm ${
-            trend === 'up' ? 'text-green-600' : 
-            trend === 'down' ? 'text-red-600' : 'text-gray-600'
-          }`}>
-            {trend === 'up' && <TrendingUp className="h-4 w-4" />}
-            {trend === 'down' && <TrendingDown className="h-4 w-4" />}
+          <div
+            className={`flex items-center gap-1 text-sm ${
+              trend === "up"
+                ? "text-green-600"
+                : trend === "down"
+                  ? "text-red-600"
+                  : "text-gray-600"
+            }`}
+          >
+            {trend === "up" && <TrendingUp className="h-4 w-4" />}
+            {trend === "down" && <TrendingDown className="h-4 w-4" />}
             <span>{trendValue}</span>
           </div>
         )}
@@ -213,7 +236,9 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
         </h3>
         <p className="text-gray-600 dark:text-gray-400 text-sm">{title}</p>
         {subtitle && (
-          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">{subtitle}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+            {subtitle}
+          </p>
         )}
       </div>
     </motion.div>
@@ -222,7 +247,9 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
   const GoalProgress: React.FC<{ goal: ProgressGoal }> = ({ goal }) => {
     const progress = Math.min((goal.current / goal.target) * 100, 100);
     const isCompleted = progress >= 100;
-    const daysLeft = Math.ceil((goal.deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+    const daysLeft = Math.ceil(
+      (goal.deadline.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+    );
 
     return (
       <motion.div
@@ -231,49 +258,54 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
         className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
       >
         <div className="flex items-center justify-between mb-2">
-          <h4 className="font-medium text-gray-900 dark:text-gray-100">{goal.title}</h4>
+          <h4 className="font-medium text-gray-900 dark:text-gray-100">
+            {goal.title}
+          </h4>
           {isCompleted && <CheckCircle className="h-5 w-5 text-green-600" />}
         </div>
-        
+
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
-            <span>{goal.current} / {goal.target}</span>
+            <span>
+              {goal.current} / {goal.target}
+            </span>
             <span>{Math.round(progress)}%</span>
           </div>
-          
+
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
             <motion.div
               className={`h-2 rounded-full ${
-                isCompleted 
-                  ? 'bg-green-500' 
-                  : progress >= 80 
-                    ? 'bg-blue-500' 
-                    : 'bg-yellow-500'
+                isCompleted
+                  ? "bg-green-500"
+                  : progress >= 80
+                    ? "bg-blue-500"
+                    : "bg-yellow-500"
               }`}
               initial={{ width: 0 }}
               animate={{ width: `${progress}%` }}
               transition={{ duration: 1, delay: 0.2 }}
             />
           </div>
-          
+
           <div className="flex justify-between text-xs text-gray-500 dark:text-gray-500">
             <span className="capitalize">{goal.period} goal</span>
-            <span>
-              {daysLeft > 0 ? `${daysLeft} days left` : 'Expired'}
-            </span>
+            <span>{daysLeft > 0 ? `${daysLeft} days left` : "Expired"}</span>
           </div>
         </div>
       </motion.div>
     );
   };
 
-  const MiniChart: React.FC<{ data: any[]; metric: string }> = ({ data, metric }) => (
+  const MiniChart: React.FC<{ data: any[]; metric: string }> = ({
+    data,
+    metric,
+  }) => (
     <div className="h-20 flex items-end justify-between gap-1">
       {data.map((item, index) => {
         const value = item[metric];
-        const maxValue = Math.max(...data.map(d => d[metric]));
+        const maxValue = Math.max(...data.map((d) => d[metric]));
         const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
-        
+
         return (
           <motion.div
             key={index}
@@ -300,7 +332,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
             Track your Spanish learning journey
           </p>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <select
             value={timeFilter}
@@ -311,11 +343,11 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
             <option value="month">This Month</option>
             <option value="year">This Year</option>
           </select>
-          
+
           <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
             <RefreshCw className="h-4 w-4" />
           </button>
-          
+
           <button className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
             <Download className="h-4 w-4" />
           </button>
@@ -332,15 +364,19 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
           trendValue="+2.5%"
           color="blue"
         />
-        
+
         <StatCard
-          icon={<Flame className={`h-6 w-6 ${getStreakColor(displayStats.currentStreak)}`} />}
+          icon={
+            <Flame
+              className={`h-6 w-6 ${getStreakColor(displayStats.currentStreak)}`}
+            />
+          }
           title="Current Streak"
           value={`${displayStats.currentStreak} days`}
           subtitle={`Best: ${displayStats.longestStreak} days`}
           color="orange"
         />
-        
+
         <StatCard
           icon={<Clock className="h-6 w-6 text-green-600" />}
           title="Total Study Time"
@@ -348,7 +384,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
           subtitle={`Avg: ${displayStats.averageSessionTime}m/session`}
           color="green"
         />
-        
+
         <StatCard
           icon={<BookOpen className="h-6 w-6 text-purple-600" />}
           title="Vocabulary Learned"
@@ -372,16 +408,16 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Weekly Progress
               </h3>
-              
+
               <div className="flex gap-2">
-                {(['accuracy', 'sessions', 'time'] as const).map((metric) => (
+                {(["accuracy", "sessions", "time"] as const).map((metric) => (
                   <button
                     key={metric}
                     onClick={() => setSelectedMetric(metric)}
                     className={`px-3 py-1 rounded-full text-xs font-medium capitalize transition-colors ${
                       selectedMetric === metric
-                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                        : 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                        ? "bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300"
+                        : "bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600"
                     }`}
                   >
                     {metric}
@@ -389,13 +425,13 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                 ))}
               </div>
             </div>
-            
+
             <MiniChart data={trendData} metric={selectedMetric} />
-            
+
             <div className="flex justify-between mt-2 text-xs text-gray-500">
               {trendData.map((item, index) => (
                 <span key={index}>
-                  {item.date.toLocaleDateString('en', { weekday: 'short' })}
+                  {item.date.toLocaleDateString("en", { weekday: "short" })}
                 </span>
               ))}
             </div>
@@ -410,9 +446,9 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Recent Achievements
             </h3>
-            
+
             <div className="space-y-3">
-              <motion.div 
+              <motion.div
                 className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg"
                 whileHover={{ scale: 1.02 }}
               >
@@ -426,8 +462,8 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                   </p>
                 </div>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
                 whileHover={{ scale: 1.02 }}
               >
@@ -441,8 +477,8 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                   </p>
                 </div>
               </motion.div>
-              
-              <motion.div 
+
+              <motion.div
                 className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
                 whileHover={{ scale: 1.02 }}
               >
@@ -466,7 +502,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
         {showGoals && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
+            animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
             className="space-y-4"
           >
@@ -481,7 +517,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                 <Filter className="h-4 w-4" />
               </button>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-4">
               {displayGoals.map((goal) => (
                 <GoalProgress key={goal.id} goal={goal} />
@@ -496,7 +532,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
           Quick Actions
         </h3>
-        
+
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <motion.button
             whileHover={{ scale: 1.05 }}
@@ -506,7 +542,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
             <Activity className="h-5 w-5 text-blue-600" />
             <span className="text-sm font-medium">Start Quiz</span>
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -515,7 +551,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
             <BookOpen className="h-5 w-5 text-green-600" />
             <span className="text-sm font-medium">Review Words</span>
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -524,7 +560,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
             <Target className="h-5 w-5 text-purple-600" />
             <span className="text-sm font-medium">Set Goal</span>
           </motion.button>
-          
+
           <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

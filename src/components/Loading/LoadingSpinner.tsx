@@ -1,11 +1,11 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Loader2, Search, MessageSquare, FileText, Globe } from 'lucide-react';
+import React from "react";
+import { Loader2, Search, MessageSquare, FileText, Globe } from "lucide-react";
 
 interface LoadingSpinnerProps {
-  size?: 'sm' | 'md' | 'lg' | 'xl';
-  type?: 'default' | 'search' | 'ai' | 'description' | 'qa' | 'phrases';
+  size?: "sm" | "md" | "lg" | "xl";
+  type?: "default" | "search" | "ai" | "description" | "qa" | "phrases";
   message?: string;
   progress?: number; // 0-100
   showProgress?: boolean;
@@ -13,32 +13,32 @@ interface LoadingSpinnerProps {
 }
 
 export function LoadingSpinner({
-  size = 'md',
-  type = 'default',
+  size = "md",
+  type = "default",
   message,
   progress,
   showProgress = false,
-  className = ''
+  className = "",
 }: LoadingSpinnerProps) {
   const sizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-6 h-6',
-    lg: 'w-8 h-8',
-    xl: 'w-12 h-12'
+    sm: "w-4 h-4",
+    md: "w-6 h-6",
+    lg: "w-8 h-8",
+    xl: "w-12 h-12",
   };
 
   const getIcon = () => {
     const iconClass = `${sizeClasses[size]} animate-spin`;
-    
+
     switch (type) {
-      case 'search':
+      case "search":
         return <Search className={iconClass} />;
-      case 'ai':
-      case 'description':
+      case "ai":
+      case "description":
         return <FileText className={iconClass} />;
-      case 'qa':
+      case "qa":
         return <MessageSquare className={iconClass} />;
-      case 'phrases':
+      case "phrases":
         return <Globe className={iconClass} />;
       default:
         return <Loader2 className={iconClass} />;
@@ -47,41 +47,46 @@ export function LoadingSpinner({
 
   const getDefaultMessage = () => {
     switch (type) {
-      case 'search':
-        return 'Searching images...';
-      case 'ai':
-      case 'description':
-        return 'Generating description...';
-      case 'qa':
-        return 'Processing question...';
-      case 'phrases':
-        return 'Extracting phrases...';
+      case "search":
+        return "Searching images...";
+      case "ai":
+      case "description":
+        return "Generating description...";
+      case "qa":
+        return "Processing question...";
+      case "phrases":
+        return "Extracting phrases...";
       default:
-        return 'Loading...';
+        return "Loading...";
     }
   };
 
   const displayMessage = message || getDefaultMessage();
 
   return (
-    <div className={`flex flex-col items-center justify-center space-y-3 ${className}`}>
+    <div
+      className={`flex flex-col items-center justify-center space-y-3 ${className}`}
+    >
       {/* Spinner Icon */}
-      <div className="flex items-center justify-center">
-        {getIcon()}
-      </div>
+      <div className="flex items-center justify-center">{getIcon()}</div>
 
       {/* Message */}
       {displayMessage && (
-        <p className={`text-center text-gray-600 ${
-          size === 'sm' ? 'text-sm' : 
-          size === 'lg' || size === 'xl' ? 'text-lg' : 'text-base'
-        }`}>
+        <p
+          className={`text-center text-gray-600 ${
+            size === "sm"
+              ? "text-sm"
+              : size === "lg" || size === "xl"
+                ? "text-lg"
+                : "text-base"
+          }`}
+        >
           {displayMessage}
         </p>
       )}
 
       {/* Progress Bar */}
-      {showProgress && typeof progress === 'number' && (
+      {showProgress && typeof progress === "number" && (
         <div className="w-full max-w-xs">
           <div className="flex justify-between text-xs text-gray-500 mb-1">
             <span>Processing</span>
@@ -97,12 +102,21 @@ export function LoadingSpinner({
       )}
 
       {/* AI Processing Indicator */}
-      {(type === 'ai' || type === 'description' || type === 'qa' || type === 'phrases') && (
+      {(type === "ai" ||
+        type === "description" ||
+        type === "qa" ||
+        type === "phrases") && (
         <div className="flex items-center gap-2 text-xs text-gray-500">
           <div className="flex space-x-1">
             <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"></div>
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-            <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+            <div
+              className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"
+              style={{ animationDelay: "0.2s" }}
+            ></div>
+            <div
+              className="w-2 h-2 bg-blue-400 rounded-full animate-pulse"
+              style={{ animationDelay: "0.4s" }}
+            ></div>
           </div>
           <span>AI processing</span>
         </div>
@@ -112,12 +126,12 @@ export function LoadingSpinner({
 }
 
 // Skeleton loader component for content placeholders
-export function ContentSkeleton({ 
-  lines = 3, 
-  className = '',
-  showAvatar = false 
-}: { 
-  lines?: number; 
+export function ContentSkeleton({
+  lines = 3,
+  className = "",
+  showAvatar = false,
+}: {
+  lines?: number;
   className?: string;
   showAvatar?: boolean;
 }) {
@@ -137,7 +151,7 @@ export function ContentSkeleton({
           <div
             key={i}
             className={`h-4 bg-gray-200 rounded ${
-              i === lines - 1 ? 'w-3/4' : 'w-full'
+              i === lines - 1 ? "w-3/4" : "w-full"
             }`}
           ></div>
         ))}
@@ -147,18 +161,18 @@ export function ContentSkeleton({
 }
 
 // Card skeleton for image/content cards
-export function CardSkeleton({ 
+export function CardSkeleton({
   showImage = true,
-  className = '' 
-}: { 
+  className = "",
+}: {
   showImage?: boolean;
   className?: string;
 }) {
   return (
-    <div className={`border rounded-lg overflow-hidden animate-pulse ${className}`}>
-      {showImage && (
-        <div className="w-full h-48 bg-gray-200"></div>
-      )}
+    <div
+      className={`border rounded-lg overflow-hidden animate-pulse ${className}`}
+    >
+      {showImage && <div className="w-full h-48 bg-gray-200"></div>}
       <div className="p-4">
         <div className="h-6 bg-gray-200 rounded mb-3"></div>
         <div className="space-y-2">

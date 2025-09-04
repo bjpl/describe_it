@@ -3,33 +3,41 @@
  * Provides comprehensive export functionality with multiple formats and options
  */
 
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { X, Download, Settings, Clock, FileText, Database, Image } from 'lucide-react';
-import { 
-  ExportFormat, 
-  ExportOptions, 
+import React, { useState, useEffect } from "react";
+import {
+  X,
+  Download,
+  Settings,
+  Clock,
+  FileText,
+  Database,
+  Image,
+} from "lucide-react";
+import {
+  ExportFormat,
+  ExportOptions,
   ExportCategory,
   ExportTemplate,
   ExportResult,
-  BatchExportRequest
-} from '../types/export';
-import { 
-  ExportManager, 
+  BatchExportRequest,
+} from "../types/export";
+import {
+  ExportManager,
   createExportManager,
   EXPORT_PRESETS,
   getRecommendedFormat,
   estimateExportSize,
-  validateExportData
-} from '../lib/export';
+  validateExportData,
+} from "../lib/export";
 
 interface VocabularyExportItem {
   phrase: string;
   translation: string;
   definition: string;
   partOfSpeech: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   category: string;
   context: string;
   dateAdded: string;
@@ -108,27 +116,33 @@ export default function ExportModal({
   descriptions = [],
   qa = [],
   sessions = [],
-  images = []
+  images = [],
 }: ExportModalProps) {
   // State management
-  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>('csv');
-  const [selectedCategories, setSelectedCategories] = useState<ExportCategory[]>(['vocabulary']);
+  const [selectedFormat, setSelectedFormat] = useState<ExportFormat>("csv");
+  const [selectedCategories, setSelectedCategories] = useState<
+    ExportCategory[]
+  >(["vocabulary"]);
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
-    start: '',
-    end: new Date().toISOString().split('T')[0]
+    start: "",
+    end: new Date().toISOString().split("T")[0],
   });
-  
+
   const [exportProgress, setExportProgress] = useState<ExportProgress>({
     isExporting: false,
     progress: 0,
-    message: ''
+    message: "",
   });
-  
-  const [exportManager, setExportManager] = useState<ExportManager | null>(null);
+
+  const [exportManager, setExportManager] = useState<ExportManager | null>(
+    null,
+  );
   const [templates, setTemplates] = useState<ExportTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<string>('');
-  const [customOptions, setCustomOptions] = useState<Partial<ExportOptions>>({});
+  const [selectedTemplate, setSelectedTemplate] = useState<string>("");
+  const [customOptions, setCustomOptions] = useState<Partial<ExportOptions>>(
+    {},
+  );
 
   // Initialize export manager
   useEffect(() => {
@@ -139,73 +153,85 @@ export default function ExportModal({
           end: Date;
         };
       }
-      
+
       const dataSources = {
-        getVocabulary: async (filters?: FilterOptions) => vocabulary.filter(item => 
-          !filters?.dateRange || 
-          (new Date(item.dateAdded) >= filters.dateRange.start && 
-           new Date(item.dateAdded) <= filters.dateRange.end)
-        ),
-        getDescriptions: async (filters?: FilterOptions) => descriptions.filter(item =>
-          !filters?.dateRange ||
-          (new Date(item.createdAt) >= filters.dateRange.start &&
-           new Date(item.createdAt) <= filters.dateRange.end)
-        ),
-        getQA: async (filters?: FilterOptions) => qa.filter(item =>
-          !filters?.dateRange ||
-          (new Date(item.createdAt) >= filters.dateRange.start &&
-           new Date(item.createdAt) <= filters.dateRange.end)
-        ),
-        getSessions: async (filters?: FilterOptions) => sessions.filter(item =>
-          !filters?.dateRange ||
-          (new Date(item.timestamp) >= filters.dateRange.start &&
-           new Date(item.timestamp) <= filters.dateRange.end)
-        ),
-        getImages: async () => images
+        getVocabulary: async (filters?: FilterOptions) =>
+          vocabulary.filter(
+            (item) =>
+              !filters?.dateRange ||
+              (new Date(item.dateAdded) >= filters.dateRange.start &&
+                new Date(item.dateAdded) <= filters.dateRange.end),
+          ),
+        getDescriptions: async (filters?: FilterOptions) =>
+          descriptions.filter(
+            (item) =>
+              !filters?.dateRange ||
+              (new Date(item.createdAt) >= filters.dateRange.start &&
+                new Date(item.createdAt) <= filters.dateRange.end),
+          ),
+        getQA: async (filters?: FilterOptions) =>
+          qa.filter(
+            (item) =>
+              !filters?.dateRange ||
+              (new Date(item.createdAt) >= filters.dateRange.start &&
+                new Date(item.createdAt) <= filters.dateRange.end),
+          ),
+        getSessions: async (filters?: FilterOptions) =>
+          sessions.filter(
+            (item) =>
+              !filters?.dateRange ||
+              (new Date(item.timestamp) >= filters.dateRange.start &&
+                new Date(item.timestamp) <= filters.dateRange.end),
+          ),
+        getImages: async () => images,
       };
 
       const manager = createExportManager(dataSources);
-      
+
       // Set up progress tracking
       manager.addEventListener((event) => {
         switch (event.type) {
-          case 'start':
+          case "start":
             setExportProgress({
               isExporting: true,
               format: event.format,
               progress: 0,
-              message: 'Starting export...'
+              message: "Starting export...",
             });
             break;
-          case 'progress':
-            setExportProgress(prev => ({
+          case "progress":
+            setExportProgress((prev) => ({
               ...prev,
               progress: event.progress || 0,
-              message: event.data?.message || 'Processing...'
+              message: event.data?.message || "Processing...",
             }));
             break;
-          case 'complete':
-            setExportProgress(prev => ({
+          case "complete":
+            setExportProgress((prev) => ({
               ...prev,
               progress: 100,
-              message: 'Export completed successfully!'
+              message: "Export completed successfully!",
             }));
             setTimeout(() => {
-              setExportProgress({ isExporting: false, progress: 0, message: '' });
+              setExportProgress({
+                isExporting: false,
+                progress: 0,
+                message: "",
+              });
             }, 2000);
             break;
-          case 'error':
+          case "error":
             setExportProgress({
               isExporting: false,
               progress: 0,
-              message: `Export failed: ${event.error}`
+              message: `Export failed: ${event.error}`,
             });
             break;
         }
       });
 
       setExportManager(manager);
-      
+
       // Load templates
       manager.listTemplates().then(setTemplates);
     }
@@ -226,16 +252,17 @@ export default function ExportModal({
       setSelectedFormat(preset.format);
       setSelectedCategories([...preset.categories]);
       setCustomOptions({
-        pdfOptions: 'pdfOptions' in preset ? preset.pdfOptions : undefined,
-        excelOptions: 'excelOptions' in preset ? preset.excelOptions : undefined,
-        ankiOptions: 'ankiOptions' in preset ? preset.ankiOptions : undefined,
-        csvOptions: 'csvOptions' in preset ? preset.csvOptions : undefined
+        pdfOptions: "pdfOptions" in preset ? preset.pdfOptions : undefined,
+        excelOptions:
+          "excelOptions" in preset ? preset.excelOptions : undefined,
+        ankiOptions: "ankiOptions" in preset ? preset.ankiOptions : undefined,
+        csvOptions: "csvOptions" in preset ? preset.csvOptions : undefined,
       });
-      
-      if ('dateRange' in preset && preset.dateRange) {
+
+      if ("dateRange" in preset && preset.dateRange) {
         setDateRange({
-          start: preset.dateRange.start.toISOString().split('T')[0],
-          end: preset.dateRange.end.toISOString().split('T')[0]
+          start: preset.dateRange.start.toISOString().split("T")[0],
+          end: preset.dateRange.end.toISOString().split("T")[0],
         });
       }
     }
@@ -244,7 +271,7 @@ export default function ExportModal({
   // Handle template selection
   const applyTemplate = async (templateId: string) => {
     if (!exportManager) return;
-    
+
     const template = await exportManager.loadTemplate(templateId);
     if (template) {
       setSelectedFormat(template.format);
@@ -260,13 +287,13 @@ export default function ExportModal({
       format: selectedFormat,
       categories: selectedCategories,
       includeMetadata: true,
-      ...customOptions
+      ...customOptions,
     };
 
     if (dateRange.start && dateRange.end) {
       options.dateRange = {
         start: new Date(dateRange.start),
-        end: new Date(dateRange.end)
+        end: new Date(dateRange.end),
       };
     }
 
@@ -278,24 +305,31 @@ export default function ExportModal({
     if (!exportManager) return;
 
     // Validate data
-    const validation = validateExportData(vocabulary, descriptions, qa, sessions);
+    const validation = validateExportData(
+      vocabulary,
+      descriptions,
+      qa,
+      sessions,
+    );
     if (!validation.isValid) {
-      alert(`Export validation failed:\n${validation.errors.join('\n')}`);
+      alert(`Export validation failed:\n${validation.errors.join("\n")}`);
       return;
     }
 
     try {
       const options = buildExportOptions();
       const result = await exportManager.exportData(options);
-      
+
       if (result.success && result.blob) {
         exportManager.downloadExport(result);
       } else {
         alert(`Export failed: ${result.error}`);
       }
     } catch (error) {
-      console.error('Export error:', error);
-      alert(`Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error("Export error:", error);
+      alert(
+        `Export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
@@ -303,53 +337,67 @@ export default function ExportModal({
   const handleBatchExport = async () => {
     if (!exportManager) return;
 
-    const formats: ExportFormat[] = ['csv', 'pdf', 'json'];
+    const formats: ExportFormat[] = ["csv", "pdf", "json"];
     const batchRequest: BatchExportRequest = {
-      exports: formats.map(format => ({
+      exports: formats.map((format) => ({
         format,
         options: {
           ...buildExportOptions(),
-          format
-        }
+          format,
+        },
       })),
       parallel: true,
       onProgress: (completed, total) => {
-        setExportProgress(prev => ({
+        setExportProgress((prev) => ({
           ...prev,
           progress: (completed / total) * 100,
-          message: `Exporting ${completed}/${total} formats...`
+          message: `Exporting ${completed}/${total} formats...`,
         }));
-      }
+      },
     };
 
     try {
       const results = await exportManager.batchExport(batchRequest);
-      
-      results.results.forEach(result => {
+
+      results.results.forEach((result) => {
         if (result.success && result.blob) {
           exportManager.downloadExport(result);
         }
       });
 
       if (results.errors.length > 0) {
-        alert(`Some exports failed:\n${results.errors.join('\n')}`);
+        alert(`Some exports failed:\n${results.errors.join("\n")}`);
       }
     } catch (error) {
-      alert(`Batch export failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      alert(
+        `Batch export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
+      );
     }
   };
 
   // Calculate totals for display
   const totalItems = selectedCategories.reduce((sum, category) => {
     switch (category) {
-      case 'vocabulary': return sum + vocabulary.length;
-      case 'descriptions': return sum + descriptions.length;
-      case 'qa': return sum + qa.length;
-      case 'session': return sum + sessions.length;
-      case 'images': return sum + images.length;
-      case 'all': 
-        return vocabulary.length + descriptions.length + qa.length + sessions.length + images.length;
-      default: return sum;
+      case "vocabulary":
+        return sum + vocabulary.length;
+      case "descriptions":
+        return sum + descriptions.length;
+      case "qa":
+        return sum + qa.length;
+      case "session":
+        return sum + sessions.length;
+      case "images":
+        return sum + images.length;
+      case "all":
+        return (
+          vocabulary.length +
+          descriptions.length +
+          qa.length +
+          sessions.length +
+          images.length
+        );
+      default:
+        return sum;
     }
   }, 0);
 
@@ -362,7 +410,9 @@ export default function ExportModal({
       <div className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b">
-          <h2 className="text-2xl font-bold text-gray-900">Export Learning Data</h2>
+          <h2 className="text-2xl font-bold text-gray-900">
+            Export Learning Data
+          </h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -381,7 +431,7 @@ export default function ExportModal({
                 <span className="text-blue-700">{exportProgress.message}</span>
               </div>
               <div className="mt-2 bg-blue-200 rounded-full h-2">
-                <div 
+                <div
                   className="bg-blue-600 h-2 rounded-full transition-all duration-300"
                   style={{ width: `${exportProgress.progress}%` }}
                 ></div>
@@ -400,7 +450,10 @@ export default function ExportModal({
                   className="p-3 border border-gray-200 rounded-lg hover:bg-gray-50 text-left transition-colors"
                 >
                   <div className="font-medium text-sm">
-                    {key.replace(/_/g, ' ').toLowerCase().replace(/\b\w/g, l => l.toUpperCase())}
+                    {key
+                      .replace(/_/g, " ")
+                      .toLowerCase()
+                      .replace(/\b\w/g, (l) => l.toUpperCase())}
                   </div>
                   <div className="text-xs text-gray-500 mt-1">
                     {preset.format.toUpperCase()}
@@ -414,26 +467,28 @@ export default function ExportModal({
           <div>
             <h3 className="text-lg font-semibold mb-3">Export Format</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {(['csv', 'json', 'pdf', 'excel', 'anki'] as ExportFormat[]).map(format => (
-                <button
-                  key={format}
-                  onClick={() => setSelectedFormat(format)}
-                  className={`p-4 border rounded-lg text-center transition-colors ${
-                    selectedFormat === format
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="font-medium">{format.toUpperCase()}</div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    {format === 'csv' && 'Spreadsheet data'}
-                    {format === 'json' && 'Structured data'}
-                    {format === 'pdf' && 'Printable format'}
-                    {format === 'excel' && 'Advanced spreadsheet'}
-                    {format === 'anki' && 'Flashcard deck'}
-                  </div>
-                </button>
-              ))}
+              {(["csv", "json", "pdf", "excel", "anki"] as ExportFormat[]).map(
+                (format) => (
+                  <button
+                    key={format}
+                    onClick={() => setSelectedFormat(format)}
+                    className={`p-4 border rounded-lg text-center transition-colors ${
+                      selectedFormat === format
+                        ? "border-blue-500 bg-blue-50 text-blue-700"
+                        : "border-gray-200 hover:bg-gray-50"
+                    }`}
+                  >
+                    <div className="font-medium">{format.toUpperCase()}</div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      {format === "csv" && "Spreadsheet data"}
+                      {format === "json" && "Structured data"}
+                      {format === "pdf" && "Printable format"}
+                      {format === "excel" && "Advanced spreadsheet"}
+                      {format === "anki" && "Flashcard deck"}
+                    </div>
+                  </button>
+                ),
+              )}
             </div>
           </div>
 
@@ -441,32 +496,67 @@ export default function ExportModal({
           <div>
             <h3 className="text-lg font-semibold mb-3">Data to Export</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {([
-                { key: 'vocabulary', label: 'Vocabulary', icon: FileText, count: vocabulary.length },
-                { key: 'descriptions', label: 'Descriptions', icon: Image, count: descriptions.length },
-                { key: 'qa', label: 'Q&A Pairs', icon: FileText, count: qa.length },
-                { key: 'sessions', label: 'Sessions', icon: Clock, count: sessions.length },
-                { key: 'images', label: 'Images', icon: Image, count: images.length },
-                { key: 'all', label: 'All Data', icon: Database, count: totalItems }
-              ] as const).map(({ key, label, icon: Icon, count }) => (
+              {(
+                [
+                  {
+                    key: "vocabulary",
+                    label: "Vocabulary",
+                    icon: FileText,
+                    count: vocabulary.length,
+                  },
+                  {
+                    key: "descriptions",
+                    label: "Descriptions",
+                    icon: Image,
+                    count: descriptions.length,
+                  },
+                  {
+                    key: "qa",
+                    label: "Q&A Pairs",
+                    icon: FileText,
+                    count: qa.length,
+                  },
+                  {
+                    key: "sessions",
+                    label: "Sessions",
+                    icon: Clock,
+                    count: sessions.length,
+                  },
+                  {
+                    key: "images",
+                    label: "Images",
+                    icon: Image,
+                    count: images.length,
+                  },
+                  {
+                    key: "all",
+                    label: "All Data",
+                    icon: Database,
+                    count: totalItems,
+                  },
+                ] as const
+              ).map(({ key, label, icon: Icon, count }) => (
                 <button
                   key={key}
                   onClick={() => {
-                    if (key === 'all') {
-                      setSelectedCategories(['all']);
+                    if (key === "all") {
+                      setSelectedCategories(["all"]);
                     } else {
-                      setSelectedCategories(prev => 
+                      setSelectedCategories((prev) =>
                         prev.includes(key as ExportCategory)
-                          ? prev.filter(c => c !== key && c !== 'all')
-                          : [...prev.filter(c => c !== 'all'), key as ExportCategory]
+                          ? prev.filter((c) => c !== key && c !== "all")
+                          : [
+                              ...prev.filter((c) => c !== "all"),
+                              key as ExportCategory,
+                            ],
                       );
                     }
                   }}
                   className={`p-3 border rounded-lg flex items-center space-x-3 transition-colors ${
                     selectedCategories.includes(key as ExportCategory)
-                      ? 'border-blue-500 bg-blue-50 text-blue-700'
-                      : 'border-gray-200 hover:bg-gray-50'
-                  } ${count === 0 ? 'opacity-50' : ''}`}
+                      ? "border-blue-500 bg-blue-50 text-blue-700"
+                      : "border-gray-200 hover:bg-gray-50"
+                  } ${count === 0 ? "opacity-50" : ""}`}
                   disabled={count === 0}
                 >
                   <Icon className="w-5 h-5" />
@@ -493,39 +583,57 @@ export default function ExportModal({
               <div className="mt-4 p-4 bg-gray-50 rounded-lg space-y-4">
                 {/* Date Range */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">Date Range</label>
+                  <label className="block text-sm font-medium mb-2">
+                    Date Range
+                  </label>
                   <div className="grid grid-cols-2 gap-3">
                     <input
                       type="date"
                       value={dateRange.start}
-                      onChange={(e) => setDateRange(prev => ({ ...prev, start: e.target.value }))}
+                      onChange={(e) =>
+                        setDateRange((prev) => ({
+                          ...prev,
+                          start: e.target.value,
+                        }))
+                      }
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                     <input
                       type="date"
                       value={dateRange.end}
-                      onChange={(e) => setDateRange(prev => ({ ...prev, end: e.target.value }))}
+                      onChange={(e) =>
+                        setDateRange((prev) => ({
+                          ...prev,
+                          end: e.target.value,
+                        }))
+                      }
                       className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
 
                 {/* Format-specific options */}
-                {selectedFormat === 'pdf' && (
+                {selectedFormat === "pdf" && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">PDF Options</label>
+                    <label className="block text-sm font-medium mb-2">
+                      PDF Options
+                    </label>
                     <div className="space-y-2">
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
-                          checked={customOptions.pdfOptions?.studySheetFormat || false}
-                          onChange={(e) => setCustomOptions(prev => ({
-                            ...prev,
-                            pdfOptions: {
-                              ...prev.pdfOptions,
-                              studySheetFormat: e.target.checked
-                            }
-                          }))}
+                          checked={
+                            customOptions.pdfOptions?.studySheetFormat || false
+                          }
+                          onChange={(e) =>
+                            setCustomOptions((prev) => ({
+                              ...prev,
+                              pdfOptions: {
+                                ...prev.pdfOptions,
+                                studySheetFormat: e.target.checked,
+                              },
+                            }))
+                          }
                           className="rounded"
                         />
                         <span className="text-sm">Study sheet format</span>
@@ -533,14 +641,18 @@ export default function ExportModal({
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
-                          checked={customOptions.pdfOptions?.includeImages || false}
-                          onChange={(e) => setCustomOptions(prev => ({
-                            ...prev,
-                            pdfOptions: {
-                              ...prev.pdfOptions,
-                              includeImages: e.target.checked
-                            }
-                          }))}
+                          checked={
+                            customOptions.pdfOptions?.includeImages || false
+                          }
+                          onChange={(e) =>
+                            setCustomOptions((prev) => ({
+                              ...prev,
+                              pdfOptions: {
+                                ...prev.pdfOptions,
+                                includeImages: e.target.checked,
+                              },
+                            }))
+                          }
                           className="rounded"
                         />
                         <span className="text-sm">Include images</span>
@@ -549,24 +661,31 @@ export default function ExportModal({
                   </div>
                 )}
 
-                {selectedFormat === 'excel' && (
+                {selectedFormat === "excel" && (
                   <div>
-                    <label className="block text-sm font-medium mb-2">Excel Options</label>
+                    <label className="block text-sm font-medium mb-2">
+                      Excel Options
+                    </label>
                     <div className="space-y-2">
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
-                          checked={customOptions.excelOptions?.charts?.progressChart || false}
-                          onChange={(e) => setCustomOptions(prev => ({
-                            ...prev,
-                            excelOptions: {
-                              ...prev.excelOptions,
-                              charts: {
-                                ...prev.excelOptions?.charts,
-                                progressChart: e.target.checked
-                              }
-                            }
-                          }))}
+                          checked={
+                            customOptions.excelOptions?.charts?.progressChart ||
+                            false
+                          }
+                          onChange={(e) =>
+                            setCustomOptions((prev) => ({
+                              ...prev,
+                              excelOptions: {
+                                ...prev.excelOptions,
+                                charts: {
+                                  ...prev.excelOptions?.charts,
+                                  progressChart: e.target.checked,
+                                },
+                              },
+                            }))
+                          }
                           className="rounded"
                         />
                         <span className="text-sm">Include progress charts</span>
@@ -574,20 +693,27 @@ export default function ExportModal({
                       <label className="flex items-center space-x-2">
                         <input
                           type="checkbox"
-                          checked={customOptions.excelOptions?.conditional?.difficultyColors || false}
-                          onChange={(e) => setCustomOptions(prev => ({
-                            ...prev,
-                            excelOptions: {
-                              ...prev.excelOptions,
-                              conditional: {
-                                ...prev.excelOptions?.conditional,
-                                difficultyColors: e.target.checked
-                              }
-                            }
-                          }))}
+                          checked={
+                            customOptions.excelOptions?.conditional
+                              ?.difficultyColors || false
+                          }
+                          onChange={(e) =>
+                            setCustomOptions((prev) => ({
+                              ...prev,
+                              excelOptions: {
+                                ...prev.excelOptions,
+                                conditional: {
+                                  ...prev.excelOptions?.conditional,
+                                  difficultyColors: e.target.checked,
+                                },
+                              },
+                            }))
+                          }
                           className="rounded"
                         />
-                        <span className="text-sm">Color-code difficulty levels</span>
+                        <span className="text-sm">
+                          Color-code difficulty levels
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -602,7 +728,9 @@ export default function ExportModal({
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
                 <span className="text-gray-600">Format:</span>
-                <span className="ml-2 font-medium">{selectedFormat.toUpperCase()}</span>
+                <span className="ml-2 font-medium">
+                  {selectedFormat.toUpperCase()}
+                </span>
               </div>
               <div>
                 <span className="text-gray-600">Items:</span>
@@ -614,7 +742,9 @@ export default function ExportModal({
               </div>
               <div>
                 <span className="text-gray-600">Categories:</span>
-                <span className="ml-2 font-medium">{selectedCategories.join(', ')}</span>
+                <span className="ml-2 font-medium">
+                  {selectedCategories.join(", ")}
+                </span>
               </div>
             </div>
           </div>
@@ -628,7 +758,7 @@ export default function ExportModal({
           >
             Cancel
           </button>
-          
+
           <div className="flex items-center space-x-3">
             <button
               onClick={handleBatchExport}
@@ -637,7 +767,7 @@ export default function ExportModal({
             >
               Export All Formats
             </button>
-            
+
             <button
               onClick={handleExport}
               disabled={exportProgress.isExporting || totalItems === 0}

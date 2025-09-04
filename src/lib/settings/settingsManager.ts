@@ -4,25 +4,31 @@ export interface AppSettings {
     unsplash: string;
     openai: string;
   };
-  
+
   // Language Settings
   language: {
-    ui: 'en' | 'es' | 'fr' | 'de' | 'it' | 'pt';
-    target: 'spanish' | 'french' | 'german' | 'italian' | 'portuguese' | 'english';
+    ui: "en" | "es" | "fr" | "de" | "it" | "pt";
+    target:
+      | "spanish"
+      | "french"
+      | "german"
+      | "italian"
+      | "portuguese"
+      | "english";
   };
-  
+
   // Study Preferences
   study: {
     dailyGoal: number; // number of images/sessions
     reminderTimes: string[]; // array of "HH:MM" format
     enableReminders: boolean;
-    difficulty: 'beginner' | 'intermediate' | 'advanced';
+    difficulty: "beginner" | "intermediate" | "advanced";
     autoAdvance: boolean;
   };
-  
+
   // Theme and Appearance
   theme: {
-    mode: 'light' | 'dark' | 'system';
+    mode: "light" | "dark" | "system";
     customColors: {
       primary: string;
       secondary: string;
@@ -31,33 +37,33 @@ export interface AppSettings {
     animations: boolean;
     reducedMotion: boolean;
   };
-  
+
   // Accessibility
   accessibility: {
-    fontSize: 'small' | 'medium' | 'large' | 'xl';
-    contrast: 'normal' | 'high';
+    fontSize: "small" | "medium" | "large" | "xl";
+    contrast: "normal" | "high";
     screenReader: boolean;
     keyboardNavigation: boolean;
     focusIndicator: boolean;
   };
-  
+
   // Cache Settings
   cache: {
     maxSize: number; // in MB
     autoClean: boolean;
     retention: number; // days
   };
-  
+
   // Export/Import
   backup: {
     autoBackup: boolean;
-    backupFrequency: 'daily' | 'weekly' | 'monthly';
+    backupFrequency: "daily" | "weekly" | "monthly";
     includeAPIKeys: boolean;
   };
-  
+
   // Performance
   performance: {
-    imageQuality: 'low' | 'medium' | 'high';
+    imageQuality: "low" | "medium" | "high";
     preloadImages: boolean;
     analyticsEnabled: boolean;
   };
@@ -65,33 +71,33 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   apiKeys: {
-    unsplash: '',
-    openai: '',
+    unsplash: "",
+    openai: "",
   },
   language: {
-    ui: 'en',
-    target: 'spanish',
+    ui: "en",
+    target: "spanish",
   },
   study: {
     dailyGoal: 10,
-    reminderTimes: ['09:00', '15:00', '20:00'],
+    reminderTimes: ["09:00", "15:00", "20:00"],
     enableReminders: true,
-    difficulty: 'intermediate',
+    difficulty: "intermediate",
     autoAdvance: false,
   },
   theme: {
-    mode: 'system',
+    mode: "system",
     customColors: {
-      primary: '#3B82F6',
-      secondary: '#64748B',
-      accent: '#8B5CF6',
+      primary: "#3B82F6",
+      secondary: "#64748B",
+      accent: "#8B5CF6",
     },
     animations: true,
     reducedMotion: false,
   },
   accessibility: {
-    fontSize: 'medium',
-    contrast: 'normal',
+    fontSize: "medium",
+    contrast: "normal",
     screenReader: false,
     keyboardNavigation: true,
     focusIndicator: true,
@@ -103,11 +109,11 @@ export const DEFAULT_SETTINGS: AppSettings = {
   },
   backup: {
     autoBackup: false,
-    backupFrequency: 'weekly',
+    backupFrequency: "weekly",
     includeAPIKeys: false,
   },
   performance: {
-    imageQuality: 'medium',
+    imageQuality: "medium",
     preloadImages: true,
     analyticsEnabled: true,
   },
@@ -117,14 +123,14 @@ export class SettingsManager {
   private static instance: SettingsManager;
   private settings: AppSettings;
   private listeners: ((settings: AppSettings) => void)[] = [];
-  private readonly STORAGE_KEY = 'describe-it-settings';
-  private readonly STORAGE_VERSION = '1.0.0';
+  private readonly STORAGE_KEY = "describe-it-settings";
+  private readonly STORAGE_VERSION = "1.0.0";
 
   private constructor() {
     this.settings = this.loadSettings();
-    
+
     // Only apply settings and setup listeners on client side
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       this.applySettings();
       this.setupSystemListeners();
     }
@@ -140,7 +146,7 @@ export class SettingsManager {
   // Load settings from localStorage
   private loadSettings(): AppSettings {
     // SSR safety check
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
       return { ...DEFAULT_SETTINGS };
     }
 
@@ -154,7 +160,7 @@ export class SettingsManager {
         }
       }
     } catch (error) {
-      console.warn('Failed to load settings from localStorage:', error);
+      console.warn("Failed to load settings from localStorage:", error);
     }
     return { ...DEFAULT_SETTINGS };
   }
@@ -162,7 +168,7 @@ export class SettingsManager {
   // Save settings to localStorage
   private saveSettings(): void {
     // SSR safety check
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
       return;
     }
 
@@ -174,7 +180,7 @@ export class SettingsManager {
       };
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
     } catch (error) {
-      console.error('Failed to save settings to localStorage:', error);
+      console.error("Failed to save settings to localStorage:", error);
     }
   }
 
@@ -189,55 +195,57 @@ export class SettingsManager {
   // Apply theme settings
   private applyTheme(): void {
     // SSR safety check
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
+    if (typeof window === "undefined" || typeof document === "undefined") {
       return;
     }
 
     const { theme } = this.settings;
-    const isDark = theme.mode === 'dark' || 
-                   (theme.mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
-    document.documentElement.classList.toggle('dark', isDark);
-    
+    const isDark =
+      theme.mode === "dark" ||
+      (theme.mode === "system" &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+    document.documentElement.classList.toggle("dark", isDark);
+
     // Apply custom colors
     const root = document.documentElement;
-    root.style.setProperty('--color-primary', theme.customColors.primary);
-    root.style.setProperty('--color-secondary', theme.customColors.secondary);
-    root.style.setProperty('--color-accent', theme.customColors.accent);
-    
+    root.style.setProperty("--color-primary", theme.customColors.primary);
+    root.style.setProperty("--color-secondary", theme.customColors.secondary);
+    root.style.setProperty("--color-accent", theme.customColors.accent);
+
     // Apply animation preferences
     if (!theme.animations || theme.reducedMotion) {
-      document.documentElement.classList.add('reduce-motion');
+      document.documentElement.classList.add("reduce-motion");
     } else {
-      document.documentElement.classList.remove('reduce-motion');
+      document.documentElement.classList.remove("reduce-motion");
     }
   }
 
   // Apply accessibility settings
   private applyAccessibility(): void {
     // SSR safety check
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
+    if (typeof window === "undefined" || typeof document === "undefined") {
       return;
     }
 
     const { accessibility } = this.settings;
     const root = document.documentElement;
-    
+
     // Font size
-    root.classList.remove('text-small', 'text-medium', 'text-large', 'text-xl');
+    root.classList.remove("text-small", "text-medium", "text-large", "text-xl");
     root.classList.add(`text-${accessibility.fontSize}`);
-    
+
     // High contrast
-    root.classList.toggle('high-contrast', accessibility.contrast === 'high');
-    
+    root.classList.toggle("high-contrast", accessibility.contrast === "high");
+
     // Focus indicators
-    root.classList.toggle('focus-visible', accessibility.focusIndicator);
+    root.classList.toggle("focus-visible", accessibility.focusIndicator);
   }
 
   // Apply language settings
   private applyLanguage(): void {
     // SSR safety check
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
+    if (typeof window === "undefined" || typeof document === "undefined") {
       return;
     }
 
@@ -249,19 +257,19 @@ export class SettingsManager {
   // Setup reminder notifications
   private setupReminders(): void {
     // SSR safety check
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
     if (!this.settings.study.enableReminders) return;
-    
+
     // Request notification permission if not already granted
-    if ('Notification' in window && Notification.permission === 'default') {
+    if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission();
     }
-    
+
     // Setup scheduled reminders (simplified version)
-    this.settings.study.reminderTimes.forEach(time => {
+    this.settings.study.reminderTimes.forEach((time) => {
       // In a real implementation, you'd use a service worker or similar
       // to schedule notifications
       console.log(`Reminder scheduled for ${time}`);
@@ -271,22 +279,22 @@ export class SettingsManager {
   // Setup system preference listeners
   private setupSystemListeners(): void {
     // SSR safety check
-    if (typeof window === 'undefined') {
+    if (typeof window === "undefined") {
       return;
     }
 
     // Listen for system theme changes
-    if (this.settings.theme.mode === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      mediaQuery.addEventListener('change', () => {
+    if (this.settings.theme.mode === "system") {
+      const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+      mediaQuery.addEventListener("change", () => {
         this.applyTheme();
         this.notifyListeners();
       });
     }
 
     // Listen for reduced motion preference
-    const motionQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
-    motionQuery.addEventListener('change', (e) => {
+    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    motionQuery.addEventListener("change", (e) => {
       this.updateSettings({
         theme: {
           ...this.settings.theme,
@@ -310,7 +318,10 @@ export class SettingsManager {
   }
 
   // Update a specific section of settings
-  updateSection<K extends keyof AppSettings>(section: K, updates: Partial<AppSettings[K]>): void {
+  updateSection<K extends keyof AppSettings>(
+    section: K,
+    updates: Partial<AppSettings[K]>,
+  ): void {
     this.settings[section] = { ...this.settings[section], ...updates };
     this.saveSettings();
     this.applySettings();
@@ -329,14 +340,20 @@ export class SettingsManager {
   exportSettings(includeAPIKeys = false): string {
     const exportData = {
       ...this.settings,
-      apiKeys: includeAPIKeys ? this.settings.apiKeys : { unsplash: '', openai: '' },
+      apiKeys: includeAPIKeys
+        ? this.settings.apiKeys
+        : { unsplash: "", openai: "" },
     };
-    
-    return JSON.stringify({
-      version: this.STORAGE_VERSION,
-      timestamp: new Date().toISOString(),
-      settings: exportData,
-    }, null, 2);
+
+    return JSON.stringify(
+      {
+        version: this.STORAGE_VERSION,
+        timestamp: new Date().toISOString(),
+        settings: exportData,
+      },
+      null,
+      2,
+    );
   }
 
   // Import settings
@@ -351,7 +368,7 @@ export class SettingsManager {
         return true;
       }
     } catch (error) {
-      console.error('Failed to import settings:', error);
+      console.error("Failed to import settings:", error);
     }
     return false;
   }
@@ -359,7 +376,7 @@ export class SettingsManager {
   // Cache management
   getCacheSize(): number {
     // SSR safety check
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
       return 0;
     }
 
@@ -370,7 +387,7 @@ export class SettingsManager {
           total += localStorage[key].length;
         }
       }
-      return Math.round(total / 1024 / 1024 * 100) / 100; // MB
+      return Math.round((total / 1024 / 1024) * 100) / 100; // MB
     } catch {
       return 0;
     }
@@ -378,30 +395,30 @@ export class SettingsManager {
 
   clearCache(): void {
     // SSR safety check
-    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
       return;
     }
 
     try {
       const keysToKeep = [this.STORAGE_KEY];
       const allKeys = Object.keys(localStorage);
-      
-      allKeys.forEach(key => {
+
+      allKeys.forEach((key) => {
         if (!keysToKeep.includes(key)) {
           localStorage.removeItem(key);
         }
       });
-      
+
       // Clear any caches managed by the app
-      if ('caches' in window) {
-        caches.keys().then(names => {
-          names.forEach(name => {
+      if ("caches" in window) {
+        caches.keys().then((names) => {
+          names.forEach((name) => {
             caches.delete(name);
           });
         });
       }
     } catch (error) {
-      console.error('Failed to clear cache:', error);
+      console.error("Failed to clear cache:", error);
     }
   }
 
@@ -417,33 +434,36 @@ export class SettingsManager {
   }
 
   private notifyListeners(): void {
-    this.listeners.forEach(callback => callback(this.settings));
+    this.listeners.forEach((callback) => callback(this.settings));
   }
 
   // Validate API keys
   async validateAPIKeys(): Promise<{ unsplash: boolean; openai: boolean }> {
     const results = { unsplash: false, openai: false };
-    
+
     // Validate Unsplash API key
     if (this.settings.apiKeys.unsplash) {
       try {
-        const response = await fetch(`https://api.unsplash.com/photos?per_page=1`, {
-          headers: {
-            'Authorization': `Client-ID ${this.settings.apiKeys.unsplash}`,
+        const response = await fetch(
+          `https://api.unsplash.com/photos?per_page=1`,
+          {
+            headers: {
+              Authorization: `Client-ID ${this.settings.apiKeys.unsplash}`,
+            },
           },
-        });
+        );
         results.unsplash = response.ok;
       } catch {
         results.unsplash = false;
       }
     }
-    
+
     // Validate OpenAI API key
     if (this.settings.apiKeys.openai) {
       try {
-        const response = await fetch('/api/health?check=openai', {
+        const response = await fetch("/api/health?check=openai", {
           headers: {
-            'Authorization': `Bearer ${this.settings.apiKeys.openai}`,
+            Authorization: `Bearer ${this.settings.apiKeys.openai}`,
           },
         });
         results.openai = response.ok;
@@ -451,7 +471,7 @@ export class SettingsManager {
         results.openai = false;
       }
     }
-    
+
     return results;
   }
 }

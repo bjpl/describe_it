@@ -6,13 +6,13 @@ export {
   useActiveTab,
   usePreferences,
   useSearchHistory,
-  useAppError
-} from './appStore';
+  useAppError,
+} from "./appStore";
 
 export {
   useSessionStore,
   useSession,
   useSessionStatus,
   useSessionActions,
-  useActivitySummary
-} from './sessionStore';
+  useActivitySummary,
+} from "./sessionStore";

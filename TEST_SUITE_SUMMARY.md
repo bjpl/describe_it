@@ -7,10 +7,11 @@ I have created a comprehensive, production-ready test suite for the Describe It 
 ## 📁 Test Architecture
 
 ### Directory Structure
+
 ```
 tests/
 ├── setup.ts                    # Global test configuration
-├── utils/                      
+├── utils/
 │   ├── test-helpers.ts         # Reusable testing utilities
 │   └── fixtures.ts             # Test data and fixtures
 ├── mocks/
@@ -41,6 +42,7 @@ tests/
 ## 🧪 Test Types Implemented
 
 ### 1. Unit Tests (35+ tests)
+
 - **Service Layer**: Complete coverage of business logic
   - `PhraseExtractor`: 15+ tests covering phrase categorization
   - `VocabularyService`: 20+ tests covering database operations
@@ -51,6 +53,7 @@ tests/
   - `QAPanel`: Question-answer generation and interaction
 
 ### 2. Integration Tests (25+ tests)
+
 - **API Endpoints**: Full request-response cycle testing
   - `/api/descriptions/generate`: Image description generation
   - `/api/qa/generate`: Question-answer pair creation
@@ -60,6 +63,7 @@ tests/
 - **Performance**: Response time monitoring
 
 ### 3. End-to-End Tests (10+ scenarios)
+
 - **Complete User Flows**: Full application workflow testing
   - Image upload → Description generation → Q&A creation → Vocabulary extraction
 - **Multi-browser Support**: Chrome, Firefox, Safari, Edge
@@ -68,6 +72,7 @@ tests/
 - **Error States**: Offline mode and error recovery
 
 ### 4. Performance Tests (15+ benchmarks)
+
 - **API Response Times**: < 2 seconds for descriptions, < 3 seconds for Q&A
 - **Concurrent Request Handling**: Multi-user simulation
 - **Memory Usage**: Memory leak detection
@@ -76,12 +81,14 @@ tests/
 ## 🛠 Testing Tools & Technologies
 
 ### Core Testing Framework
+
 - **Vitest**: Fast, modern test runner with native TypeScript support
 - **Testing Library**: Component testing with user-centric approach
 - **Playwright**: Cross-browser E2E testing automation
 - **Mock Service Worker (MSW)**: API mocking for integration tests
 
 ### Coverage & Reporting
+
 - **@vitest/coverage-v8**: Code coverage with V8 engine
 - **HTML Reports**: Interactive coverage and test reports
 - **CI/CD Integration**: GitHub Actions workflow
@@ -90,13 +97,15 @@ tests/
 ## 📊 Coverage Targets & Metrics
 
 ### Code Coverage Requirements
+
 - **Statements**: 80% (Exceeds industry standard of 70%)
 - **Branches**: 75% (Comprehensive conditional logic testing)
 - **Functions**: 80% (All public methods tested)
 - **Lines**: 80% (High line-by-line coverage)
 
 ### Performance Benchmarks
-- **API Response Times**: 
+
+- **API Response Times**:
   - Fast: < 500ms
   - Acceptable: < 2000ms
   - Slow: > 5000ms (flagged)
@@ -106,24 +115,28 @@ tests/
 ## 🚀 Key Features
 
 ### 1. Comprehensive Mocking System
+
 - **API Services**: OpenAI, Supabase, Image Search
 - **External Dependencies**: File system, network requests
 - **Browser APIs**: Local storage, clipboard, geolocation
 - **React Components**: Next.js Image, Navigation hooks
 
 ### 2. Test Data Management
+
 - **Fixtures**: Consistent test data across all test types
 - **Factories**: Dynamic test data generation
 - **Builders**: Complex object construction patterns
 - **Scenarios**: Pre-defined test scenarios for common use cases
 
 ### 3. Advanced Testing Patterns
+
 - **Parallel Execution**: Tests run concurrently for speed
 - **Selective Testing**: Run specific test suites or files
 - **Watch Mode**: Real-time test execution during development
 - **Snapshot Testing**: UI component regression detection
 
 ### 4. Error & Edge Case Coverage
+
 - **Network Failures**: Timeout, connection errors, rate limits
 - **Invalid Input**: Malformed data, boundary conditions
 - **Browser Compatibility**: Cross-browser inconsistencies
@@ -132,12 +145,14 @@ tests/
 ## 🔧 Configuration Files
 
 ### Core Configuration
+
 - `vitest.config.ts`: Test runner configuration with coverage thresholds
 - `playwright.config.ts`: E2E testing configuration
 - `jest.config.js`: Backup Jest configuration for compatibility
 - `tests/setup.ts`: Global test environment setup
 
 ### CI/CD Pipeline
+
 - `.github/workflows/test.yml`: Comprehensive GitHub Actions workflow
   - Multi-Node.js version testing (18.x, 20.x)
   - Parallel test execution
@@ -146,6 +161,7 @@ tests/
   - Security scanning
 
 ### Scripts & Utilities
+
 - `scripts/test-coverage.js`: Coverage validation and reporting
 - Test data generators and helpers
 - Performance monitoring tools
@@ -154,21 +170,25 @@ tests/
 ## 📈 Quality Assurance Benefits
 
 ### 1. Regression Prevention
+
 - Comprehensive test coverage prevents breaking changes
 - Automated testing in CI/CD pipeline
 - Cross-browser compatibility assurance
 
 ### 2. Development Confidence
+
 - Safe refactoring with test safety net
 - Clear documentation through test cases
 - Performance regression detection
 
 ### 3. Maintainability
+
 - Well-organized test structure
 - Reusable test utilities
 - Clear naming conventions and documentation
 
 ### 4. Performance Monitoring
+
 - Automated performance benchmarks
 - Response time tracking
 - Memory usage monitoring
@@ -177,6 +197,7 @@ tests/
 ## 🎯 Usage Instructions
 
 ### Running Tests Locally
+
 ```bash
 # All tests with coverage
 npm run test:coverage
@@ -198,6 +219,7 @@ npm test tests/unit/services/phraseExtractor.test.ts
 ```
 
 ### Coverage Reports
+
 ```bash
 # Generate HTML coverage report
 npm run test:coverage
@@ -211,7 +233,9 @@ npx vitest --ui
 ```
 
 ### CI/CD Integration
+
 The test suite automatically runs on:
+
 - Every push to main/develop branches
 - All pull requests
 - Daily scheduled runs
@@ -220,18 +244,21 @@ The test suite automatically runs on:
 ## 🏆 Test Quality Metrics
 
 ### Comprehensive Coverage
+
 - **35+ Unit Tests**: Service logic and component behavior
 - **25+ Integration Tests**: API endpoints and data flow
 - **10+ E2E Tests**: Complete user journeys
 - **15+ Performance Tests**: Speed and efficiency validation
 
 ### Real-World Scenarios
+
 - **Multi-language Support**: Spanish and English testing
 - **File Upload Handling**: Various file types and sizes
 - **Error Recovery**: Graceful failure handling
 - **Accessibility**: Screen reader and keyboard navigation
 
 ### Production Readiness
+
 - **CI/CD Integration**: Automated testing pipeline
 - **Performance Monitoring**: Response time tracking
 - **Security Testing**: Input validation and XSS prevention
@@ -240,6 +267,7 @@ The test suite automatically runs on:
 ## 🎉 Conclusion
 
 This comprehensive test suite provides:
+
 - **80%+ code coverage** across all application layers
 - **Production-ready quality assurance** with automated testing
 - **Performance monitoring** with benchmarks and alerts
@@ -252,7 +280,7 @@ The test infrastructure is designed to scale with the application, provide fast 
 
 ---
 
-*Generated on: ${new Date().toISOString()}*  
-*Coverage Target: 80% (Statements, Branches, Functions, Lines)*  
-*Test Runner: Vitest with Playwright for E2E*  
-*Total Tests: 85+ comprehensive test cases*
+_Generated on: ${new Date().toISOString()}_  
+_Coverage Target: 80% (Statements, Branches, Functions, Lines)_  
+_Test Runner: Vitest with Playwright for E2E_  
+_Total Tests: 85+ comprehensive test cases_

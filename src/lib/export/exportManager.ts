@@ -3,7 +3,7 @@
  * Orchestrates all export formats and provides advanced filtering
  */
 
-import { saveAs } from 'file-saver';
+import { saveAs } from "file-saver";
 import {
   ExportData,
   ExportOptions,
@@ -21,15 +21,15 @@ import {
   DescriptionExportItem,
   QAExportItem,
   SessionExportItem,
-  ImageExportItem
-} from '../../types/export';
+  ImageExportItem,
+} from "../../types/export";
 
 // Import all exporters
-import { exportToPDF } from './pdfExporter';
-import { exportToExcel } from './excelExporter';
-import { exportToAnki } from './ankiExporter';
-import { exportToJSON } from './jsonExporter';
-import { exportAllData as exportToCSV } from './csvExporter';
+import { exportToPDF } from "./pdfExporter";
+import { exportToExcel } from "./excelExporter";
+import { exportToAnki } from "./ankiExporter";
+import { exportToJSON } from "./jsonExporter";
+import { exportAllData as exportToCSV } from "./csvExporter";
 
 interface DataSources {
   getVocabulary: (filters?: any) => Promise<VocabularyExportItem[]>;
@@ -62,32 +62,32 @@ export class ExportManager implements IExportManager {
 
     try {
       this.emitEvent({
-        type: 'start',
+        type: "start",
         exportId,
         format: options.format,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       // Validate options
       if (!this.validateOptions(options)) {
-        throw new Error('Invalid export options');
+        throw new Error("Invalid export options");
       }
 
       // Gather filtered data
       const data = await this.gatherFilteredData(options, exportId);
-      
+
       this.emitEvent({
-        type: 'progress',
+        type: "progress",
         exportId,
         format: options.format,
         progress: 50,
-        data: { message: 'Data gathered, generating export...' },
-        timestamp: new Date().toISOString()
+        data: { message: "Data gathered, generating export..." },
+        timestamp: new Date().toISOString(),
       });
 
       // Generate export based on format
       const blob = await this.generateExport(data, options);
-      
+
       const duration = Date.now() - startTime;
       const result: ExportResult = {
         success: true,
@@ -96,42 +96,42 @@ export class ExportManager implements IExportManager {
         size: blob.size,
         blob,
         duration,
-        itemsExported: data.metadata.totalItems
+        itemsExported: data.metadata.totalItems,
       };
 
       // Record in history
       this.recordExport(result, options);
 
       this.emitEvent({
-        type: 'complete',
+        type: "complete",
         exportId,
         format: options.format,
         data: result,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       return result;
-
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error";
       const duration = Date.now() - startTime;
 
       this.emitEvent({
-        type: 'error',
+        type: "error",
         exportId,
         format: options.format,
         error: errorMessage,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
 
       return {
         success: false,
         format: options.format,
-        filename: '',
+        filename: "",
         size: 0,
         duration,
         itemsExported: 0,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   }
@@ -150,20 +150,20 @@ export class ExportManager implements IExportManager {
         try {
           return await this.exportData(exportConfig.options);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
           errors.push(`${exportConfig.format}: ${errorMessage}`);
           return null;
         }
       });
 
       const parallelResults = await Promise.all(promises);
-      results.push(...parallelResults.filter(Boolean) as ExportResult[]);
-
+      results.push(...(parallelResults.filter(Boolean) as ExportResult[]));
     } else {
       // Sequential execution
       for (let i = 0; i < request.exports.length; i++) {
         const exportConfig = request.exports[i];
-        
+
         if (request.onProgress) {
           request.onProgress(i, request.exports.length);
         }
@@ -172,28 +172,32 @@ export class ExportManager implements IExportManager {
           const result = await this.exportData(exportConfig.options);
           results.push(result);
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorMessage =
+            error instanceof Error ? error.message : "Unknown error";
           errors.push(`${exportConfig.format}: ${errorMessage}`);
         }
       }
     }
 
     const totalDuration = Date.now() - startTime;
-    const successCount = results.filter(r => r.success).length;
+    const successCount = results.filter((r) => r.success).length;
 
     return {
       results,
       totalDuration,
       successCount,
       errorCount: errors.length,
-      errors
+      errors,
     };
   }
 
   /**
    * Gather and filter data based on export options
    */
-  private async gatherFilteredData(options: ExportOptions, exportId: string): Promise<ExportData> {
+  private async gatherFilteredData(
+    options: ExportOptions,
+    exportId: string,
+  ): Promise<ExportData> {
     const data: ExportData = {
       metadata: {
         exportId,
@@ -202,36 +206,51 @@ export class ExportManager implements IExportManager {
         options,
         totalItems: 0,
         categories: options.categories,
-        version: '2.0.0'
-      }
+        version: "2.0.0",
+      },
     };
 
     // Vocabulary
-    if (options.categories.includes('vocabulary') || options.categories.includes('all')) {
+    if (
+      options.categories.includes("vocabulary") ||
+      options.categories.includes("all")
+    ) {
       const filters = this.buildVocabularyFilters(options);
       data.vocabulary = await this.dataSources.getVocabulary(filters);
     }
 
     // Descriptions
-    if (options.categories.includes('descriptions') || options.categories.includes('all')) {
+    if (
+      options.categories.includes("descriptions") ||
+      options.categories.includes("all")
+    ) {
       const filters = this.buildDescriptionFilters(options);
       data.descriptions = await this.dataSources.getDescriptions(filters);
     }
 
     // Q&A
-    if (options.categories.includes('qa') || options.categories.includes('all')) {
+    if (
+      options.categories.includes("qa") ||
+      options.categories.includes("all")
+    ) {
       const filters = this.buildQAFilters(options);
       data.qa = await this.dataSources.getQA(filters);
     }
 
     // Sessions
-    if (options.categories.includes('session') || options.categories.includes('all')) {
+    if (
+      options.categories.includes("session") ||
+      options.categories.includes("all")
+    ) {
       const filters = this.buildSessionFilters(options);
       data.sessions = await this.dataSources.getSessions(filters);
     }
 
     // Images
-    if (options.categories.includes('images') || options.categories.includes('all')) {
+    if (
+      options.categories.includes("images") ||
+      options.categories.includes("all")
+    ) {
       const filters = this.buildImageFilters(options);
       data.images = await this.dataSources.getImages(filters);
     }
@@ -351,33 +370,36 @@ export class ExportManager implements IExportManager {
   /**
    * Generate export based on format
    */
-  private async generateExport(data: ExportData, options: ExportOptions): Promise<Blob> {
+  private async generateExport(
+    data: ExportData,
+    options: ExportOptions,
+  ): Promise<Blob> {
     switch (options.format) {
-      case 'pdf':
+      case "pdf":
         return await exportToPDF(data, options.pdfOptions);
-      
-      case 'excel':
+
+      case "excel":
         return await exportToExcel(data, options.excelOptions);
-      
-      case 'anki':
+
+      case "anki":
         return await exportToAnki(data, options.ankiOptions);
-      
-      case 'json':
+
+      case "json":
         return await exportToJSON(data);
-      
-      case 'csv':
+
+      case "csv":
         // Convert to CSV format (reuse existing function)
         const csvData = {
           vocabulary: data.vocabulary || [],
           descriptions: data.descriptions || [],
           qa: data.qa || [],
-          sessions: data.sessions || []
+          sessions: data.sessions || [],
         };
-        
+
         // For now, create a simple CSV blob - this could be enhanced
         const csvContent = this.convertToCSV(csvData);
-        return new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
-      
+        return new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+
       default:
         throw new Error(`Unsupported export format: ${options.format}`);
     }
@@ -388,27 +410,27 @@ export class ExportManager implements IExportManager {
    */
   private convertToCSV(data: any): string {
     const lines: string[] = [];
-    
+
     // Add each data type as a section
     Object.entries(data).forEach(([type, items]: [string, any[]]) => {
       if (items.length > 0) {
         lines.push(`\n# ${type.toUpperCase()}`);
         const headers = Object.keys(items[0]);
-        lines.push(headers.join(','));
-        
-        items.forEach(item => {
-          const values = headers.map(header => {
-            const value = item[header] || '';
-            return typeof value === 'string' && value.includes(',') 
-              ? `"${value.replace(/"/g, '""')}"` 
+        lines.push(headers.join(","));
+
+        items.forEach((item) => {
+          const values = headers.map((header) => {
+            const value = item[header] || "";
+            return typeof value === "string" && value.includes(",")
+              ? `"${value.replace(/"/g, '""')}"`
               : value;
           });
-          lines.push(values.join(','));
+          lines.push(values.join(","));
         });
       }
     });
-    
-    return lines.join('\n');
+
+    return lines.join("\n");
   }
 
   /**
@@ -435,36 +457,37 @@ export class ExportManager implements IExportManager {
       totalSessions: data.sessions?.length || 0,
       totalImages: data.images?.length || 0,
       dateRange: {
-        start: '',
-        end: ''
+        start: "",
+        end: "",
       },
       categories: {} as Record<string, number>,
       progress: {
         beginnerWords: 0,
         intermediateWords: 0,
-        advancedWords: 0
-      }
+        advancedWords: 0,
+      },
     };
 
     // Calculate date range and vocabulary progress
     if (data.vocabulary) {
-      const dates = data.vocabulary.map(v => new Date(v.dateAdded)).sort();
+      const dates = data.vocabulary.map((v) => new Date(v.dateAdded)).sort();
       if (dates.length > 0) {
         summary.dateRange.start = dates[0].toISOString();
         summary.dateRange.end = dates[dates.length - 1].toISOString();
       }
 
-      data.vocabulary.forEach(item => {
-        summary.categories[item.category] = (summary.categories[item.category] || 0) + 1;
-        
+      data.vocabulary.forEach((item) => {
+        summary.categories[item.category] =
+          (summary.categories[item.category] || 0) + 1;
+
         switch (item.difficulty) {
-          case 'beginner':
+          case "beginner":
             summary.progress.beginnerWords++;
             break;
-          case 'intermediate':
+          case "intermediate":
             summary.progress.intermediateWords++;
             break;
-          case 'advanced':
+          case "advanced":
             summary.progress.advancedWords++;
             break;
         }
@@ -478,10 +501,10 @@ export class ExportManager implements IExportManager {
    * Generate filename based on export options
    */
   private generateFilename(options: ExportOptions): string {
-    const timestamp = new Date().toISOString().split('T')[0];
-    const categories = options.categories.join('-');
+    const timestamp = new Date().toISOString().split("T")[0];
+    const categories = options.categories.join("-");
     const extension = this.getFileExtension(options.format);
-    
+
     return `describe-it-export-${categories}-${timestamp}.${extension}`;
   }
 
@@ -490,30 +513,32 @@ export class ExportManager implements IExportManager {
    */
   private getFileExtension(format: ExportFormat): string {
     const extensions = {
-      'csv': 'csv',
-      'json': 'json',
-      'pdf': 'pdf',
-      'anki': 'txt',
-      'excel': 'xlsx'
+      csv: "csv",
+      json: "json",
+      pdf: "pdf",
+      anki: "txt",
+      excel: "xlsx",
     };
-    
-    return extensions[format] || 'txt';
+
+    return extensions[format] || "txt";
   }
 
   /**
    * Template management methods
    */
-  async saveTemplate(template: Omit<ExportTemplate, 'id' | 'createdAt'>): Promise<ExportTemplate> {
+  async saveTemplate(
+    template: Omit<ExportTemplate, "id" | "createdAt">,
+  ): Promise<ExportTemplate> {
     const fullTemplate: ExportTemplate = {
       ...template,
       id: `template-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
       createdAt: new Date().toISOString(),
-      useCount: 0
+      useCount: 0,
     };
 
     this.templates.set(fullTemplate.id, fullTemplate);
     this.saveTemplatesToStorage();
-    
+
     return fullTemplate;
   }
 
@@ -554,31 +579,32 @@ export class ExportManager implements IExportManager {
   validateOptions(options: ExportOptions): boolean {
     if (!options.format) return false;
     if (!options.categories || options.categories.length === 0) return false;
-    if (options.dateRange && options.dateRange.start > options.dateRange.end) return false;
+    if (options.dateRange && options.dateRange.start > options.dateRange.end)
+      return false;
     return true;
   }
 
   async estimateSize(options: ExportOptions): Promise<number> {
     // Simple estimation based on data size
     // This could be made more sophisticated
-    const data = await this.gatherFilteredData(options, 'estimate');
+    const data = await this.gatherFilteredData(options, "estimate");
     const jsonSize = JSON.stringify(data).length;
-    
+
     // Rough multipliers for different formats
     const multipliers = {
-      'json': 1,
-      'csv': 0.5,
-      'pdf': 2,
-      'excel': 1.5,
-      'anki': 0.8
+      json: 1,
+      csv: 0.5,
+      pdf: 2,
+      excel: 1.5,
+      anki: 0.8,
     };
-    
+
     return Math.round(jsonSize * (multipliers[options.format] || 1));
   }
 
   async previewData(options: ExportOptions): Promise<any> {
-    const data = await this.gatherFilteredData(options, 'preview');
-    
+    const data = await this.gatherFilteredData(options, "preview");
+
     // Return a preview with limited items
     return {
       metadata: data.metadata,
@@ -586,7 +612,7 @@ export class ExportManager implements IExportManager {
       descriptions: data.descriptions?.slice(0, 3),
       qa: data.qa?.slice(0, 3),
       sessions: data.sessions?.slice(0, 10),
-      summary: data.summary
+      summary: data.summary,
     };
   }
 
@@ -605,7 +631,7 @@ export class ExportManager implements IExportManager {
   }
 
   private emitEvent(event: ExportEvent): void {
-    this.eventListeners.forEach(listener => listener(event));
+    this.eventListeners.forEach((listener) => listener(event));
   }
 
   /**
@@ -622,11 +648,11 @@ export class ExportManager implements IExportManager {
       success: result.success,
       error: result.error,
       createdAt: new Date().toISOString(),
-      options
+      options,
     };
 
     this.exportHistory.unshift(historyItem);
-    
+
     // Keep only last 50 exports
     if (this.exportHistory.length > 50) {
       this.exportHistory = this.exportHistory.slice(0, 50);
@@ -645,65 +671,74 @@ export class ExportManager implements IExportManager {
   private saveTemplatesToStorage(): void {
     try {
       const templates = Array.from(this.templates.values());
-      localStorage.setItem('describe-it-export-templates', JSON.stringify(templates));
+      localStorage.setItem(
+        "describe-it-export-templates",
+        JSON.stringify(templates),
+      );
     } catch (error) {
-      console.warn('Failed to save templates to storage:', error);
+      console.warn("Failed to save templates to storage:", error);
     }
   }
 
   private loadTemplatesFromStorage(): void {
     try {
-      const stored = localStorage.getItem('describe-it-export-templates');
+      const stored = localStorage.getItem("describe-it-export-templates");
       if (stored) {
         const templates = JSON.parse(stored) as ExportTemplate[];
-        templates.forEach(template => {
+        templates.forEach((template) => {
           this.templates.set(template.id, template);
         });
       }
     } catch (error) {
-      console.warn('Failed to load templates from storage:', error);
+      console.warn("Failed to load templates from storage:", error);
     }
   }
 
   private saveScheduledExportsToStorage(): void {
     try {
       const scheduled = Array.from(this.scheduledExports.values());
-      localStorage.setItem('describe-it-scheduled-exports', JSON.stringify(scheduled));
+      localStorage.setItem(
+        "describe-it-scheduled-exports",
+        JSON.stringify(scheduled),
+      );
     } catch (error) {
-      console.warn('Failed to save scheduled exports to storage:', error);
+      console.warn("Failed to save scheduled exports to storage:", error);
     }
   }
 
   private loadScheduledExportsFromStorage(): void {
     try {
-      const stored = localStorage.getItem('describe-it-scheduled-exports');
+      const stored = localStorage.getItem("describe-it-scheduled-exports");
       if (stored) {
         const scheduled = JSON.parse(stored) as ScheduledExport[];
-        scheduled.forEach(item => {
+        scheduled.forEach((item) => {
           this.scheduledExports.set(item.id, item);
         });
       }
     } catch (error) {
-      console.warn('Failed to load scheduled exports from storage:', error);
+      console.warn("Failed to load scheduled exports from storage:", error);
     }
   }
 
   private saveHistoryToStorage(): void {
     try {
-      localStorage.setItem('describe-it-export-history', JSON.stringify(this.exportHistory));
+      localStorage.setItem(
+        "describe-it-export-history",
+        JSON.stringify(this.exportHistory),
+      );
     } catch (error) {
-      console.warn('Failed to save export history to storage:', error);
+      console.warn("Failed to save export history to storage:", error);
     }
   }
 
   private loadHistoryFromStorage(): void {
     try {
-      const stored = localStorage.getItem('describe-it-export-history');
+      const stored = localStorage.getItem("describe-it-export-history");
       if (stored) {
         this.exportHistory = JSON.parse(stored);
       }
     } catch (error) {
-      console.warn('Failed to load export history from storage:', error);
+      console.warn("Failed to load export history from storage:", error);
     }
   }
 
@@ -729,49 +764,49 @@ export function createExportManager(dataSources: DataSources): ExportManager {
  */
 export const DEFAULT_EXPORT_OPTIONS: Record<string, ExportOptions> = {
   vocabularyCSV: {
-    format: 'csv',
-    categories: ['vocabulary'],
-    includeMetadata: false
+    format: "csv",
+    categories: ["vocabulary"],
+    includeMetadata: false,
   },
-  
+
   studySheetPDF: {
-    format: 'pdf',
-    categories: ['vocabulary'],
+    format: "pdf",
+    categories: ["vocabulary"],
     pdfOptions: {
       studySheetFormat: true,
-      pageSize: 'A4',
-      orientation: 'portrait'
-    }
+      pageSize: "A4",
+      orientation: "portrait",
+    },
   },
-  
+
   fullBackupJSON: {
-    format: 'json',
-    categories: ['all'],
+    format: "json",
+    categories: ["all"],
     includeMetadata: true,
-    includeMedia: false
+    includeMedia: false,
   },
-  
+
   ankiDeck: {
-    format: 'anki',
-    categories: ['vocabulary', 'qa'],
+    format: "anki",
+    categories: ["vocabulary", "qa"],
     ankiOptions: {
-      deckName: 'Language Learning',
-      noteType: 'basic',
-      includeImages: false
-    }
+      deckName: "Language Learning",
+      noteType: "basic",
+      includeImages: false,
+    },
   },
-  
+
   progressReportExcel: {
-    format: 'excel',
-    categories: ['vocabulary', 'session'],
+    format: "excel",
+    categories: ["vocabulary", "session"],
     excelOptions: {
       charts: {
         progressChart: true,
-        categoryBreakdown: true
+        categoryBreakdown: true,
       },
       conditional: {
-        difficultyColors: true
-      }
-    }
-  }
+        difficultyColors: true,
+      },
+    },
+  },
 };

@@ -3,9 +3,9 @@
  * Consolidates all CSV exports into a single system
  */
 
-import { exportResponses } from './csvExporter';
-import { SessionReportGenerator } from '../logging/sessionReportGenerator';
-import { getSessionLogger } from '../logging/sessionLogger';
+import { exportResponses } from "./csvExporter";
+import { SessionReportGenerator } from "../logging/sessionReportGenerator";
+import { getSessionLogger } from "../logging/sessionLogger";
 
 export interface ExportData {
   descriptions?: Array<{
@@ -16,14 +16,14 @@ export interface ExportData {
     spanish: string;
     timestamp: string;
   }>;
-  
+
   qaResponses?: Array<{
     question: string;
     user_answer: string;
     correct_answer: string;
     timestamp: string;
   }>;
-  
+
   vocabulary?: Array<{
     spanish: string;
     english: string;
@@ -32,7 +32,7 @@ export interface ExportData {
     context?: string;
     timestamp: string;
   }>;
-  
+
   sessionData?: Array<{
     interaction_type: string;
     component: string;
@@ -42,7 +42,7 @@ export interface ExportData {
 }
 
 export interface ExportOptions {
-  format: 'csv' | 'json' | 'xlsx';
+  format: "csv" | "json" | "xlsx";
   includeDescriptions: boolean;
   includeQA: boolean;
   includeVocabulary: boolean;
@@ -53,29 +53,34 @@ export interface ExportOptions {
 export class UnifiedExporter {
   private sessionLogger: ReturnType<typeof getSessionLogger> | null = null;
   private reportGenerator: SessionReportGenerator | null = null;
-  
+
   private getSessionLogger() {
     if (!this.sessionLogger) {
       this.sessionLogger = getSessionLogger();
     }
     return this.sessionLogger;
   }
-  
+
   private getReportGenerator() {
     if (!this.reportGenerator) {
-      this.reportGenerator = new SessionReportGenerator(this.getSessionLogger());
+      this.reportGenerator = new SessionReportGenerator(
+        this.getSessionLogger(),
+      );
     }
     return this.reportGenerator;
   }
 
   async exportAll(data: ExportData, options: ExportOptions): Promise<void> {
-    const timestamp = new Date().toISOString().slice(0, 19).replace(/[:.]/g, '-');
+    const timestamp = new Date()
+      .toISOString()
+      .slice(0, 19)
+      .replace(/[:.]/g, "-");
     const baseFilename = options.filename || `describe-it-export-${timestamp}`;
 
     try {
-      if (options.format === 'json') {
+      if (options.format === "json") {
         await this.exportAsJson(data, options, baseFilename);
-      } else if (options.format === 'xlsx') {
+      } else if (options.format === "xlsx") {
         await this.exportAsExcel(data, options, baseFilename);
       } else {
         // Default CSV export - create separate files for each data type
@@ -83,32 +88,43 @@ export class UnifiedExporter {
       }
 
       // Log the export action
-      this.getSessionLogger().logInteraction('data_exported', {
+      this.getSessionLogger().logInteraction("data_exported", {
         format: options.format,
         components: this.getIncludedComponents(options),
-        filename: baseFilename
+        filename: baseFilename,
       });
-
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error("Export failed:", error);
       this.getSessionLogger().logError(
-        `Export failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        `Export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         error instanceof Error ? error.stack : undefined,
-        'export_error'
+        "export_error",
       );
       throw error;
     }
   }
 
-  private async exportAsCSV(data: ExportData, options: ExportOptions, baseFilename: string): Promise<void> {
-    const exports: Array<{ filename: string; data: any[]; headers: string[] }> = [];
+  private async exportAsCSV(
+    data: ExportData,
+    options: ExportOptions,
+    baseFilename: string,
+  ): Promise<void> {
+    const exports: Array<{ filename: string; data: any[]; headers: string[] }> =
+      [];
 
     // Descriptions CSV
     if (options.includeDescriptions && data.descriptions?.length) {
       exports.push({
         filename: `${baseFilename}-descriptions.csv`,
         data: data.descriptions,
-        headers: ['Image ID', 'Image URL', 'Style', 'English', 'Spanish', 'Timestamp']
+        headers: [
+          "Image ID",
+          "Image URL",
+          "Style",
+          "English",
+          "Spanish",
+          "Timestamp",
+        ],
       });
     }
 
@@ -117,7 +133,7 @@ export class UnifiedExporter {
       exports.push({
         filename: `${baseFilename}-qa-responses.csv`,
         data: data.qaResponses,
-        headers: ['Question', 'User Answer', 'Correct Answer', 'Timestamp']
+        headers: ["Question", "User Answer", "Correct Answer", "Timestamp"],
       });
     }
 
@@ -126,7 +142,14 @@ export class UnifiedExporter {
       exports.push({
         filename: `${baseFilename}-vocabulary.csv`,
         data: data.vocabulary,
-        headers: ['Spanish', 'English', 'Category', 'Difficulty', 'Context', 'Timestamp']
+        headers: [
+          "Spanish",
+          "English",
+          "Category",
+          "Difficulty",
+          "Context",
+          "Timestamp",
+        ],
       });
     }
 
@@ -135,17 +158,25 @@ export class UnifiedExporter {
       exports.push({
         filename: `${baseFilename}-session.csv`,
         data: data.sessionData,
-        headers: ['Interaction Type', 'Component', 'Data', 'Timestamp']
+        headers: ["Interaction Type", "Component", "Data", "Timestamp"],
       });
     }
 
     // Export each CSV file
     for (const exportItem of exports) {
-      this.downloadCSV(exportItem.filename, exportItem.data, exportItem.headers);
+      this.downloadCSV(
+        exportItem.filename,
+        exportItem.data,
+        exportItem.headers,
+      );
     }
   }
 
-  private async exportAsJson(data: ExportData, options: ExportOptions, baseFilename: string): Promise<void> {
+  private async exportAsJson(
+    data: ExportData,
+    options: ExportOptions,
+    baseFilename: string,
+  ): Promise<void> {
     const exportData: any = {};
 
     if (options.includeDescriptions && data.descriptions) {
@@ -169,25 +200,29 @@ export class UnifiedExporter {
       const sessionSummary = this.getSessionLogger().generateSummary();
       exportData.sessionSummary = sessionSummary;
     } catch (error) {
-      console.warn('Could not generate session summary for export');
+      console.warn("Could not generate session summary for export");
     }
 
     // Add metadata
     exportData.metadata = {
       exportedAt: new Date().toISOString(),
-      version: '1.0',
-      application: 'Describe It - Spanish Learning App',
-      hiveMindAgent: 'Epsilon-5 Integration Controller'
+      version: "1.0",
+      application: "Describe It - Spanish Learning App",
+      hiveMindAgent: "Epsilon-5 Integration Controller",
     };
 
     const jsonString = JSON.stringify(exportData, null, 2);
-    this.downloadFile(`${baseFilename}.json`, jsonString, 'application/json');
+    this.downloadFile(`${baseFilename}.json`, jsonString, "application/json");
   }
 
-  private async exportAsExcel(data: ExportData, options: ExportOptions, baseFilename: string): Promise<void> {
+  private async exportAsExcel(
+    data: ExportData,
+    options: ExportOptions,
+    baseFilename: string,
+  ): Promise<void> {
     // For now, fallback to CSV since we don't have xlsx library
     // In a full implementation, we'd use something like 'xlsx' library
-    console.warn('Excel export not fully implemented, falling back to CSV');
+    console.warn("Excel export not fully implemented, falling back to CSV");
     await this.exportAsCSV(data, options, baseFilename);
   }
 
@@ -196,117 +231,133 @@ export class UnifiedExporter {
 
     // Convert data to CSV format
     const csvContent = this.convertToCSV(data, headers);
-    this.downloadFile(filename, csvContent, 'text/csv');
+    this.downloadFile(filename, csvContent, "text/csv");
   }
 
   private convertToCSV(data: any[], headers: string[]): string {
     const csvRows = [];
-    
+
     // Add headers
-    csvRows.push(headers.join(','));
-    
+    csvRows.push(headers.join(","));
+
     // Add data rows
     for (const row of data) {
       const values = Object.values(row).map((value: any) => {
         // Escape quotes and wrap in quotes if contains comma, quote, or newline
-        const stringValue = String(value || '');
-        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        const stringValue = String(value || "");
+        if (
+          stringValue.includes(",") ||
+          stringValue.includes('"') ||
+          stringValue.includes("\n")
+        ) {
           return `"${stringValue.replace(/"/g, '""')}"`;
         }
         return stringValue;
       });
-      csvRows.push(values.join(','));
+      csvRows.push(values.join(","));
     }
-    
-    return csvRows.join('\n');
+
+    return csvRows.join("\n");
   }
 
-  private downloadFile(filename: string, content: string, mimeType: string): void {
+  private downloadFile(
+    filename: string,
+    content: string,
+    mimeType: string,
+  ): void {
     // Only works in browser environment
-    if (typeof window === 'undefined' || typeof document === 'undefined') {
-      console.warn('Download not available in SSR environment');
+    if (typeof window === "undefined" || typeof document === "undefined") {
+      console.warn("Download not available in SSR environment");
       return;
     }
-    
+
     const blob = new Blob([content], { type: mimeType });
     const url = URL.createObjectURL(blob);
-    
-    const link = document.createElement('a');
+
+    const link = document.createElement("a");
     link.href = url;
     link.download = filename;
-    link.style.display = 'none';
-    
+    link.style.display = "none";
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    
+
     // Clean up the URL object
     setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
   private getIncludedComponents(options: ExportOptions): string[] {
     const components = [];
-    if (options.includeDescriptions) components.push('descriptions');
-    if (options.includeQA) components.push('qa');
-    if (options.includeVocabulary) components.push('vocabulary');
-    if (options.includeSessionData) components.push('session');
+    if (options.includeDescriptions) components.push("descriptions");
+    if (options.includeQA) components.push("qa");
+    if (options.includeVocabulary) components.push("vocabulary");
+    if (options.includeSessionData) components.push("session");
     return components;
   }
 
   // Static methods for easy access
-  static async exportDescriptions(descriptions: ExportData['descriptions']): Promise<void> {
+  static async exportDescriptions(
+    descriptions: ExportData["descriptions"],
+  ): Promise<void> {
     const exporter = new UnifiedExporter();
     await exporter.exportAll(
       { descriptions },
       {
-        format: 'csv',
+        format: "csv",
         includeDescriptions: true,
         includeQA: false,
         includeVocabulary: false,
-        includeSessionData: false
-      }
+        includeSessionData: false,
+      },
     );
   }
 
-  static async exportQAResponses(qaResponses: ExportData['qaResponses']): Promise<void> {
+  static async exportQAResponses(
+    qaResponses: ExportData["qaResponses"],
+  ): Promise<void> {
     const exporter = new UnifiedExporter();
     await exporter.exportAll(
       { qaResponses },
       {
-        format: 'csv',
+        format: "csv",
         includeDescriptions: false,
         includeQA: true,
         includeVocabulary: false,
-        includeSessionData: false
-      }
+        includeSessionData: false,
+      },
     );
   }
 
-  static async exportVocabulary(vocabulary: ExportData['vocabulary']): Promise<void> {
+  static async exportVocabulary(
+    vocabulary: ExportData["vocabulary"],
+  ): Promise<void> {
     const exporter = new UnifiedExporter();
     await exporter.exportAll(
       { vocabulary },
       {
-        format: 'csv',
+        format: "csv",
         includeDescriptions: false,
         includeQA: false,
         includeVocabulary: true,
-        includeSessionData: false
-      }
+        includeSessionData: false,
+      },
     );
   }
 
-  static async exportSession(sessionData: ExportData['sessionData']): Promise<void> {
+  static async exportSession(
+    sessionData: ExportData["sessionData"],
+  ): Promise<void> {
     const exporter = new UnifiedExporter();
     await exporter.exportAll(
       { sessionData },
       {
-        format: 'csv',
+        format: "csv",
         includeDescriptions: false,
         includeQA: false,
         includeVocabulary: false,
-        includeSessionData: true
-      }
+        includeSessionData: true,
+      },
     );
   }
 }
@@ -315,7 +366,7 @@ export class UnifiedExporter {
 let _unifiedExporter: UnifiedExporter | null = null;
 
 export function getUnifiedExporter(): UnifiedExporter {
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     // Return a minimal mock for SSR
     return {
       exportAll: async () => {},
@@ -323,11 +374,11 @@ export function getUnifiedExporter(): UnifiedExporter {
         exportDescriptions: async () => {},
         exportQAResponses: async () => {},
         exportVocabulary: async () => {},
-        exportSession: async () => {}
-      }
+        exportSession: async () => {},
+      },
     } as any;
   }
-  
+
   if (!_unifiedExporter) {
     _unifiedExporter = new UnifiedExporter();
   }

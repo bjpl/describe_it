@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { useState, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Download,
   FileText,
@@ -30,8 +30,8 @@ import {
   Mail,
   Cloud,
   Printer,
-  ExternalLink
-} from 'lucide-react';
+  ExternalLink,
+} from "lucide-react";
 
 interface ExportFormat {
   id: string;
@@ -49,7 +49,7 @@ interface ExportFormat {
   options?: {
     includeImages?: boolean;
     includeMetadata?: boolean;
-    compression?: 'none' | 'low' | 'medium' | 'high';
+    compression?: "none" | "low" | "medium" | "high";
     format?: string[];
   };
 }
@@ -77,7 +77,7 @@ interface ExportOptions {
     from: string;
     to: string;
   };
-  compression: 'none' | 'low' | 'medium' | 'high';
+  compression: "none" | "low" | "medium" | "high";
   customFilename?: string;
 }
 
@@ -85,8 +85,8 @@ const EnhancedExportManager: React.FC<{
   data?: ExportData;
   onClose?: () => void;
   className?: string;
-}> = ({ data, onClose, className = '' }) => {
-  const [selectedFormat, setSelectedFormat] = useState<string>('json');
+}> = ({ data, onClose, className = "" }) => {
+  const [selectedFormat, setSelectedFormat] = useState<string>("json");
   const [exportOptions, setExportOptions] = useState<ExportOptions>({
     includeVocabulary: true,
     includeProgress: true,
@@ -94,118 +94,124 @@ const EnhancedExportManager: React.FC<{
     includeImages: false,
     includeSettings: false,
     dateRange: {
-      from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-      to: new Date().toISOString().split('T')[0]
+      from: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
+        .toISOString()
+        .split("T")[0],
+      to: new Date().toISOString().split("T")[0],
     },
-    compression: 'medium'
+    compression: "medium",
   });
-  const [exportStatus, setExportStatus] = useState<'idle' | 'preparing' | 'exporting' | 'complete' | 'error'>('idle');
+  const [exportStatus, setExportStatus] = useState<
+    "idle" | "preparing" | "exporting" | "complete" | "error"
+  >("idle");
   const [exportProgress, setExportProgress] = useState(0);
   const [previewData, setPreviewData] = useState<any>(null);
   const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
 
   const exportFormats: ExportFormat[] = [
     {
-      id: 'json',
-      name: 'JSON',
+      id: "json",
+      name: "JSON",
       icon: <Database className="h-5 w-5" />,
-      description: 'Structured data format, best for backups and data transfer',
-      extension: '.json',
+      description: "Structured data format, best for backups and data transfer",
+      extension: ".json",
       supports: {
         vocabulary: true,
         progress: true,
         sessions: true,
         images: true,
-        settings: true
-      }
+        settings: true,
+      },
     },
     {
-      id: 'csv',
-      name: 'CSV (Spreadsheet)',
+      id: "csv",
+      name: "CSV (Spreadsheet)",
       icon: <FileSpreadsheet className="h-5 w-5" />,
-      description: 'Comma-separated values, perfect for Excel and data analysis',
-      extension: '.csv',
+      description:
+        "Comma-separated values, perfect for Excel and data analysis",
+      extension: ".csv",
       supports: {
         vocabulary: true,
         progress: true,
         sessions: true,
         images: false,
-        settings: false
-      }
+        settings: false,
+      },
     },
     {
-      id: 'pdf',
-      name: 'PDF Report',
+      id: "pdf",
+      name: "PDF Report",
       icon: <FileText className="h-5 w-5" />,
-      description: 'Formatted document with charts and summaries',
-      extension: '.pdf',
+      description: "Formatted document with charts and summaries",
+      extension: ".pdf",
       supports: {
         vocabulary: true,
         progress: true,
         sessions: true,
         images: true,
-        settings: false
-      }
+        settings: false,
+      },
     },
     {
-      id: 'anki',
-      name: 'Anki Deck',
+      id: "anki",
+      name: "Anki Deck",
       icon: <Brain className="h-5 w-5" />,
-      description: 'Flashcard deck for Anki spaced repetition software',
-      extension: '.apkg',
+      description: "Flashcard deck for Anki spaced repetition software",
+      extension: ".apkg",
       supports: {
         vocabulary: true,
         progress: false,
         sessions: false,
         images: false,
-        settings: false
-      }
+        settings: false,
+      },
     },
     {
-      id: 'html',
-      name: 'Web Page',
+      id: "html",
+      name: "Web Page",
       icon: <Globe className="h-5 w-5" />,
-      description: 'Interactive HTML report that can be viewed in any browser',
-      extension: '.html',
+      description: "Interactive HTML report that can be viewed in any browser",
+      extension: ".html",
       supports: {
         vocabulary: true,
         progress: true,
         sessions: true,
         images: true,
-        settings: false
-      }
+        settings: false,
+      },
     },
     {
-      id: 'xlsx',
-      name: 'Excel Workbook',
+      id: "xlsx",
+      name: "Excel Workbook",
       icon: <FileSpreadsheet className="h-5 w-5" />,
-      description: 'Multiple sheets with vocabulary, progress, and analytics',
-      extension: '.xlsx',
+      description: "Multiple sheets with vocabulary, progress, and analytics",
+      extension: ".xlsx",
       supports: {
         vocabulary: true,
         progress: true,
         sessions: true,
         images: false,
-        settings: false
-      }
+        settings: false,
+      },
     },
     {
-      id: 'backup',
-      name: 'Full Backup',
+      id: "backup",
+      name: "Full Backup",
       icon: <Archive className="h-5 w-5" />,
-      description: 'Complete application backup including all data and settings',
-      extension: '.zip',
+      description:
+        "Complete application backup including all data and settings",
+      extension: ".zip",
       supports: {
         vocabulary: true,
         progress: true,
         sessions: true,
         images: true,
-        settings: true
-      }
-    }
+        settings: true,
+      },
+    },
   ];
 
-  const selectedFormatData = exportFormats.find(f => f.id === selectedFormat);
+  const selectedFormatData = exportFormats.find((f) => f.id === selectedFormat);
 
   // Mock data if not provided
   const mockData: ExportData = {
@@ -213,29 +219,29 @@ const EnhancedExportManager: React.FC<{
       id: i + 1,
       spanish: `Spanish word ${i + 1}`,
       english: `English word ${i + 1}`,
-      category: ['greetings', 'food', 'travel', 'colors'][i % 4],
-      difficulty: ['beginner', 'intermediate', 'advanced'][i % 3],
-      learned: Math.random() > 0.3
+      category: ["greetings", "food", "travel", "colors"][i % 4],
+      difficulty: ["beginner", "intermediate", "advanced"][i % 3],
+      learned: Math.random() > 0.3,
     })),
     progress: {
       totalSessions: 45,
       totalTime: 2340,
       accuracy: 87,
-      streak: 12
+      streak: 12,
     },
     sessions: Array.from({ length: 45 }, (_, i) => ({
       id: i + 1,
       date: new Date(Date.now() - i * 24 * 60 * 60 * 1000),
       duration: Math.floor(Math.random() * 60) + 10,
-      score: Math.floor(Math.random() * 40) + 60
+      score: Math.floor(Math.random() * 40) + 60,
     })),
     images: [],
     settings: {},
     metadata: {
       exportDate: new Date().toISOString(),
-      version: '1.0.0',
-      totalItems: 150
-    }
+      version: "1.0.0",
+      totalItems: 150,
+    },
   };
 
   const displayData = data || mockData;
@@ -243,19 +249,19 @@ const EnhancedExportManager: React.FC<{
   const filteredData = useMemo(() => {
     const fromDate = new Date(exportOptions.dateRange.from);
     const toDate = new Date(exportOptions.dateRange.to);
-    
+
     return {
       ...displayData,
-      sessions: displayData.sessions.filter(session => {
+      sessions: displayData.sessions.filter((session) => {
         const sessionDate = new Date(session.date);
         return sessionDate >= fromDate && sessionDate <= toDate;
-      })
+      }),
     };
   }, [displayData, exportOptions.dateRange]);
 
   const estimatedSize = useMemo(() => {
     let size = 0;
-    
+
     if (exportOptions.includeVocabulary) {
       size += filteredData.vocabulary.length * 0.5; // ~0.5KB per vocab item
     }
@@ -290,19 +296,24 @@ const EnhancedExportManager: React.FC<{
     if (exportOptions.customFilename) {
       return exportOptions.customFilename;
     }
-    
-    const date = new Date().toISOString().split('T')[0];
-    const formatName = selectedFormatData?.name.toLowerCase().replace(/\s+/g, '-') || selectedFormat;
+
+    const date = new Date().toISOString().split("T")[0];
+    const formatName =
+      selectedFormatData?.name.toLowerCase().replace(/\s+/g, "-") ||
+      selectedFormat;
     return `describe-it-export-${formatName}-${date}`;
   }, [exportOptions.customFilename, selectedFormat, selectedFormatData]);
 
-  const handleOptionChange = useCallback((key: keyof ExportOptions, value: any) => {
-    setExportOptions(prev => ({ ...prev, [key]: value }));
-  }, []);
+  const handleOptionChange = useCallback(
+    (key: keyof ExportOptions, value: any) => {
+      setExportOptions((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
 
   const generatePreview = useCallback(() => {
     const preview: any = {};
-    
+
     if (exportOptions.includeVocabulary) {
       preview.vocabulary = filteredData.vocabulary.slice(0, 5);
     }
@@ -317,24 +328,26 @@ const EnhancedExportManager: React.FC<{
   }, [filteredData, exportOptions]);
 
   const simulateExport = useCallback(async () => {
-    setExportStatus('preparing');
+    setExportStatus("preparing");
     setExportProgress(0);
 
     // Simulate preparation
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 1000));
     setExportProgress(25);
-    
-    setExportStatus('exporting');
-    
+
+    setExportStatus("exporting");
+
     // Simulate export process
     for (let i = 25; i <= 100; i += 25) {
-      await new Promise(resolve => setTimeout(resolve, 500));
+      await new Promise((resolve) => setTimeout(resolve, 500));
       setExportProgress(i);
     }
 
     // Generate and download file
     const exportedData = {
-      ...(exportOptions.includeVocabulary && { vocabulary: filteredData.vocabulary }),
+      ...(exportOptions.includeVocabulary && {
+        vocabulary: filteredData.vocabulary,
+      }),
       ...(exportOptions.includeProgress && { progress: filteredData.progress }),
       ...(exportOptions.includeSessions && { sessions: filteredData.sessions }),
       ...(exportOptions.includeImages && { images: filteredData.images }),
@@ -342,16 +355,16 @@ const EnhancedExportManager: React.FC<{
       metadata: {
         ...filteredData.metadata,
         exportFormat: selectedFormat,
-        exportOptions: exportOptions
-      }
+        exportOptions: exportOptions,
+      },
     };
 
     const blob = new Blob([JSON.stringify(exportedData, null, 2)], {
-      type: 'application/json'
+      type: "application/json",
     });
-    
+
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `${generateFilename()}${selectedFormatData?.extension}`;
     document.body.appendChild(a);
@@ -359,31 +372,39 @@ const EnhancedExportManager: React.FC<{
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    setExportStatus('complete');
+    setExportStatus("complete");
     setTimeout(() => {
-      setExportStatus('idle');
+      setExportStatus("idle");
       setExportProgress(0);
     }, 3000);
-  }, [filteredData, exportOptions, selectedFormat, selectedFormatData, generateFilename]);
+  }, [
+    filteredData,
+    exportOptions,
+    selectedFormat,
+    selectedFormatData,
+    generateFilename,
+  ]);
 
   const ExportFormatCard: React.FC<{ format: ExportFormat }> = ({ format }) => (
     <motion.button
       onClick={() => setSelectedFormat(format.id)}
       className={`w-full p-4 border-2 rounded-xl text-left transition-all ${
         selectedFormat === format.id
-          ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-          : 'border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+          ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+          : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
       }`}
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
     >
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${
-            selectedFormat === format.id 
-              ? 'bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-300' 
-              : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400'
-          }`}>
+          <div
+            className={`p-2 rounded-lg ${
+              selectedFormat === format.id
+                ? "bg-blue-100 text-blue-600 dark:bg-blue-800 dark:text-blue-300"
+                : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+            }`}
+          >
             {format.icon}
           </div>
           <div>
@@ -399,19 +420,19 @@ const EnhancedExportManager: React.FC<{
           <Check className="h-5 w-5 text-blue-600" />
         )}
       </div>
-      
+
       <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">
         {format.description}
       </p>
-      
+
       <div className="flex flex-wrap gap-1">
         {Object.entries(format.supports).map(([feature, supported]) => (
           <span
             key={feature}
             className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
               supported
-                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
-                : 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500'
+                ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300"
+                : "bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500"
             }`}
           >
             {feature}
@@ -468,33 +489,72 @@ const EnhancedExportManager: React.FC<{
                   <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Include Data
                   </h4>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     {[
-                      { key: 'includeVocabulary', label: 'Vocabulary', icon: BookOpen, count: displayData.vocabulary.length },
-                      { key: 'includeProgress', label: 'Progress', icon: BarChart3, count: 1 },
-                      { key: 'includeSessions', label: 'Sessions', icon: Clock, count: filteredData.sessions.length },
-                      { key: 'includeImages', label: 'Images', icon: FileImage, count: displayData.images.length },
-                      { key: 'includeSettings', label: 'Settings', icon: Settings, count: 1 }
+                      {
+                        key: "includeVocabulary",
+                        label: "Vocabulary",
+                        icon: BookOpen,
+                        count: displayData.vocabulary.length,
+                      },
+                      {
+                        key: "includeProgress",
+                        label: "Progress",
+                        icon: BarChart3,
+                        count: 1,
+                      },
+                      {
+                        key: "includeSessions",
+                        label: "Sessions",
+                        icon: Clock,
+                        count: filteredData.sessions.length,
+                      },
+                      {
+                        key: "includeImages",
+                        label: "Images",
+                        icon: FileImage,
+                        count: displayData.images.length,
+                      },
+                      {
+                        key: "includeSettings",
+                        label: "Settings",
+                        icon: Settings,
+                        count: 1,
+                      },
                     ].map((option) => {
                       const Icon = option.icon;
-                      const isSupported = selectedFormatData?.supports[option.key.replace('include', '').toLowerCase() as keyof typeof selectedFormatData.supports];
-                      
+                      const isSupported =
+                        selectedFormatData?.supports[
+                          option.key
+                            .replace("include", "")
+                            .toLowerCase() as keyof typeof selectedFormatData.supports
+                        ];
+
                       return (
                         <label
                           key={option.key}
                           className={`flex items-center p-4 border-2 rounded-lg transition-all cursor-pointer ${
                             !isSupported
-                              ? 'border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 opacity-50 cursor-not-allowed'
+                              ? "border-gray-200 bg-gray-50 dark:border-gray-700 dark:bg-gray-800 opacity-50 cursor-not-allowed"
                               : exportOptions[option.key as keyof ExportOptions]
-                                ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20'
-                                : 'border-gray-200 dark:border-gray-700 hover:border-gray-300'
+                                ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                                : "border-gray-200 dark:border-gray-700 hover:border-gray-300"
                           }`}
                         >
                           <input
                             type="checkbox"
-                            checked={exportOptions[option.key as keyof ExportOptions] as boolean}
-                            onChange={(e) => handleOptionChange(option.key as keyof ExportOptions, e.target.checked)}
+                            checked={
+                              exportOptions[
+                                option.key as keyof ExportOptions
+                              ] as boolean
+                            }
+                            onChange={(e) =>
+                              handleOptionChange(
+                                option.key as keyof ExportOptions,
+                                e.target.checked,
+                              )
+                            }
                             disabled={!isSupported}
                             className="mr-3"
                           />
@@ -521,7 +581,7 @@ const EnhancedExportManager: React.FC<{
                   <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Date Range
                   </h4>
-                  
+
                   <div className="grid grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -530,11 +590,16 @@ const EnhancedExportManager: React.FC<{
                       <input
                         type="date"
                         value={exportOptions.dateRange.from}
-                        onChange={(e) => handleOptionChange('dateRange', { ...exportOptions.dateRange, from: e.target.value })}
+                        onChange={(e) =>
+                          handleOptionChange("dateRange", {
+                            ...exportOptions.dateRange,
+                            from: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
                       />
                     </div>
-                    
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         To
@@ -542,7 +607,12 @@ const EnhancedExportManager: React.FC<{
                       <input
                         type="date"
                         value={exportOptions.dateRange.to}
-                        onChange={(e) => handleOptionChange('dateRange', { ...exportOptions.dateRange, to: e.target.value })}
+                        onChange={(e) =>
+                          handleOptionChange("dateRange", {
+                            ...exportOptions.dateRange,
+                            to: e.target.value,
+                          })
+                        }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
                       />
                     </div>
@@ -558,12 +628,12 @@ const EnhancedExportManager: React.FC<{
                     <Settings className="h-4 w-4" />
                     Advanced Options
                   </button>
-                  
+
                   <AnimatePresence>
                     {showAdvancedOptions && (
                       <motion.div
                         initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
+                        animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
                         className="mt-4 space-y-4"
                       >
@@ -573,7 +643,9 @@ const EnhancedExportManager: React.FC<{
                           </label>
                           <select
                             value={exportOptions.compression}
-                            onChange={(e) => handleOptionChange('compression', e.target.value)}
+                            onChange={(e) =>
+                              handleOptionChange("compression", e.target.value)
+                            }
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
                           >
                             <option value="none">No Compression</option>
@@ -582,15 +654,20 @@ const EnhancedExportManager: React.FC<{
                             <option value="high">High Compression</option>
                           </select>
                         </div>
-                        
+
                         <div>
                           <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                             Custom Filename
                           </label>
                           <input
                             type="text"
-                            value={exportOptions.customFilename || ''}
-                            onChange={(e) => handleOptionChange('customFilename', e.target.value)}
+                            value={exportOptions.customFilename || ""}
+                            onChange={(e) =>
+                              handleOptionChange(
+                                "customFilename",
+                                e.target.value,
+                              )
+                            }
                             placeholder={generateFilename()}
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
                           />
@@ -606,25 +683,40 @@ const EnhancedExportManager: React.FC<{
                 <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-4">
                   Export Summary
                 </h4>
-                
+
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">Format:</span>
-                    <span className="ml-2 font-medium">{selectedFormatData?.name}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Est. Size:</span>
-                    <span className="ml-2 font-medium">{formatFileSize(estimatedSize)}</span>
-                  </div>
-                  <div>
-                    <span className="text-gray-600 dark:text-gray-400">Filename:</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Format:
+                    </span>
                     <span className="ml-2 font-medium">
-                      {generateFilename()}{selectedFormatData?.extension}
+                      {selectedFormatData?.name}
                     </span>
                   </div>
                   <div>
-                    <span className="text-gray-600 dark:text-gray-400">Compression:</span>
-                    <span className="ml-2 font-medium capitalize">{exportOptions.compression}</span>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Est. Size:
+                    </span>
+                    <span className="ml-2 font-medium">
+                      {formatFileSize(estimatedSize)}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Filename:
+                    </span>
+                    <span className="ml-2 font-medium">
+                      {generateFilename()}
+                      {selectedFormatData?.extension}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-gray-600 dark:text-gray-400">
+                      Compression:
+                    </span>
+                    <span className="ml-2 font-medium capitalize">
+                      {exportOptions.compression}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -643,7 +735,7 @@ const EnhancedExportManager: React.FC<{
                     Generate Preview
                   </button>
                 </div>
-                
+
                 {previewData && (
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -658,7 +750,7 @@ const EnhancedExportManager: React.FC<{
               {/* Export Button */}
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  {exportStatus === 'exporting' && (
+                  {exportStatus === "exporting" && (
                     <div className="flex items-center gap-2">
                       <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
                       <span className="text-sm text-gray-600 dark:text-gray-400">
@@ -666,31 +758,37 @@ const EnhancedExportManager: React.FC<{
                       </span>
                     </div>
                   )}
-                  
-                  {exportStatus === 'complete' && (
+
+                  {exportStatus === "complete" && (
                     <div className="flex items-center gap-2 text-green-600">
                       <Check className="h-4 w-4" />
                       <span className="text-sm">Export completed!</span>
                     </div>
                   )}
                 </div>
-                
+
                 <motion.button
                   onClick={simulateExport}
-                  disabled={exportStatus === 'exporting' || exportStatus === 'preparing'}
+                  disabled={
+                    exportStatus === "exporting" || exportStatus === "preparing"
+                  }
                   className="flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
-                  whileHover={exportStatus === 'idle' ? { scale: 1.05 } : {}}
-                  whileTap={exportStatus === 'idle' ? { scale: 0.95 } : {}}
+                  whileHover={exportStatus === "idle" ? { scale: 1.05 } : {}}
+                  whileTap={exportStatus === "idle" ? { scale: 0.95 } : {}}
                 >
                   <Download className="h-4 w-4" />
-                  {exportStatus === 'preparing' && 'Preparing...'}
-                  {exportStatus === 'exporting' && 'Exporting...'}
-                  {(exportStatus === 'idle' || exportStatus === 'complete' || exportStatus === 'error') && 'Export Data'}
+                  {exportStatus === "preparing" && "Preparing..."}
+                  {exportStatus === "exporting" && "Exporting..."}
+                  {(exportStatus === "idle" ||
+                    exportStatus === "complete" ||
+                    exportStatus === "error") &&
+                    "Export Data"}
                 </motion.button>
               </div>
 
               {/* Export Progress */}
-              {(exportStatus === 'exporting' || exportStatus === 'preparing') && (
+              {(exportStatus === "exporting" ||
+                exportStatus === "preparing") && (
                 <div className="mt-4">
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <motion.div

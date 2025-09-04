@@ -1,20 +1,27 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Settings, Download, RefreshCw, Target, Clock, Award } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo } from "react";
+import {
+  Settings,
+  Download,
+  RefreshCw,
+  Target,
+  Clock,
+  Award,
+} from "lucide-react";
 
 // Import our new components
-import { QuestionNavigator } from './QuestionNavigator';
-import { AnswerInput } from './AnswerInput';
-import { ShowAnswer } from './ShowAnswer';
-import { QuestionCounter } from './QuestionCounter';
+import { QuestionNavigator } from "./QuestionNavigator";
+import { AnswerInput } from "./AnswerInput";
+import { ShowAnswer } from "./ShowAnswer";
+import { QuestionCounter } from "./QuestionCounter";
 
 // Import export utilities
-import QAExporter, { 
+import QAExporter, {
   type QASessionData,
-  type QAUserResponse
-} from '../lib/export/qaExporter';
-import { getCurrentTimestamp } from '../lib/export/csvExporter';
+  type QAUserResponse,
+} from "../lib/export/qaExporter";
+import { getCurrentTimestamp } from "../lib/export/csvExporter";
 
 interface Question {
   id: string;
@@ -23,17 +30,17 @@ interface Question {
   correctAnswer: number;
   explanation?: string;
   hints?: string[];
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
-  type: 'comprehension' | 'vocabulary' | 'detail' | 'inference';
-  language: 'en' | 'es';
+  difficulty: "beginner" | "intermediate" | "advanced";
+  type: "comprehension" | "vocabulary" | "detail" | "inference";
+  language: "en" | "es";
 }
 
 interface EnhancedQAPanelProps {
   selectedImage: any;
   descriptionText: string | null;
-  style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
-  language?: 'en' | 'es' | 'both';
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
+  style: "narrativo" | "poetico" | "academico" | "conversacional" | "infantil";
+  language?: "en" | "es" | "both";
+  difficulty?: "beginner" | "intermediate" | "advanced";
   onStyleChange?: (style: string) => void;
 }
 
@@ -49,31 +56,39 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
   selectedImage,
   descriptionText,
   style,
-  language = 'both',
-  difficulty = 'intermediate',
-  onStyleChange
+  language = "both",
+  difficulty = "intermediate",
+  onStyleChange,
 }) => {
   // Core state
   const [questions, setQuestions] = useState<Question[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Answer state
-  const [selectedAnswers, setSelectedAnswers] = useState<{ [key: string]: string }>({});
-  const [submittedAnswers, setSubmittedAnswers] = useState<{ [key: string]: boolean }>({});
-  const [showAnswers, setShowAnswers] = useState<{ [key: string]: boolean }>({});
-  const [confidenceScores, setConfidenceScores] = useState<{ [key: string]: number }>({});
-  
+  const [selectedAnswers, setSelectedAnswers] = useState<{
+    [key: string]: string;
+  }>({});
+  const [submittedAnswers, setSubmittedAnswers] = useState<{
+    [key: string]: boolean;
+  }>({});
+  const [showAnswers, setShowAnswers] = useState<{ [key: string]: boolean }>(
+    {},
+  );
+  const [confidenceScores, setConfidenceScores] = useState<{
+    [key: string]: number;
+  }>({});
+
   // Session state
   const [session, setSession] = useState<SessionState>({
     sessionId: `qa_${Date.now()}`,
     startTime: getCurrentTimestamp(),
     responses: [],
     timeSpent: 0,
-    streak: 0
+    streak: 0,
   });
-  
+
   // Settings state
   const [settings, setSettings] = useState({
     questionCount: 5,
@@ -81,9 +96,9 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
     autoRevealAnswers: false,
     timeLimit: 0, // 0 = no limit
     difficulty: difficulty,
-    language: language
+    language: language,
   });
-  
+
   const [showSettings, setShowSettings] = useState(false);
 
   // Generate questions
@@ -105,21 +120,22 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
       startTime: getCurrentTimestamp(),
       responses: [],
       timeSpent: 0,
-      streak: 0
+      streak: 0,
     });
 
     try {
-      const response = await fetch('/api/qa/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/qa/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageUrl: selectedImage.urls?.regular,
           descriptionText: descriptionText,
           style: style,
           difficulty: settings.difficulty,
           questionCount: settings.questionCount,
-          includeSpanish: settings.language === 'both' || settings.language === 'es',
-          language: settings.language
+          includeSpanish:
+            settings.language === "both" || settings.language === "es",
+          language: settings.language,
         }),
       });
 
@@ -128,217 +144,279 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
       }
 
       const data = await response.json();
-      
+
       if (data.success && data.data?.questions) {
         // Convert API response to our question format
-        const formattedQuestions: Question[] = data.data.questions.map((q: any) => 
-          createMultipleChoiceFromAnswer(q, q.question)
+        const formattedQuestions: Question[] = data.data.questions.map(
+          (q: any) => createMultipleChoiceFromAnswer(q, q.question),
         );
         setQuestions(formattedQuestions);
       } else {
-        throw new Error(data.message || 'Failed to generate questions');
+        throw new Error(data.message || "Failed to generate questions");
       }
     } catch (err) {
-      console.error('Error generating questions:', err);
-      setError(err instanceof Error ? err.message : 'Failed to generate questions');
+      console.error("Error generating questions:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to generate questions",
+      );
     } finally {
       setLoading(false);
     }
   }, [selectedImage, descriptionText, style, settings]);
 
   // Create multiple choice question from API response
-  const createMultipleChoiceFromAnswer = useCallback((apiQuestion: any, questionText: string): Question => {
-    const answer = apiQuestion.answer;
-    
-    // Generate plausible incorrect options based on question type
-    let options: string[] = [];
-    const questionType = detectQuestionType(questionText);
-    
-    options = generateOptionsForQuestion(questionText, answer, questionType);
-    
-    // Shuffle options and track correct answer
-    let correctAnswer = 0;
-    const shuffledOptions = [...options];
-    for (let i = shuffledOptions.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffledOptions[i], shuffledOptions[j]] = [shuffledOptions[j], shuffledOptions[i]];
-      
-      if (j === correctAnswer) {
-        correctAnswer = i;
-      } else if (i === correctAnswer) {
-        correctAnswer = j;
-      }
-    }
+  const createMultipleChoiceFromAnswer = useCallback(
+    (apiQuestion: any, questionText: string): Question => {
+      const answer = apiQuestion.answer;
 
-    return {
-      id: apiQuestion.id || `q_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
-      question: questionText,
-      options: shuffledOptions,
-      correctAnswer,
-      explanation: `Based on the image analysis: ${answer}`,
-      hints: generateHintsForQuestion(questionText, answer),
-      difficulty: apiQuestion.difficulty || settings.difficulty,
-      type: apiQuestion.type || questionType,
-      language: apiQuestion.language || 'en'
-    };
-  }, [settings.difficulty]);
+      // Generate plausible incorrect options based on question type
+      let options: string[] = [];
+      const questionType = detectQuestionType(questionText);
+
+      options = generateOptionsForQuestion(questionText, answer, questionType);
+
+      // Shuffle options and track correct answer
+      let correctAnswer = 0;
+      const shuffledOptions = [...options];
+      for (let i = shuffledOptions.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffledOptions[i], shuffledOptions[j]] = [
+          shuffledOptions[j],
+          shuffledOptions[i],
+        ];
+
+        if (j === correctAnswer) {
+          correctAnswer = i;
+        } else if (i === correctAnswer) {
+          correctAnswer = j;
+        }
+      }
+
+      return {
+        id:
+          apiQuestion.id ||
+          `q_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`,
+        question: questionText,
+        options: shuffledOptions,
+        correctAnswer,
+        explanation: `Based on the image analysis: ${answer}`,
+        hints: generateHintsForQuestion(questionText, answer),
+        difficulty: apiQuestion.difficulty || settings.difficulty,
+        type: apiQuestion.type || questionType,
+        language: apiQuestion.language || "en",
+      };
+    },
+    [settings.difficulty],
+  );
 
   // Detect question type from text
-  const detectQuestionType = (question: string): Question['type'] => {
+  const detectQuestionType = (question: string): Question["type"] => {
     const lowerQ = question.toLowerCase();
-    if (lowerQ.includes('color') || lowerQ.includes('detail') || lowerQ.includes('see')) return 'detail';
-    if (lowerQ.includes('mean') || lowerQ.includes('definition') || lowerQ.includes('word')) return 'vocabulary';
-    if (lowerQ.includes('why') || lowerQ.includes('infer') || lowerQ.includes('suggest')) return 'inference';
-    return 'comprehension';
+    if (
+      lowerQ.includes("color") ||
+      lowerQ.includes("detail") ||
+      lowerQ.includes("see")
+    )
+      return "detail";
+    if (
+      lowerQ.includes("mean") ||
+      lowerQ.includes("definition") ||
+      lowerQ.includes("word")
+    )
+      return "vocabulary";
+    if (
+      lowerQ.includes("why") ||
+      lowerQ.includes("infer") ||
+      lowerQ.includes("suggest")
+    )
+      return "inference";
+    return "comprehension";
   };
 
   // Generate options for different question types
-  const generateOptionsForQuestion = (question: string, correctAnswer: string, type: Question['type']) => {
+  const generateOptionsForQuestion = (
+    question: string,
+    correctAnswer: string,
+    type: Question["type"],
+  ) => {
     const options = [correctAnswer];
-    
+
     // Add generic distractors based on question type
     switch (type) {
-      case 'detail':
+      case "detail":
         options.push(
-          'The image shows a completely different scene',
-          'This detail is not visible in the image',
-          'The opposite of what is actually shown'
+          "The image shows a completely different scene",
+          "This detail is not visible in the image",
+          "The opposite of what is actually shown",
         );
         break;
-      case 'vocabulary':
+      case "vocabulary":
         options.push(
-          'This word has a completely different meaning',
-          'This is not a Spanish/English word',
-          'The definition is unrelated to the context'
+          "This word has a completely different meaning",
+          "This is not a Spanish/English word",
+          "The definition is unrelated to the context",
         );
         break;
-      case 'inference':
+      case "inference":
         options.push(
-          'The opposite conclusion can be drawn',
-          'No inference is possible from this image',
-          'This suggests something entirely different'
+          "The opposite conclusion can be drawn",
+          "No inference is possible from this image",
+          "This suggests something entirely different",
         );
         break;
       default: // comprehension
         options.push(
-          'This shows a completely different activity',
-          'The comprehension is not related to the image',
-          'This interpretation is incorrect'
+          "This shows a completely different activity",
+          "The comprehension is not related to the image",
+          "This interpretation is incorrect",
         );
     }
-    
+
     return options;
   };
 
   // Generate hints for questions
-  const generateHintsForQuestion = (question: string, answer: string): string[] => {
+  const generateHintsForQuestion = (
+    question: string,
+    answer: string,
+  ): string[] => {
     return [
-      'Look carefully at the main elements in the image',
-      'Consider the context and setting of the scene',
-      'Think about what the description tells us about this image'
+      "Look carefully at the main elements in the image",
+      "Consider the context and setting of the scene",
+      "Think about what the description tells us about this image",
     ];
   };
 
   // Handle answer selection
-  const handleAnswerSelect = useCallback((questionId: string, answerId: string) => {
-    setSelectedAnswers(prev => ({
-      ...prev,
-      [questionId]: answerId
-    }));
-  }, []);
+  const handleAnswerSelect = useCallback(
+    (questionId: string, answerId: string) => {
+      setSelectedAnswers((prev) => ({
+        ...prev,
+        [questionId]: answerId,
+      }));
+    },
+    [],
+  );
 
   // Handle answer submission
-  const handleSubmitAnswer = useCallback((questionId: string) => {
-    const question = questions.find(q => q.id === questionId);
-    if (!question) return;
+  const handleSubmitAnswer = useCallback(
+    (questionId: string) => {
+      const question = questions.find((q) => q.id === questionId);
+      if (!question) return;
 
-    const selectedAnswerIndex = parseInt(selectedAnswers[questionId] || '0');
-    const isCorrect = selectedAnswerIndex === question.correctAnswer;
-    const confidence = confidenceScores[questionId] || 50;
-    
-    // Create response record
-    const response: QAUserResponse = {
-      questionIndex: questions.findIndex(q => q.id === questionId),
-      questionId: questionId,
-      question: question.question,
-      correctAnswer: question.options[question.correctAnswer],
-      userAnswer: question.options[selectedAnswerIndex] || 'No answer selected',
-      isCorrect: isCorrect,
-      confidence: confidence,
-      timeSpent: 0, // Could be tracked with timer
-      hintsUsed: 0,
-      timestamp: getCurrentTimestamp(),
-      difficulty: question.difficulty === 'beginner' ? 'facil' : 
-                 question.difficulty === 'intermediate' ? 'medio' : 'dificil',
-      category: 'general'
-    };
+      const selectedAnswerIndex = parseInt(selectedAnswers[questionId] || "0");
+      const isCorrect = selectedAnswerIndex === question.correctAnswer;
+      const confidence = confidenceScores[questionId] || 50;
 
-    // Update session
-    setSession(prev => ({
-      ...prev,
-      responses: [...prev.responses, response],
-      streak: isCorrect ? prev.streak + 1 : 0
-    }));
+      // Create response record
+      const response: QAUserResponse = {
+        questionIndex: questions.findIndex((q) => q.id === questionId),
+        questionId: questionId,
+        question: question.question,
+        correctAnswer: question.options[question.correctAnswer],
+        userAnswer:
+          question.options[selectedAnswerIndex] || "No answer selected",
+        isCorrect: isCorrect,
+        confidence: confidence,
+        timeSpent: 0, // Could be tracked with timer
+        hintsUsed: 0,
+        timestamp: getCurrentTimestamp(),
+        difficulty:
+          question.difficulty === "beginner"
+            ? "facil"
+            : question.difficulty === "intermediate"
+              ? "medio"
+              : "dificil",
+        category: "general",
+      };
 
-    setSubmittedAnswers(prev => ({
-      ...prev,
-      [questionId]: true
-    }));
-
-    // Auto-reveal answer if setting enabled
-    if (settings.autoRevealAnswers) {
-      setShowAnswers(prev => ({
+      // Update session
+      setSession((prev) => ({
         ...prev,
-        [questionId]: true
+        responses: [...prev.responses, response],
+        streak: isCorrect ? prev.streak + 1 : 0,
       }));
-    }
-  }, [questions, selectedAnswers, confidenceScores, selectedImage, settings.autoRevealAnswers]);
+
+      setSubmittedAnswers((prev) => ({
+        ...prev,
+        [questionId]: true,
+      }));
+
+      // Auto-reveal answer if setting enabled
+      if (settings.autoRevealAnswers) {
+        setShowAnswers((prev) => ({
+          ...prev,
+          [questionId]: true,
+        }));
+      }
+    },
+    [
+      questions,
+      selectedAnswers,
+      confidenceScores,
+      selectedImage,
+      settings.autoRevealAnswers,
+    ],
+  );
 
   // Handle confidence change
-  const handleConfidenceChange = useCallback((questionId: string, confidence: number) => {
-    setConfidenceScores(prev => ({
-      ...prev,
-      [questionId]: confidence
-    }));
-  }, []);
+  const handleConfidenceChange = useCallback(
+    (questionId: string, confidence: number) => {
+      setConfidenceScores((prev) => ({
+        ...prev,
+        [questionId]: confidence,
+      }));
+    },
+    [],
+  );
 
   // Export functions
   const handleExportResponses = useCallback(() => {
     if (session.responses.length === 0) {
-      alert('No responses to export. Please answer some questions first.');
+      alert("No responses to export. Please answer some questions first.");
       return;
     }
     // Create session data for export
     const sessionData: QASessionData = {
       sessionId: session.sessionId,
-      imageUrl: selectedImage?.urls?.regular || '',
-      description: descriptionText || '',
-      language: 'es',
-      questions: questions.map((q, idx) => ({ 
-        id: q.id || `q_${idx}`, 
-        question: q.question, 
+      imageUrl: selectedImage?.urls?.regular || "",
+      description: descriptionText || "",
+      language: "es",
+      questions: questions.map((q, idx) => ({
+        id: q.id || `q_${idx}`,
+        question: q.question,
         answer: q.options[q.correctAnswer],
-        options: q.options, 
+        options: q.options,
         correctAnswer: q.correctAnswer,
-        difficulty: q.difficulty === 'beginner' ? 'facil' : 
-                    q.difficulty === 'intermediate' ? 'medio' : 'dificil',
-        category: 'general'
+        difficulty:
+          q.difficulty === "beginner"
+            ? "facil"
+            : q.difficulty === "intermediate"
+              ? "medio"
+              : "dificil",
+        category: "general",
       })),
       userResponses: session.responses,
       sessionMetadata: {
         startTime: session.startTime,
         endTime: getCurrentTimestamp(),
         totalTime: session.timeSpent,
-        score: (session.responses.filter(r => r.isCorrect).length / session.responses.length) * 100,
-        accuracy: (session.responses.filter(r => r.isCorrect).length / session.responses.length) * 100,
-        streak: session.streak
-      }
+        score:
+          (session.responses.filter((r) => r.isCorrect).length /
+            session.responses.length) *
+          100,
+        accuracy:
+          (session.responses.filter((r) => r.isCorrect).length /
+            session.responses.length) *
+          100,
+        streak: session.streak,
+      },
     };
-    
+
     const csvData = QAExporter.exportToCSV(sessionData);
-    const blob = new Blob([csvData], { type: 'text/csv' });
+    const blob = new Blob([csvData], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `qa_session_${session.sessionId}_${Date.now()}.csv`;
     document.body.appendChild(a);
@@ -350,36 +428,43 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
   const handleExportSession = useCallback(() => {
     const qaSession: QASessionData = {
       sessionId: session.sessionId,
-      imageUrl: selectedImage?.urls?.regular || '',
-      description: descriptionText || '',
-      language: 'es',
-      questions: questions.map((q, idx) => ({ 
-        id: q.id || `q_${idx}`, 
-        question: q.question, 
+      imageUrl: selectedImage?.urls?.regular || "",
+      description: descriptionText || "",
+      language: "es",
+      questions: questions.map((q, idx) => ({
+        id: q.id || `q_${idx}`,
+        question: q.question,
         answer: q.options[q.correctAnswer],
-        options: q.options, 
+        options: q.options,
         correctAnswer: q.correctAnswer,
-        difficulty: q.difficulty === 'beginner' ? 'facil' : 
-                    q.difficulty === 'intermediate' ? 'medio' : 'dificil',
-        category: 'general'
+        difficulty:
+          q.difficulty === "beginner"
+            ? "facil"
+            : q.difficulty === "intermediate"
+              ? "medio"
+              : "dificil",
+        category: "general",
       })),
       userResponses: session.responses,
       sessionMetadata: {
         startTime: session.startTime,
         endTime: getCurrentTimestamp(),
         totalTime: session.timeSpent,
-        score: session.responses.filter(r => r.isCorrect).length,
-        accuracy: session.responses.length > 0 
-          ? (session.responses.filter(r => r.isCorrect).length / session.responses.length) * 100
-          : 0,
-        streak: session.streak
-      }
+        score: session.responses.filter((r) => r.isCorrect).length,
+        accuracy:
+          session.responses.length > 0
+            ? (session.responses.filter((r) => r.isCorrect).length /
+                session.responses.length) *
+              100
+            : 0,
+        streak: session.streak,
+      },
     };
-    
+
     const csvData = QAExporter.exportToCSV(qaSession);
-    const blob = new Blob([csvData], { type: 'text/csv' });
+    const blob = new Blob([csvData], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `qa_session_full_${session.sessionId}_${Date.now()}.csv`;
     document.body.appendChild(a);
@@ -390,23 +475,31 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
 
   // Computed values
   const currentQuestion = questions[currentIndex];
-  const answeredQuestions = new Set(questions.map((q, index) => submittedAnswers[q.id] ? index : -1).filter(i => i !== -1));
-  const correctAnswers = new Set(questions.map((q, index) => {
-    if (!submittedAnswers[q.id]) return -1;
-    const selectedIndex = parseInt(selectedAnswers[q.id] || '0');
-    return selectedIndex === q.correctAnswer ? index : -1;
-  }).filter(i => i !== -1));
-  
+  const answeredQuestions = new Set(
+    questions
+      .map((q, index) => (submittedAnswers[q.id] ? index : -1))
+      .filter((i) => i !== -1),
+  );
+  const correctAnswers = new Set(
+    questions
+      .map((q, index) => {
+        if (!submittedAnswers[q.id]) return -1;
+        const selectedIndex = parseInt(selectedAnswers[q.id] || "0");
+        return selectedIndex === q.correctAnswer ? index : -1;
+      })
+      .filter((i) => i !== -1),
+  );
+
   const stats = useMemo(() => {
     const answered = session.responses.length;
-    const correct = session.responses.filter(r => r.isCorrect).length;
+    const correct = session.responses.filter((r) => r.isCorrect).length;
     const accuracy = answered > 0 ? (correct / answered) * 100 : 0;
-    
+
     return {
       answered,
       correct,
       accuracy,
-      remaining: questions.length - currentIndex - 1
+      remaining: questions.length - currentIndex - 1,
     };
   }, [session.responses, questions.length, currentIndex]);
 
@@ -423,13 +516,15 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Enhanced Q&A System</h2>
-          <div className="text-blue-600 animate-pulse">Generating questions...</div>
+          <div className="text-blue-600 animate-pulse">
+            Generating questions...
+          </div>
         </div>
         <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm">
           <div className="animate-pulse space-y-4">
             <div className="h-4 bg-gray-200 rounded w-3/4"></div>
             <div className="space-y-3">
-              {[1,2,3,4].map(i => (
+              {[1, 2, 3, 4].map((i) => (
                 <div key={i} className="h-12 bg-gray-100 rounded"></div>
               ))}
             </div>
@@ -525,10 +620,17 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
           <h3 className="font-semibold mb-4">Q&A Settings</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium mb-1">Question Count</label>
+              <label className="block text-sm font-medium mb-1">
+                Question Count
+              </label>
               <select
                 value={settings.questionCount}
-                onChange={(e) => setSettings(prev => ({ ...prev, questionCount: parseInt(e.target.value) }))}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    questionCount: parseInt(e.target.value),
+                  }))
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 <option value={3}>3 Questions</option>
@@ -538,10 +640,17 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium mb-1">Difficulty</label>
+              <label className="block text-sm font-medium mb-1">
+                Difficulty
+              </label>
               <select
                 value={settings.difficulty}
-                onChange={(e) => setSettings(prev => ({ ...prev, difficulty: e.target.value as any }))}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    difficulty: e.target.value as any,
+                  }))
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 <option value="beginner">Beginner</option>
@@ -553,7 +662,12 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
               <label className="block text-sm font-medium mb-1">Language</label>
               <select
                 value={settings.language}
-                onChange={(e) => setSettings(prev => ({ ...prev, language: e.target.value as any }))}
+                onChange={(e) =>
+                  setSettings((prev) => ({
+                    ...prev,
+                    language: e.target.value as any,
+                  }))
+                }
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm"
               >
                 <option value="both">Both Languages</option>
@@ -566,7 +680,12 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
                 <input
                   type="checkbox"
                   checked={settings.includeHints}
-                  onChange={(e) => setSettings(prev => ({ ...prev, includeHints: e.target.checked }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      includeHints: e.target.checked,
+                    }))
+                  }
                   className="rounded"
                 />
                 <span>Include Hints</span>
@@ -575,7 +694,12 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
                 <input
                   type="checkbox"
                   checked={settings.autoRevealAnswers}
-                  onChange={(e) => setSettings(prev => ({ ...prev, autoRevealAnswers: e.target.checked }))}
+                  onChange={(e) =>
+                    setSettings((prev) => ({
+                      ...prev,
+                      autoRevealAnswers: e.target.checked,
+                    }))
+                  }
                   className="rounded"
                 />
                 <span>Auto-reveal Answers</span>
@@ -594,7 +718,16 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
         streak={session.streak}
         sessionScore={{
           percentage: Math.round(stats.accuracy),
-          grade: stats.accuracy >= 90 ? 'A+' : stats.accuracy >= 80 ? 'A' : stats.accuracy >= 70 ? 'B' : stats.accuracy >= 60 ? 'C' : 'D'
+          grade:
+            stats.accuracy >= 90
+              ? "A+"
+              : stats.accuracy >= 80
+                ? "A"
+                : stats.accuracy >= 70
+                  ? "B"
+                  : stats.accuracy >= 60
+                    ? "C"
+                    : "D",
         }}
       />
 
@@ -603,14 +736,16 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
         currentIndex={currentIndex}
         totalQuestions={questions.length}
         onPrevious={() => setCurrentIndex(Math.max(0, currentIndex - 1))}
-        onNext={() => setCurrentIndex(Math.min(questions.length - 1, currentIndex + 1))}
+        onNext={() =>
+          setCurrentIndex(Math.min(questions.length - 1, currentIndex + 1))
+        }
         onGoToQuestion={setCurrentIndex}
         onReset={() => {
           setSelectedAnswers({});
           setSubmittedAnswers({});
           setShowAnswers({});
           setCurrentIndex(0);
-          setSession(prev => ({ ...prev, responses: [], streak: 0 }));
+          setSession((prev) => ({ ...prev, responses: [], streak: 0 }));
         }}
         answeredQuestions={answeredQuestions}
         correctAnswers={correctAnswers}
@@ -619,21 +754,27 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
       {/* Current Question */}
       {currentQuestion && (
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-6">
-          <h3 className="text-xl font-semibold mb-6">{currentQuestion.question}</h3>
-          
+          <h3 className="text-xl font-semibold mb-6">
+            {currentQuestion.question}
+          </h3>
+
           <AnswerInput
             questionId={currentQuestion.id}
             options={currentQuestion.options.map((option, index) => ({
               id: index.toString(),
               text: option,
-              correct: index === currentQuestion.correctAnswer
+              correct: index === currentQuestion.correctAnswer,
             }))}
             selectedAnswer={selectedAnswers[currentQuestion.id] || null}
             isSubmitted={submittedAnswers[currentQuestion.id] || false}
             isCorrect={correctAnswers.has(currentIndex)}
-            onAnswerSelect={(answerId) => handleAnswerSelect(currentQuestion.id, answerId)}
+            onAnswerSelect={(answerId) =>
+              handleAnswerSelect(currentQuestion.id, answerId)
+            }
             onSubmit={() => handleSubmitAnswer(currentQuestion.id)}
-            onConfidenceChange={(confidence) => handleConfidenceChange(currentQuestion.id, confidence)}
+            onConfidenceChange={(confidence) =>
+              handleConfidenceChange(currentQuestion.id, confidence)
+            }
             showFeedback={true}
           />
         </div>
@@ -647,8 +788,12 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
           explanation={currentQuestion.explanation}
           hints={settings.includeHints ? currentQuestion.hints : []}
           isRevealed={showAnswers[currentQuestion.id] || false}
-          onReveal={() => setShowAnswers(prev => ({ ...prev, [currentQuestion.id]: true }))}
-          onHide={() => setShowAnswers(prev => ({ ...prev, [currentQuestion.id]: false }))}
+          onReveal={() =>
+            setShowAnswers((prev) => ({ ...prev, [currentQuestion.id]: true }))
+          }
+          onHide={() =>
+            setShowAnswers((prev) => ({ ...prev, [currentQuestion.id]: false }))
+          }
           difficulty={currentQuestion.difficulty}
           category={currentQuestion.type}
         />
@@ -659,9 +804,13 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
         <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-xl p-6">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">Session Progress</h3>
+              <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                Session Progress
+              </h3>
               <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
-                <span>Answered: {stats.answered}/{questions.length}</span>
+                <span>
+                  Answered: {stats.answered}/{questions.length}
+                </span>
                 <span>Accuracy: {Math.round(stats.accuracy)}%</span>
                 <span>Streak: {session.streak}</span>
               </div>

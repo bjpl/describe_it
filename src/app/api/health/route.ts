@@ -1,157 +1,76 @@
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { NextRequest, NextResponse } from 'next/server';
+import { healthCheckService } from '@/lib/api/healthCheck';
 
-export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-export async function GET() {
-  const startTime = Date.now();
-  const checks: Record<string, any> = {};
-  let overall = 'healthy';
-
+export async function GET(request: NextRequest) {
   try {
-    // Check Supabase connection
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
-      try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        );
-        
-        const { error } = await supabase.from('profiles').select('count').limit(1).single();
-        
-        checks.database = {
-          status: error ? 'unhealthy' : 'healthy',
-          responseTime: Date.now() - startTime,
-          error: error?.message
-        };
-        
-        if (error) overall = 'degraded';
-      } catch (err) {
-        checks.database = {
-          status: 'unhealthy',
-          responseTime: Date.now() - startTime,
-          error: err instanceof Error ? err.message : 'Unknown error'
-        };
-        overall = 'unhealthy';
-      }
-    }
+    const detailed = request.nextUrl.searchParams.get('detailed') === 'true';
 
-    // Check environment variables
-    const criticalEnvVars = [
-      'NEXT_PUBLIC_SUPABASE_URL',
-      'NEXT_PUBLIC_SUPABASE_ANON_KEY'
-    ];
-
-    const optionalEnvVars = [
-      'OPENAI_API_KEY',
-      'NEXT_PUBLIC_UNSPLASH_ACCESS_KEY'
-    ];
-
-    const missingCritical = criticalEnvVars.filter(envVar => !process.env[envVar]);
-    const missingOptional = optionalEnvVars.filter(envVar => !process.env[envVar]);
-    
-    checks.environment = {
-      status: missingCritical.length === 0 ? 'healthy' : 'unhealthy',
-      missing: {
-        critical: missingCritical,
-        optional: missingOptional
-      },
-      demoMode: {
-        openai: !process.env.OPENAI_API_KEY,
-        unsplash: !process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-      }
-    };
-    
-    if (missingCritical.length > 0) overall = 'degraded';
-
-    // Check external API connectivity (only if API keys are present)
-    if (process.env.OPENAI_API_KEY) {
-      try {
-        const openaiCheck = await fetch('https://api.openai.com/v1/models', {
-          headers: {
-            'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-          },
-          signal: AbortSignal.timeout(5000)
-        });
-        
-        checks.openai = {
-          status: openaiCheck.ok ? 'healthy' : 'unhealthy',
-          statusCode: openaiCheck.status
-        };
+    if (detailed) {
+      // Full health check with actual API calls
+      const healthStatus = await healthCheckService.checkAllServices();
       
-        if (!openaiCheck.ok) overall = 'degraded';
-      } catch (err) {
-        checks.openai = {
-          status: 'unhealthy',
-          error: err instanceof Error ? err.message : 'Connection failed'
-        };
-        overall = 'degraded';
-      }
+      return NextResponse.json(healthStatus, {
+        status: healthStatus.overall.healthy ? 200 : 503,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=30',
+          'X-Demo-Mode': healthStatus.services.some(s => s.demoMode) ? 'true' : 'false',
+          'X-Overall-Health': healthStatus.overall.status
+        }
+      });
     } else {
-      checks.openai = {
-        status: 'demo',
-        message: 'API key not configured - using demo mode'
-      };
-    }
-
-    // Check Unsplash API connectivity (only if API key is present)
-    if (process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY) {
-      try {
-        const unsplashCheck = await fetch('https://api.unsplash.com/me', {
-          headers: {
-            'Authorization': `Client-ID ${process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}`,
-          },
-          signal: AbortSignal.timeout(5000)
-        });
-        
-        checks.unsplash = {
-          status: unsplashCheck.ok ? 'healthy' : 'unhealthy',
-          statusCode: unsplashCheck.status
-        };
+      // Quick status check
+      const quickStatus = healthCheckService.getQuickStatus();
       
-        if (!unsplashCheck.ok) overall = 'degraded';
-      } catch (err) {
-        checks.unsplash = {
-          status: 'unhealthy',
-          error: err instanceof Error ? err.message : 'Connection failed'
-        };
-        overall = 'degraded';
-      }
-    } else {
-      checks.unsplash = {
-        status: 'demo',
-        message: 'API key not configured - using demo mode'
-      };
+      return NextResponse.json({
+        status: 'ok',
+        healthy: quickStatus.healthy,
+        demo: quickStatus.demoMode,
+        configuredServices: quickStatus.configuredServices,
+        message: quickStatus.demoMode 
+          ? 'Running in DEMO mode - app works perfectly without API keys!'
+          : `All ${quickStatus.configuredServices} services configured`,
+        timestamp: new Date().toISOString()
+      }, {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=30',
+          'X-Demo-Mode': quickStatus.demoMode ? 'true' : 'false'
+        }
+      });
     }
 
-    const responseTime = Date.now() - startTime;
+  } catch (error) {
+    console.error('Health check endpoint error:', error);
     
-    const response = {
-      status: overall,
+    return NextResponse.json({
+      status: 'error',
+      healthy: false,
+      demo: true,
+      message: 'Health check failed - running in demo mode',
       timestamp: new Date().toISOString(),
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
-      responseTime,
-      checks
-    };
-
-    const statusCode = overall === 'healthy' ? 200 : overall === 'degraded' ? 207 : 503;
-    
-    return NextResponse.json(response, { 
-      status: statusCode,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    }, {
+      status: 500,
       headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0'
+        'X-Demo-Mode': 'true'
       }
     });
-    
-  } catch (error) {
-    return NextResponse.json({
-      status: 'unhealthy',
-      timestamp: new Date().toISOString(),
-      error: error instanceof Error ? error.message : 'Unknown error',
-      responseTime: Date.now() - startTime
-    }, { status: 503 });
   }
+}
+
+// Options for CORS if needed
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    },
+  });
 }

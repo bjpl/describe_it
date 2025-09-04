@@ -1,27 +1,31 @@
-'use client';
+"use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface AccessibilityContextType {
   isHighContrast: boolean;
-  fontSize: 'small' | 'medium' | 'large' | 'extra-large';
+  fontSize: "small" | "medium" | "large" | "extra-large";
   reducedMotion: boolean;
   screenReaderMode: boolean;
   keyboardNavigation: boolean;
   toggleHighContrast: () => void;
-  setFontSize: (size: AccessibilityContextType['fontSize']) => void;
+  setFontSize: (size: AccessibilityContextType["fontSize"]) => void;
   toggleReducedMotion: () => void;
   toggleScreenReaderMode: () => void;
   announceToScreenReader: (message: string) => void;
 }
 
-const AccessibilityContext = createContext<AccessibilityContextType | null>(null);
+const AccessibilityContext = createContext<AccessibilityContextType | null>(
+  null,
+);
 
 export const useAccessibility = () => {
   const context = useContext(AccessibilityContext);
   if (!context) {
-    throw new Error('useAccessibility must be used within AccessibilityProvider');
+    throw new Error(
+      "useAccessibility must be used within AccessibilityProvider",
+    );
   }
   return context;
 };
@@ -30,27 +34,36 @@ interface AccessibilityProviderProps {
   children: React.ReactNode;
 }
 
-export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ children }) => {
+export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({
+  children,
+}) => {
   const [isHighContrast, setIsHighContrast] = useState(false);
-  const [fontSize, setFontSize] = useState<AccessibilityContextType['fontSize']>('medium');
+  const [fontSize, setFontSize] =
+    useState<AccessibilityContextType["fontSize"]>("medium");
   const [reducedMotion, setReducedMotion] = useState(false);
   const [screenReaderMode, setScreenReaderMode] = useState(false);
   const [keyboardNavigation, setKeyboardNavigation] = useState(false);
-  const [announcements, setAnnouncements] = useState<Array<{ id: string; message: string }>>([]);
+  const [announcements, setAnnouncements] = useState<
+    Array<{ id: string; message: string }>
+  >([]);
 
   // Detect system preferences
   useEffect(() => {
     // Check for prefers-reduced-motion
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const prefersReducedMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)",
+    ).matches;
     setReducedMotion(prefersReducedMotion);
 
     // Check for prefers-contrast
-    const prefersHighContrast = window.matchMedia('(prefers-contrast: high)').matches;
+    const prefersHighContrast = window.matchMedia(
+      "(prefers-contrast: high)",
+    ).matches;
     setIsHighContrast(prefersHighContrast);
 
     // Detect keyboard navigation
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Tab') {
+      if (e.key === "Tab") {
         setKeyboardNavigation(true);
       }
     };
@@ -59,72 +72,83 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
       setKeyboardNavigation(false);
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    document.addEventListener('mousedown', handleMouseDown);
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handleMouseDown);
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('mousedown', handleMouseDown);
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handleMouseDown);
     };
   }, []);
 
   // Apply accessibility settings to document
   useEffect(() => {
     const root = document.documentElement;
-    
+
     // High contrast
     if (isHighContrast) {
-      root.classList.add('high-contrast');
+      root.classList.add("high-contrast");
     } else {
-      root.classList.remove('high-contrast');
+      root.classList.remove("high-contrast");
     }
 
     // Font size
-    root.classList.remove('font-small', 'font-medium', 'font-large', 'font-extra-large');
+    root.classList.remove(
+      "font-small",
+      "font-medium",
+      "font-large",
+      "font-extra-large",
+    );
     root.classList.add(`font-${fontSize}`);
 
     // Reduced motion
     if (reducedMotion) {
-      root.classList.add('reduce-motion');
+      root.classList.add("reduce-motion");
     } else {
-      root.classList.remove('reduce-motion');
+      root.classList.remove("reduce-motion");
     }
 
     // Keyboard navigation
     if (keyboardNavigation) {
-      root.classList.add('keyboard-navigation');
+      root.classList.add("keyboard-navigation");
     } else {
-      root.classList.remove('keyboard-navigation');
+      root.classList.remove("keyboard-navigation");
     }
   }, [isHighContrast, fontSize, reducedMotion, keyboardNavigation]);
 
   const toggleHighContrast = () => {
-    setIsHighContrast(prev => !prev);
-    announceToScreenReader(isHighContrast ? 'High contrast disabled' : 'High contrast enabled');
+    setIsHighContrast((prev) => !prev);
+    announceToScreenReader(
+      isHighContrast ? "High contrast disabled" : "High contrast enabled",
+    );
   };
 
-  const handleSetFontSize = (size: AccessibilityContextType['fontSize']) => {
+  const handleSetFontSize = (size: AccessibilityContextType["fontSize"]) => {
     setFontSize(size);
     announceToScreenReader(`Font size changed to ${size}`);
   };
 
   const toggleReducedMotion = () => {
-    setReducedMotion(prev => !prev);
-    announceToScreenReader(reducedMotion ? 'Motion enabled' : 'Motion reduced');
+    setReducedMotion((prev) => !prev);
+    announceToScreenReader(reducedMotion ? "Motion enabled" : "Motion reduced");
   };
 
   const toggleScreenReaderMode = () => {
-    setScreenReaderMode(prev => !prev);
-    announceToScreenReader(screenReaderMode ? 'Screen reader mode disabled' : 'Screen reader mode enabled');
+    setScreenReaderMode((prev) => !prev);
+    announceToScreenReader(
+      screenReaderMode
+        ? "Screen reader mode disabled"
+        : "Screen reader mode enabled",
+    );
   };
 
   const announceToScreenReader = (message: string) => {
     const id = `announcement-${Date.now()}`;
-    setAnnouncements(prev => [...prev, { id, message }]);
-    
+    setAnnouncements((prev) => [...prev, { id, message }]);
+
     // Remove announcement after it's been read
     setTimeout(() => {
-      setAnnouncements(prev => prev.filter(a => a.id !== id));
+      setAnnouncements((prev) => prev.filter((a) => a.id !== id));
     }, 1000);
   };
 
@@ -138,22 +162,22 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
     setFontSize: handleSetFontSize,
     toggleReducedMotion,
     toggleScreenReaderMode,
-    announceToScreenReader
+    announceToScreenReader,
   };
 
   return (
     <AccessibilityContext.Provider value={value}>
       {children}
-      
+
       {/* Screen reader announcements */}
-      <div 
-        className="sr-only" 
-        aria-live="polite" 
+      <div
+        className="sr-only"
+        aria-live="polite"
         aria-atomic="true"
         role="status"
       >
         <AnimatePresence>
-          {announcements.map(announcement => (
+          {announcements.map((announcement) => (
             <motion.div
               key={announcement.id}
               initial={{ opacity: 0 }}
@@ -181,21 +205,23 @@ export const AccessibilityPanel: React.FC = () => {
     setFontSize,
     toggleReducedMotion,
     toggleScreenReaderMode,
-    announceToScreenReader
+    announceToScreenReader,
   } = useAccessibility();
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Alt + A to open accessibility panel
-      if (e.altKey && e.key === 'a') {
+      if (e.altKey && e.key === "a") {
         e.preventDefault();
-        setIsOpen(prev => !prev);
-        announceToScreenReader(isOpen ? 'Accessibility panel closed' : 'Accessibility panel opened');
+        setIsOpen((prev) => !prev);
+        announceToScreenReader(
+          isOpen ? "Accessibility panel closed" : "Accessibility panel opened",
+        );
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, announceToScreenReader]);
 
   return (
@@ -235,7 +261,7 @@ export const AccessibilityPanel: React.FC = () => {
               onClick={() => setIsOpen(false)}
               className="fixed inset-0 bg-black bg-opacity-50 z-50"
             />
-            
+
             {/* Panel */}
             <motion.div
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
@@ -262,7 +288,10 @@ export const AccessibilityPanel: React.FC = () => {
               <div className="space-y-4">
                 {/* High Contrast */}
                 <div className="flex items-center justify-between">
-                  <label htmlFor="high-contrast" className="text-sm font-medium">
+                  <label
+                    htmlFor="high-contrast"
+                    className="text-sm font-medium"
+                  >
                     High Contrast
                   </label>
                   <button
@@ -270,7 +299,7 @@ export const AccessibilityPanel: React.FC = () => {
                     onClick={toggleHighContrast}
                     className={`
                       relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                      ${isHighContrast ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'}
+                      ${isHighContrast ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"}
                     `}
                     role="switch"
                     aria-checked={isHighContrast}
@@ -278,7 +307,7 @@ export const AccessibilityPanel: React.FC = () => {
                     <span
                       className={`
                         inline-block h-4 w-4 rounded-full bg-white transition-transform
-                        ${isHighContrast ? 'translate-x-6' : 'translate-x-1'}
+                        ${isHighContrast ? "translate-x-6" : "translate-x-1"}
                       `}
                     />
                   </button>
@@ -286,30 +315,39 @@ export const AccessibilityPanel: React.FC = () => {
 
                 {/* Font Size */}
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Font Size</label>
+                  <label className="text-sm font-medium mb-2 block">
+                    Font Size
+                  </label>
                   <div className="grid grid-cols-2 gap-2">
-                    {(['small', 'medium', 'large', 'extra-large'] as const).map((size) => (
-                      <button
-                        key={size}
-                        onClick={() => setFontSize(size)}
-                        className={`
+                    {(["small", "medium", "large", "extra-large"] as const).map(
+                      (size) => (
+                        <button
+                          key={size}
+                          onClick={() => setFontSize(size)}
+                          className={`
                           px-3 py-2 text-xs rounded border text-center
-                          ${fontSize === size
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600'
+                          ${
+                            fontSize === size
+                              ? "bg-blue-600 text-white border-blue-600"
+                              : "bg-gray-100 dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                           }
                         `}
-                        aria-pressed={fontSize === size}
-                      >
-                        {size.charAt(0).toUpperCase() + size.slice(1).replace('-', ' ')}
-                      </button>
-                    ))}
+                          aria-pressed={fontSize === size}
+                        >
+                          {size.charAt(0).toUpperCase() +
+                            size.slice(1).replace("-", " ")}
+                        </button>
+                      ),
+                    )}
                   </div>
                 </div>
 
                 {/* Reduced Motion */}
                 <div className="flex items-center justify-between">
-                  <label htmlFor="reduced-motion" className="text-sm font-medium">
+                  <label
+                    htmlFor="reduced-motion"
+                    className="text-sm font-medium"
+                  >
                     Reduce Motion
                   </label>
                   <button
@@ -317,7 +355,7 @@ export const AccessibilityPanel: React.FC = () => {
                     onClick={toggleReducedMotion}
                     className={`
                       relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                      ${reducedMotion ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'}
+                      ${reducedMotion ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"}
                     `}
                     role="switch"
                     aria-checked={reducedMotion}
@@ -325,7 +363,7 @@ export const AccessibilityPanel: React.FC = () => {
                     <span
                       className={`
                         inline-block h-4 w-4 rounded-full bg-white transition-transform
-                        ${reducedMotion ? 'translate-x-6' : 'translate-x-1'}
+                        ${reducedMotion ? "translate-x-6" : "translate-x-1"}
                       `}
                     />
                   </button>
@@ -333,7 +371,10 @@ export const AccessibilityPanel: React.FC = () => {
 
                 {/* Screen Reader Mode */}
                 <div className="flex items-center justify-between">
-                  <label htmlFor="screen-reader-mode" className="text-sm font-medium">
+                  <label
+                    htmlFor="screen-reader-mode"
+                    className="text-sm font-medium"
+                  >
                     Screen Reader Mode
                   </label>
                   <button
@@ -341,7 +382,7 @@ export const AccessibilityPanel: React.FC = () => {
                     onClick={toggleScreenReaderMode}
                     className={`
                       relative inline-flex h-6 w-11 items-center rounded-full transition-colors
-                      ${screenReaderMode ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-600'}
+                      ${screenReaderMode ? "bg-blue-600" : "bg-gray-200 dark:bg-gray-600"}
                     `}
                     role="switch"
                     aria-checked={screenReaderMode}
@@ -349,7 +390,7 @@ export const AccessibilityPanel: React.FC = () => {
                     <span
                       className={`
                         inline-block h-4 w-4 rounded-full bg-white transition-transform
-                        ${screenReaderMode ? 'translate-x-6' : 'translate-x-1'}
+                        ${screenReaderMode ? "translate-x-6" : "translate-x-1"}
                       `}
                     />
                   </button>

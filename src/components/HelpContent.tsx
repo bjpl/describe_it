@@ -1,21 +1,21 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { 
-  Search, 
-  Image, 
-  MessageSquare, 
-  HelpCircle, 
-  Keyboard, 
-  Activity, 
-  Globe, 
-  BookOpen, 
-  Settings, 
-  AlertCircle, 
-  Info, 
-  Mail, 
-  ExternalLink, 
-  Check, 
+import { useState, useCallback, useEffect } from "react";
+import {
+  Search,
+  Image,
+  MessageSquare,
+  HelpCircle,
+  Keyboard,
+  Activity,
+  Globe,
+  BookOpen,
+  Settings,
+  AlertCircle,
+  Info,
+  Mail,
+  ExternalLink,
+  Check,
   X,
   ChevronRight,
   ChevronDown,
@@ -26,9 +26,9 @@ import {
   Star,
   Lightbulb,
   Target,
-  TrendingUp
-} from 'lucide-react';
-import { useNetworkStatus } from '@/hooks/useNetworkStatus';
+  TrendingUp,
+} from "lucide-react";
+import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 
 interface HelpContentProps {
   onClose: () => void;
@@ -36,7 +36,7 @@ interface HelpContentProps {
 
 interface ServiceStatus {
   name: string;
-  category: 'core' | 'external' | 'storage' | 'monitoring' | 'security';
+  category: "core" | "external" | "storage" | "monitoring" | "security";
   enabled: boolean;
   configured: boolean;
   healthy: boolean;
@@ -53,7 +53,7 @@ interface ApiStatus {
 }
 
 interface FeedbackData {
-  type: 'bug' | 'feature' | 'general';
+  type: "bug" | "feature" | "general";
   email: string;
   subject: string;
   message: string;
@@ -61,25 +61,27 @@ interface FeedbackData {
 }
 
 export function HelpContent({ onClose }: HelpContentProps) {
-  const [activeTab, setActiveTab] = useState('guide');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set());
+  const [activeTab, setActiveTab] = useState("guide");
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(
+    new Set(),
+  );
   const [apiStatus, setApiStatus] = useState<ApiStatus>({
     unsplash: false,
     openai: false,
     database: false,
-    cache: false
+    cache: false,
   });
   const [serviceStatuses, setServiceStatuses] = useState<ServiceStatus[]>([]);
   const [feedbackForm, setFeedbackForm] = useState<FeedbackData>({
-    type: 'general',
-    email: '',
-    subject: '',
-    message: '',
-    includeSystemInfo: true
+    type: "general",
+    email: "",
+    subject: "",
+    message: "",
+    includeSystemInfo: true,
   });
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
   const { isOnline, connectionType } = useNetworkStatus();
 
   // Load API status and service information
@@ -87,41 +89,47 @@ export function HelpContent({ onClose }: HelpContentProps) {
     const loadSystemStatus = async () => {
       try {
         // Check API endpoints
-        const healthResponse = await fetch('/api/health', { method: 'HEAD' });
-        const cacheResponse = await fetch('/api/cache/status', { method: 'HEAD' });
-        
+        const healthResponse = await fetch("/api/health", { method: "HEAD" });
+        const cacheResponse = await fetch("/api/cache/status", {
+          method: "HEAD",
+        });
+
         setApiStatus({
           unsplash: Boolean(process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY),
           openai: Boolean(process.env.OPENAI_API_KEY),
           database: healthResponse.ok,
-          cache: cacheResponse.ok
+          cache: cacheResponse.ok,
         });
 
         // Mock service statuses (in a real app, this would come from an API)
         setServiceStatuses([
           {
-            name: 'Image Search',
-            category: 'external',
+            name: "Image Search",
+            category: "external",
             enabled: Boolean(process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY),
             configured: Boolean(process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY),
             healthy: Boolean(process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY),
             demoMode: !process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
             required: false,
-            reason: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY ? undefined : 'Using demo images'
+            reason: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+              ? undefined
+              : "Using demo images",
           },
           {
-            name: 'AI Descriptions',
-            category: 'external',
+            name: "AI Descriptions",
+            category: "external",
             enabled: Boolean(process.env.OPENAI_API_KEY),
             configured: Boolean(process.env.OPENAI_API_KEY),
             healthy: Boolean(process.env.OPENAI_API_KEY),
             demoMode: !process.env.OPENAI_API_KEY,
             required: false,
-            reason: process.env.OPENAI_API_KEY ? undefined : 'Using pre-generated content'
-          }
+            reason: process.env.OPENAI_API_KEY
+              ? undefined
+              : "Using pre-generated content",
+          },
         ]);
       } catch (error) {
-        console.error('Failed to load system status:', error);
+        console.error("Failed to load system status:", error);
       }
     };
 
@@ -129,7 +137,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
   }, []);
 
   const toggleSection = useCallback((sectionId: string) => {
-    setExpandedSections(prev => {
+    setExpandedSections((prev) => {
       const next = new Set(prev);
       if (next.has(sectionId)) {
         next.delete(sectionId);
@@ -143,52 +151,52 @@ export function HelpContent({ onClose }: HelpContentProps) {
   const handleFeedbackSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
+
     try {
       // In a real app, this would submit to your feedback API
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
-      
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Simulate API call
+
       setFeedbackSubmitted(true);
       setFeedbackForm({
-        type: 'general',
-        email: '',
-        subject: '',
-        message: '',
-        includeSystemInfo: true
+        type: "general",
+        email: "",
+        subject: "",
+        message: "",
+        includeSystemInfo: true,
       });
     } catch (error) {
-      console.error('Failed to submit feedback:', error);
+      console.error("Failed to submit feedback:", error);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const tabs = [
-    { id: 'guide', label: 'User Guide', icon: BookOpen },
-    { id: 'shortcuts', label: 'Shortcuts', icon: Keyboard },
-    { id: 'status', label: 'API Status', icon: Activity },
-    { id: 'tips', label: 'Learning Tips', icon: Lightbulb },
-    { id: 'troubleshooting', label: 'Troubleshooting', icon: AlertCircle },
-    { id: 'about', label: 'About', icon: Info },
-    { id: 'feedback', label: 'Feedback', icon: Mail }
+    { id: "guide", label: "User Guide", icon: BookOpen },
+    { id: "shortcuts", label: "Shortcuts", icon: Keyboard },
+    { id: "status", label: "API Status", icon: Activity },
+    { id: "tips", label: "Learning Tips", icon: Lightbulb },
+    { id: "troubleshooting", label: "Troubleshooting", icon: AlertCircle },
+    { id: "about", label: "About", icon: Info },
+    { id: "feedback", label: "Feedback", icon: Mail },
   ];
 
   const shortcuts = [
-    { key: 'Ctrl/Cmd + K', action: 'Focus search bar' },
-    { key: 'Ctrl/Cmd + Enter', action: 'Search for images' },
-    { key: 'Ctrl/Cmd + D', action: 'Generate description' },
-    { key: 'Ctrl/Cmd + Q', action: 'Generate Q&A' },
-    { key: 'Ctrl/Cmd + P', action: 'Extract phrases' },
-    { key: 'Ctrl/Cmd + I', action: 'Open help modal' },
-    { key: 'Escape', action: 'Close modal/cancel action' },
-    { key: 'Tab', action: 'Navigate between elements' },
-    { key: 'Space', action: 'Activate focused button' },
-    { key: 'Arrow Keys', action: 'Navigate image grid' }
+    { key: "Ctrl/Cmd + K", action: "Focus search bar" },
+    { key: "Ctrl/Cmd + Enter", action: "Search for images" },
+    { key: "Ctrl/Cmd + D", action: "Generate description" },
+    { key: "Ctrl/Cmd + Q", action: "Generate Q&A" },
+    { key: "Ctrl/Cmd + P", action: "Extract phrases" },
+    { key: "Ctrl/Cmd + I", action: "Open help modal" },
+    { key: "Escape", action: "Close modal/cancel action" },
+    { key: "Tab", action: "Navigate between elements" },
+    { key: "Space", action: "Activate focused button" },
+    { key: "Arrow Keys", action: "Navigate image grid" },
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case 'guide':
+      case "guide":
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -196,41 +204,57 @@ export function HelpContent({ onClose }: HelpContentProps) {
                 Welcome to Describe It!
               </h3>
               <p className="text-gray-600 dark:text-gray-400">
-                Learn Spanish through interactive image descriptions and exercises.
+                Learn Spanish through interactive image descriptions and
+                exercises.
               </p>
             </div>
 
             {/* Getting Started */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <button
-                onClick={() => toggleSection('getting-started')}
+                onClick={() => toggleSection("getting-started")}
                 className="w-full flex items-center justify-between text-left"
               >
                 <div className="flex items-center gap-3">
                   <Search className="w-5 h-5 text-blue-600" />
                   <span className="font-semibold">Getting Started</span>
                 </div>
-                {expandedSections.has('getting-started') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {expandedSections.has("getting-started") ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
               </button>
-              
-              {expandedSections.has('getting-started') && (
+
+              {expandedSections.has("getting-started") && (
                 <div className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-400">
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">1</div>
+                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
+                      1
+                    </div>
                     <div>
-                      <strong>Search for Images:</strong> Use the search bar to find images related to topics you want to learn about. Try searches like "kitchen", "family", or "vacation".
+                      <strong>Search for Images:</strong> Use the search bar to
+                      find images related to topics you want to learn about. Try
+                      searches like "kitchen", "family", or "vacation".
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">2</div>
+                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
+                      2
+                    </div>
                     <div>
-                      <strong>Select an Image:</strong> Click on any image from the search results to begin the learning process.
+                      <strong>Select an Image:</strong> Click on any image from
+                      the search results to begin the learning process.
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
-                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">3</div>
+                    <div className="w-6 h-6 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center text-xs font-bold text-blue-600">
+                      3
+                    </div>
                     <div>
-                      <strong>Generate Content:</strong> Use the buttons to generate descriptions, Q&A exercises, or extract key phrases.
+                      <strong>Generate Content:</strong> Use the buttons to
+                      generate descriptions, Q&A exercises, or extract key
+                      phrases.
                     </div>
                   </div>
                 </div>
@@ -240,24 +264,31 @@ export function HelpContent({ onClose }: HelpContentProps) {
             {/* Features */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <button
-                onClick={() => toggleSection('features')}
+                onClick={() => toggleSection("features")}
                 className="w-full flex items-center justify-between text-left"
               >
                 <div className="flex items-center gap-3">
                   <Star className="w-5 h-5 text-yellow-600" />
                   <span className="font-semibold">Features Overview</span>
                 </div>
-                {expandedSections.has('features') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {expandedSections.has("features") ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
               </button>
-              
-              {expandedSections.has('features') && (
+
+              {expandedSections.has("features") && (
                 <div className="mt-4 space-y-4">
                   <div className="flex items-start gap-3">
                     <Image className="w-5 h-5 text-green-600 mt-0.5" />
                     <div>
-                      <strong className="text-green-600">AI-Powered Descriptions</strong>
+                      <strong className="text-green-600">
+                        AI-Powered Descriptions
+                      </strong>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Get detailed descriptions in both English and Spanish to understand vocabulary in context.
+                        Get detailed descriptions in both English and Spanish to
+                        understand vocabulary in context.
                       </p>
                     </div>
                   </div>
@@ -266,16 +297,20 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     <div>
                       <strong className="text-blue-600">Interactive Q&A</strong>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Test your understanding with automatically generated questions about the image.
+                        Test your understanding with automatically generated
+                        questions about the image.
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
                     <BookOpen className="w-5 h-5 text-purple-600 mt-0.5" />
                     <div>
-                      <strong className="text-purple-600">Phrase Extraction</strong>
+                      <strong className="text-purple-600">
+                        Phrase Extraction
+                      </strong>
                       <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                        Identify key vocabulary and phrases to focus your learning.
+                        Identify key vocabulary and phrases to focus your
+                        learning.
                       </p>
                     </div>
                   </div>
@@ -286,29 +321,37 @@ export function HelpContent({ onClose }: HelpContentProps) {
             {/* Learning Methods */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
               <button
-                onClick={() => toggleSection('learning-methods')}
+                onClick={() => toggleSection("learning-methods")}
                 className="w-full flex items-center justify-between text-left"
               >
                 <div className="flex items-center gap-3">
                   <Target className="w-5 h-5 text-indigo-600" />
                   <span className="font-semibold">Learning Methods</span>
                 </div>
-                {expandedSections.has('learning-methods') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                {expandedSections.has("learning-methods") ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
               </button>
-              
-              {expandedSections.has('learning-methods') && (
+
+              {expandedSections.has("learning-methods") && (
                 <div className="mt-4 space-y-3 text-sm text-gray-600 dark:text-gray-400">
                   <div>
-                    <strong>Visual Learning:</strong> Associate Spanish words and phrases with images to improve retention.
+                    <strong>Visual Learning:</strong> Associate Spanish words
+                    and phrases with images to improve retention.
                   </div>
                   <div>
-                    <strong>Contextual Learning:</strong> Learn vocabulary within meaningful sentences and descriptions.
+                    <strong>Contextual Learning:</strong> Learn vocabulary
+                    within meaningful sentences and descriptions.
                   </div>
                   <div>
-                    <strong>Active Recall:</strong> Use Q&A exercises to test your understanding and reinforce learning.
+                    <strong>Active Recall:</strong> Use Q&A exercises to test
+                    your understanding and reinforce learning.
                   </div>
                   <div>
-                    <strong>Progressive Difficulty:</strong> Start with basic vocabulary and gradually work up to complex sentences.
+                    <strong>Progressive Difficulty:</strong> Start with basic
+                    vocabulary and gradually work up to complex sentences.
                   </div>
                 </div>
               )}
@@ -316,7 +359,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
           </div>
         );
 
-      case 'shortcuts':
+      case "shortcuts":
         return (
           <div className="space-y-4">
             <div className="text-center mb-6">
@@ -330,10 +373,15 @@ export function HelpContent({ onClose }: HelpContentProps) {
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-              <h4 className="font-semibold mb-3 text-gray-900 dark:text-white">Navigation</h4>
+              <h4 className="font-semibold mb-3 text-gray-900 dark:text-white">
+                Navigation
+              </h4>
               <div className="space-y-2">
                 {shortcuts.map((shortcut, index) => (
-                  <div key={index} className="flex items-center justify-between py-1">
+                  <div
+                    key={index}
+                    className="flex items-center justify-between py-1"
+                  >
                     <span className="text-sm text-gray-600 dark:text-gray-400">
                       {shortcut.action}
                     </span>
@@ -353,8 +401,9 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     Accessibility
                   </h4>
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    All functionality is accessible via keyboard navigation. Use Tab to move between elements 
-                    and Enter or Space to activate buttons. Screen readers are fully supported.
+                    All functionality is accessible via keyboard navigation. Use
+                    Tab to move between elements and Enter or Space to activate
+                    buttons. Screen readers are fully supported.
                   </p>
                 </div>
               </div>
@@ -362,7 +411,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
           </div>
         );
 
-      case 'status':
+      case "status":
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -379,22 +428,32 @@ export function HelpContent({ onClose }: HelpContentProps) {
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
                 <Globe className="w-5 h-5" />
-                <h4 className="font-semibold text-gray-900 dark:text-white">Connection</h4>
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  Connection
+                </h4>
               </div>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600 dark:text-gray-400">Network Status</span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    Network Status
+                  </span>
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${isOnline ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${isOnline ? "bg-green-500" : "bg-red-500"}`}
+                    />
                     <span className="text-sm font-medium">
-                      {isOnline ? 'Online' : 'Offline'}
+                      {isOnline ? "Online" : "Offline"}
                     </span>
                   </div>
                 </div>
                 {connectionType && (
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600 dark:text-gray-400">Connection Type</span>
-                    <span className="text-sm font-medium">{connectionType}</span>
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Connection Type
+                    </span>
+                    <span className="text-sm font-medium">
+                      {connectionType}
+                    </span>
                   </div>
                 )}
               </div>
@@ -404,7 +463,9 @@ export function HelpContent({ onClose }: HelpContentProps) {
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
               <div className="flex items-center gap-3 mb-3">
                 <Zap className="w-5 h-5" />
-                <h4 className="font-semibold text-gray-900 dark:text-white">API Services</h4>
+                <h4 className="font-semibold text-gray-900 dark:text-white">
+                  API Services
+                </h4>
               </div>
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
@@ -413,9 +474,11 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     <span className="text-sm">Image Search</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${apiStatus.unsplash ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${apiStatus.unsplash ? "bg-green-500" : "bg-yellow-500"}`}
+                    />
                     <span className="text-sm font-medium">
-                      {apiStatus.unsplash ? 'Active' : 'Demo Mode'}
+                      {apiStatus.unsplash ? "Active" : "Demo Mode"}
                     </span>
                   </div>
                 </div>
@@ -425,9 +488,11 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     <span className="text-sm">AI Descriptions</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${apiStatus.openai ? 'bg-green-500' : 'bg-yellow-500'}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${apiStatus.openai ? "bg-green-500" : "bg-yellow-500"}`}
+                    />
                     <span className="text-sm font-medium">
-                      {apiStatus.openai ? 'Active' : 'Demo Mode'}
+                      {apiStatus.openai ? "Active" : "Demo Mode"}
                     </span>
                   </div>
                 </div>
@@ -437,9 +502,11 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     <span className="text-sm">Health Check</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className={`w-2 h-2 rounded-full ${apiStatus.database ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <div
+                      className={`w-2 h-2 rounded-full ${apiStatus.database ? "bg-green-500" : "bg-red-500"}`}
+                    />
                     <span className="text-sm font-medium">
-                      {apiStatus.database ? 'Healthy' : 'Unavailable'}
+                      {apiStatus.database ? "Healthy" : "Unavailable"}
                     </span>
                   </div>
                 </div>
@@ -456,11 +523,16 @@ export function HelpContent({ onClose }: HelpContentProps) {
                       Demo Mode Active
                     </h4>
                     <p className="text-sm text-yellow-800 dark:text-yellow-200 mb-2">
-                      Some services are running in demo mode with pre-generated content.
+                      Some services are running in demo mode with pre-generated
+                      content.
                     </p>
                     <div className="text-xs text-yellow-700 dark:text-yellow-300 space-y-1">
-                      {!apiStatus.unsplash && <div>• Image search uses curated demo images</div>}
-                      {!apiStatus.openai && <div>• AI content uses pre-generated responses</div>}
+                      {!apiStatus.unsplash && (
+                        <div>• Image search uses curated demo images</div>
+                      )}
+                      {!apiStatus.openai && (
+                        <div>• AI content uses pre-generated responses</div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -469,7 +541,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
           </div>
         );
 
-      case 'tips':
+      case "tips":
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -491,10 +563,13 @@ export function HelpContent({ onClose }: HelpContentProps) {
                       Focus on Context
                     </h4>
                     <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
-                      Rather than memorizing isolated words, focus on understanding vocabulary within the context of complete descriptions.
+                      Rather than memorizing isolated words, focus on
+                      understanding vocabulary within the context of complete
+                      descriptions.
                     </p>
                     <div className="text-xs text-blue-700 dark:text-blue-300">
-                      Tip: Read the full description first, then identify unfamiliar words.
+                      Tip: Read the full description first, then identify
+                      unfamiliar words.
                     </div>
                   </div>
                 </div>
@@ -508,10 +583,12 @@ export function HelpContent({ onClose }: HelpContentProps) {
                       Progressive Learning
                     </h4>
                     <p className="text-sm text-green-800 dark:text-green-200 mb-2">
-                      Start with simple images and gradually work up to more complex scenes as your vocabulary grows.
+                      Start with simple images and gradually work up to more
+                      complex scenes as your vocabulary grows.
                     </p>
                     <div className="text-xs text-green-700 dark:text-green-300">
-                      Suggested progression: Objects → Scenes → Activities → Abstract concepts
+                      Suggested progression: Objects → Scenes → Activities →
+                      Abstract concepts
                     </div>
                   </div>
                 </div>
@@ -525,7 +602,8 @@ export function HelpContent({ onClose }: HelpContentProps) {
                       Active Engagement
                     </h4>
                     <p className="text-sm text-purple-800 dark:text-purple-200 mb-2">
-                      Don't just read passively. Use the Q&A feature to test yourself and the phrase extraction to identify key terms.
+                      Don't just read passively. Use the Q&A feature to test
+                      yourself and the phrase extraction to identify key terms.
                     </p>
                     <div className="text-xs text-purple-700 dark:text-purple-300">
                       Try to answer questions before reading the answers.
@@ -542,10 +620,12 @@ export function HelpContent({ onClose }: HelpContentProps) {
                       Regular Practice
                     </h4>
                     <p className="text-sm text-orange-800 dark:text-orange-200 mb-2">
-                      Consistent daily practice, even for 10-15 minutes, is more effective than longer, infrequent sessions.
+                      Consistent daily practice, even for 10-15 minutes, is more
+                      effective than longer, infrequent sessions.
                     </p>
                     <div className="text-xs text-orange-700 dark:text-orange-300">
-                      Set a daily goal of analyzing 2-3 images with full descriptions.
+                      Set a daily goal of analyzing 2-3 images with full
+                      descriptions.
                     </div>
                   </div>
                 </div>
@@ -553,30 +633,42 @@ export function HelpContent({ onClose }: HelpContentProps) {
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Study Strategies</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                Study Strategies
+              </h4>
               <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2" />
-                  <span>Create mental associations between images and Spanish descriptions</span>
+                  <span>
+                    Create mental associations between images and Spanish
+                    descriptions
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2" />
-                  <span>Practice describing images in your own words before reading AI descriptions</span>
+                  <span>
+                    Practice describing images in your own words before reading
+                    AI descriptions
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2" />
-                  <span>Use the extracted phrases to create your own sentences</span>
+                  <span>
+                    Use the extracted phrases to create your own sentences
+                  </span>
                 </div>
                 <div className="flex items-start gap-2">
                   <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-2" />
-                  <span>Review previous images periodically to reinforce learning</span>
+                  <span>
+                    Review previous images periodically to reinforce learning
+                  </span>
                 </div>
               </div>
             </div>
           </div>
         );
 
-      case 'troubleshooting':
+      case "troubleshooting":
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -592,24 +684,32 @@ export function HelpContent({ onClose }: HelpContentProps) {
             <div className="space-y-4">
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <button
-                  onClick={() => toggleSection('no-images')}
+                  onClick={() => toggleSection("no-images")}
                   className="w-full flex items-center justify-between text-left"
                 >
                   <span className="font-semibold text-gray-900 dark:text-white">
                     No images appear in search results
                   </span>
-                  {expandedSections.has('no-images') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  {expandedSections.has("no-images") ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </button>
-                
-                {expandedSections.has('no-images') && (
+
+                {expandedSections.has("no-images") && (
                   <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div><strong>Possible causes:</strong></div>
+                    <div>
+                      <strong>Possible causes:</strong>
+                    </div>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>Network connection issues</li>
                       <li>API rate limit exceeded</li>
                       <li>Search term too specific or in wrong language</li>
                     </ul>
-                    <div className="mt-3"><strong>Solutions:</strong></div>
+                    <div className="mt-3">
+                      <strong>Solutions:</strong>
+                    </div>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>Check your internet connection</li>
                       <li>Try simpler, more general search terms in English</li>
@@ -622,29 +722,39 @@ export function HelpContent({ onClose }: HelpContentProps) {
 
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <button
-                  onClick={() => toggleSection('slow-loading')}
+                  onClick={() => toggleSection("slow-loading")}
                   className="w-full flex items-center justify-between text-left"
                 >
                   <span className="font-semibold text-gray-900 dark:text-white">
                     Content loads very slowly
                   </span>
-                  {expandedSections.has('slow-loading') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  {expandedSections.has("slow-loading") ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </button>
-                
-                {expandedSections.has('slow-loading') && (
+
+                {expandedSections.has("slow-loading") && (
                   <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div><strong>Possible causes:</strong></div>
+                    <div>
+                      <strong>Possible causes:</strong>
+                    </div>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>Slow internet connection</li>
                       <li>High server load</li>
                       <li>Large image files</li>
                     </ul>
-                    <div className="mt-3"><strong>Solutions:</strong></div>
+                    <div className="mt-3">
+                      <strong>Solutions:</strong>
+                    </div>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>Check your network speed</li>
                       <li>Close other bandwidth-heavy applications</li>
                       <li>Try again during off-peak hours</li>
-                      <li>Use a wired connection instead of Wi-Fi if possible</li>
+                      <li>
+                        Use a wired connection instead of Wi-Fi if possible
+                      </li>
                     </ul>
                   </div>
                 )}
@@ -652,24 +762,32 @@ export function HelpContent({ onClose }: HelpContentProps) {
 
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <button
-                  onClick={() => toggleSection('keyboard-shortcuts')}
+                  onClick={() => toggleSection("keyboard-shortcuts")}
                   className="w-full flex items-center justify-between text-left"
                 >
                   <span className="font-semibold text-gray-900 dark:text-white">
                     Keyboard shortcuts not working
                   </span>
-                  {expandedSections.has('keyboard-shortcuts') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  {expandedSections.has("keyboard-shortcuts") ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </button>
-                
-                {expandedSections.has('keyboard-shortcuts') && (
+
+                {expandedSections.has("keyboard-shortcuts") && (
                   <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div><strong>Possible causes:</strong></div>
+                    <div>
+                      <strong>Possible causes:</strong>
+                    </div>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>Browser focus is on another element</li>
                       <li>Operating system shortcuts conflict</li>
                       <li>Browser extensions interfering</li>
                     </ul>
-                    <div className="mt-3"><strong>Solutions:</strong></div>
+                    <div className="mt-3">
+                      <strong>Solutions:</strong>
+                    </div>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>Click on the page area to ensure focus</li>
                       <li>Try using Ctrl instead of Cmd on Windows/Linux</li>
@@ -682,20 +800,31 @@ export function HelpContent({ onClose }: HelpContentProps) {
 
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
                 <button
-                  onClick={() => toggleSection('demo-mode')}
+                  onClick={() => toggleSection("demo-mode")}
                   className="w-full flex items-center justify-between text-left"
                 >
                   <span className="font-semibold text-gray-900 dark:text-white">
                     App stuck in demo mode
                   </span>
-                  {expandedSections.has('demo-mode') ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+                  {expandedSections.has("demo-mode") ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </button>
-                
-                {expandedSections.has('demo-mode') && (
+
+                {expandedSections.has("demo-mode") && (
                   <div className="mt-3 space-y-2 text-sm text-gray-600 dark:text-gray-400">
-                    <div><strong>About demo mode:</strong></div>
-                    <p>Demo mode is automatically enabled when API keys are not configured. This is normal for the public demo version.</p>
-                    <div className="mt-3"><strong>In demo mode:</strong></div>
+                    <div>
+                      <strong>About demo mode:</strong>
+                    </div>
+                    <p>
+                      Demo mode is automatically enabled when API keys are not
+                      configured. This is normal for the public demo version.
+                    </p>
+                    <div className="mt-3">
+                      <strong>In demo mode:</strong>
+                    </div>
                     <ul className="list-disc list-inside space-y-1 ml-2">
                       <li>Image search shows curated demo images</li>
                       <li>AI descriptions use pre-generated content</li>
@@ -714,8 +843,10 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     Still need help?
                   </h4>
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    If you're experiencing issues not covered here, please use the Feedback tab to report the problem. 
-                    Include as much detail as possible about what you were doing when the issue occurred.
+                    If you're experiencing issues not covered here, please use
+                    the Feedback tab to report the problem. Include as much
+                    detail as possible about what you were doing when the issue
+                    occurred.
                   </p>
                 </div>
               </div>
@@ -723,7 +854,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
           </div>
         );
 
-      case 'about':
+      case "about":
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -739,32 +870,48 @@ export function HelpContent({ onClose }: HelpContentProps) {
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Version Information</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                Version Information
+              </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Version</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Version
+                  </span>
                   <span className="font-medium">0.1.0</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Build Date</span>
-                  <span className="font-medium">{new Date().toLocaleDateString()}</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Build Date
+                  </span>
+                  <span className="font-medium">
+                    {new Date().toLocaleDateString()}
+                  </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Status</span>
+                  <span className="text-gray-600 dark:text-gray-400">
+                    Status
+                  </span>
                   <span className="font-medium">Demo</span>
                 </div>
               </div>
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Technology Stack</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                Technology Stack
+              </h4>
               <div className="grid grid-cols-2 gap-3 text-sm">
                 <div>
-                  <div className="text-gray-600 dark:text-gray-400">Frontend</div>
+                  <div className="text-gray-600 dark:text-gray-400">
+                    Frontend
+                  </div>
                   <div className="font-medium">React 19, Next.js 15</div>
                 </div>
                 <div>
-                  <div className="text-gray-600 dark:text-gray-400">Styling</div>
+                  <div className="text-gray-600 dark:text-gray-400">
+                    Styling
+                  </div>
                   <div className="font-medium">Tailwind CSS</div>
                 </div>
                 <div>
@@ -779,22 +926,32 @@ export function HelpContent({ onClose }: HelpContentProps) {
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Credits</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                Credits
+              </h4>
               <div className="space-y-3 text-sm">
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Images</div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    Images
+                  </div>
                   <div className="text-gray-600 dark:text-gray-400">
-                    Powered by Unsplash API - High-quality photos from talented photographers worldwide
+                    Powered by Unsplash API - High-quality photos from talented
+                    photographers worldwide
                   </div>
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white">AI Technology</div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    AI Technology
+                  </div>
                   <div className="text-gray-600 dark:text-gray-400">
-                    OpenAI GPT-4 for natural language processing and content generation
+                    OpenAI GPT-4 for natural language processing and content
+                    generation
                   </div>
                 </div>
                 <div>
-                  <div className="font-medium text-gray-900 dark:text-white">Icons</div>
+                  <div className="font-medium text-gray-900 dark:text-white">
+                    Icons
+                  </div>
                   <div className="text-gray-600 dark:text-gray-400">
                     Lucide - Beautiful & consistent SVG icon library
                   </div>
@@ -803,7 +960,9 @@ export function HelpContent({ onClose }: HelpContentProps) {
             </div>
 
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">Documentation & Resources</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-3">
+                Documentation & Resources
+              </h4>
               <div className="space-y-2">
                 <a
                   href="https://github.com/your-username/describe-it"
@@ -828,7 +987,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                   className="flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                   onClick={(e) => {
                     e.preventDefault();
-                    setActiveTab('tips');
+                    setActiveTab("tips");
                   }}
                 >
                   <BookOpen className="w-4 h-4" />
@@ -843,7 +1002,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
           </div>
         );
 
-      case 'feedback':
+      case "feedback":
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
@@ -863,7 +1022,8 @@ export function HelpContent({ onClose }: HelpContentProps) {
                   Thank you for your feedback!
                 </h4>
                 <p className="text-sm text-green-800 dark:text-green-200 mb-4">
-                  We've received your message and will review it carefully. Your input helps us make the app better for everyone.
+                  We've received your message and will review it carefully. Your
+                  input helps us make the app better for everyone.
                 </p>
                 <button
                   onClick={() => setFeedbackSubmitted(false)}
@@ -880,7 +1040,12 @@ export function HelpContent({ onClose }: HelpContentProps) {
                   </label>
                   <select
                     value={feedbackForm.type}
-                    onChange={(e) => setFeedbackForm(prev => ({ ...prev, type: e.target.value as FeedbackData['type'] }))}
+                    onChange={(e) =>
+                      setFeedbackForm((prev) => ({
+                        ...prev,
+                        type: e.target.value as FeedbackData["type"],
+                      }))
+                    }
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   >
                     <option value="general">General Feedback</option>
@@ -896,7 +1061,12 @@ export function HelpContent({ onClose }: HelpContentProps) {
                   <input
                     type="email"
                     value={feedbackForm.email}
-                    onChange={(e) => setFeedbackForm(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setFeedbackForm((prev) => ({
+                        ...prev,
+                        email: e.target.value,
+                      }))
+                    }
                     placeholder="your.email@example.com"
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
@@ -912,7 +1082,12 @@ export function HelpContent({ onClose }: HelpContentProps) {
                   <input
                     type="text"
                     value={feedbackForm.subject}
-                    onChange={(e) => setFeedbackForm(prev => ({ ...prev, subject: e.target.value }))}
+                    onChange={(e) =>
+                      setFeedbackForm((prev) => ({
+                        ...prev,
+                        subject: e.target.value,
+                      }))
+                    }
                     placeholder="Brief description of your feedback"
                     required
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -925,7 +1100,12 @@ export function HelpContent({ onClose }: HelpContentProps) {
                   </label>
                   <textarea
                     value={feedbackForm.message}
-                    onChange={(e) => setFeedbackForm(prev => ({ ...prev, message: e.target.value }))}
+                    onChange={(e) =>
+                      setFeedbackForm((prev) => ({
+                        ...prev,
+                        message: e.target.value,
+                      }))
+                    }
                     placeholder="Please provide detailed information about your feedback, bug report, or feature request..."
                     required
                     rows={6}
@@ -938,10 +1118,18 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     type="checkbox"
                     id="includeSystemInfo"
                     checked={feedbackForm.includeSystemInfo}
-                    onChange={(e) => setFeedbackForm(prev => ({ ...prev, includeSystemInfo: e.target.checked }))}
+                    onChange={(e) =>
+                      setFeedbackForm((prev) => ({
+                        ...prev,
+                        includeSystemInfo: e.target.checked,
+                      }))
+                    }
                     className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
                   />
-                  <label htmlFor="includeSystemInfo" className="text-sm text-gray-700 dark:text-gray-300">
+                  <label
+                    htmlFor="includeSystemInfo"
+                    className="text-sm text-gray-700 dark:text-gray-300"
+                  >
                     Include system information to help with troubleshooting
                   </label>
                 </div>
@@ -952,11 +1140,19 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     disabled={isSubmitting}
                     className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? 'Sending...' : 'Send Feedback'}
+                    {isSubmitting ? "Sending..." : "Send Feedback"}
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFeedbackForm({ type: 'general', email: '', subject: '', message: '', includeSystemInfo: true })}
+                    onClick={() =>
+                      setFeedbackForm({
+                        type: "general",
+                        email: "",
+                        subject: "",
+                        message: "",
+                        includeSystemInfo: true,
+                      })
+                    }
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
                   >
                     Reset
@@ -966,31 +1162,37 @@ export function HelpContent({ onClose }: HelpContentProps) {
             )}
 
             <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">Other Ways to Reach Us</h4>
+              <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
+                Other Ways to Reach Us
+              </h4>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <ExternalLink className="w-4 h-4 text-gray-500" />
-                  <a 
-                    href="https://github.com/your-username/describe-it/issues" 
-                    target="_blank" 
+                  <a
+                    href="https://github.com/your-username/describe-it/issues"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                   >
                     GitHub Issues
                   </a>
-                  <span className="text-gray-500">- For bug reports and feature requests</span>
+                  <span className="text-gray-500">
+                    - For bug reports and feature requests
+                  </span>
                 </div>
                 <div className="flex items-center gap-2">
                   <ExternalLink className="w-4 h-4 text-gray-500" />
-                  <a 
-                    href="https://github.com/your-username/describe-it/discussions" 
-                    target="_blank" 
+                  <a
+                    href="https://github.com/your-username/describe-it/discussions"
+                    target="_blank"
                     rel="noopener noreferrer"
                     className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-200"
                   >
                     GitHub Discussions
                   </a>
-                  <span className="text-gray-500">- For general questions and ideas</span>
+                  <span className="text-gray-500">
+                    - For general questions and ideas
+                  </span>
                 </div>
               </div>
             </div>
@@ -1008,7 +1210,9 @@ export function HelpContent({ onClose }: HelpContentProps) {
       <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center gap-3">
           <HelpCircle className="w-6 h-6 text-blue-600" />
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white">Help & Support</h2>
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            Help & Support
+          </h2>
         </div>
         <button
           onClick={onClose}
@@ -1026,8 +1230,8 @@ export function HelpContent({ onClose }: HelpContentProps) {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50'
+                ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50 dark:bg-blue-900/20"
+                : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700/50"
             }`}
           >
             <tab.icon className="w-4 h-4" />

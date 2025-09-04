@@ -27,7 +27,7 @@ export const EDUCATIONAL_PROMPTS = {
     • Incluir al menos una oración con subjuntivo
     
     ESTILO: Educativo pero engaging, claro pero rico en vocabulario.`,
-    
+
     poetico: `Como profesor de literatura española, crea una descripción poética educativa de esta imagen.
     
     ELEMENTOS POÉTICOS REQUERIDOS:
@@ -50,7 +50,7 @@ export const EDUCATIONAL_PROMPTS = {
     "El silencio abraza cada rincón de esta escena..."
     
     Mantén balance entre belleza poética y claridad para estudiantes de español.`,
-    
+
     academico: `Como profesor universitario, proporciona un análisis académico de esta imagen para estudiantes avanzados de español (B2-C1).
     
     ESTRUCTURA DEL ANÁLISIS:
@@ -85,7 +85,7 @@ export const EDUCATIONAL_PROMPTS = {
     • Conectores académicos: no obstante, asimismo, en consecuencia, cabe destacar, por consiguiente
     • Voz pasiva y pasiva refleja
     • Construcciones impersonales`,
-    
+
     conversacional: `Como un amigo hispanohablante nativo, describe esta imagen de manera natural y coloquial para practicar español conversacional.
     
     ELEMENTOS CONVERSACIONALES OBLIGATORIOS:
@@ -116,7 +116,7 @@ export const EDUCATIONAL_PROMPTS = {
     
     FINAL INTERACTIVO:
     • "¿Tú qué opinas?" / "¿A ti qué te parece?"`,
-    
+
     infantil: `Como maestro de español para niños, crea una descripción mágica y educativa para estudiantes jóvenes (8-12 años).
     
     ESTRUCTURA DE AVENTURA:
@@ -152,9 +152,9 @@ export const EDUCATIONAL_PROMPTS = {
     CIERRE IMAGINATIVO:
     • "¿Qué crees que pasaría si tú estuvieras ahí?"
     • "¿Qué aventura vivirías en este lugar?"
-    • "Inventa un final diferente para esta historia"`
+    • "Inventa un final diferente para esta historia"`,
   },
-  
+
   en: {
     narrativo: `As a Spanish teacher, create an educational narrative description of this image for English-speaking Spanish learners.
     
@@ -165,35 +165,35 @@ export const EDUCATIONAL_PROMPTS = {
     • Variety of verb tenses
     • Descriptive adjectives
     • Common Spanish expressions with translations`,
-    
+
     poetico: `Create a poetic description for Spanish language learners:
     • Simple metaphors and similes
     • Sensory language
     • Emotional vocabulary
     • Rhythmic flow
     • Accessible literary devices`,
-    
+
     academico: `Provide an academic analysis for advanced Spanish students:
     • Formal vocabulary
     • Complex grammar structures
     • Cultural context
     • Objective tone
     • Academic discourse markers`,
-    
+
     conversacional: `Describe the image conversationally for Spanish conversation practice:
     • Natural expressions
     • Colloquialisms
     • Personal opinions
     • Interactive questions
     • Casual tone`,
-    
+
     infantil: `Create a fun description for young Spanish learners:
     • Simple vocabulary
     • Repetition for reinforcement
     • Interactive elements
     • Playful comparisons
-    • Imaginative story`
-  }
+    • Imaginative story`,
+  },
 };
 
 // Q&A Generation Prompts
@@ -239,7 +239,7 @@ export const QA_PROMPTS = {
   • Incluir vocabulario del nivel correspondiente
   • Usar estructuras gramaticales variadas
   • Evitar caracteres especiales que puedan romper el JSON`,
-  
+
   en: `Generate educational Q&A pairs for Spanish learners based on this description.
   
   MANDATORY RESPONSE FORMAT:
@@ -262,7 +262,7 @@ export const QA_PROMPTS = {
   
   Valid categories: "Vocabulario", "Gramática", "Cultura", "Comprensión", "Expresión"
   
-  Include various question types and provide complete, educational answers.`
+  Include various question types and provide complete, educational answers.`,
 };
 
 // Phrase Extraction Prompts
@@ -314,7 +314,7 @@ export const PHRASE_PROMPTS = {
   • Evitar caracteres especiales que rompan el JSON
   • Cada array debe tener al menos 1 elemento, máximo 8
   • Usar palabras relevantes para estudiantes de español`,
-  
+
   en: `Extract and categorize educational vocabulary for Spanish learners from this description.
   
   MANDATORY RESPONSE FORMAT:
@@ -331,5 +331,5 @@ export const PHRASE_PROMPTS = {
   }
   
   Extract relevant Spanish vocabulary categorized appropriately.
-  Each array should have 1-8 items. All words must be in Spanish.`
+  Each array should have 1-8 items. All words must be in Spanish.`,
 };

@@ -131,15 +131,15 @@
     align-items: center;
     justify-content: center;
   }
-  
-  button, 
+
+  button,
   .button,
   [role="button"] {
     min-height: 44px;
     min-width: 44px;
     padding: 0.5rem 1rem;
   }
-  
+
   input[type="text"],
   input[type="email"],
   input[type="password"],
@@ -179,16 +179,16 @@
     padding: 0.75rem 1rem;
     border-radius: 0.5rem;
   }
-  
+
   .search-results {
     margin-top: 0.5rem;
   }
-  
+
   .search-filters {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .search-filters > * {
     width: 100%;
   }
@@ -210,7 +210,7 @@
     align-items: flex-end;
     padding: 0;
   }
-  
+
   .modal-content {
     width: 100%;
     max-height: 90vh;
@@ -232,7 +232,7 @@
     flex-direction: column;
     gap: 0.25rem;
   }
-  
+
   .tab-trigger {
     width: 100%;
     justify-content: flex-start;
@@ -245,15 +245,15 @@
     grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
-  
+
   .image-card {
     aspect-ratio: 1;
   }
-  
+
   .image-overlay {
     padding: 0.5rem;
   }
-  
+
   .image-overlay-text {
     font-size: 0.75rem;
   }
@@ -264,12 +264,12 @@
   .form-group {
     margin-bottom: 1rem;
   }
-  
+
   .form-actions {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
+
   .form-actions > * {
     width: 100%;
   }
@@ -280,22 +280,22 @@
   .no-print {
     display: none !important;
   }
-  
+
   .print-only {
     display: block !important;
   }
-  
+
   body {
     font-size: 12pt;
     line-height: 1.4;
   }
-  
+
   .card {
     break-inside: avoid;
     border: 1px solid #000;
     margin-bottom: 1rem;
   }
-  
+
   .image-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 1rem;
@@ -309,7 +309,7 @@
     border-color: #374151;
     color: #f9fafb;
   }
-  
+
   .responsive-image-container {
     border: 1px solid #374151;
   }
@@ -320,11 +320,11 @@
   .responsive-image {
     transition: none;
   }
-  
+
   .image-card {
     transform: none !important;
   }
-  
+
   .modal {
     animation: none;
   }
@@ -335,11 +335,11 @@
   .card {
     border: 2px solid;
   }
-  
+
   .responsive-image-container {
     border: 2px solid;
   }
-  
+
   button,
   .button {
     border: 2px solid;
@@ -352,7 +352,7 @@
     align-items: flex-start;
     padding-top: 1rem;
   }
-  
+
   .search-container {
     margin-bottom: 0.5rem;
   }
@@ -363,15 +363,15 @@
   .safe-area-inset-top {
     padding-top: max(1rem, env(safe-area-inset-top));
   }
-  
+
   .safe-area-inset-bottom {
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
-  
+
   .safe-area-inset-left {
     padding-left: max(1rem, env(safe-area-inset-left));
   }
-  
+
   .safe-area-inset-right {
     padding-right: max(1rem, env(safe-area-inset-right));
   }
@@ -423,7 +423,7 @@
     padding: 0.75rem;
     margin: 0.25rem;
   }
-  
+
   .clickable-area {
     min-height: 44px;
     min-width: 44px;

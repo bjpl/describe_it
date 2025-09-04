@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { memo, useCallback } from 'react';
-import { Search, History, Eye, EyeOff, RotateCcw } from 'lucide-react';
-import { getUsageStats, clearExpiredImages } from '@/lib/tracking/imageTracker';
+import { memo, useCallback } from "react";
+import { Search, History, Eye, EyeOff, RotateCcw } from "lucide-react";
+import { getUsageStats, clearExpiredImages } from "@/lib/tracking/imageTracker";
 
 interface SearchSectionProps {
   searchQuery: string;
@@ -23,25 +23,35 @@ export const SearchSection = memo<SearchSectionProps>(function SearchSection({
   onSearchQueryChange,
   onSearch,
   onToggleUsedImages,
-  onClearHistory
+  onClearHistory,
 }) {
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      onSearch();
-    }
-  }, [onSearch]);
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        onSearch();
+      }
+    },
+    [onSearch],
+  );
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    onSearchQueryChange(e.target.value);
-  }, [onSearchQueryChange]);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onSearchQueryChange(e.target.value);
+    },
+    [onSearchQueryChange],
+  );
 
   const handleToggleUsedImages = useCallback(() => {
     onToggleUsedImages?.();
   }, [onToggleUsedImages]);
 
   const handleClearHistory = useCallback(() => {
-    if (confirm('Are you sure you want to clear your image usage history? This cannot be undone.')) {
+    if (
+      confirm(
+        "Are you sure you want to clear your image usage history? This cannot be undone.",
+      )
+    ) {
       onClearHistory?.();
     }
   }, [onClearHistory]);
@@ -51,7 +61,7 @@ export const SearchSection = memo<SearchSectionProps>(function SearchSection({
     if (cleared > 0) {
       alert(`Cleared ${cleared} expired entries from image history.`);
     } else {
-      alert('No expired entries found.');
+      alert("No expired entries found.");
     }
   }, []);
 
@@ -77,7 +87,7 @@ export const SearchSection = memo<SearchSectionProps>(function SearchSection({
           aria-label="Search for images"
         >
           <Search className="h-4 w-4" />
-          {loading ? 'Searching...' : 'Search'}
+          {loading ? "Searching..." : "Search"}
         </button>
       </div>
 
@@ -87,10 +97,18 @@ export const SearchSection = memo<SearchSectionProps>(function SearchSection({
           <button
             onClick={handleToggleUsedImages}
             className="flex items-center gap-2 px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-            title={showUsedImages ? 'Hide previously used images' : 'Show previously used images'}
+            title={
+              showUsedImages
+                ? "Hide previously used images"
+                : "Show previously used images"
+            }
           >
-            {showUsedImages ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-            {showUsedImages ? 'Hide Used' : 'Show Used'}
+            {showUsedImages ? (
+              <EyeOff className="h-4 w-4" />
+            ) : (
+              <Eye className="h-4 w-4" />
+            )}
+            {showUsedImages ? "Hide Used" : "Show Used"}
           </button>
 
           {usageStats.totalUsed > 0 && (
@@ -136,4 +154,4 @@ export const SearchSection = memo<SearchSectionProps>(function SearchSection({
   );
 });
 
-SearchSection.displayName = 'SearchSection';
+SearchSection.displayName = "SearchSection";

@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import React, { Component, ReactNode } from 'react';
-import { ErrorFallback } from './ErrorFallback';
+import React, { Component, ReactNode } from "react";
+import { ErrorFallback } from "./ErrorFallback";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -21,7 +21,10 @@ interface ErrorBoundaryProps {
   isolate?: boolean; // Prevent error from bubbling up
 }
 
-export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
   private retryTimeoutId: NodeJS.Timeout | null = null;
 
   constructor(props: ErrorBoundaryProps) {
@@ -33,17 +36,17 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     // Update state so the next render will show the fallback UI
     return {
       hasError: true,
-      error
+      error,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error to error reporting service
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
 
     // Call onError callback if provided
@@ -65,7 +68,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
     this.setState({
       hasError: false,
       error: undefined,
-      errorInfo: undefined
+      errorInfo: undefined,
     });
 
     this.props.onReset?.();
@@ -81,7 +84,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
   render() {
     if (this.state.hasError) {
       const { fallback: FallbackComponent } = this.props;
-      
+
       if (FallbackComponent) {
         return (
           <FallbackComponent
@@ -100,7 +103,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
           onReset={this.handleReset}
           title="Application Error"
           message="Something went wrong in this section of the application."
-          showDetails={process.env.NODE_ENV === 'development'}
+          showDetails={process.env.NODE_ENV === "development"}
         />
       );
     }
@@ -112,15 +115,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 // Hook-based error boundary for functional components
 export function useErrorHandler() {
   return (error: Error, errorInfo?: { componentStack?: string }) => {
-    console.error('Error caught by error handler:', error, errorInfo);
-    
+    console.error("Error caught by error handler:", error, errorInfo);
+
     // In a real application, you would report this to an error tracking service
     // like Sentry, Bugsnag, or LogRocket
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Only log in browser environment
-      console.group('Error Details');
-      console.error('Error:', error);
-      console.error('Component Stack:', errorInfo?.componentStack);
+      console.group("Error Details");
+      console.error("Error:", error);
+      console.error("Component Stack:", errorInfo?.componentStack);
       console.groupEnd();
     }
   };

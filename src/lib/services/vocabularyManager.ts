@@ -3,9 +3,11 @@
  * Manages vocabulary collection with click-to-add functionality and persistence
  */
 
-import { CategorizedPhrase, VocabularySet, SavedPhrase } from '@/types/api';
-import VocabularyStorage, { StoredVocabularyData } from '../storage/vocabularyStorage';
-import { createSortKey } from '../utils/phrase-helpers';
+import { CategorizedPhrase, VocabularySet, SavedPhrase } from "@/types/api";
+import VocabularyStorage, {
+  StoredVocabularyData,
+} from "../storage/vocabularyStorage";
+import { createSortKey } from "../utils/phrase-helpers";
 
 export interface VocabularyManagerConfig {
   autoSave: boolean;
@@ -41,7 +43,7 @@ export class VocabularyManager {
       maxPhrasesPerSet: 100,
       enableTranslation: true,
       sortIgnoreArticles: true,
-      ...config
+      ...config,
     };
 
     this.storage = VocabularyStorage;
@@ -57,13 +59,13 @@ export class VocabularyManager {
    */
   async addPhraseWithClick(
     phrase: CategorizedPhrase,
-    options: ClickToAddOptions = {}
+    options: ClickToAddOptions = {},
   ): Promise<SavedPhrase> {
     const {
       category = phrase.category,
       setId,
       autoTranslate = this.config.enableTranslation,
-      markAsNew = true
+      markAsNew = true,
     } = options;
 
     // Create saved phrase with enhanced data
@@ -72,13 +74,15 @@ export class VocabularyManager {
       category,
       saved: true,
       savedAt: new Date(),
-      translation: autoTranslate ? await this.translatePhrase(phrase.phrase, phrase.definition) : undefined,
+      translation: autoTranslate
+        ? await this.translatePhrase(phrase.phrase, phrase.definition)
+        : undefined,
       studyProgress: {
         correctAnswers: 0,
         totalAttempts: 0,
         lastReviewed: undefined,
-        nextReview: undefined
-      }
+        nextReview: undefined,
+      },
     };
 
     // Add to current phrases collection
@@ -99,9 +103,9 @@ export class VocabularyManager {
 
     // Emit event
     this.emitEvent({
-      type: 'phraseAdded',
+      type: "phraseAdded",
       phrase: savedPhrase,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return savedPhrase;
@@ -112,7 +116,7 @@ export class VocabularyManager {
    */
   async addMultiplePhrases(
     phrases: CategorizedPhrase[],
-    options: ClickToAddOptions = {}
+    options: ClickToAddOptions = {},
   ): Promise<SavedPhrase[]> {
     const savedPhrases: SavedPhrase[] = [];
 
@@ -140,10 +144,10 @@ export class VocabularyManager {
 
     // Remove from all vocabulary sets
     const vocabularySets = this.storage.loadVocabularySets();
-    const updatedSets = vocabularySets.map(set => ({
+    const updatedSets = vocabularySets.map((set) => ({
       ...set,
-      phrases: set.phrases.filter(p => p.id !== phraseId),
-      lastModified: new Date()
+      phrases: set.phrases.filter((p) => p.id !== phraseId),
+      lastModified: new Date(),
     }));
 
     // Save updated sets
@@ -156,9 +160,9 @@ export class VocabularyManager {
 
     // Emit event
     this.emitEvent({
-      type: 'phraseRemoved',
+      type: "phraseRemoved",
       phraseId,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return true;
@@ -170,21 +174,22 @@ export class VocabularyManager {
   async createSetFromPhrases(
     selectedPhraseIds: string[],
     setName: string,
-    description?: string
+    description?: string,
   ): Promise<VocabularySet> {
     const selectedPhrases = selectedPhraseIds
-      .map(id => this.currentPhrases.get(id))
-      .filter(phrase => phrase !== undefined) as SavedPhrase[];
+      .map((id) => this.currentPhrases.get(id))
+      .filter((phrase) => phrase !== undefined) as SavedPhrase[];
 
     if (selectedPhrases.length === 0) {
-      throw new Error('No valid phrases selected for vocabulary set');
+      throw new Error("No valid phrases selected for vocabulary set");
     }
 
     // Create new vocabulary set
     const vocabularySet: VocabularySet = {
       id: `set_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       name: setName,
-      description: description || `Study set with ${selectedPhrases.length} phrases`,
+      description:
+        description || `Study set with ${selectedPhrases.length} phrases`,
       phrases: this.sortPhrasesAlphabetically(selectedPhrases),
       createdAt: new Date(),
       lastModified: new Date(),
@@ -192,8 +197,8 @@ export class VocabularyManager {
         totalPhrases: selectedPhrases.length,
         masteredPhrases: 0,
         reviewsDue: selectedPhrases.length,
-        averageProgress: 0
-      }
+        averageProgress: 0,
+      },
     };
 
     // Save to storage
@@ -201,9 +206,9 @@ export class VocabularyManager {
 
     // Emit event
     this.emitEvent({
-      type: 'setCreated',
+      type: "setCreated",
       set: vocabularySet,
-      timestamp: new Date()
+      timestamp: new Date(),
     });
 
     return vocabularySet;
@@ -214,13 +219,13 @@ export class VocabularyManager {
    */
   sortPhrasesAlphabetically(phrases: SavedPhrase[]): SavedPhrase[] {
     if (!this.config.sortIgnoreArticles) {
-      return phrases.sort((a, b) => a.phrase.localeCompare(b.phrase, 'es'));
+      return phrases.sort((a, b) => a.phrase.localeCompare(b.phrase, "es"));
     }
 
     return phrases.sort((a, b) => {
       const sortKeyA = a.sortKey || createSortKey(a.phrase);
       const sortKeyB = b.sortKey || createSortKey(b.phrase);
-      return sortKeyA.localeCompare(sortKeyB, 'es', { sensitivity: 'base' });
+      return sortKeyA.localeCompare(sortKeyB, "es", { sensitivity: "base" });
     });
   }
 
@@ -229,18 +234,22 @@ export class VocabularyManager {
    */
   async exportTargetWordList(
     setId?: string,
-    includeTranslations: boolean = true
+    includeTranslations: boolean = true,
   ): Promise<string> {
     let phrasesToExport: SavedPhrase[];
 
     if (setId) {
-      const vocabularySet = this.storage.loadVocabularySets().find(set => set.id === setId);
+      const vocabularySet = this.storage
+        .loadVocabularySets()
+        .find((set) => set.id === setId);
       if (!vocabularySet) {
-        throw new Error('Vocabulary set not found');
+        throw new Error("Vocabulary set not found");
       }
       phrasesToExport = vocabularySet.phrases;
     } else {
-      phrasesToExport = Array.from(this.currentPhrases.values()) as SavedPhrase[];
+      phrasesToExport = Array.from(
+        this.currentPhrases.values(),
+      ) as SavedPhrase[];
     }
 
     // Sort alphabetically
@@ -248,39 +257,42 @@ export class VocabularyManager {
 
     // Generate CSV headers
     const headers = [
-      'Word/Phrase',
-      'Translation',
-      'Category',
-      'Part of Speech',
-      'Difficulty',
-      'Context',
-      'Gender',
-      'Article',
-      'Conjugation',
-      'Date Added',
-      'Study Progress'
+      "Word/Phrase",
+      "Translation",
+      "Category",
+      "Part of Speech",
+      "Difficulty",
+      "Context",
+      "Gender",
+      "Article",
+      "Conjugation",
+      "Date Added",
+      "Study Progress",
     ];
 
     // Generate CSV rows
-    const rows = sortedPhrases.map(phrase => [
+    const rows = sortedPhrases.map((phrase) => [
       phrase.phrase,
-      includeTranslations ? (phrase.translation || phrase.definition) : phrase.definition,
+      includeTranslations
+        ? phrase.translation || phrase.definition
+        : phrase.definition,
       this.getCategoryDisplayName(phrase.category),
       phrase.partOfSpeech,
       phrase.difficulty,
       phrase.context.replace(/"/g, '""'), // Escape quotes
-      phrase.gender || '',
-      phrase.article || '',
-      phrase.conjugation || '',
-      phrase.savedAt?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
-      `${phrase.studyProgress.correctAnswers}/${phrase.studyProgress.totalAttempts}`
+      phrase.gender || "",
+      phrase.article || "",
+      phrase.conjugation || "",
+      phrase.savedAt?.toISOString().split("T")[0] ||
+        new Date().toISOString().split("T")[0],
+      `${phrase.studyProgress.correctAnswers}/${phrase.studyProgress.totalAttempts}`,
     ]);
 
     // Combine headers and rows
     const csvContent = [
-      headers.map(header => `"${header}"`).join(','),
-      ...rows.map(row => row.map(field => `"${field}"`).join(','))
-    ].join('\n');
+      headers.map((header) => `"${header}"`).join(","),
+      ...rows.map((row) => row.map((field) => `"${field}"`).join(",")),
+    ].join("\n");
 
     return csvContent;
   }
@@ -290,29 +302,32 @@ export class VocabularyManager {
    */
   async downloadTargetWordList(
     setId?: string,
-    includeTranslations: boolean = true
+    includeTranslations: boolean = true,
   ): Promise<void> {
-    const csvContent = await this.exportTargetWordList(setId, includeTranslations);
-    const timestamp = new Date().toISOString().split('T')[0];
+    const csvContent = await this.exportTargetWordList(
+      setId,
+      includeTranslations,
+    );
+    const timestamp = new Date().toISOString().split("T")[0];
     const filename = `target_word_list_${timestamp}.csv`;
 
     // Create and trigger download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = filename;
-    link.style.display = 'none';
-    
+    link.style.display = "none";
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
 
     // Emit event
     this.emitEvent({
-      type: 'dataExported',
+      type: "dataExported",
       filename,
-      recordCount: csvContent.split('\n').length - 1,
-      timestamp: new Date()
+      recordCount: csvContent.split("\n").length - 1,
+      timestamp: new Date(),
     });
   }
 
@@ -321,27 +336,31 @@ export class VocabularyManager {
    */
   getVocabularyStats(): VocabularyStats {
     const phrases = Array.from(this.currentPhrases.values()) as SavedPhrase[];
-    
+
     const categoryCounts: Record<string, number> = {};
     const difficultyDistribution: Record<string, number> = {};
 
-    phrases.forEach(phrase => {
-      categoryCounts[phrase.category] = (categoryCounts[phrase.category] || 0) + 1;
-      difficultyDistribution[phrase.difficulty] = (difficultyDistribution[phrase.difficulty] || 0) + 1;
+    phrases.forEach((phrase) => {
+      categoryCounts[phrase.category] =
+        (categoryCounts[phrase.category] || 0) + 1;
+      difficultyDistribution[phrase.difficulty] =
+        (difficultyDistribution[phrase.difficulty] || 0) + 1;
     });
 
     // Get recently added phrases (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentlyAdded = phrases
-      .filter(phrase => phrase.savedAt && phrase.savedAt >= sevenDaysAgo)
+      .filter((phrase) => phrase.savedAt && phrase.savedAt >= sevenDaysAgo)
       .sort((a, b) => (b.savedAt?.getTime() || 0) - (a.savedAt?.getTime() || 0))
       .slice(0, 10);
 
     // Get most studied phrases
     const mostStudied = phrases
-      .filter(phrase => phrase.studyProgress.totalAttempts > 0)
-      .sort((a, b) => b.studyProgress.totalAttempts - a.studyProgress.totalAttempts)
+      .filter((phrase) => phrase.studyProgress.totalAttempts > 0)
+      .sort(
+        (a, b) => b.studyProgress.totalAttempts - a.studyProgress.totalAttempts,
+      )
       .slice(0, 10);
 
     return {
@@ -349,7 +368,7 @@ export class VocabularyManager {
       categoryCounts,
       difficultyDistribution,
       recentlyAdded,
-      mostStudied
+      mostStudied,
     };
   }
 
@@ -357,15 +376,18 @@ export class VocabularyManager {
    * Search phrases by text
    */
   searchPhrases(query: string, category?: string): SavedPhrase[] {
-    const allPhrases = Array.from(this.currentPhrases.values()) as SavedPhrase[];
+    const allPhrases = Array.from(
+      this.currentPhrases.values(),
+    ) as SavedPhrase[];
     const lowerQuery = query.toLowerCase();
 
-    return allPhrases.filter(phrase => {
-      const matchesQuery = 
+    return allPhrases.filter((phrase) => {
+      const matchesQuery =
         phrase.phrase.toLowerCase().includes(lowerQuery) ||
         phrase.definition.toLowerCase().includes(lowerQuery) ||
         phrase.context.toLowerCase().includes(lowerQuery) ||
-        (phrase.translation && phrase.translation.toLowerCase().includes(lowerQuery));
+        (phrase.translation &&
+          phrase.translation.toLowerCase().includes(lowerQuery));
 
       const matchesCategory = !category || phrase.category === category;
 
@@ -378,7 +400,9 @@ export class VocabularyManager {
    */
   getPhrasesByCategory(category: string): SavedPhrase[] {
     const phrases = Array.from(this.currentPhrases.values()) as SavedPhrase[];
-    return this.sortPhrasesAlphabetically(phrases.filter(phrase => phrase.category === category));
+    return this.sortPhrasesAlphabetically(
+      phrases.filter((phrase) => phrase.category === category),
+    );
   }
 
   /**
@@ -401,13 +425,13 @@ export class VocabularyManager {
   private async loadCurrentPhrases(): Promise<void> {
     try {
       const vocabularySets = this.storage.loadVocabularySets();
-      const allPhrases = vocabularySets.flatMap(set => set.phrases);
-      
-      allPhrases.forEach(phrase => {
+      const allPhrases = vocabularySets.flatMap((set) => set.phrases);
+
+      allPhrases.forEach((phrase) => {
         this.currentPhrases.set(phrase.id, phrase);
       });
     } catch (error) {
-      console.error('Error loading current phrases:', error);
+      console.error("Error loading current phrases:", error);
     }
   }
 
@@ -416,16 +440,19 @@ export class VocabularyManager {
     // The VocabularyStorage already handles persistence
   }
 
-  private async addPhraseToSet(phrase: SavedPhrase, setId: string): Promise<void> {
+  private async addPhraseToSet(
+    phrase: SavedPhrase,
+    setId: string,
+  ): Promise<void> {
     const vocabularySets = this.storage.loadVocabularySets();
-    const targetSet = vocabularySets.find(set => set.id === setId);
-    
+    const targetSet = vocabularySets.find((set) => set.id === setId);
+
     if (!targetSet) {
       throw new Error(`Vocabulary set with ID ${setId} not found`);
     }
 
     // Check if phrase already exists in set
-    if (targetSet.phrases.some(p => p.id === phrase.id)) {
+    if (targetSet.phrases.some((p) => p.id === phrase.id)) {
       return; // Already exists
     }
 
@@ -440,14 +467,16 @@ export class VocabularyManager {
 
   private async addToRecentAdditions(phrase: SavedPhrase): Promise<void> {
     const vocabularySets = this.storage.loadVocabularySets();
-    let recentSet = vocabularySets.find(set => set.name === 'Recent Additions');
+    let recentSet = vocabularySets.find(
+      (set) => set.name === "Recent Additions",
+    );
 
     if (!recentSet) {
       // Create "Recent Additions" set
       recentSet = {
-        id: 'recent_additions',
-        name: 'Recent Additions',
-        description: 'Recently added phrases',
+        id: "recent_additions",
+        name: "Recent Additions",
+        description: "Recently added phrases",
         phrases: [],
         createdAt: new Date(),
         lastModified: new Date(),
@@ -455,8 +484,8 @@ export class VocabularyManager {
           totalPhrases: 0,
           masteredPhrases: 0,
           reviewsDue: 0,
-          averageProgress: 0
-        }
+          averageProgress: 0,
+        },
       };
       vocabularySets.push(recentSet);
     }
@@ -470,20 +499,23 @@ export class VocabularyManager {
     this.storage.saveVocabularySets(vocabularySets);
   }
 
-  private async translatePhrase(phrase: string, definition: string): Promise<string | undefined> {
+  private async translatePhrase(
+    phrase: string,
+    definition: string,
+  ): Promise<string | undefined> {
     if (!this.config.enableTranslation) return undefined;
 
     try {
       // Call translation service (would integrate with actual translation API)
-      const response = await fetch('/api/translate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: phrase,
           context: definition,
-          targetLanguage: 'en',
-          sourceLanguage: 'es'
-        })
+          targetLanguage: "en",
+          sourceLanguage: "es",
+        }),
       });
 
       if (response.ok) {
@@ -491,7 +523,7 @@ export class VocabularyManager {
         return data.translation;
       }
     } catch (error) {
-      console.error('Translation error:', error);
+      console.error("Translation error:", error);
     }
 
     return undefined;
@@ -499,28 +531,28 @@ export class VocabularyManager {
 
   private getCategoryDisplayName(category: string): string {
     const categoryMap: Record<string, string> = {
-      'sustantivos': 'Nouns',
-      'verbos': 'Verbs',
-      'adjetivos': 'Adjectives',
-      'adverbios': 'Adverbs',
-      'frasesClaves': 'Key Phrases'
+      sustantivos: "Nouns",
+      verbos: "Verbs",
+      adjetivos: "Adjectives",
+      adverbios: "Adverbs",
+      frasesClaves: "Key Phrases",
     };
     return categoryMap[category] || category;
   }
 
   private emitEvent(event: VocabularyEvent): void {
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(event);
       } catch (error) {
-        console.error('Error in vocabulary event listener:', error);
+        console.error("Error in vocabulary event listener:", error);
       }
     });
   }
 }
 
 export interface VocabularyEvent {
-  type: 'phraseAdded' | 'phraseRemoved' | 'setCreated' | 'dataExported';
+  type: "phraseAdded" | "phraseRemoved" | "setCreated" | "dataExported";
   phrase?: SavedPhrase;
   phraseId?: string;
   set?: VocabularySet;

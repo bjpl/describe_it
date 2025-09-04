@@ -1,2 +1,6 @@
-export * from './AccessibilityProvider';
-export { AccessibilityProvider, AccessibilityPanel, useAccessibility } from './AccessibilityProvider';
+export * from "./AccessibilityProvider";
+export {
+  AccessibilityProvider,
+  AccessibilityPanel,
+  useAccessibility,
+} from "./AccessibilityProvider";

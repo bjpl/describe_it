@@ -1,14 +1,14 @@
-import { kv } from '@vercel/kv';
-import { CacheEntry } from '../../types/api';
+import { kv } from "@vercel/kv";
+import { CacheEntry } from "../../types/api";
 
 class VercelKVCache {
   private defaultTTL: number = 3600; // 1 hour default
-  private keyPrefix: string = 'describe_it:';
+  private keyPrefix: string = "describe_it:";
 
   constructor() {
     // Check if KV is properly configured
     if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-      console.warn('Vercel KV not configured. Caching will be disabled.');
+      console.warn("Vercel KV not configured. Caching will be disabled.");
     }
   }
 
@@ -29,9 +29,13 @@ class VercelKVCache {
   /**
    * Set a value in the cache with TTL
    */
-  async set<T = any>(key: string, value: T, ttl: number = this.defaultTTL): Promise<void> {
+  async set<T = any>(
+    key: string,
+    value: T,
+    ttl: number = this.defaultTTL,
+  ): Promise<void> {
     if (!this.isAvailable()) {
-      console.warn('KV not available, skipping cache set');
+      console.warn("KV not available, skipping cache set");
       return;
     }
 
@@ -46,7 +50,7 @@ class VercelKVCache {
 
       await kv.set(prefixedKey, cacheEntry, { ex: ttl });
     } catch (error) {
-      console.error('Error setting cache value:', error);
+      console.error("Error setting cache value:", error);
       // Don't throw - caching failures should not break the application
     }
   }
@@ -79,7 +83,7 @@ class VercelKVCache {
 
       return cacheEntry.data;
     } catch (error) {
-      console.error('Error getting cache value:', error);
+      console.error("Error getting cache value:", error);
       return null;
     }
   }
@@ -97,7 +101,7 @@ class VercelKVCache {
       const result = await kv.del(prefixedKey);
       return result === 1;
     } catch (error) {
-      console.error('Error deleting cache value:', error);
+      console.error("Error deleting cache value:", error);
       return false;
     }
   }
@@ -115,7 +119,7 @@ class VercelKVCache {
       const result = await kv.exists(prefixedKey);
       return result === 1;
     } catch (error) {
-      console.error('Error checking cache key existence:', error);
+      console.error("Error checking cache key existence:", error);
       return false;
     }
   }
@@ -129,8 +133,10 @@ class VercelKVCache {
     }
 
     try {
-      const prefixedKeys = keys.map(key => this.getPrefixedKey(key));
-      const results = await kv.mget<Array<CacheEntry<T> | null>>(...prefixedKeys);
+      const prefixedKeys = keys.map((key) => this.getPrefixedKey(key));
+      const results = await kv.mget<Array<CacheEntry<T> | null>>(
+        ...prefixedKeys,
+      );
 
       return results.map((cacheEntry, index) => {
         if (!cacheEntry) {
@@ -150,7 +156,7 @@ class VercelKVCache {
         return cacheEntry.data;
       });
     } catch (error) {
-      console.error('Error getting multiple cache values:', error);
+      console.error("Error getting multiple cache values:", error);
       return keys.map(() => null);
     }
   }
@@ -158,7 +164,9 @@ class VercelKVCache {
   /**
    * Set multiple values in the cache
    */
-  async mset<T = any>(entries: Array<{ key: string; value: T; ttl?: number }>): Promise<void> {
+  async mset<T = any>(
+    entries: Array<{ key: string; value: T; ttl?: number }>,
+  ): Promise<void> {
     if (!this.isAvailable()) {
       return;
     }
@@ -166,12 +174,12 @@ class VercelKVCache {
     try {
       // Set each entry individually since KV doesn't support mset with TTL
       const promises = entries.map(({ key, value, ttl = this.defaultTTL }) =>
-        this.set(key, value, ttl)
+        this.set(key, value, ttl),
       );
 
       await Promise.all(promises);
     } catch (error) {
-      console.error('Error setting multiple cache values:', error);
+      console.error("Error setting multiple cache values:", error);
     }
   }
 
@@ -186,15 +194,15 @@ class VercelKVCache {
     try {
       const prefixedKey = this.getPrefixedKey(key);
       const result = await kv.incr(prefixedKey);
-      
+
       // Set TTL if this is a new key
       if (result === 1) {
         await kv.expire(prefixedKey, this.defaultTTL);
       }
-      
+
       return result;
     } catch (error) {
-      console.error('Error incrementing cache value:', error);
+      console.error("Error incrementing cache value:", error);
       return null;
     }
   }
@@ -202,7 +210,7 @@ class VercelKVCache {
   /**
    * Get all keys matching a pattern
    */
-  async keys(pattern: string = '*'): Promise<string[]> {
+  async keys(pattern: string = "*"): Promise<string[]> {
     if (!this.isAvailable()) {
       return [];
     }
@@ -210,11 +218,11 @@ class VercelKVCache {
     try {
       const prefixedPattern = this.getPrefixedKey(pattern);
       const keys = await kv.keys(prefixedPattern);
-      
+
       // Remove the prefix from returned keys
-      return keys.map(key => key.replace(this.keyPrefix, ''));
+      return keys.map((key) => key.replace(this.keyPrefix, ""));
     } catch (error) {
-      console.error('Error getting cache keys:', error);
+      console.error("Error getting cache keys:", error);
       return [];
     }
   }
@@ -222,7 +230,7 @@ class VercelKVCache {
   /**
    * Clear all keys matching a pattern
    */
-  async clear(pattern: string = '*'): Promise<number> {
+  async clear(pattern: string = "*"): Promise<number> {
     if (!this.isAvailable()) {
       return 0;
     }
@@ -233,11 +241,11 @@ class VercelKVCache {
         return 0;
       }
 
-      const prefixedKeys = keys.map(key => this.getPrefixedKey(key));
+      const prefixedKeys = keys.map((key) => this.getPrefixedKey(key));
       const result = await kv.del(...prefixedKeys);
       return result;
     } catch (error) {
-      console.error('Error clearing cache:', error);
+      console.error("Error clearing cache:", error);
       return 0;
     }
   }
@@ -261,18 +269,18 @@ class VercelKVCache {
     }
 
     try {
-      const allKeys = await this.keys('*');
+      const allKeys = await this.keys("*");
       stats.totalKeys = allKeys.length;
 
       // Count keys by prefix
-      allKeys.forEach(key => {
-        const prefix = key.split(':')[0] || 'no-prefix';
+      allKeys.forEach((key) => {
+        const prefix = key.split(":")[0] || "no-prefix";
         stats.keysByPrefix[prefix] = (stats.keysByPrefix[prefix] || 0) + 1;
       });
 
       return stats;
     } catch (error) {
-      console.error('Error getting cache stats:', error);
+      console.error("Error getting cache stats:", error);
       return stats;
     }
   }
@@ -283,7 +291,7 @@ class VercelKVCache {
   async getOrSet<T>(
     key: string,
     fetcher: () => Promise<T>,
-    ttl: number = this.defaultTTL
+    ttl: number = this.defaultTTL,
   ): Promise<T> {
     // Try to get from cache first
     const cached = await this.get<T>(key);
@@ -294,13 +302,13 @@ class VercelKVCache {
     // If not in cache, fetch the data
     try {
       const data = await fetcher();
-      
+
       // Cache the result (fire and forget to not slow down the response)
       this.set(key, data, ttl).catch(() => {});
-      
+
       return data;
     } catch (error) {
-      console.error('Error in cache fetcher:', error);
+      console.error("Error in cache fetcher:", error);
       throw error;
     }
   }
@@ -311,7 +319,7 @@ class VercelKVCache {
   memoize<T extends any[], R>(
     fn: (...args: T) => Promise<R>,
     keyGenerator: (...args: T) => string,
-    ttl: number = this.defaultTTL
+    ttl: number = this.defaultTTL,
   ): (...args: T) => Promise<R> {
     return async (...args: T): Promise<R> => {
       const key = keyGenerator(...args);
@@ -328,16 +336,16 @@ class VercelKVCache {
     }
 
     try {
-      const testKey = 'health_check';
-      const testValue = 'ok';
-      
+      const testKey = "health_check";
+      const testValue = "ok";
+
       await this.set(testKey, testValue, 10); // 10 seconds TTL
       const retrieved = await this.get(testKey);
       await this.delete(testKey);
-      
+
       return retrieved === testValue;
     } catch (error) {
-      console.error('Cache health check failed:', error);
+      console.error("Cache health check failed:", error);
       return false;
     }
   }
@@ -345,27 +353,29 @@ class VercelKVCache {
   /**
    * Batch operations for better performance
    */
-  async batch<T>(operations: Array<{
-    type: 'get' | 'set' | 'delete';
-    key: string;
-    value?: T;
-    ttl?: number;
-  }>): Promise<Array<T | boolean | null>> {
+  async batch<T>(
+    operations: Array<{
+      type: "get" | "set" | "delete";
+      key: string;
+      value?: T;
+      ttl?: number;
+    }>,
+  ): Promise<Array<T | boolean | null>> {
     if (!this.isAvailable()) {
       return operations.map(() => null);
     }
 
     const promises = operations.map(async (op) => {
       switch (op.type) {
-        case 'get':
+        case "get":
           return this.get<T>(op.key);
-        case 'set':
+        case "set":
           if (op.value !== undefined) {
             await this.set(op.key, op.value, op.ttl);
             return true;
           }
           return false;
-        case 'delete':
+        case "delete":
           return this.delete(op.key);
         default:
           return null;
@@ -375,7 +385,7 @@ class VercelKVCache {
     try {
       return await Promise.all(promises);
     } catch (error) {
-      console.error('Error in batch operations:', error);
+      console.error("Error in batch operations:", error);
       return operations.map(() => null);
     }
   }

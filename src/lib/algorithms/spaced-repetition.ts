@@ -1,4 +1,8 @@
-import { BaseAlgorithm, AlgorithmConfig, ReviewCard } from './algorithm-interface';
+import {
+  BaseAlgorithm,
+  AlgorithmConfig,
+  ReviewCard,
+} from "./algorithm-interface";
 
 export class SpacedRepetitionAlgorithm extends BaseAlgorithm {
   constructor(config?: Partial<AlgorithmConfig>) {
@@ -7,7 +11,7 @@ export class SpacedRepetitionAlgorithm extends BaseAlgorithm {
       easeFactor: 2.5,
       minInterval: 1,
       maxInterval: 365,
-      ...config
+      ...config,
     };
     super(defaultConfig);
   }
@@ -15,7 +19,7 @@ export class SpacedRepetitionAlgorithm extends BaseAlgorithm {
   calculateNextInterval(
     currentInterval: number,
     quality: number,
-    easeFactor: number
+    easeFactor: number,
   ): number {
     if (quality < 3) {
       return this.config.minInterval;
@@ -30,18 +34,26 @@ export class SpacedRepetitionAlgorithm extends BaseAlgorithm {
       nextInterval = Math.round(currentInterval * easeFactor);
     }
 
-    return Math.min(Math.max(nextInterval, this.config.minInterval), this.config.maxInterval);
+    return Math.min(
+      Math.max(nextInterval, this.config.minInterval),
+      this.config.maxInterval,
+    );
   }
 
   updateEaseFactor(currentFactor: number, quality: number): number {
-    const newFactor = currentFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
+    const newFactor =
+      currentFactor + (0.1 - (5 - quality) * (0.08 + (5 - quality) * 0.02));
     return Math.max(newFactor, 1.3);
   }
 
   updateCard(card: ReviewCard, quality: number): ReviewCard {
     const newEaseFactor = this.updateEaseFactor(card.easeFactor, quality);
-    const newInterval = this.calculateNextInterval(card.interval, quality, newEaseFactor);
-    
+    const newInterval = this.calculateNextInterval(
+      card.interval,
+      quality,
+      newEaseFactor,
+    );
+
     const nextReviewDate = new Date();
     nextReviewDate.setDate(nextReviewDate.getDate() + newInterval);
 
@@ -51,7 +63,7 @@ export class SpacedRepetitionAlgorithm extends BaseAlgorithm {
       easeFactor: newEaseFactor,
       nextReviewDate,
       reviewCount: card.reviewCount + 1,
-      successStreak: quality >= 3 ? card.successStreak + 1 : 0
+      successStreak: quality >= 3 ? card.successStreak + 1 : 0,
     };
   }
 }

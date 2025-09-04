@@ -1,8 +1,14 @@
-'use client'
+"use client";
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { motion } from 'framer-motion';
-import { AlertTriangle, RefreshCw, Bug, Copy, ExternalLink } from 'lucide-react';
+import React, { Component, ErrorInfo, ReactNode } from "react";
+import { motion } from "framer-motion";
+import {
+  AlertTriangle,
+  RefreshCw,
+  Bug,
+  Copy,
+  ExternalLink,
+} from "lucide-react";
 
 interface Props {
   children: ReactNode;
@@ -27,14 +33,14 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
   constructor(props: Props) {
     super(props);
-    
+
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
       eventId: null,
       isRetrying: false,
-      errorCount: 0
+      errorCount: 0,
     };
   }
 
@@ -47,11 +53,11 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
-    if (process.env.NODE_ENV === 'development') {
-      console.group('🔥 React Error Boundary');
-      console.error('Error:', error);
-      console.error('Error Info:', errorInfo);
-      console.error('Component Stack:', errorInfo.componentStack);
+    if (process.env.NODE_ENV === "development") {
+      console.group("🔥 React Error Boundary");
+      console.error("Error:", error);
+      console.error("Error Info:", errorInfo);
+      console.error("Component Stack:", errorInfo.componentStack);
       console.groupEnd();
     }
 
@@ -62,7 +68,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       error,
       errorInfo,
       eventId,
-      errorCount: this.state.errorCount + 1
+      errorCount: this.state.errorCount + 1,
     });
 
     // Call custom error handler
@@ -75,12 +81,12 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
   componentDidUpdate(prevProps: Props) {
     const { resetKeys, resetOnPropsChange } = this.props;
     const { hasError } = this.state;
-    
+
     if (hasError && (resetOnPropsChange || resetKeys)) {
       const hasResetKeyChanged = resetKeys?.some(
-        (resetKey, index) => prevProps.resetKeys?.[index] !== resetKey
+        (resetKey, index) => prevProps.resetKeys?.[index] !== resetKey,
       );
-      
+
       if (resetOnPropsChange || hasResetKeyChanged) {
         this.resetError();
       }
@@ -96,7 +102,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
   reportError = async (error: Error, errorInfo: ErrorInfo, eventId: string) => {
     try {
       // In production, send to your error reporting service
-      if (process.env.NODE_ENV === 'production') {
+      if (process.env.NODE_ENV === "production") {
         // Example: Sentry, LogRocket, Bugsnag, etc.
         /*
         Sentry.captureException(error, {
@@ -115,7 +121,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
         });
         */
       }
-      
+
       // Store error in local storage for debugging
       const errorData = {
         message: error.message,
@@ -126,22 +132,24 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
         userAgent: navigator.userAgent,
         url: window.location.href,
       };
-      
+
       const existingErrors = JSON.parse(
-        localStorage.getItem('react-error-boundary-logs') || '[]'
+        localStorage.getItem("react-error-boundary-logs") || "[]",
       );
-      
+
       existingErrors.push(errorData);
-      
+
       // Keep only last 10 errors
       if (existingErrors.length > 10) {
         existingErrors.splice(0, existingErrors.length - 10);
       }
-      
-      localStorage.setItem('react-error-boundary-logs', JSON.stringify(existingErrors));
-      
+
+      localStorage.setItem(
+        "react-error-boundary-logs",
+        JSON.stringify(existingErrors),
+      );
     } catch (reportingError) {
-      console.error('Failed to report error:', reportingError);
+      console.error("Failed to report error:", reportingError);
     }
   };
 
@@ -149,19 +157,19 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     if (this.resetTimeoutId) {
       clearTimeout(this.resetTimeoutId);
     }
-    
+
     this.setState({
       hasError: false,
       error: null,
       errorInfo: null,
       eventId: null,
-      isRetrying: false
+      isRetrying: false,
     });
   };
 
   handleRetry = () => {
     this.setState({ isRetrying: true });
-    
+
     // Add delay to prevent rapid retries
     this.resetTimeoutId = window.setTimeout(() => {
       this.resetError();
@@ -170,7 +178,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
   copyErrorToClipboard = async () => {
     const { error, errorInfo, eventId } = this.state;
-    
+
     const errorText = `
 Error ID: ${eventId}
 Time: ${new Date().toISOString()}
@@ -188,14 +196,15 @@ ${errorInfo?.componentStack}
 
     try {
       await navigator.clipboard.writeText(errorText);
-      alert('Error details copied to clipboard');
+      alert("Error details copied to clipboard");
     } catch (err) {
-      console.error('Failed to copy error details:', err);
+      console.error("Failed to copy error details:", err);
     }
   };
 
   render() {
-    const { hasError, error, errorInfo, eventId, isRetrying, errorCount } = this.state;
+    const { hasError, error, errorInfo, eventId, isRetrying, errorCount } =
+      this.state;
     const { children, fallback, isolate } = this.props;
 
     if (hasError) {
@@ -206,10 +215,12 @@ ${errorInfo?.componentStack}
 
       // Default error UI
       return (
-        <div className={`
+        <div
+          className={`
           min-h-64 flex items-center justify-center p-8
-          ${isolate ? 'border-2 border-red-200 rounded-lg bg-red-50' : 'min-h-screen bg-gray-50'}
-        `}>
+          ${isolate ? "border-2 border-red-200 rounded-lg bg-red-50" : "min-h-screen bg-gray-50"}
+        `}
+        >
           <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -233,10 +244,9 @@ ${errorInfo?.componentStack}
                 Something went wrong
               </h2>
               <p className="text-gray-600">
-                {isolate 
+                {isolate
                   ? "This component encountered an error and couldn't render properly."
-                  : "We're sorry, but something unexpected happened."
-                }
+                  : "We're sorry, but something unexpected happened."}
               </p>
               {errorCount > 1 && (
                 <p className="text-sm text-orange-600">
@@ -246,10 +256,10 @@ ${errorInfo?.componentStack}
             </div>
 
             {/* Error Details (Development) */}
-            {process.env.NODE_ENV === 'development' && error && (
+            {process.env.NODE_ENV === "development" && error && (
               <motion.div
                 initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
+                animate={{ opacity: 1, height: "auto" }}
                 transition={{ delay: 0.4 }}
                 className="bg-gray-100 rounded-lg p-4 text-left text-sm overflow-auto max-h-32"
               >
@@ -293,8 +303,10 @@ ${errorInfo?.componentStack}
                   transition-colors
                 "
               >
-                <RefreshCw className={`w-4 h-4 ${isRetrying ? 'animate-spin' : ''}`} />
-                {isRetrying ? 'Retrying...' : 'Try Again'}
+                <RefreshCw
+                  className={`w-4 h-4 ${isRetrying ? "animate-spin" : ""}`}
+                />
+                {isRetrying ? "Retrying..." : "Try Again"}
               </button>
 
               <button
@@ -311,7 +323,7 @@ ${errorInfo?.componentStack}
             </motion.div>
 
             {/* Development Tools */}
-            {process.env.NODE_ENV === 'development' && (
+            {process.env.NODE_ENV === "development" && (
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -329,11 +341,11 @@ ${errorInfo?.componentStack}
                   <Copy className="w-4 h-4" />
                   Copy Error Details
                 </button>
-                
+
                 <button
                   onClick={() => {
                     const errors = JSON.parse(
-                      localStorage.getItem('react-error-boundary-logs') || '[]'
+                      localStorage.getItem("react-error-boundary-logs") || "[]",
                     );
                     console.table(errors);
                     alert(`${errors.length} errors logged to console`);
@@ -361,7 +373,7 @@ ${errorInfo?.componentStack}
 // HOC for easier usage
 export function withErrorBoundary<P extends object>(
   Component: React.ComponentType<P>,
-  errorBoundaryProps?: Omit<Props, 'children'>
+  errorBoundaryProps?: Omit<Props, "children">,
 ) {
   const WrappedComponent = (props: P) => (
     <EnhancedErrorBoundary {...errorBoundaryProps}>
@@ -370,7 +382,7 @@ export function withErrorBoundary<P extends object>(
   );
 
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
-  
+
   return WrappedComponent;
 }
 
@@ -382,16 +394,19 @@ export const useErrorHandler = () => {
     setError(null);
   }, []);
 
-  const captureError = React.useCallback((error: Error | string, errorInfo?: any) => {
-    const errorObj = error instanceof Error ? error : new Error(error);
-    
-    // Report immediately
-    if (process.env.NODE_ENV === 'development') {
-      console.error('Captured error:', errorObj, errorInfo);
-    }
-    
-    setError(errorObj);
-  }, []);
+  const captureError = React.useCallback(
+    (error: Error | string, errorInfo?: any) => {
+      const errorObj = error instanceof Error ? error : new Error(error);
+
+      // Report immediately
+      if (process.env.NODE_ENV === "development") {
+        console.error("Captured error:", errorObj, errorInfo);
+      }
+
+      setError(errorObj);
+    },
+    [],
+  );
 
   // Throw error to be caught by nearest error boundary
   if (error) {

@@ -4,13 +4,16 @@
  */
 
 // Import all services
-export { openaiService, OpenAIService } from './openaiService';
-export { translationService, TranslationService } from './translationService';
-export { vocabularyService } from './vocabularyService'; // Original service
-export { enhancedVocabularyService, EnhancedVocabularyService } from './enhancedVocabularyService';
-export { qaService, QAService } from './qaService';
-export { progressService, ProgressService } from './progressService';
-export { exportService, ExportService } from './exportService';
+export { openaiService, OpenAIService } from "./openaiService";
+export { translationService, TranslationService } from "./translationService";
+export { vocabularyService } from "./vocabularyService"; // Original service
+export {
+  enhancedVocabularyService,
+  EnhancedVocabularyService,
+} from "./enhancedVocabularyService";
+export { qaService, QAService } from "./qaService";
+export { progressService, ProgressService } from "./progressService";
+export { exportService, ExportService } from "./exportService";
 
 // Service health check interface
 interface ServiceHealth {
@@ -32,13 +35,13 @@ export class ServiceRegistry {
 
   private registerServices(): void {
     // Register all services
-    this.services.set('openai', openaiService);
-    this.services.set('translation', translationService);
-    this.services.set('vocabulary', vocabularyService);
-    this.services.set('enhancedVocabulary', enhancedVocabularyService);
-    this.services.set('qa', qaService);
-    this.services.set('progress', progressService);
-    this.services.set('export', exportService);
+    this.services.set("openai", openaiService);
+    this.services.set("translation", translationService);
+    this.services.set("vocabulary", vocabularyService);
+    this.services.set("enhancedVocabulary", enhancedVocabularyService);
+    this.services.set("qa", qaService);
+    this.services.set("progress", progressService);
+    this.services.set("export", exportService);
   }
 
   /**
@@ -79,7 +82,7 @@ export class ServiceRegistry {
 
       try {
         // Check if service has a health check method
-        if (typeof service.healthCheck === 'function') {
+        if (typeof service.healthCheck === "function") {
           const result = await service.healthCheck();
           health.healthy = result.healthy || result === true;
           health.error = result.error;
@@ -87,11 +90,12 @@ export class ServiceRegistry {
           // Fallback: check if service is available
           health.healthy = service !== null && service !== undefined;
         }
-        
+
         health.responseTime = Date.now() - startTime;
       } catch (error) {
         health.healthy = false;
-        health.error = error instanceof Error ? error.message : 'Health check failed';
+        health.error =
+          error instanceof Error ? error.message : "Health check failed";
         health.responseTime = Date.now() - startTime;
       }
 
@@ -120,8 +124,8 @@ export class ServiceRegistry {
     services: ServiceHealth[];
   } {
     const services = Array.from(this.healthStatus.values());
-    const healthyServices = services.filter(s => s.healthy).length;
-    
+    const healthyServices = services.filter((s) => s.healthy).length;
+
     return {
       healthy: healthyServices === services.length,
       totalServices: services.length,
@@ -138,12 +142,15 @@ export class ServiceRegistry {
     const initPromises = [];
 
     for (const [name, service] of this.services.entries()) {
-      if (typeof service.initialize === 'function') {
+      if (typeof service.initialize === "function") {
         console.log(`Initializing service: ${name}`);
         initPromises.push(
           service.initialize().catch((error: Error) => {
-            console.warn(`Failed to initialize service ${name}:`, error.message);
-          })
+            console.warn(
+              `Failed to initialize service ${name}:`,
+              error.message,
+            );
+          }),
         );
       }
     }
@@ -158,17 +165,17 @@ export class ServiceRegistry {
     const cleanupPromises = [];
 
     for (const [name, service] of this.services.entries()) {
-      if (typeof service.cleanup === 'function') {
+      if (typeof service.cleanup === "function") {
         console.log(`Cleaning up service: ${name}`);
         cleanupPromises.push(
           service.cleanup().catch((error: Error) => {
             console.warn(`Failed to cleanup service ${name}:`, error.message);
-          })
+          }),
         );
       }
 
       // Clear caches if available
-      if (typeof service.clearCache === 'function') {
+      if (typeof service.clearCache === "function") {
         try {
           service.clearCache();
         } catch (error) {
@@ -188,17 +195,17 @@ export class ServiceRegistry {
 
     for (const [name, service] of this.services.entries()) {
       try {
-        if (typeof service.getStats === 'function') {
+        if (typeof service.getStats === "function") {
           stats[name] = await service.getStats();
-        } else if (typeof service.getCacheStats === 'function') {
+        } else if (typeof service.getCacheStats === "function") {
           stats[name] = service.getCacheStats();
         } else {
           stats[name] = { available: true };
         }
       } catch (error) {
-        stats[name] = { 
-          error: error instanceof Error ? error.message : 'Failed to get stats',
-          available: false 
+        stats[name] = {
+          error: error instanceof Error ? error.message : "Failed to get stats",
+          available: false,
         };
       }
     }
@@ -266,7 +273,9 @@ export class ServiceFactory {
   /**
    * Create a configured enhanced vocabulary service
    */
-  static createEnhancedVocabularyService(config?: ServiceConfig): EnhancedVocabularyService {
+  static createEnhancedVocabularyService(
+    config?: ServiceConfig,
+  ): EnhancedVocabularyService {
     return new EnhancedVocabularyService();
   }
 
@@ -299,35 +308,41 @@ export const ServiceUtils = {
   /**
    * Wait for all services to be healthy
    */
-  async waitForHealthyServices(registry: ServiceRegistry, timeout: number = 30000): Promise<boolean> {
+  async waitForHealthyServices(
+    registry: ServiceRegistry,
+    timeout: number = 30000,
+  ): Promise<boolean> {
     const startTime = Date.now();
-    
+
     while (Date.now() - startTime < timeout) {
       const health = await registry.performHealthChecks();
-      const allHealthy = health.every(s => s.healthy);
-      
+      const allHealthy = health.every((s) => s.healthy);
+
       if (allHealthy) {
         return true;
       }
-      
+
       // Wait 1 second before checking again
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
-    
+
     return false;
   },
 
   /**
    * Get services by category/type
    */
-  getServicesByType(registry: ServiceRegistry, type: 'ai' | 'storage' | 'analysis' | 'export'): string[] {
+  getServicesByType(
+    registry: ServiceRegistry,
+    type: "ai" | "storage" | "analysis" | "export",
+  ): string[] {
     const typeMap = {
-      ai: ['openai', 'translation'],
-      storage: ['vocabulary', 'enhancedVocabulary', 'progress'],
-      analysis: ['qa'],
-      export: ['export'],
+      ai: ["openai", "translation"],
+      storage: ["vocabulary", "enhancedVocabulary", "progress"],
+      analysis: ["qa"],
+      export: ["export"],
     };
-    
+
     return typeMap[type] || [];
   },
 
@@ -338,17 +353,19 @@ export const ServiceUtils = {
     const systemHealth = registry.getSystemHealth();
     let report = `\n=== Service Health Report ===\n`;
     report += `Generated: ${new Date().toISOString()}\n`;
-    report += `Overall Status: ${systemHealth.healthy ? '✅ HEALTHY' : '❌ UNHEALTHY'}\n`;
+    report += `Overall Status: ${systemHealth.healthy ? "✅ HEALTHY" : "❌ UNHEALTHY"}\n`;
     report += `Services: ${systemHealth.healthyServices}/${systemHealth.totalServices} healthy\n\n`;
-    
-    systemHealth.services.forEach(service => {
-      const status = service.healthy ? '✅' : '❌';
-      const responseTime = service.responseTime ? ` (${service.responseTime}ms)` : '';
-      const error = service.error ? ` - ${service.error}` : '';
-      
+
+    systemHealth.services.forEach((service) => {
+      const status = service.healthy ? "✅" : "❌";
+      const responseTime = service.responseTime
+        ? ` (${service.responseTime}ms)`
+        : "";
+      const error = service.error ? ` - ${service.error}` : "";
+
       report += `${status} ${service.name}${responseTime}${error}\n`;
     });
-    
+
     return report;
   },
 };

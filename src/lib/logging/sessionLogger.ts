@@ -1,15 +1,15 @@
 // Session Logger - Comprehensive user interaction tracking
-import { 
-  SessionInteraction, 
-  InteractionType, 
-  InteractionData, 
-  SessionMetadata, 
-  SessionSummary, 
-  SessionStorage, 
+import {
+  SessionInteraction,
+  InteractionType,
+  InteractionData,
+  SessionMetadata,
+  SessionSummary,
+  SessionStorage,
   SessionLoggerSettings,
   LearningMetrics,
-  SessionReport
-} from '@/types/session';
+  SessionReport,
+} from "@/types/session";
 
 export class SessionLogger {
   private sessionId: string;
@@ -23,7 +23,7 @@ export class SessionLogger {
     this.sessionId = this.generateSessionId();
     this.startTime = Date.now();
     this.lastActivity = this.startTime;
-    
+
     this.settings = {
       enabled: true,
       maxInteractions: 1000,
@@ -33,7 +33,7 @@ export class SessionLogger {
       anonymizeData: false,
       autoExport: false,
       exportInterval: 30,
-      ...settings
+      ...settings,
     };
 
     this.sessionMetadata = {
@@ -42,8 +42,8 @@ export class SessionLogger {
       lastActivity: this.lastActivity,
       deviceType: this.detectDeviceType(),
       browserName: this.detectBrowser(),
-      language: typeof navigator !== 'undefined' ? navigator.language : 'en',
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      language: typeof navigator !== "undefined" ? navigator.language : "en",
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     };
 
     this.initializeSession();
@@ -53,33 +53,36 @@ export class SessionLogger {
     return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
   }
 
-  private detectDeviceType(): 'desktop' | 'tablet' | 'mobile' {
-    if (typeof window === 'undefined') return 'desktop';
-    
+  private detectDeviceType(): "desktop" | "tablet" | "mobile" {
+    if (typeof window === "undefined") return "desktop";
+
     const width = window.innerWidth;
-    if (width < 768) return 'mobile';
-    if (width < 1024) return 'tablet';
-    return 'desktop';
+    if (width < 768) return "mobile";
+    if (width < 1024) return "tablet";
+    return "desktop";
   }
 
   private detectBrowser(): string {
-    if (typeof navigator === 'undefined') return 'unknown';
-    
+    if (typeof navigator === "undefined") return "unknown";
+
     const userAgent = navigator.userAgent;
-    if (userAgent.includes('Chrome')) return 'Chrome';
-    if (userAgent.includes('Firefox')) return 'Firefox';
-    if (userAgent.includes('Safari')) return 'Safari';
-    if (userAgent.includes('Edge')) return 'Edge';
-    return 'other';
+    if (userAgent.includes("Chrome")) return "Chrome";
+    if (userAgent.includes("Firefox")) return "Firefox";
+    if (userAgent.includes("Safari")) return "Safari";
+    if (userAgent.includes("Edge")) return "Edge";
+    return "other";
   }
 
   private initializeSession(): void {
     if (!this.settings.enabled) return;
-    
+
     // Log session start
-    this.logInteraction('session_started', {
-      userAgent: this.settings.trackUserAgent && typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
-      url: typeof window !== 'undefined' ? window.location.href : undefined
+    this.logInteraction("session_started", {
+      userAgent:
+        this.settings.trackUserAgent && typeof navigator !== "undefined"
+          ? navigator.userAgent
+          : undefined,
+      url: typeof window !== "undefined" ? window.location.href : undefined,
     });
 
     // Load existing session data if persistent
@@ -91,7 +94,10 @@ export class SessionLogger {
     this.setupAutoSave();
   }
 
-  public logInteraction(type: InteractionType, data: InteractionData = {}): void {
+  public logInteraction(
+    type: InteractionType,
+    data: InteractionData = {},
+  ): void {
     if (!this.settings.enabled) return;
 
     const interaction: SessionInteraction = {
@@ -99,7 +105,7 @@ export class SessionLogger {
       timestamp: Date.now(),
       type,
       data: this.settings.anonymizeData ? this.anonymizeData(data) : data,
-      metadata: this.sessionMetadata
+      metadata: this.sessionMetadata,
     };
 
     this.interactions.push(interaction);
@@ -108,7 +114,9 @@ export class SessionLogger {
 
     // Trim interactions if exceeding max
     if (this.interactions.length > this.settings.maxInteractions) {
-      this.interactions = this.interactions.slice(-this.settings.maxInteractions);
+      this.interactions = this.interactions.slice(
+        -this.settings.maxInteractions,
+      );
     }
 
     // Save to storage if enabled
@@ -116,23 +124,27 @@ export class SessionLogger {
       this.saveToStorage();
     }
 
-    console.debug('Session interaction logged:', { type, data });
+    console.debug("Session interaction logged:", { type, data });
   }
 
   // Specific logging methods for better type safety
   public logSearch(query: string, resultCount: number, duration: number): void {
-    this.logInteraction('search_query', {
+    this.logInteraction("search_query", {
       searchQuery: query,
       searchResultCount: resultCount,
-      searchDuration: duration
+      searchDuration: duration,
     });
   }
 
-  public logImageSelection(imageId: string, imageUrl: string, selectionTime: number): void {
-    this.logInteraction('image_selected', {
+  public logImageSelection(
+    imageId: string,
+    imageUrl: string,
+    selectionTime: number,
+  ): void {
+    this.logInteraction("image_selected", {
       imageId,
       imageUrl,
-      selectionTime
+      selectionTime,
     });
   }
 
@@ -141,14 +153,14 @@ export class SessionLogger {
     language: string,
     wordCount: number,
     generationTime: number,
-    text?: string
+    text?: string,
   ): void {
-    this.logInteraction('description_generated', {
+    this.logInteraction("description_generated", {
       descriptionStyle: style,
       descriptionLanguage: language,
       descriptionWordCount: wordCount,
       descriptionGenerationTime: generationTime,
-      descriptionText: this.settings.anonymizeData ? undefined : text
+      descriptionText: this.settings.anonymizeData ? undefined : text,
     });
   }
 
@@ -157,63 +169,70 @@ export class SessionLogger {
     answer: string,
     difficulty: string,
     category: string,
-    generationTime: number
+    generationTime: number,
   ): void {
-    this.logInteraction('qa_generated', {
+    this.logInteraction("qa_generated", {
       questionText: question,
       answerText: answer,
       qaDifficulty: difficulty,
       qaCategory: category,
-      qaGenerationTime: generationTime
+      qaGenerationTime: generationTime,
     });
   }
 
   public logVocabularySelection(words: string[], category: string): void {
-    this.logInteraction('vocabulary_selected', {
+    this.logInteraction("vocabulary_selected", {
       selectedWords: words,
-      vocabularyCategory: category
+      vocabularyCategory: category,
     });
   }
 
-  public logPhraseExtraction(phrases: string[], categories: Record<string, string[]>): void {
-    this.logInteraction('phrase_extracted', {
+  public logPhraseExtraction(
+    phrases: string[],
+    categories: Record<string, string[]>,
+  ): void {
+    this.logInteraction("phrase_extracted", {
       extractedPhrases: phrases,
-      phraseCategories: categories
+      phraseCategories: categories,
     });
   }
 
   public logError(message: string, stack?: string, code?: string): void {
-    this.logInteraction('error_occurred', {
+    this.logInteraction("error_occurred", {
       errorMessage: message,
       errorStack: stack,
-      errorCode: code
+      errorCode: code,
     });
   }
 
-  public logSettingsChange(settingName: string, oldValue: any, newValue: any): void {
-    this.logInteraction('settings_changed', {
+  public logSettingsChange(
+    settingName: string,
+    oldValue: any,
+    newValue: any,
+  ): void {
+    this.logInteraction("settings_changed", {
       settingName,
       oldValue,
-      newValue
+      newValue,
     });
   }
 
   private anonymizeData(data: InteractionData): InteractionData {
     const anonymized = { ...data };
-    
+
     // Remove or hash sensitive data
     if (anonymized.searchQuery) {
       anonymized.searchQuery = this.hashString(anonymized.searchQuery);
     }
-    
+
     if (anonymized.descriptionText) {
       delete anonymized.descriptionText;
     }
-    
+
     if (anonymized.questionText) {
       anonymized.questionText = this.hashString(anonymized.questionText);
     }
-    
+
     return anonymized;
   }
 
@@ -221,7 +240,7 @@ export class SessionLogger {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash; // Convert to 32-bit integer
     }
     return `hash_${hash}`;
@@ -230,83 +249,116 @@ export class SessionLogger {
   public generateSummary(): SessionSummary {
     const endTime = Date.now();
     const totalDuration = endTime - this.startTime;
-    
+
     // Count interactions by type
-    const interactionBreakdown: Record<InteractionType, number> = {} as Record<InteractionType, number>;
-    this.interactions.forEach(interaction => {
-      interactionBreakdown[interaction.type] = (interactionBreakdown[interaction.type] || 0) + 1;
+    const interactionBreakdown: Record<InteractionType, number> = {} as Record<
+      InteractionType,
+      number
+    >;
+    this.interactions.forEach((interaction) => {
+      interactionBreakdown[interaction.type] =
+        (interactionBreakdown[interaction.type] || 0) + 1;
     });
 
     // Calculate search statistics
-    const searchInteractions = this.interactions.filter(i => i.type === 'search_query');
-    const uniqueQueries = [...new Set(searchInteractions.map(i => i.data.searchQuery))];
-    const averageSearchTime = searchInteractions.length > 0 
-      ? searchInteractions.reduce((sum, i) => sum + (i.data.searchDuration || 0), 0) / searchInteractions.length 
-      : 0;
+    const searchInteractions = this.interactions.filter(
+      (i) => i.type === "search_query",
+    );
+    const uniqueQueries = [
+      ...new Set(searchInteractions.map((i) => i.data.searchQuery)),
+    ];
+    const averageSearchTime =
+      searchInteractions.length > 0
+        ? searchInteractions.reduce(
+            (sum, i) => sum + (i.data.searchDuration || 0),
+            0,
+          ) / searchInteractions.length
+        : 0;
 
     // Calculate image statistics
-    const imageInteractions = this.interactions.filter(i => i.type === 'image_selected');
-    const uniqueImages = [...new Set(imageInteractions.map(i => i.data.imageId))];
-    const averageSelectionTime = imageInteractions.length > 0
-      ? imageInteractions.reduce((sum, i) => sum + (i.data.selectionTime || 0), 0) / imageInteractions.length
-      : 0;
+    const imageInteractions = this.interactions.filter(
+      (i) => i.type === "image_selected",
+    );
+    const uniqueImages = [
+      ...new Set(imageInteractions.map((i) => i.data.imageId)),
+    ];
+    const averageSelectionTime =
+      imageInteractions.length > 0
+        ? imageInteractions.reduce(
+            (sum, i) => sum + (i.data.selectionTime || 0),
+            0,
+          ) / imageInteractions.length
+        : 0;
 
     // Calculate description statistics
-    const descriptionInteractions = this.interactions.filter(i => i.type === 'description_generated');
+    const descriptionInteractions = this.interactions.filter(
+      (i) => i.type === "description_generated",
+    );
     const descriptionsByStyle: Record<string, number> = {};
     const descriptionsByLanguage: Record<string, number> = {};
     let totalWordsGenerated = 0;
     let totalDescriptionTime = 0;
 
-    descriptionInteractions.forEach(interaction => {
-      const style = interaction.data.descriptionStyle || 'unknown';
-      const language = interaction.data.descriptionLanguage || 'unknown';
-      
+    descriptionInteractions.forEach((interaction) => {
+      const style = interaction.data.descriptionStyle || "unknown";
+      const language = interaction.data.descriptionLanguage || "unknown";
+
       descriptionsByStyle[style] = (descriptionsByStyle[style] || 0) + 1;
-      descriptionsByLanguage[language] = (descriptionsByLanguage[language] || 0) + 1;
+      descriptionsByLanguage[language] =
+        (descriptionsByLanguage[language] || 0) + 1;
       totalWordsGenerated += interaction.data.descriptionWordCount || 0;
       totalDescriptionTime += interaction.data.descriptionGenerationTime || 0;
     });
 
-    const averageDescriptionTime = descriptionInteractions.length > 0 
-      ? totalDescriptionTime / descriptionInteractions.length 
-      : 0;
+    const averageDescriptionTime =
+      descriptionInteractions.length > 0
+        ? totalDescriptionTime / descriptionInteractions.length
+        : 0;
 
     // Calculate Q&A statistics
-    const qaInteractions = this.interactions.filter(i => i.type === 'qa_generated');
+    const qaInteractions = this.interactions.filter(
+      (i) => i.type === "qa_generated",
+    );
     const questionsByDifficulty: Record<string, number> = {};
     const questionsByCategory: Record<string, number> = {};
     let totalQATime = 0;
 
-    qaInteractions.forEach(interaction => {
-      const difficulty = interaction.data.qaDifficulty || 'unknown';
-      const category = interaction.data.qaCategory || 'unknown';
-      
-      questionsByDifficulty[difficulty] = (questionsByDifficulty[difficulty] || 0) + 1;
+    qaInteractions.forEach((interaction) => {
+      const difficulty = interaction.data.qaDifficulty || "unknown";
+      const category = interaction.data.qaCategory || "unknown";
+
+      questionsByDifficulty[difficulty] =
+        (questionsByDifficulty[difficulty] || 0) + 1;
       questionsByCategory[category] = (questionsByCategory[category] || 0) + 1;
       totalQATime += interaction.data.qaGenerationTime || 0;
     });
 
-    const averageQATime = qaInteractions.length > 0 ? totalQATime / qaInteractions.length : 0;
+    const averageQATime =
+      qaInteractions.length > 0 ? totalQATime / qaInteractions.length : 0;
 
     // Calculate vocabulary statistics
-    const vocabularyInteractions = this.interactions.filter(i => i.type === 'vocabulary_selected');
+    const vocabularyInteractions = this.interactions.filter(
+      (i) => i.type === "vocabulary_selected",
+    );
     const vocabularyByCategory: Record<string, number> = {};
     let vocabularySelected = 0;
 
-    vocabularyInteractions.forEach(interaction => {
-      const category = interaction.data.vocabularyCategory || 'unknown';
+    vocabularyInteractions.forEach((interaction) => {
+      const category = interaction.data.vocabularyCategory || "unknown";
       const wordsCount = interaction.data.selectedWords?.length || 0;
-      
-      vocabularyByCategory[category] = (vocabularyByCategory[category] || 0) + wordsCount;
+
+      vocabularyByCategory[category] =
+        (vocabularyByCategory[category] || 0) + wordsCount;
       vocabularySelected += wordsCount;
     });
 
     // Calculate error statistics
-    const errorInteractions = this.interactions.filter(i => i.type === 'error_occurred');
+    const errorInteractions = this.interactions.filter(
+      (i) => i.type === "error_occurred",
+    );
     const errorsByType: Record<string, number> = {};
-    errorInteractions.forEach(interaction => {
-      const errorType = interaction.data.errorCode || 'unknown';
+    errorInteractions.forEach((interaction) => {
+      const errorType = interaction.data.errorCode || "unknown";
       errorsByType[errorType] = (errorsByType[errorType] || 0) + 1;
     });
 
@@ -322,39 +374,43 @@ export class SessionLogger {
       totalDuration,
       totalInteractions: this.interactions.length,
       interactionBreakdown,
-      
+
       totalSearches: searchInteractions.length,
       uniqueQueries,
       averageSearchTime,
-      
+
       imagesViewed: imageInteractions.length,
       uniqueImages,
       averageSelectionTime,
-      
+
       descriptionsGenerated: descriptionInteractions.length,
       descriptionsByStyle,
       descriptionsByLanguage,
       averageDescriptionTime,
       totalWordsGenerated,
-      
+
       questionsGenerated: qaInteractions.length,
       questionsByDifficulty,
       questionsByCategory,
       averageQATime,
-      
-      phrasesExtracted: this.interactions.filter(i => i.type === 'phrase_extracted').length,
+
+      phrasesExtracted: this.interactions.filter(
+        (i) => i.type === "phrase_extracted",
+      ).length,
       vocabularySelected,
       vocabularyByCategory,
-      
+
       errorCount: errorInteractions.length,
       errorsByType,
-      
+
       learningScore,
       engagementScore,
       comprehensionLevel,
-      
-      exportCount: this.interactions.filter(i => i.type === 'export_initiated').length,
-      exportFormats: []
+
+      exportCount: this.interactions.filter(
+        (i) => i.type === "export_initiated",
+      ).length,
+      exportFormats: [],
     };
   }
 
@@ -366,14 +422,14 @@ export class SessionLogger {
       vocabulary_selected: 8,
       phrase_extracted: 5,
       image_selected: 3,
-      search_query: 2
+      search_query: 2,
     };
 
     let totalScore = 0;
     let maxPossibleScore = 0;
 
     Object.entries(weights).forEach(([type, weight]) => {
-      const count = this.interactions.filter(i => i.type === type).length;
+      const count = this.interactions.filter((i) => i.type === type).length;
       totalScore += Math.min(count * weight, weight * 10); // Cap at 10 instances per type
       maxPossibleScore += weight * 10;
     });
@@ -385,44 +441,54 @@ export class SessionLogger {
     const totalTime = Date.now() - this.startTime;
     const activeTime = this.interactions.length * 30000; // Assume 30s per interaction
     const engagementRatio = Math.min(activeTime / totalTime, 1);
-    
+
     return Math.round(engagementRatio * 100);
   }
 
-  private determineComprehensionLevel(): 'beginner' | 'intermediate' | 'advanced' {
+  private determineComprehensionLevel():
+    | "beginner"
+    | "intermediate"
+    | "advanced" {
     const summary = this.generateSummary();
-    
+
     if (summary.learningScore >= 80 && summary.vocabularySelected >= 50) {
-      return 'advanced';
-    } else if (summary.learningScore >= 50 && summary.vocabularySelected >= 20) {
-      return 'intermediate';
+      return "advanced";
+    } else if (
+      summary.learningScore >= 50 &&
+      summary.vocabularySelected >= 20
+    ) {
+      return "intermediate";
     }
-    
-    return 'beginner';
+
+    return "beginner";
   }
 
   public getLearningMetrics(): LearningMetrics {
-    const readingInteractions = this.interactions.filter(i => 
-      i.type === 'description_viewed' || i.type === 'qa_viewed'
+    const readingInteractions = this.interactions.filter(
+      (i) => i.type === "description_viewed" || i.type === "qa_viewed",
     );
-    
-    const timeSpentReading = readingInteractions.reduce((sum, i) => 
-      sum + (i.data.duration || 0), 0
+
+    const timeSpentReading = readingInteractions.reduce(
+      (sum, i) => sum + (i.data.duration || 0),
+      0,
     );
 
     const vocabularyEncountered = this.interactions
-      .filter(i => i.type === 'vocabulary_selected')
+      .filter((i) => i.type === "vocabulary_selected")
       .reduce((sum, i) => sum + (i.data.selectedWords?.length || 0), 0);
 
     return {
       timeSpentReading,
-      descriptionsRead: this.interactions.filter(i => i.type === 'description_viewed').length,
-      questionsAnswered: this.interactions.filter(i => i.type === 'qa_viewed').length,
+      descriptionsRead: this.interactions.filter(
+        (i) => i.type === "description_viewed",
+      ).length,
+      questionsAnswered: this.interactions.filter((i) => i.type === "qa_viewed")
+        .length,
       vocabularyEncountered,
       repetitionPatterns: {},
       difficultyProgression: [],
       focusAreas: [],
-      improvementSuggestions: this.generateImprovementSuggestions()
+      improvementSuggestions: this.generateImprovementSuggestions(),
     };
   }
 
@@ -431,43 +497,50 @@ export class SessionLogger {
     const summary = this.generateSummary();
 
     if (summary.vocabularySelected < 10) {
-      suggestions.push('Try selecting more vocabulary words to enhance learning');
+      suggestions.push(
+        "Try selecting more vocabulary words to enhance learning",
+      );
     }
 
     if (summary.descriptionsGenerated < 3) {
-      suggestions.push('Generate more descriptions in different styles to improve comprehension');
+      suggestions.push(
+        "Generate more descriptions in different styles to improve comprehension",
+      );
     }
 
     if (summary.questionsGenerated === 0) {
-      suggestions.push('Use the Q&A feature to test your understanding');
+      suggestions.push("Use the Q&A feature to test your understanding");
     }
 
     if (summary.errorCount > 5) {
-      suggestions.push('Check your internet connection for better experience');
+      suggestions.push("Check your internet connection for better experience");
     }
 
     return suggestions;
   }
 
   private saveToStorage(): void {
-    if (typeof localStorage === 'undefined') return;
-    
+    if (typeof localStorage === "undefined") return;
+
     try {
       const storage: SessionStorage = {
         currentSession: this.sessionMetadata,
         interactions: this.interactions,
-        settings: this.settings
+        settings: this.settings,
       };
 
-      localStorage.setItem(`session_${this.sessionId}`, JSON.stringify(storage));
+      localStorage.setItem(
+        `session_${this.sessionId}`,
+        JSON.stringify(storage),
+      );
     } catch (error) {
-      console.warn('Failed to save session to storage:', error);
+      console.warn("Failed to save session to storage:", error);
     }
   }
 
   private loadFromStorage(): void {
-    if (typeof localStorage === 'undefined') return;
-    
+    if (typeof localStorage === "undefined") return;
+
     try {
       const stored = localStorage.getItem(`session_${this.sessionId}`);
       if (stored) {
@@ -476,19 +549,19 @@ export class SessionLogger {
         this.settings = { ...this.settings, ...storage.settings };
       }
     } catch (error) {
-      console.warn('Failed to load session from storage:', error);
+      console.warn("Failed to load session from storage:", error);
     }
   }
 
   private setupAutoSave(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     // Save on page unload
-    window.addEventListener('beforeunload', () => {
-      this.logInteraction('session_ended', {
-        duration: Date.now() - this.startTime
+    window.addEventListener("beforeunload", () => {
+      this.logInteraction("session_ended", {
+        duration: Date.now() - this.startTime,
       });
-      
+
       if (this.settings.persistToStorage) {
         this.saveToStorage();
       }
@@ -496,9 +569,12 @@ export class SessionLogger {
 
     // Periodic auto-save
     if (this.settings.autoExport) {
-      setInterval(() => {
-        this.saveToStorage();
-      }, this.settings.exportInterval * 60 * 1000);
+      setInterval(
+        () => {
+          this.saveToStorage();
+        },
+        this.settings.exportInterval * 60 * 1000,
+      );
     }
   }
 
@@ -524,34 +600,34 @@ export class SessionLogger {
     this.interactions = [];
     this.lastActivity = Date.now();
     this.sessionMetadata.lastActivity = this.lastActivity;
-    
-    if (this.settings.persistToStorage && typeof localStorage !== 'undefined') {
+
+    if (this.settings.persistToStorage && typeof localStorage !== "undefined") {
       localStorage.removeItem(`session_${this.sessionId}`);
     }
   }
 
   // Export functionality
-  public exportSession(format: 'json' | 'text' | 'csv' = 'json'): string {
-    this.logInteraction('export_initiated', { exportFormat: format });
-    
+  public exportSession(format: "json" | "text" | "csv" = "json"): string {
+    this.logInteraction("export_initiated", { exportFormat: format });
+
     const summary = this.generateSummary();
     const learningMetrics = this.getLearningMetrics();
-    
+
     const report: SessionReport = {
       summary,
       interactions: this.interactions,
       learningMetrics,
       recommendations: learningMetrics.improvementSuggestions,
       exportFormat: format,
-      generatedAt: Date.now()
+      generatedAt: Date.now(),
     };
 
     switch (format) {
-      case 'json':
+      case "json":
         return JSON.stringify(report, null, 2);
-      case 'text':
+      case "text":
         return this.formatAsText(report);
-      case 'csv':
+      case "csv":
         return this.formatAsCSV(report);
       default:
         return JSON.stringify(report, null, 2);
@@ -560,7 +636,7 @@ export class SessionLogger {
 
   private formatAsText(report: SessionReport): string {
     const { summary, learningMetrics } = report;
-    
+
     return `
 SESSION REPORT
 ==============
@@ -585,7 +661,7 @@ Time Spent Reading: ${Math.round(learningMetrics.timeSpentReading / 1000 / 60)} 
 
 RECOMMENDATIONS
 ===============
-${report.recommendations.map(r => `- ${r}`).join('\n')}
+${report.recommendations.map((r) => `- ${r}`).join("\n")}
 
 Generated on: ${new Date(report.generatedAt).toLocaleString()}
     `.trim();
@@ -593,22 +669,28 @@ Generated on: ${new Date(report.generatedAt).toLocaleString()}
 
   private formatAsCSV(report: SessionReport): string {
     const headers = [
-      'timestamp', 'interaction_type', 'component', 'duration', 
-      'search_query', 'image_id', 'description_style', 'vocabulary_count'
+      "timestamp",
+      "interaction_type",
+      "component",
+      "duration",
+      "search_query",
+      "image_id",
+      "description_style",
+      "vocabulary_count",
     ];
 
-    const rows = report.interactions.map(interaction => [
+    const rows = report.interactions.map((interaction) => [
       new Date(interaction.timestamp).toISOString(),
       interaction.type,
-      interaction.data.componentName || '',
-      interaction.data.duration || '',
-      interaction.data.searchQuery || '',
-      interaction.data.imageId || '',
-      interaction.data.descriptionStyle || '',
-      interaction.data.selectedWords?.length || ''
+      interaction.data.componentName || "",
+      interaction.data.duration || "",
+      interaction.data.searchQuery || "",
+      interaction.data.imageId || "",
+      interaction.data.descriptionStyle || "",
+      interaction.data.selectedWords?.length || "",
     ]);
 
-    return [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
+    return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");
   }
 }
 
@@ -617,7 +699,7 @@ let globalSessionLogger: SessionLogger | null = null;
 
 export function getSessionLogger(): SessionLogger {
   // Only create on client-side
-  if (typeof window === 'undefined') {
+  if (typeof window === "undefined") {
     // Return a minimal mock for SSR
     return {
       logInteraction: () => {},
@@ -629,23 +711,25 @@ export function getSessionLogger(): SessionLogger {
       logPhraseExtraction: () => {},
       logError: () => {},
       logSettingsChange: () => {},
-      generateSummary: () => ({} as any),
-      getLearningMetrics: () => ({} as any),
-      getSessionId: () => 'ssr-mock',
+      generateSummary: () => ({}) as any,
+      getLearningMetrics: () => ({}) as any,
+      getSessionId: () => "ssr-mock",
       getInteractions: () => [],
-      getSessionMetadata: () => ({} as any),
-      getSettings: () => ({} as any),
+      getSessionMetadata: () => ({}) as any,
+      getSettings: () => ({}) as any,
       clearSession: () => {},
-      exportSession: () => '{}'
+      exportSession: () => "{}",
     } as SessionLogger;
   }
-  
+
   if (!globalSessionLogger) {
     globalSessionLogger = new SessionLogger();
   }
   return globalSessionLogger;
 }
 
-export function createSessionLogger(settings?: Partial<SessionLoggerSettings>): SessionLogger {
+export function createSessionLogger(
+  settings?: Partial<SessionLoggerSettings>,
+): SessionLogger {
   return new SessionLogger(settings);
 }

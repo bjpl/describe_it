@@ -1,33 +1,36 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo, memo } from 'react';
-import { Download, Play, RefreshCw, BarChart3 } from 'lucide-react';
-import useQASystem from '@/hooks/useQASystem';
-import { QuestionNavigator } from './QuestionNavigator';
-import { QuestionCounter } from './QuestionCounter';
-import { ShowAnswer } from './ShowAnswer';
-import { performanceProfiler, useRenderCount } from '@/lib/utils/performance-helpers';
+import React, { useState, useCallback, useMemo, memo } from "react";
+import { Download, Play, RefreshCw, BarChart3 } from "lucide-react";
+import useQASystem from "@/hooks/useQASystem";
+import { QuestionNavigator } from "./QuestionNavigator";
+import { QuestionCounter } from "./QuestionCounter";
+import { ShowAnswer } from "./ShowAnswer";
+import {
+  performanceProfiler,
+  useRenderCount,
+} from "@/lib/utils/performance-helpers";
 
 interface QASystemDemoProps {
   imageUrl: string;
   description: string;
-  language?: 'es' | 'en';
+  language?: "es" | "en";
 }
 
 const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
   imageUrl,
   description,
-  language = 'es'
+  language = "es",
 }) => {
   const [isStarted, setIsStarted] = useState(false);
-  
+
   // Performance monitoring
-  const renderCount = useRenderCount('QASystemDemo');
-  
+  const renderCount = useRenderCount("QASystemDemo");
+
   React.useEffect(() => {
-    performanceProfiler.startMark('QASystemDemo-render');
+    performanceProfiler.startMark("QASystemDemo-render");
     return () => {
-      performanceProfiler.endMark('QASystemDemo-render');
+      performanceProfiler.endMark("QASystemDemo-render");
     };
   });
 
@@ -39,7 +42,7 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
     isLoading,
     error,
     isSessionComplete,
-    
+
     // Progress
     answeredQuestions,
     correctAnswers,
@@ -50,7 +53,7 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
     currentStreak,
     maxStreak,
     progressPercentage,
-    
+
     // Current question state
     selectedAnswer,
     isCurrentAnswered,
@@ -59,14 +62,14 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
     currentConfidence,
     hasSelectedAnswer,
     canSubmit,
-    
+
     // Navigation
     canGoPrevious,
     canGoNext,
     goToPrevious,
     goToNext,
     goToQuestion,
-    
+
     // Actions
     selectAnswer,
     setConfidence,
@@ -75,7 +78,7 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
     hideAnswer,
     resetSession,
     exportToCSV,
-    getLearningInsights
+    getLearningInsights,
   } = useQASystem({
     imageUrl,
     description,
@@ -83,41 +86,46 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
     questionCount: 5,
     config: {
       showConfidenceSlider: true,
-      allowHints: true
+      allowHints: true,
     },
     onSessionComplete: useCallback((sessionData: any) => {
-      console.log('Session completed:', sessionData);
+      console.log("Session completed:", sessionData);
       setIsStarted(false);
     }, []),
     onQuestionAnswered: useCallback((response: any) => {
-      console.log('Question answered:', response);
-    }, [])
+      console.log("Question answered:", response);
+    }, []),
   });
-  
+
   // Memoize expensive computations and callbacks
   const handleStartQuiz = useCallback(() => {
     setIsStarted(true);
   }, []);
-  
+
   const handleResetQuiz = useCallback(() => {
     setIsStarted(false);
     resetSession();
   }, [resetSession]);
-  
+
   // Memoize static content based on language
-  const quizTitle = useMemo(() => (
-    language === 'es' ? 'Sistema de Preguntas y Respuestas' : 'Q&A System'
-  ), [language]);
-  
-  const quizDescription = useMemo(() => (
-    language === 'es' 
-      ? 'Pon a prueba tu comprensión de la imagen con preguntas interactivas basadas en la descripción generada.'
-      : 'Test your understanding of the image with interactive questions based on the generated description.'
-  ), [language]);
-  
-  const startButtonText = useMemo(() => (
-    language === 'es' ? 'Comenzar Quiz' : 'Start Quiz'
-  ), [language]);
+  const quizTitle = useMemo(
+    () =>
+      language === "es" ? "Sistema de Preguntas y Respuestas" : "Q&A System",
+    [language],
+  );
+
+  const quizDescription = useMemo(
+    () =>
+      language === "es"
+        ? "Pon a prueba tu comprensión de la imagen con preguntas interactivas basadas en la descripción generada."
+        : "Test your understanding of the image with interactive questions based on the generated description.",
+    [language],
+  );
+
+  const startButtonText = useMemo(
+    () => (language === "es" ? "Comenzar Quiz" : "Start Quiz"),
+    [language],
+  );
 
   if (!isStarted) {
     return (
@@ -126,7 +134,7 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
           <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/20 rounded-full flex items-center justify-center mx-auto">
             <BarChart3 className="h-8 w-8 text-blue-600" />
           </div>
-          
+
           <div>
             <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               {quizTitle}
@@ -156,7 +164,9 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
         <div className="text-center space-y-4">
           <div className="animate-spin w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full mx-auto"></div>
           <p className="text-gray-600 dark:text-gray-400">
-            {language === 'es' ? 'Generando preguntas...' : 'Generating questions...'}
+            {language === "es"
+              ? "Generando preguntas..."
+              : "Generating questions..."}
           </p>
         </div>
       </div>
@@ -172,7 +182,9 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
           </div>
           <div>
             <h3 className="text-lg font-semibold text-red-900 dark:text-red-300 mb-2">
-              {language === 'es' ? 'Error al generar preguntas' : 'Error generating questions'}
+              {language === "es"
+                ? "Error al generar preguntas"
+                : "Error generating questions"}
             </h3>
             <p className="text-red-700 dark:text-red-400 text-sm">{error}</p>
           </div>
@@ -180,7 +192,7 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
             onClick={handleResetQuiz}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
-            {language === 'es' ? 'Reintentar' : 'Try Again'}
+            {language === "es" ? "Reintentar" : "Try Again"}
           </button>
         </div>
       </div>
@@ -189,19 +201,18 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
 
   if (isSessionComplete) {
     const insights = getLearningInsights();
-    
+
     return (
       <div className="space-y-6">
         {/* Session Complete Header */}
         <div className="bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-xl p-6 text-center">
           <h2 className="text-2xl font-bold mb-2">
-            {language === 'es' ? '¡Quiz Completado!' : 'Quiz Complete!'}
+            {language === "es" ? "¡Quiz Completado!" : "Quiz Complete!"}
           </h2>
           <p className="opacity-90">
-            {language === 'es' 
+            {language === "es"
               ? `Respondiste ${totalCorrect} de ${questions.length} preguntas correctamente (${accuracy}%)`
-              : `You answered ${totalCorrect} out of ${questions.length} questions correctly (${accuracy}%)`
-            }
+              : `You answered ${totalCorrect} out of ${questions.length} questions correctly (${accuracy}%)`}
           </p>
         </div>
 
@@ -216,22 +227,35 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
           streak={maxStreak}
           sessionScore={{
             percentage: accuracy,
-            grade: accuracy >= 90 ? 'A+' : accuracy >= 80 ? 'A' : accuracy >= 70 ? 'B' : accuracy >= 60 ? 'C' : 'D'
+            grade:
+              accuracy >= 90
+                ? "A+"
+                : accuracy >= 80
+                  ? "A"
+                  : accuracy >= 70
+                    ? "B"
+                    : accuracy >= 60
+                      ? "C"
+                      : "D",
           }}
         />
 
         {/* Learning Insights */}
-        {(insights.strengths.length > 0 || insights.improvements.length > 0 || insights.recommendations.length > 0) && (
+        {(insights.strengths.length > 0 ||
+          insights.improvements.length > 0 ||
+          insights.recommendations.length > 0) && (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              {language === 'es' ? 'Perspectivas de Aprendizaje' : 'Learning Insights'}
+              {language === "es"
+                ? "Perspectivas de Aprendizaje"
+                : "Learning Insights"}
             </h3>
-            
+
             <div className="grid md:grid-cols-3 gap-4">
               {insights.strengths.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-medium text-green-700 dark:text-green-300">
-                    {language === 'es' ? 'Fortalezas' : 'Strengths'}
+                    {language === "es" ? "Fortalezas" : "Strengths"}
                   </h4>
                   <ul className="text-sm text-green-600 dark:text-green-400 space-y-1">
                     {insights.strengths.map((strength, index) => (
@@ -240,11 +264,11 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
                   </ul>
                 </div>
               )}
-              
+
               {insights.improvements.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-medium text-yellow-700 dark:text-yellow-300">
-                    {language === 'es' ? 'Áreas de Mejora' : 'Areas to Improve'}
+                    {language === "es" ? "Áreas de Mejora" : "Areas to Improve"}
                   </h4>
                   <ul className="text-sm text-yellow-600 dark:text-yellow-400 space-y-1">
                     {insights.improvements.map((improvement, index) => (
@@ -253,11 +277,11 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
                   </ul>
                 </div>
               )}
-              
+
               {insights.recommendations.length > 0 && (
                 <div className="space-y-2">
                   <h4 className="font-medium text-blue-700 dark:text-blue-300">
-                    {language === 'es' ? 'Recomendaciones' : 'Recommendations'}
+                    {language === "es" ? "Recomendaciones" : "Recommendations"}
                   </h4>
                   <ul className="text-sm text-blue-600 dark:text-blue-400 space-y-1">
                     {insights.recommendations.map((recommendation, index) => (
@@ -277,15 +301,15 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
             className="flex items-center space-x-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
           >
             <Download className="h-4 w-4" />
-            <span>{language === 'es' ? 'Exportar CSV' : 'Export CSV'}</span>
+            <span>{language === "es" ? "Exportar CSV" : "Export CSV"}</span>
           </button>
-          
+
           <button
             onClick={handleResetQuiz}
             className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
           >
             <RefreshCw className="h-4 w-4" />
-            <span>{language === 'es' ? 'Nuevo Quiz' : 'New Quiz'}</span>
+            <span>{language === "es" ? "Nuevo Quiz" : "New Quiz"}</span>
           </button>
         </div>
       </div>
@@ -326,28 +350,27 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
           <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {currentQuestion.question}
           </h3>
-          
+
           {/* Simple Answer Interface (since AnswerInput expects options) */}
           <div className="space-y-3">
             <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
               <p className="text-blue-900 dark:text-blue-300 text-sm">
-                {language === 'es' 
-                  ? 'Este es un sistema de demostración. La respuesta correcta es:' 
-                  : 'This is a demo system. The correct answer is:'
-                }
+                {language === "es"
+                  ? "Este es un sistema de demostración. La respuesta correcta es:"
+                  : "This is a demo system. The correct answer is:"}
               </p>
               <p className="font-medium text-blue-900 dark:text-blue-300 mt-2">
                 {currentQuestion.answer}
               </p>
             </div>
-            
+
             {!isCurrentAnswered && (
               <div className="flex justify-center">
                 <button
                   onClick={submitAnswer}
                   className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
-                  {language === 'es' ? 'Marcar como Vista' : 'Mark as Viewed'}
+                  {language === "es" ? "Marcar como Vista" : "Mark as Viewed"}
                 </button>
               </div>
             )}
@@ -359,11 +382,17 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
       <ShowAnswer
         questionId={currentQuestion.id || `q_${currentIndex}`}
         answer={currentQuestion.answer}
-        explanation={`${language === 'es' ? 'Categoría' : 'Category'}: ${currentQuestion.category}, ${language === 'es' ? 'Dificultad' : 'Difficulty'}: ${currentQuestion.difficulty}`}
+        explanation={`${language === "es" ? "Categoría" : "Category"}: ${currentQuestion.category}, ${language === "es" ? "Dificultad" : "Difficulty"}: ${currentQuestion.difficulty}`}
         isRevealed={isAnswerRevealed}
         onReveal={revealAnswer}
         onHide={hideAnswer}
-        difficulty={currentQuestion.difficulty === 'facil' ? 'beginner' : currentQuestion.difficulty === 'medio' ? 'intermediate' : 'advanced'}
+        difficulty={
+          currentQuestion.difficulty === "facil"
+            ? "beginner"
+            : currentQuestion.difficulty === "medio"
+              ? "intermediate"
+              : "advanced"
+        }
         category={currentQuestion.category}
       />
 
@@ -375,7 +404,9 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
             className="flex items-center space-x-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
           >
             <Download className="h-4 w-4" />
-            <span>{language === 'es' ? 'Exportar Progreso' : 'Export Progress'}</span>
+            <span>
+              {language === "es" ? "Exportar Progreso" : "Export Progress"}
+            </span>
           </button>
         </div>
       )}

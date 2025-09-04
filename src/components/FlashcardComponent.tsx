@@ -1,9 +1,19 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
-import { RotateCcw, Volume2, Eye, EyeOff, ArrowLeft, ArrowRight } from 'lucide-react';
-import { SavedPhrase } from '@/types/api';
-import { getDifficultyColor, getCategoryColor } from '@/lib/utils/phrase-helpers';
+import React, { useState, useEffect } from "react";
+import {
+  RotateCcw,
+  Volume2,
+  Eye,
+  EyeOff,
+  ArrowLeft,
+  ArrowRight,
+} from "lucide-react";
+import { SavedPhrase } from "@/types/api";
+import {
+  getDifficultyColor,
+  getCategoryColor,
+} from "@/lib/utils/phrase-helpers";
 
 interface FlashcardComponentProps {
   phrase: SavedPhrase;
@@ -24,18 +34,18 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
   currentIndex,
   totalCount,
   showNavigation = true,
-  autoAdvance = false
+  autoAdvance = false,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  
+
   // Reset card state when phrase changes
   useEffect(() => {
     setIsFlipped(false);
     setShowHint(false);
   }, [phrase.id]);
-  
+
   // Auto-advance after answer if enabled
   useEffect(() => {
     if (isFlipped && autoAdvance) {
@@ -45,17 +55,17 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
       return () => clearTimeout(timer);
     }
   }, [isFlipped, autoAdvance, onNext]);
-  
+
   const handleFlip = () => {
     if (isAnimating) return;
-    
+
     setIsAnimating(true);
     setTimeout(() => {
       setIsFlipped(!isFlipped);
       setIsAnimating(false);
     }, 150);
   };
-  
+
   const handleAnswer = (quality: number) => {
     onAnswer(quality);
     if (!autoAdvance) {
@@ -64,106 +74,110 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
       }, 1000);
     }
   };
-  
+
   const speakText = (text: string) => {
-    if ('speechSynthesis' in window) {
+    if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'es-ES';
+      utterance.lang = "es-ES";
       utterance.rate = 0.8;
       speechSynthesis.speak(utterance);
     }
   };
-  
+
   const handleKeyPress = (event: React.KeyboardEvent) => {
     switch (event.key) {
-      case ' ':
-      case 'Enter':
+      case " ":
+      case "Enter":
         event.preventDefault();
         handleFlip();
         break;
-      case '1':
+      case "1":
         if (isFlipped) handleAnswer(0);
         break;
-      case '2':
+      case "2":
         if (isFlipped) handleAnswer(1);
         break;
-      case '3':
+      case "3":
         if (isFlipped) handleAnswer(3);
         break;
-      case '4':
+      case "4":
         if (isFlipped) handleAnswer(4);
         break;
-      case '5':
+      case "5":
         if (isFlipped) handleAnswer(5);
         break;
-      case 'ArrowLeft':
+      case "ArrowLeft":
         event.preventDefault();
         onPrevious();
         break;
-      case 'ArrowRight':
+      case "ArrowRight":
         event.preventDefault();
         onNext();
         break;
-      case 'h':
+      case "h":
         setShowHint(!showHint);
         break;
     }
   };
-  
+
   return (
-    <div 
+    <div
       className="flashcard-container focus:outline-none"
       tabIndex={0}
       onKeyDown={handleKeyPress}
     >
       {/* Progress bar */}
       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-4">
-        <div 
+        <div
           className="bg-blue-600 h-2 rounded-full transition-all duration-300"
           style={{ width: `${((currentIndex + 1) / totalCount) * 100}%` }}
         />
       </div>
-      
+
       {/* Card counter */}
       <div className="text-center mb-4 text-sm text-gray-600 dark:text-gray-400">
         Card {currentIndex + 1} of {totalCount}
       </div>
-      
+
       {/* Flashcard */}
       <div className="relative w-full max-w-lg mx-auto">
-        <div 
-          className={`flashcard ${isFlipped ? 'flipped' : ''} ${isAnimating ? 'animating' : ''}`}
+        <div
+          className={`flashcard ${isFlipped ? "flipped" : ""} ${isAnimating ? "animating" : ""}`}
           onClick={handleFlip}
-          style={{ cursor: 'pointer', perspective: '1000px' }}
+          style={{ cursor: "pointer", perspective: "1000px" }}
         >
           {/* Front of card */}
           <div className="flashcard-face flashcard-front bg-white dark:bg-gray-800 border-2 border-gray-200 dark:border-gray-600 rounded-xl p-8 shadow-lg">
             <div className="text-center space-y-4">
               <div className="flex items-center justify-center gap-2 mb-4">
-                <span className={`px-3 py-1 rounded-full text-sm ${getCategoryColor(phrase.category)}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${getCategoryColor(phrase.category)}`}
+                >
                   {phrase.category}
                 </span>
-                <span className={`px-3 py-1 rounded-full text-sm ${getDifficultyColor(phrase.difficulty)}`}>
+                <span
+                  className={`px-3 py-1 rounded-full text-sm ${getDifficultyColor(phrase.difficulty)}`}
+                >
                   {phrase.difficulty}
                 </span>
               </div>
-              
+
               <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                 "{phrase.phrase}"
               </h2>
-              
+
               {phrase.article && (
                 <p className="text-lg text-gray-600 dark:text-gray-400">
                   Article: <span className="font-medium">{phrase.article}</span>
                 </p>
               )}
-              
+
               {phrase.partOfSpeech && (
                 <p className="text-sm text-gray-500 dark:text-gray-500">
                   {phrase.partOfSpeech}
                 </p>
               )}
-              
+
               <div className="flex items-center justify-center gap-4 mt-6">
                 <button
                   onClick={(e) => {
@@ -175,7 +189,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
                 >
                   <Volume2 className="h-5 w-5" />
                 </button>
-                
+
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
@@ -184,10 +198,14 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
                   className="p-2 text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
                   title="Show hint"
                 >
-                  {showHint ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  {showHint ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
                 </button>
               </div>
-              
+
               {showHint && (
                 <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                   <p className="text-sm text-yellow-800 dark:text-yellow-300">
@@ -195,54 +213,62 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
                   </p>
                 </div>
               )}
-              
+
               <div className="mt-8 text-sm text-gray-400 dark:text-gray-500">
                 Click to reveal answer
               </div>
             </div>
           </div>
-          
+
           {/* Back of card */}
           <div className="flashcard-face flashcard-back bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-600 rounded-xl p-8 shadow-lg">
             <div className="text-center space-y-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                 "{phrase.phrase}"
               </h2>
-              
+
               <div className="space-y-4">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Definition
                   </h3>
-                  <p className="text-gray-700 dark:text-gray-300">{phrase.definition}</p>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {phrase.definition}
+                  </p>
                 </div>
-                
+
                 {phrase.translation && (
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                       Translation
                     </h3>
-                    <p className="text-gray-700 dark:text-gray-300">{phrase.translation}</p>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {phrase.translation}
+                    </p>
                   </div>
                 )}
-                
+
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     Context
                   </h3>
-                  <p className="text-gray-700 dark:text-gray-300 italic">"{phrase.context}"</p>
+                  <p className="text-gray-700 dark:text-gray-300 italic">
+                    "{phrase.context}"
+                  </p>
                 </div>
-                
+
                 {phrase.conjugation && (
                   <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                       Infinitive
                     </h3>
-                    <p className="text-gray-700 dark:text-gray-300">{phrase.conjugation}</p>
+                    <p className="text-gray-700 dark:text-gray-300">
+                      {phrase.conjugation}
+                    </p>
                   </div>
                 )}
               </div>
-              
+
               {/* Answer buttons */}
               <div className="grid grid-cols-2 gap-3 mt-8">
                 <div className="space-y-2">
@@ -286,7 +312,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
                   </button>
                 </div>
               </div>
-              
+
               <div className="text-xs text-gray-500 dark:text-gray-400 mt-4">
                 Use number keys 1-5 or click buttons to rate your answer
               </div>
@@ -294,7 +320,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Navigation */}
       {showNavigation && (
         <div className="flex items-center justify-between mt-6 max-w-lg mx-auto">
@@ -306,7 +332,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
             <ArrowLeft className="h-4 w-4" />
             Previous
           </button>
-          
+
           <button
             onClick={() => setIsFlipped(false)}
             className="flex items-center gap-2 px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 transition-colors"
@@ -315,7 +341,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
             <RotateCcw className="h-4 w-4" />
             Reset
           </button>
-          
+
           <button
             onClick={onNext}
             disabled={currentIndex === totalCount - 1}
@@ -326,14 +352,15 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
           </button>
         </div>
       )}
-      
+
       {/* Keyboard shortcuts help */}
       <div className="text-center mt-4 text-xs text-gray-500 dark:text-gray-400">
         <p>
-          <strong>Shortcuts:</strong> Space/Enter = Flip • 1-5 = Rate • ← → = Navigate • H = Hint
+          <strong>Shortcuts:</strong> Space/Enter = Flip • 1-5 = Rate • ← → =
+          Navigate • H = Hint
         </p>
       </div>
-      
+
       <style jsx>{`
         .flashcard {
           position: relative;
@@ -342,15 +369,15 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
           transition: transform 0.3s ease-in-out;
           transform-style: preserve-3d;
         }
-        
+
         .flashcard.flipped {
           transform: rotateY(180deg);
         }
-        
+
         .flashcard.animating {
           pointer-events: none;
         }
-        
+
         .flashcard-face {
           position: absolute;
           width: 100%;
@@ -360,20 +387,20 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
           align-items: center;
           justify-content: center;
         }
-        
+
         .flashcard-back {
           transform: rotateY(180deg);
         }
-        
+
         .flashcard-front {
           transform: rotateY(0deg);
         }
-        
+
         @media (max-width: 640px) {
           .flashcard {
             height: 350px;
           }
-          
+
           .flashcard-face {
             padding: 1.5rem;
           }

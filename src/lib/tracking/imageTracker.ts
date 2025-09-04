@@ -20,7 +20,7 @@ export interface ImageTrackerOptions {
   expireAfterDays?: number;
 }
 
-const STORAGE_KEY = 'describe_it_used_images';
+const STORAGE_KEY = "describe_it_used_images";
 const DEFAULT_MAX_ENTRIES = 1000;
 const DEFAULT_EXPIRE_DAYS = 30;
 
@@ -30,7 +30,8 @@ class ImageTracker {
 
   constructor(options: ImageTrackerOptions = {}) {
     this.maxEntries = options.maxEntries ?? DEFAULT_MAX_ENTRIES;
-    this.expireAfterMs = (options.expireAfterDays ?? DEFAULT_EXPIRE_DAYS) * 24 * 60 * 60 * 1000;
+    this.expireAfterMs =
+      (options.expireAfterDays ?? DEFAULT_EXPIRE_DAYS) * 24 * 60 * 60 * 1000;
   }
 
   /**
@@ -38,10 +39,10 @@ class ImageTracker {
    */
   private getTrackedImages(): Map<string, TrackedImage> {
     // Check if we're on the client side
-    if (typeof window === 'undefined' || !window.localStorage) {
+    if (typeof window === "undefined" || !window.localStorage) {
       return new Map();
     }
-    
+
     try {
       const data = localStorage.getItem(STORAGE_KEY);
       if (!data) return new Map();
@@ -52,7 +53,7 @@ class ImageTracker {
       // Convert array back to Map and filter expired entries
       const now = Date.now();
       for (const item of parsed) {
-        if (item && item.id && typeof item.usedAt === 'number') {
+        if (item && item.id && typeof item.usedAt === "number") {
           // Check if entry has expired
           if (now - item.usedAt < this.expireAfterMs) {
             imageMap.set(item.id, item);
@@ -62,7 +63,7 @@ class ImageTracker {
 
       return imageMap;
     } catch (error) {
-      console.warn('Failed to load tracked images:', error);
+      console.warn("Failed to load tracked images:", error);
       return new Map();
     }
   }
@@ -72,10 +73,10 @@ class ImageTracker {
    */
   private saveTrackedImages(imageMap: Map<string, TrackedImage>): void {
     // Check if we're on the client side
-    if (typeof window === 'undefined' || !window.localStorage) {
+    if (typeof window === "undefined" || !window.localStorage) {
       return;
     }
-    
+
     try {
       // Convert Map to array for storage, keeping only the most recent entries
       const imageArray = Array.from(imageMap.values())
@@ -84,18 +85,21 @@ class ImageTracker {
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(imageArray));
     } catch (error) {
-      console.error('Failed to save tracked images:', error);
+      console.error("Failed to save tracked images:", error);
       // If storage is full, try to clear old entries and retry
       this.clearExpiredImages();
       try {
         const imageArray = Array.from(imageMap.values())
           .sort((a, b) => b.usedAt - a.usedAt)
           .slice(0, Math.floor(this.maxEntries / 2)); // Reduce to half capacity
-        if (typeof window !== 'undefined' && window.localStorage) {
+        if (typeof window !== "undefined" && window.localStorage) {
           localStorage.setItem(STORAGE_KEY, JSON.stringify(imageArray));
         }
       } catch (retryError) {
-        console.error('Failed to save tracked images after cleanup:', retryError);
+        console.error(
+          "Failed to save tracked images after cleanup:",
+          retryError,
+        );
       }
     }
   }
@@ -119,26 +123,29 @@ class ImageTracker {
   /**
    * Mark an image as used
    */
-  markImageAsUsed(image: {
-    id: string;
-    urls?: { regular?: string; small?: string };
-    url?: string;
-    alt_description?: string;
-    description?: string;
-    user?: { name?: string };
-  }, searchQuery?: string): void {
+  markImageAsUsed(
+    image: {
+      id: string;
+      urls?: { regular?: string; small?: string };
+      url?: string;
+      alt_description?: string;
+      description?: string;
+      user?: { name?: string };
+    },
+    searchQuery?: string,
+  ): void {
     const trackedImages = this.getTrackedImages();
-    
+
     const trackedImage: TrackedImage = {
       id: image.id,
-      url: image.urls?.regular || image.urls?.small || image.url || '',
+      url: image.urls?.regular || image.urls?.small || image.url || "",
       usedAt: Date.now(),
       searchQuery,
       metadata: {
         alt_description: image.alt_description,
         description: image.description,
         photographer: image.user?.name,
-      }
+      },
     };
 
     trackedImages.set(image.id, trackedImage);
@@ -150,13 +157,15 @@ class ImageTracker {
    */
   filterUsedImages<T extends { id: string }>(images: T[]): T[] {
     const trackedImages = this.getTrackedImages();
-    return images.filter(image => !trackedImages.has(image.id));
+    return images.filter((image) => !trackedImages.has(image.id));
   }
 
   /**
    * Filter images and return both used and unused
    */
-  categorizeImages<T extends { id: string }>(images: T[]): {
+  categorizeImages<T extends { id: string }>(
+    images: T[],
+  ): {
     unused: T[];
     used: T[];
     usageInfo: Map<string, TrackedImage>;
@@ -181,7 +190,9 @@ class ImageTracker {
    */
   getAllUsedImages(): TrackedImage[] {
     const trackedImages = this.getTrackedImages();
-    return Array.from(trackedImages.values()).sort((a, b) => b.usedAt - a.usedAt);
+    return Array.from(trackedImages.values()).sort(
+      (a, b) => b.usedAt - a.usedAt,
+    );
   }
 
   /**
@@ -200,12 +211,12 @@ class ImageTracker {
     const oneWeekMs = 7 * oneDayMs;
 
     const images = Array.from(trackedImages.values());
-    const usedTimes = images.map(img => img.usedAt);
+    const usedTimes = images.map((img) => img.usedAt);
 
     return {
       totalUsed: images.length,
-      usedToday: images.filter(img => now - img.usedAt < oneDayMs).length,
-      usedThisWeek: images.filter(img => now - img.usedAt < oneWeekMs).length,
+      usedToday: images.filter((img) => now - img.usedAt < oneDayMs).length,
+      usedThisWeek: images.filter((img) => now - img.usedAt < oneWeekMs).length,
       oldestEntry: usedTimes.length > 0 ? Math.min(...usedTimes) : undefined,
       newestEntry: usedTimes.length > 0 ? Math.max(...usedTimes) : undefined,
     };
@@ -226,14 +237,14 @@ class ImageTracker {
    * Clear all tracked images
    */
   clearAllHistory(): void {
-    if (typeof window === 'undefined' || !window.localStorage) {
+    if (typeof window === "undefined" || !window.localStorage) {
       return;
     }
-    
+
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error('Failed to clear image history:', error);
+      console.error("Failed to clear image history:", error);
     }
   }
 
@@ -261,9 +272,9 @@ class ImageTracker {
    */
   importHistory(images: TrackedImage[]): void {
     const trackedImages = new Map<string, TrackedImage>();
-    
+
     for (const image of images) {
-      if (image.id && typeof image.usedAt === 'number') {
+      if (image.id && typeof image.usedAt === "number") {
         trackedImages.set(image.id, image);
       }
     }
@@ -276,25 +287,23 @@ class ImageTracker {
 export const imageTracker = new ImageTracker();
 
 // Helper functions for easy usage
-export const isImageUsed = (imageId: string): boolean => 
+export const isImageUsed = (imageId: string): boolean =>
   imageTracker.isImageUsed(imageId);
 
-export const markImageAsUsed = (image: any, searchQuery?: string): void => 
+export const markImageAsUsed = (image: any, searchQuery?: string): void =>
   imageTracker.markImageAsUsed(image, searchQuery);
 
-export const filterUsedImages = <T extends { id: string }>(images: T[]): T[] => 
+export const filterUsedImages = <T extends { id: string }>(images: T[]): T[] =>
   imageTracker.filterUsedImages(images);
 
-export const categorizeImages = <T extends { id: string }>(images: T[]) => 
+export const categorizeImages = <T extends { id: string }>(images: T[]) =>
   imageTracker.categorizeImages(images);
 
-export const clearImageHistory = (): void => 
-  imageTracker.clearAllHistory();
+export const clearImageHistory = (): void => imageTracker.clearAllHistory();
 
-export const getUsageStats = () => 
-  imageTracker.getUsageStats();
+export const getUsageStats = () => imageTracker.getUsageStats();
 
-export const clearExpiredImages = (): number => 
+export const clearExpiredImages = (): number =>
   imageTracker.clearExpiredImages();
 
 export default imageTracker;

@@ -1,6 +1,6 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { kv } from '@vercel/kv';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
+import { kv } from "@vercel/kv";
 
 // Rate limiting configuration
 const RATE_LIMITS = {
@@ -31,30 +31,33 @@ export interface AuthenticatedRequest extends NextRequest {
  * Authentication middleware
  */
 export async function withAuth(
-  handler: (req: AuthenticatedRequest) => Promise<NextResponse>
+  handler: (req: AuthenticatedRequest) => Promise<NextResponse>,
 ) {
   return async (req: NextRequest) => {
     try {
-      const authHeader = req.headers.get('authorization');
-      if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      const authHeader = req.headers.get("authorization");
+      if (!authHeader || !authHeader.startsWith("Bearer ")) {
         return NextResponse.json(
-          { error: 'Missing or invalid authorization header' },
-          { status: 401 }
+          { error: "Missing or invalid authorization header" },
+          { status: 401 },
         );
       }
 
-      const token = authHeader.split(' ')[1];
+      const token = authHeader.split(" ")[1];
       const supabase = createClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       );
 
-      const { data: { user }, error } = await supabase.auth.getUser(token);
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser(token);
 
       if (error || !user) {
         return NextResponse.json(
-          { error: 'Invalid or expired token' },
-          { status: 401 }
+          { error: "Invalid or expired token" },
+          { status: 401 },
         );
       }
 
@@ -62,15 +65,15 @@ export async function withAuth(
       authenticatedReq.user = {
         id: user.id,
         email: user.email!,
-        role: user.user_metadata?.role || 'user',
+        role: user.user_metadata?.role || "user",
       };
 
       return handler(authenticatedReq);
     } catch (error) {
-      console.error('Authentication error:', error);
+      console.error("Authentication error:", error);
       return NextResponse.json(
-        { error: 'Authentication failed' },
-        { status: 500 }
+        { error: "Authentication failed" },
+        { status: 500 },
       );
     }
   };
@@ -81,32 +84,34 @@ export async function withAuth(
  */
 export function withRateLimit(
   type: keyof typeof RATE_LIMITS,
-  handler: (req: NextRequest) => Promise<NextResponse>
+  handler: (req: NextRequest) => Promise<NextResponse>,
 ) {
   return async (req: NextRequest) => {
     try {
-      const ip = req.ip || req.headers.get('x-forwarded-for') || 'anonymous';
+      const ip = req.ip || req.headers.get("x-forwarded-for") || "anonymous";
       const limit = RATE_LIMITS[type];
       const key = `rate_limit:${type}:${ip}`;
 
       // Check current count
-      const current = await kv.get<number>(key) || 0;
-      
+      const current = (await kv.get<number>(key)) || 0;
+
       if (current >= limit.requests) {
         return NextResponse.json(
-          { 
-            error: 'Rate limit exceeded',
-            retryAfter: Math.ceil(limit.window / 1000)
+          {
+            error: "Rate limit exceeded",
+            retryAfter: Math.ceil(limit.window / 1000),
           },
-          { 
+          {
             status: 429,
             headers: {
-              'Retry-After': Math.ceil(limit.window / 1000).toString(),
-              'X-RateLimit-Limit': limit.requests.toString(),
-              'X-RateLimit-Remaining': '0',
-              'X-RateLimit-Reset': new Date(Date.now() + limit.window).toISOString(),
-            }
-          }
+              "Retry-After": Math.ceil(limit.window / 1000).toString(),
+              "X-RateLimit-Limit": limit.requests.toString(),
+              "X-RateLimit-Remaining": "0",
+              "X-RateLimit-Reset": new Date(
+                Date.now() + limit.window,
+              ).toISOString(),
+            },
+          },
         );
       }
 
@@ -115,13 +120,19 @@ export function withRateLimit(
 
       // Add rate limit headers to response
       const response = await handler(req);
-      response.headers.set('X-RateLimit-Limit', limit.requests.toString());
-      response.headers.set('X-RateLimit-Remaining', (limit.requests - current - 1).toString());
-      response.headers.set('X-RateLimit-Reset', new Date(Date.now() + limit.window).toISOString());
+      response.headers.set("X-RateLimit-Limit", limit.requests.toString());
+      response.headers.set(
+        "X-RateLimit-Remaining",
+        (limit.requests - current - 1).toString(),
+      );
+      response.headers.set(
+        "X-RateLimit-Reset",
+        new Date(Date.now() + limit.window).toISOString(),
+      );
 
       return response;
     } catch (error) {
-      console.error('Rate limiting error:', error);
+      console.error("Rate limiting error:", error);
       // If rate limiting fails, continue with the request
       return handler(req);
     }
@@ -134,7 +145,7 @@ export function withRateLimit(
 export function withCache(
   cacheKey: keyof typeof CACHE_TTL,
   generateCacheKey: (req: NextRequest) => string,
-  handler: (req: NextRequest) => Promise<NextResponse>
+  handler: (req: NextRequest) => Promise<NextResponse>,
 ) {
   return async (req: NextRequest) => {
     try {
@@ -142,37 +153,37 @@ export function withCache(
       const ttl = CACHE_TTL[cacheKey];
 
       // Try to get cached response
-      if (req.method === 'GET') {
+      if (req.method === "GET") {
         const cached = await kv.get(key);
         if (cached) {
           return NextResponse.json(cached, {
             headers: {
-              'X-Cache': 'HIT',
-              'Cache-Control': `max-age=${ttl}`,
-            }
+              "X-Cache": "HIT",
+              "Cache-Control": `max-age=${ttl}`,
+            },
           });
         }
       }
 
       // Execute handler
       const response = await handler(req);
-      
+
       // Cache successful GET responses
-      if (req.method === 'GET' && response.status === 200) {
+      if (req.method === "GET" && response.status === 200) {
         const data = await response.json();
         await kv.set(key, data, { ex: ttl });
-        
+
         return NextResponse.json(data, {
           headers: {
-            'X-Cache': 'MISS',
-            'Cache-Control': `max-age=${ttl}`,
-          }
+            "X-Cache": "MISS",
+            "Cache-Control": `max-age=${ttl}`,
+          },
         });
       }
 
       // Invalidate cache for non-GET requests
-      if (req.method !== 'GET') {
-        const pattern = key.split(':').slice(0, -1).join(':') + ':*';
+      if (req.method !== "GET") {
+        const pattern = key.split(":").slice(0, -1).join(":") + ":*";
         // Note: This would require a custom implementation for wildcard deletion
         // For now, we'll just delete the specific key
         await kv.del(key);
@@ -180,7 +191,7 @@ export function withCache(
 
       return response;
     } catch (error) {
-      console.error('Caching error:', error);
+      console.error("Caching error:", error);
       return handler(req);
     }
   };
@@ -190,41 +201,41 @@ export function withCache(
  * Error handling middleware
  */
 export function withErrorHandler(
-  handler: (req: NextRequest) => Promise<NextResponse>
+  handler: (req: NextRequest) => Promise<NextResponse>,
 ) {
   return async (req: NextRequest) => {
     try {
       return await handler(req);
     } catch (error) {
-      console.error('API Error:', error);
+      console.error("API Error:", error);
 
       if (error instanceof Error) {
         // Handle specific error types
-        if (error.message.includes('validation')) {
+        if (error.message.includes("validation")) {
           return NextResponse.json(
-            { error: 'Validation error', details: error.message },
-            { status: 400 }
+            { error: "Validation error", details: error.message },
+            { status: 400 },
           );
         }
 
-        if (error.message.includes('not found')) {
+        if (error.message.includes("not found")) {
           return NextResponse.json(
-            { error: 'Resource not found' },
-            { status: 404 }
+            { error: "Resource not found" },
+            { status: 404 },
           );
         }
 
-        if (error.message.includes('permission')) {
+        if (error.message.includes("permission")) {
           return NextResponse.json(
-            { error: 'Permission denied' },
-            { status: 403 }
+            { error: "Permission denied" },
+            { status: 403 },
           );
         }
       }
 
       return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
+        { error: "Internal server error" },
+        { status: 500 },
       );
     }
   };
@@ -233,29 +244,33 @@ export function withErrorHandler(
 /**
  * CORS middleware
  */
-export function withCors(
-  handler: (req: NextRequest) => Promise<NextResponse>
-) {
+export function withCors(handler: (req: NextRequest) => Promise<NextResponse>) {
   return async (req: NextRequest) => {
     // Handle preflight requests
-    if (req.method === 'OPTIONS') {
+    if (req.method === "OPTIONS") {
       return new NextResponse(null, {
         status: 200,
         headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-          'Access-Control-Max-Age': '86400',
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+          "Access-Control-Allow-Headers": "Content-Type, Authorization",
+          "Access-Control-Max-Age": "86400",
         },
       });
     }
 
     const response = await handler(req);
-    
+
     // Add CORS headers to response
-    response.headers.set('Access-Control-Allow-Origin', '*');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    response.headers.set("Access-Control-Allow-Origin", "*");
+    response.headers.set(
+      "Access-Control-Allow-Methods",
+      "GET, POST, PUT, DELETE, OPTIONS",
+    );
+    response.headers.set(
+      "Access-Control-Allow-Headers",
+      "Content-Type, Authorization",
+    );
 
     return response;
   };
@@ -266,23 +281,24 @@ export function withCors(
  */
 export function withValidation<T>(
   schema: { parse: (data: any) => T },
-  handler: (req: NextRequest, validData: T) => Promise<NextResponse>
+  handler: (req: NextRequest, validData: T) => Promise<NextResponse>,
 ) {
   return async (req: NextRequest) => {
     try {
       let data: any;
 
-      if (req.method === 'GET') {
+      if (req.method === "GET") {
         // Parse query parameters
         const url = new URL(req.url);
         data = Object.fromEntries(url.searchParams.entries());
-        
+
         // Convert string numbers and booleans
         for (const key in data) {
           const value = data[key];
-          if (value === 'true') data[key] = true;
-          else if (value === 'false') data[key] = false;
-          else if (!isNaN(Number(value)) && value !== '') data[key] = Number(value);
+          if (value === "true") data[key] = true;
+          else if (value === "false") data[key] = false;
+          else if (!isNaN(Number(value)) && value !== "")
+            data[key] = Number(value);
         }
       } else {
         // Parse JSON body
@@ -292,13 +308,14 @@ export function withValidation<T>(
       const validData = schema.parse(data);
       return handler(req, validData);
     } catch (error) {
-      console.error('Validation error:', error);
+      console.error("Validation error:", error);
       return NextResponse.json(
-        { 
-          error: 'Validation failed',
-          details: error instanceof Error ? error.message : 'Unknown validation error'
+        {
+          error: "Validation failed",
+          details:
+            error instanceof Error ? error.message : "Unknown validation error",
         },
-        { status: 400 }
+        { status: 400 },
       );
     }
   };
@@ -307,11 +324,12 @@ export function withValidation<T>(
 /**
  * Compose multiple middleware functions
  */
-export function compose(
-  ...middlewares: Array<(handler: any) => any>
-) {
+export function compose(...middlewares: Array<(handler: any) => any>) {
   return (handler: any) => {
-    return middlewares.reduceRight((acc, middleware) => middleware(acc), handler);
+    return middlewares.reduceRight(
+      (acc, middleware) => middleware(acc),
+      handler,
+    );
   };
 }
 
@@ -324,5 +342,13 @@ export const withAuthAndRateLimit = (type: keyof typeof RATE_LIMITS) =>
 export const withPublicRateLimit = (type: keyof typeof RATE_LIMITS) =>
   compose(withErrorHandler, withCors, withRateLimit(type));
 
-export const withCacheAndAuth = (cacheKey: keyof typeof CACHE_TTL, generateKey: (req: NextRequest) => string) =>
-  compose(withErrorHandler, withCors, withCache(cacheKey, generateKey), withAuth);
+export const withCacheAndAuth = (
+  cacheKey: keyof typeof CACHE_TTL,
+  generateKey: (req: NextRequest) => string,
+) =>
+  compose(
+    withErrorHandler,
+    withCors,
+    withCache(cacheKey, generateKey),
+    withAuth,
+  );

@@ -86,26 +86,11 @@
             "árboles",
             "paisaje"
           ],
-          "acciones": [
-            "cubierta",
-            "crea",
-            "adornan"
-          ],
-          "lugares": [
-            "zonas más bajas",
-            "paisaje alpino"
-          ],
-          "colores": [
-            "azul",
-            "dorados",
-            "verdes"
-          ],
-          "emociones": [
-            "hermosa"
-          ],
-          "conceptos": [
-            "luz"
-          ]
+          "acciones": ["cubierta", "crea", "adornan"],
+          "lugares": ["zonas más bajas", "paisaje alpino"],
+          "colores": ["azul", "dorados", "verdes"],
+          "emociones": ["hermosa"],
+          "conceptos": ["luz"]
         }
       }
     }

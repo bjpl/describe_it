@@ -6,7 +6,7 @@
 interface PreloadStrategy {
   name: string;
   components: string[];
-  trigger: 'hover' | 'focus' | 'immediate' | 'intersection';
+  trigger: "hover" | "focus" | "immediate" | "intersection";
   delay?: number;
 }
 
@@ -16,25 +16,25 @@ interface PreloadStrategy {
 export const PreloadStrategies: Record<string, PreloadStrategy> = {
   // Preload learning components when user hovers over learning tabs
   learningFlow: {
-    name: 'Learning Components',
-    components: ['PhrasesPanel', 'QAPanel'],
-    trigger: 'hover',
+    name: "Learning Components",
+    components: ["PhrasesPanel", "QAPanel"],
+    trigger: "hover",
     delay: 200,
   },
-  
+
   // Preload image processing components on search interaction
   imageFlow: {
-    name: 'Image Processing',
-    components: ['ImageSearch', 'ImageViewer', 'OptimizedImageGrid'],
-    trigger: 'focus',
+    name: "Image Processing",
+    components: ["ImageSearch", "ImageViewer", "OptimizedImageGrid"],
+    trigger: "focus",
     delay: 100,
   },
-  
+
   // Preload performance tools for admin users
   performanceFlow: {
-    name: 'Performance Tools',
-    components: ['PerformanceDashboard', 'BundleAnalyzer'],
-    trigger: 'immediate',
+    name: "Performance Tools",
+    components: ["PerformanceDashboard", "BundleAnalyzer"],
+    trigger: "immediate",
   },
 };
 
@@ -74,10 +74,10 @@ export class ComponentPreloader {
    */
   private createPreloadPromise(componentName: string): Promise<any> {
     switch (componentName) {
-      case 'PhrasesPanel':
-        return import('../../components/PhrasesPanel');
-      case 'QAPanel':
-        return import('../../components/QAPanel');
+      case "PhrasesPanel":
+        return import("../../components/PhrasesPanel");
+      case "QAPanel":
+        return import("../../components/QAPanel");
       default:
         return Promise.reject(new Error(`Unknown component: ${componentName}`));
     }
@@ -87,7 +87,7 @@ export class ComponentPreloader {
    * Preload multiple components
    */
   async preloadComponents(componentNames: string[]): Promise<void> {
-    const promises = componentNames.map(name => this.preloadComponent(name));
+    const promises = componentNames.map((name) => this.preloadComponent(name));
     await Promise.allSettled(promises);
   }
 
@@ -102,7 +102,7 @@ export class ComponentPreloader {
     }
 
     if (strategy.delay) {
-      await new Promise(resolve => setTimeout(resolve, strategy.delay));
+      await new Promise((resolve) => setTimeout(resolve, strategy.delay));
     }
 
     await this.preloadComponents(strategy.components);
@@ -137,8 +137,10 @@ export const componentPreloader = new ComponentPreloader();
 export function useComponentPreloader() {
   return {
     preload: componentPreloader.preloadComponent.bind(componentPreloader),
-    preloadMultiple: componentPreloader.preloadComponents.bind(componentPreloader),
-    executeStrategy: componentPreloader.executeStrategy.bind(componentPreloader),
+    preloadMultiple:
+      componentPreloader.preloadComponents.bind(componentPreloader),
+    executeStrategy:
+      componentPreloader.executeStrategy.bind(componentPreloader),
     getStats: componentPreloader.getStats.bind(componentPreloader),
   };
 }
@@ -146,11 +148,11 @@ export function useComponentPreloader() {
 /**
  * HOC for automatic component preloading
  */
-import React from 'react';
+import React from "react";
 
 export function withPreloader<P extends object>(
   WrappedComponent: React.ComponentType<P>,
-  strategy: string
+  strategy: string,
 ) {
   return function PreloaderWrapper(props: P) {
     // Preload on component mount
@@ -166,12 +168,15 @@ export function withPreloader<P extends object>(
  * Preloader hook for tab interactions
  */
 export function useTabPreloader(tabMappings: Record<string, string>) {
-  const handleTabHover = React.useCallback((tabName: string) => {
-    const strategy = tabMappings[tabName];
-    if (strategy) {
-      componentPreloader.executeStrategy(strategy);
-    }
-  }, [tabMappings]);
+  const handleTabHover = React.useCallback(
+    (tabName: string) => {
+      const strategy = tabMappings[tabName];
+      if (strategy) {
+        componentPreloader.executeStrategy(strategy);
+      }
+    },
+    [tabMappings],
+  );
 
   return { handleTabHover };
 }

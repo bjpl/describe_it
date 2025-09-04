@@ -3,19 +3,19 @@
  * Manages active learning sessions, user preferences, and progress tracking
  */
 
-import { create } from 'zustand';
-import { devtools, persist, subscribeWithSelector } from 'zustand/middleware';
-import { immer } from 'zustand/middleware/immer';
-import { supabaseService } from '../api/supabase';
-import { 
+import { create } from "zustand";
+import { devtools, persist, subscribeWithSelector } from "zustand/middleware";
+import { immer } from "zustand/middleware/immer";
+import { supabaseService } from "../api/supabase";
+import {
   Session,
   SessionInsert,
   UserPreferences,
   LearningLevel,
   DescriptionStyle,
   SessionType,
-  SessionStatus 
-} from '../../types/database';
+  SessionStatus,
+} from "../../types/database";
 
 // =============================================================================
 // TYPES
@@ -26,7 +26,7 @@ export interface LearningSessionState {
   currentSession: Session | null;
   sessionStartTime: Date | null;
   isSessionActive: boolean;
-  
+
   // Session statistics (current session)
   currentStats: {
     images_viewed: number;
@@ -37,10 +37,10 @@ export interface LearningSessionState {
     points_earned: number;
     time_spent_minutes: number;
   };
-  
+
   // User preferences
   preferences: UserPreferences;
-  
+
   // Learning settings
   learningSettings: {
     daily_goal: number;
@@ -51,10 +51,10 @@ export interface LearningSessionState {
     play_audio: boolean;
     dark_mode: boolean;
   };
-  
+
   // Session history (limited recent sessions)
   recentSessions: Session[];
-  
+
   // Progress tracking
   dailyProgress: {
     sessions_today: number;
@@ -62,7 +62,7 @@ export interface LearningSessionState {
     goal_progress: number; // percentage of daily goal completed
     streak_days: number;
   };
-  
+
   // UI state
   ui: {
     sidebar_open: boolean;
@@ -79,20 +79,28 @@ export interface LearningSessionActions {
   endSession: () => Promise<void>;
   pauseSession: () => Promise<void>;
   resumeSession: () => Promise<void>;
-  updateSessionStats: (updates: Partial<LearningSessionState['currentStats']>) => void;
-  
+  updateSessionStats: (
+    updates: Partial<LearningSessionState["currentStats"]>,
+  ) => void;
+
   // Preferences
   updatePreferences: (updates: Partial<UserPreferences>) => void;
-  updateLearningSettings: (updates: Partial<LearningSessionState['learningSettings']>) => void;
-  
+  updateLearningSettings: (
+    updates: Partial<LearningSessionState["learningSettings"]>,
+  ) => void;
+
   // Progress tracking
   addPoints: (points: number) => void;
   recordActivity: (activity: {
-    type: 'image_viewed' | 'description_completed' | 'question_answered' | 'phrase_selected';
+    type:
+      | "image_viewed"
+      | "description_completed"
+      | "question_answered"
+      | "phrase_selected";
     correct?: boolean;
     points?: number;
   }) => void;
-  
+
   // UI actions
   setCurrentImage: (imageId: string | null) => void;
   toggleSidebar: () => void;
@@ -100,13 +108,13 @@ export interface LearningSessionActions {
   togglePhraseSelection: (phraseId: string) => void;
   clearSelectedPhrases: () => void;
   setFullscreenMode: (enabled: boolean) => void;
-  
+
   // Persistence
   saveSession: () => Promise<void>;
   loadRecentSessions: (userId: string) => Promise<void>;
   exportSessionData: () => string;
   importSessionData: (data: string) => boolean;
-  
+
   // Reset/Clear
   resetCurrentSession: () => void;
   clearAllData: () => void;
@@ -119,12 +127,12 @@ type LearningSessionStore = LearningSessionState & LearningSessionActions;
 // =============================================================================
 
 const defaultPreferences: UserPreferences = {
-  theme: 'system',
-  language: 'en',
-  difficulty_preference: 'beginner',
+  theme: "system",
+  language: "en",
+  difficulty_preference: "beginner",
   session_length: 20,
   daily_goal: 10,
-  preferred_styles: ['detailed', 'conversational'],
+  preferred_styles: ["detailed", "conversational"],
   notifications: {
     email: false,
     push: true,
@@ -140,17 +148,17 @@ const defaultPreferences: UserPreferences = {
   },
 };
 
-const defaultLearningSettings: LearningSessionState['learningSettings'] = {
+const defaultLearningSettings: LearningSessionState["learningSettings"] = {
   daily_goal: 10,
   session_length_minutes: 20,
-  difficulty_preference: 'beginner',
+  difficulty_preference: "beginner",
   auto_advance: true,
   show_hints: true,
   play_audio: false,
   dark_mode: false,
 };
 
-const defaultStats: LearningSessionState['currentStats'] = {
+const defaultStats: LearningSessionState["currentStats"] = {
   images_viewed: 0,
   descriptions_completed: 0,
   questions_answered: 0,
@@ -185,29 +193,29 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
           },
           ui: {
             sidebar_open: false,
-            active_tab: 'search',
+            active_tab: "search",
             selected_phrases: [],
             current_image_id: null,
             fullscreen_mode: false,
           },
 
           // Session management
-          startSession: async (sessionType = 'practice', userId) => {
+          startSession: async (sessionType = "practice", userId) => {
             const state = get();
-            
+
             if (state.isSessionActive) {
               await state.endSession();
             }
 
             set((state) => {
               const now = new Date();
-              
+
               // Create new session data
               const sessionData: Partial<Session> = {
                 id: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                user_id: userId || 'anonymous',
+                user_id: userId || "anonymous",
                 session_type: sessionType,
-                status: 'active',
+                status: "active",
                 started_at: now.toISOString(),
                 session_data: {
                   preferences: state.preferences,
@@ -222,74 +230,95 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
             });
 
             // Save to database if user is authenticated
-            if (userId && userId !== 'anonymous') {
+            if (userId && userId !== "anonymous") {
               try {
                 const sessionInsert: SessionInsert = {
                   user_id: userId,
                   session_type: sessionType,
-                  status: 'active',
+                  status: "active",
                   started_at: new Date().toISOString(),
                   session_data: {
                     preferences: state.preferences,
                     settings: state.learningSettings,
                   },
                 };
-                
-                const savedSession = await supabaseService.createSession(sessionInsert);
-                
+
+                const savedSession =
+                  await supabaseService.createSession(sessionInsert);
+
                 set((state) => {
                   state.currentSession = savedSession;
                 });
               } catch (error) {
-                console.error('Failed to save session to database:', error);
+                console.error("Failed to save session to database:", error);
               }
             }
           },
 
           endSession: async () => {
             const state = get();
-            
+
             if (!state.isSessionActive || !state.currentSession) return;
 
             const endTime = new Date();
-            const duration = state.sessionStartTime 
-              ? Math.floor((endTime.getTime() - state.sessionStartTime.getTime()) / 1000 / 60)
+            const duration = state.sessionStartTime
+              ? Math.floor(
+                  (endTime.getTime() - state.sessionStartTime.getTime()) /
+                    1000 /
+                    60,
+                )
               : state.currentStats.time_spent_minutes;
 
             // Update session with final stats
             const updatedSession: Partial<Session> = {
               ...state.currentSession,
-              status: 'completed',
+              status: "completed",
               completed_at: endTime.toISOString(),
               duration_minutes: duration,
               ...state.currentStats,
-              accuracy_percentage: state.currentStats.questions_answered > 0
-                ? (state.currentStats.questions_correct / state.currentStats.questions_answered) * 100
-                : 0,
+              accuracy_percentage:
+                state.currentStats.questions_answered > 0
+                  ? (state.currentStats.questions_correct /
+                      state.currentStats.questions_answered) *
+                    100
+                  : 0,
             };
 
             set((state) => {
               state.currentSession = updatedSession as Session;
               state.isSessionActive = false;
               state.sessionStartTime = null;
-              
+
               // Update daily progress
               state.dailyProgress.sessions_today += 1;
-              state.dailyProgress.points_today += state.currentStats.points_earned;
-              state.dailyProgress.goal_progress = Math.min(100, 
-                (state.dailyProgress.points_today / state.learningSettings.daily_goal) * 100
+              state.dailyProgress.points_today +=
+                state.currentStats.points_earned;
+              state.dailyProgress.goal_progress = Math.min(
+                100,
+                (state.dailyProgress.points_today /
+                  state.learningSettings.daily_goal) *
+                  100,
               );
 
               // Add to recent sessions (keep last 10)
-              state.recentSessions = [updatedSession as Session, ...state.recentSessions.slice(0, 9)];
+              state.recentSessions = [
+                updatedSession as Session,
+                ...state.recentSessions.slice(0, 9),
+              ];
             });
 
             // Save to database
-            if (state.currentSession?.user_id && state.currentSession.user_id !== 'anonymous') {
+            if (
+              state.currentSession?.user_id &&
+              state.currentSession.user_id !== "anonymous"
+            ) {
               try {
-                await supabaseService.updateSession(state.currentSession.id, updatedSession);
+                await supabaseService.updateSession(
+                  state.currentSession.id,
+                  updatedSession,
+                );
               } catch (error) {
-                console.error('Failed to update session in database:', error);
+                console.error("Failed to update session in database:", error);
               }
             }
           },
@@ -300,16 +329,18 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
 
             set((state) => {
               if (state.currentSession) {
-                state.currentSession.status = 'paused';
+                state.currentSession.status = "paused";
               }
             });
 
             // Update in database
-            if (state.currentSession?.user_id !== 'anonymous') {
+            if (state.currentSession?.user_id !== "anonymous") {
               try {
-                await supabaseService.updateSession(state.currentSession!.id, { status: 'paused' });
+                await supabaseService.updateSession(state.currentSession!.id, {
+                  status: "paused",
+                });
               } catch (error) {
-                console.error('Failed to pause session in database:', error);
+                console.error("Failed to pause session in database:", error);
               }
             }
           },
@@ -320,17 +351,19 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
 
             set((state) => {
               if (state.currentSession) {
-                state.currentSession.status = 'active';
+                state.currentSession.status = "active";
                 state.isSessionActive = true;
               }
             });
 
             // Update in database
-            if (state.currentSession?.user_id !== 'anonymous') {
+            if (state.currentSession?.user_id !== "anonymous") {
               try {
-                await supabaseService.updateSession(state.currentSession!.id, { status: 'active' });
+                await supabaseService.updateSession(state.currentSession!.id, {
+                  status: "active",
+                });
               } catch (error) {
-                console.error('Failed to resume session in database:', error);
+                console.error("Failed to resume session in database:", error);
               }
             }
           },
@@ -338,7 +371,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
           updateSessionStats: (updates) => {
             set((state) => {
               Object.assign(state.currentStats, updates);
-              
+
               // Update current session if active
               if (state.currentSession && state.isSessionActive) {
                 Object.assign(state.currentSession, updates);
@@ -363,9 +396,10 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
           addPoints: (points) => {
             set((state) => {
               state.currentStats.points_earned += points;
-              
+
               if (state.currentSession) {
-                state.currentSession.points_earned = state.currentStats.points_earned;
+                state.currentSession.points_earned =
+                  state.currentStats.points_earned;
               }
             });
           },
@@ -373,19 +407,22 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
           recordActivity: (activity) => {
             set((state) => {
               switch (activity.type) {
-                case 'image_viewed':
+                case "image_viewed":
                   state.currentStats.images_viewed += 1;
                   break;
-                case 'description_completed':
+                case "description_completed":
                   state.currentStats.descriptions_completed += 1;
-                  if (activity.points) state.currentStats.points_earned += activity.points;
+                  if (activity.points)
+                    state.currentStats.points_earned += activity.points;
                   break;
-                case 'question_answered':
+                case "question_answered":
                   state.currentStats.questions_answered += 1;
-                  if (activity.correct) state.currentStats.questions_correct += 1;
-                  if (activity.points) state.currentStats.points_earned += activity.points;
+                  if (activity.correct)
+                    state.currentStats.questions_correct += 1;
+                  if (activity.points)
+                    state.currentStats.points_earned += activity.points;
                   break;
-                case 'phrase_selected':
+                case "phrase_selected":
                   state.currentStats.phrases_selected += 1;
                   break;
               }
@@ -442,7 +479,11 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
           // Persistence
           saveSession: async () => {
             const state = get();
-            if (!state.currentSession || state.currentSession.user_id === 'anonymous') return;
+            if (
+              !state.currentSession ||
+              state.currentSession.user_id === "anonymous"
+            )
+              return;
 
             try {
               await supabaseService.updateSession(state.currentSession.id, {
@@ -455,18 +496,21 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
                 updated_at: new Date().toISOString(),
               });
             } catch (error) {
-              console.error('Failed to save session:', error);
+              console.error("Failed to save session:", error);
             }
           },
 
           loadRecentSessions: async (userId) => {
             try {
-              const sessions = await supabaseService.getUserSessions(userId, 10);
+              const sessions = await supabaseService.getUserSessions(
+                userId,
+                10,
+              );
               set((state) => {
                 state.recentSessions = sessions;
               });
             } catch (error) {
-              console.error('Failed to load recent sessions:', error);
+              console.error("Failed to load recent sessions:", error);
             }
           },
 
@@ -478,41 +522,50 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
               recentSessions: state.recentSessions.slice(0, 5), // Last 5 sessions
               dailyProgress: state.dailyProgress,
               exportedAt: new Date().toISOString(),
-              version: '1.0',
+              version: "1.0",
             };
-            
+
             return JSON.stringify(exportData, null, 2);
           },
 
           importSessionData: (data) => {
             try {
               const importData = JSON.parse(data);
-              
+
               if (!importData.version || !importData.preferences) {
-                throw new Error('Invalid export data format');
+                throw new Error("Invalid export data format");
               }
-              
+
               set((state) => {
                 if (importData.preferences) {
-                  state.preferences = { ...defaultPreferences, ...importData.preferences };
+                  state.preferences = {
+                    ...defaultPreferences,
+                    ...importData.preferences,
+                  };
                 }
-                
+
                 if (importData.learningSettings) {
-                  state.learningSettings = { ...defaultLearningSettings, ...importData.learningSettings };
+                  state.learningSettings = {
+                    ...defaultLearningSettings,
+                    ...importData.learningSettings,
+                  };
                 }
-                
+
                 if (importData.recentSessions) {
                   state.recentSessions = importData.recentSessions;
                 }
-                
+
                 if (importData.dailyProgress) {
-                  state.dailyProgress = { ...state.dailyProgress, ...importData.dailyProgress };
+                  state.dailyProgress = {
+                    ...state.dailyProgress,
+                    ...importData.dailyProgress,
+                  };
                 }
               });
-              
+
               return true;
             } catch (error) {
-              console.error('Failed to import session data:', error);
+              console.error("Failed to import session data:", error);
               return false;
             }
           },
@@ -546,7 +599,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
               };
               state.ui = {
                 sidebar_open: false,
-                active_tab: 'search',
+                active_tab: "search",
                 selected_phrases: [],
                 current_image_id: null,
                 fullscreen_mode: false,
@@ -555,7 +608,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
           },
         })),
         {
-          name: 'learning-session-store',
+          name: "learning-session-store",
           partialize: (state) => ({
             preferences: state.preferences,
             learningSettings: state.learningSettings,
@@ -566,53 +619,62 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
               active_tab: state.ui.active_tab,
             },
           }),
-        }
-      )
+        },
+      ),
     ),
-    { name: 'LearningSessionStore' }
-  )
+    { name: "LearningSessionStore" },
+  ),
 );
 
 // =============================================================================
 // SELECTORS
 // =============================================================================
 
-export const useCurrentSession = () => useLearningSessionStore((state) => state.currentSession);
-export const useSessionActive = () => useLearningSessionStore((state) => state.isSessionActive);
-export const useCurrentStats = () => useLearningSessionStore((state) => state.currentStats);
-export const useUserPreferences = () => useLearningSessionStore((state) => state.preferences);
-export const useLearningSettings = () => useLearningSessionStore((state) => state.learningSettings);
-export const useDailyProgress = () => useLearningSessionStore((state) => state.dailyProgress);
+export const useCurrentSession = () =>
+  useLearningSessionStore((state) => state.currentSession);
+export const useSessionActive = () =>
+  useLearningSessionStore((state) => state.isSessionActive);
+export const useCurrentStats = () =>
+  useLearningSessionStore((state) => state.currentStats);
+export const useUserPreferences = () =>
+  useLearningSessionStore((state) => state.preferences);
+export const useLearningSettings = () =>
+  useLearningSessionStore((state) => state.learningSettings);
+export const useDailyProgress = () =>
+  useLearningSessionStore((state) => state.dailyProgress);
 export const useUIState = () => useLearningSessionStore((state) => state.ui);
 
 // Session actions
-export const useSessionActions = () => useLearningSessionStore((state) => ({
-  startSession: state.startSession,
-  endSession: state.endSession,
-  pauseSession: state.pauseSession,
-  resumeSession: state.resumeSession,
-  updateSessionStats: state.updateSessionStats,
-  recordActivity: state.recordActivity,
-  addPoints: state.addPoints,
-  saveSession: state.saveSession,
-  resetCurrentSession: state.resetCurrentSession,
-}));
+export const useSessionActions = () =>
+  useLearningSessionStore((state) => ({
+    startSession: state.startSession,
+    endSession: state.endSession,
+    pauseSession: state.pauseSession,
+    resumeSession: state.resumeSession,
+    updateSessionStats: state.updateSessionStats,
+    recordActivity: state.recordActivity,
+    addPoints: state.addPoints,
+    saveSession: state.saveSession,
+    resetCurrentSession: state.resetCurrentSession,
+  }));
 
 // Preferences actions
-export const usePreferencesActions = () => useLearningSessionStore((state) => ({
-  updatePreferences: state.updatePreferences,
-  updateLearningSettings: state.updateLearningSettings,
-}));
+export const usePreferencesActions = () =>
+  useLearningSessionStore((state) => ({
+    updatePreferences: state.updatePreferences,
+    updateLearningSettings: state.updateLearningSettings,
+  }));
 
 // UI actions
-export const useUIActions = () => useLearningSessionStore((state) => ({
-  setCurrentImage: state.setCurrentImage,
-  toggleSidebar: state.toggleSidebar,
-  setActiveTab: state.setActiveTab,
-  togglePhraseSelection: state.togglePhraseSelection,
-  clearSelectedPhrases: state.clearSelectedPhrases,
-  setFullscreenMode: state.setFullscreenMode,
-}));
+export const useUIActions = () =>
+  useLearningSessionStore((state) => ({
+    setCurrentImage: state.setCurrentImage,
+    toggleSidebar: state.toggleSidebar,
+    setActiveTab: state.setActiveTab,
+    togglePhraseSelection: state.togglePhraseSelection,
+    clearSelectedPhrases: state.clearSelectedPhrases,
+    setFullscreenMode: state.setFullscreenMode,
+  }));
 
 // =============================================================================
 // PERSISTENCE HOOKS
@@ -640,13 +702,15 @@ export const useAutoSaveSession = (intervalMs = 30000) => {
  * Load user data on authentication
  */
 export const useLoadUserData = (userId: string | null) => {
-  const loadRecentSessions = useLearningSessionStore((state) => state.loadRecentSessions);
+  const loadRecentSessions = useLearningSessionStore(
+    (state) => state.loadRecentSessions,
+  );
 
   React.useEffect(() => {
-    if (userId && userId !== 'anonymous') {
+    if (userId && userId !== "anonymous") {
       loadRecentSessions(userId);
     }
   }, [userId, loadRecentSessions]);
 };
 
-import React from 'react';
+import React from "react";

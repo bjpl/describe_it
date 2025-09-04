@@ -4,39 +4,36 @@
  */
 
 // Type exports
-export * from '../../types/export';
+export * from "../../types/export";
 
 // Core exporters
-export * from './csvExporter';
-export * from './jsonExporter';
-export * from './pdfExporter';
-export * from './excelExporter';
-export * from './ankiExporter';
-export * from './exportManager';
+export * from "./csvExporter";
+export * from "./jsonExporter";
+export * from "./pdfExporter";
+export * from "./excelExporter";
+export * from "./ankiExporter";
+export * from "./exportManager";
 
 // Re-export commonly used functions for convenience
 export {
   ExportManager,
   createExportManager,
-  DEFAULT_EXPORT_OPTIONS
-} from './exportManager';
+  DEFAULT_EXPORT_OPTIONS,
+} from "./exportManager";
 
-export {
-  exportToPDF,
-  exportStudySheet
-} from './pdfExporter';
+export { exportToPDF, exportStudySheet } from "./pdfExporter";
 
 export {
   exportToExcel,
   exportVocabularyToExcel,
-  downloadExcel
-} from './excelExporter';
+  downloadExcel,
+} from "./excelExporter";
 
 export {
   exportToAnki,
   exportVocabularyToAnki,
-  downloadAnkiDeck
-} from './ankiExporter';
+  downloadAnkiDeck,
+} from "./ankiExporter";
 
 export {
   exportToJSON,
@@ -44,38 +41,38 @@ export {
   exportToFullJSON,
   downloadJSON,
   parseImportedJSON,
-  normalizeDataForJSON
-} from './jsonExporter';
+  normalizeDataForJSON,
+} from "./jsonExporter";
 
 export {
   CSVExporter,
   exportToEnhancedCSV,
   downloadEnhancedCSV,
-  exportAllData as exportAllDataToCSV
-} from './csvExporter';
+  exportAllData as exportAllDataToCSV,
+} from "./csvExporter";
 
 /**
  * Quick export functions for common use cases
  */
 
-import { ExportManager, createExportManager } from './exportManager';
-import { DEFAULT_EXPORT_OPTIONS } from './exportManager';
-import type { 
-  ExportOptions, 
-  VocabularyExportItem, 
+import { ExportManager, createExportManager } from "./exportManager";
+import { DEFAULT_EXPORT_OPTIONS } from "./exportManager";
+import type {
+  ExportOptions,
+  VocabularyExportItem,
   DescriptionExportItem,
   QAExportItem,
   SessionExportItem,
   ImageExportItem,
-  ExportFormat
-} from '../../types/export';
+  ExportFormat,
+} from "../../types/export";
 
 /**
  * Quick vocabulary export to specified format
  */
 export async function quickVocabularyExport(
   vocabulary: VocabularyExportItem[],
-  format: ExportFormat = 'csv'
+  format: ExportFormat = "csv",
 ): Promise<void> {
   // Create a mock data sources object for the export manager
   const dataSources = {
@@ -83,23 +80,23 @@ export async function quickVocabularyExport(
     getDescriptions: async () => [],
     getQA: async () => [],
     getSessions: async () => [],
-    getImages: async () => []
+    getImages: async () => [],
   };
 
   const exportManager = createExportManager(dataSources);
-  
+
   const options: ExportOptions = {
     format,
-    categories: ['vocabulary'],
-    includeMetadata: true
+    categories: ["vocabulary"],
+    includeMetadata: true,
   };
 
   const result = await exportManager.exportData(options);
-  
+
   if (result.success && result.blob) {
     exportManager.downloadExport(result);
   } else {
-    throw new Error(result.error || 'Export failed');
+    throw new Error(result.error || "Export failed");
   }
 }
 
@@ -107,18 +104,18 @@ export async function quickVocabularyExport(
  * Quick study sheet export (PDF format)
  */
 export async function quickStudySheetExport(
-  vocabulary: VocabularyExportItem[]
+  vocabulary: VocabularyExportItem[],
 ): Promise<void> {
-  return quickVocabularyExport(vocabulary, 'pdf');
+  return quickVocabularyExport(vocabulary, "pdf");
 }
 
 /**
  * Quick Anki deck export
  */
 export async function quickAnkiExport(
-  vocabulary: VocabularyExportItem[]
+  vocabulary: VocabularyExportItem[],
 ): Promise<void> {
-  return quickVocabularyExport(vocabulary, 'anki');
+  return quickVocabularyExport(vocabulary, "anki");
 }
 
 /**
@@ -129,30 +126,30 @@ export async function quickDataBackup(
   descriptions: DescriptionExportItem[] = [],
   qa: QAExportItem[] = [],
   sessions: SessionExportItem[] = [],
-  images: ImageExportItem[] = []
+  images: ImageExportItem[] = [],
 ): Promise<void> {
   const dataSources = {
     getVocabulary: async () => vocabulary,
     getDescriptions: async () => descriptions,
     getQA: async () => qa,
     getSessions: async () => sessions,
-    getImages: async () => images
+    getImages: async () => images,
   };
 
   const exportManager = createExportManager(dataSources);
-  
+
   const options: ExportOptions = {
-    format: 'json',
-    categories: ['all'],
-    includeMetadata: true
+    format: "json",
+    categories: ["all"],
+    includeMetadata: true,
   };
 
   const result = await exportManager.exportData(options);
-  
+
   if (result.success && result.blob) {
     exportManager.downloadExport(result);
   } else {
-    throw new Error(result.error || 'Backup failed');
+    throw new Error(result.error || "Backup failed");
   }
 }
 
@@ -164,90 +161,90 @@ export const EXPORT_PRESETS = {
    * Basic vocabulary list for review
    */
   VOCABULARY_REVIEW: {
-    format: 'csv' as ExportFormat,
-    categories: ['vocabulary'] as const,
+    format: "csv" as ExportFormat,
+    categories: ["vocabulary"] as const,
     csvOptions: {
       includeHeaders: true,
-      quoteStrings: true
-    }
+      quoteStrings: true,
+    },
   },
 
   /**
    * Study sheet for printing
    */
   STUDY_SHEET: {
-    format: 'pdf' as ExportFormat,
-    categories: ['vocabulary'] as const,
+    format: "pdf" as ExportFormat,
+    categories: ["vocabulary"] as const,
     pdfOptions: {
       studySheetFormat: true,
-      pageSize: 'A4' as const,
-      orientation: 'portrait' as const,
+      pageSize: "A4" as const,
+      orientation: "portrait" as const,
       sections: {
         vocabulary: true,
-        summary: false
-      }
-    }
+        summary: false,
+      },
+    },
   },
 
   /**
    * Anki flashcards
    */
   FLASHCARDS: {
-    format: 'anki' as ExportFormat,
-    categories: ['vocabulary', 'qa'] as const,
+    format: "anki" as ExportFormat,
+    categories: ["vocabulary", "qa"] as const,
     ankiOptions: {
-      deckName: 'Language Learning Deck',
-      noteType: 'basic' as const,
-      includeImages: false
-    }
+      deckName: "Language Learning Deck",
+      noteType: "basic" as const,
+      includeImages: false,
+    },
   },
 
   /**
    * Progress report with charts
    */
   PROGRESS_REPORT: {
-    format: 'excel' as ExportFormat,
-    categories: ['vocabulary', 'session'] as const,
+    format: "excel" as ExportFormat,
+    categories: ["vocabulary", "session"] as const,
     excelOptions: {
       charts: {
         progressChart: true,
-        categoryBreakdown: true
+        categoryBreakdown: true,
       },
       conditional: {
-        difficultyColors: true
-      }
-    }
+        difficultyColors: true,
+      },
+    },
   },
 
   /**
    * Complete data backup
    */
   FULL_BACKUP: {
-    format: 'json' as ExportFormat,
-    categories: ['all'] as const,
+    format: "json" as ExportFormat,
+    categories: ["all"] as const,
     includeMetadata: true,
-    includeMedia: false
+    includeMedia: false,
   },
 
   /**
    * Weekly progress summary
    */
   WEEKLY_SUMMARY: {
-    format: 'pdf' as ExportFormat,
-    categories: ['vocabulary', 'descriptions', 'qa'] as const,
+    format: "pdf" as ExportFormat,
+    categories: ["vocabulary", "descriptions", "qa"] as const,
     dateRange: {
       start: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), // 7 days ago
-      end: new Date()
+      end: new Date(),
     },
     pdfOptions: {
       sections: {
         vocabulary: true,
         descriptions: true,
         qa: true,
-        summary: true
-      }
-    }
-  }
+        summary: true,
+      },
+    },
+  },
 };
 
 /**
@@ -255,13 +252,13 @@ export const EXPORT_PRESETS = {
  */
 export function getRecommendedFormat(itemCount: number): ExportFormat {
   if (itemCount < 50) {
-    return 'pdf'; // Good for small datasets, readable format
+    return "pdf"; // Good for small datasets, readable format
   } else if (itemCount < 500) {
-    return 'excel'; // Good for medium datasets with analysis features
+    return "excel"; // Good for medium datasets with analysis features
   } else if (itemCount < 2000) {
-    return 'csv'; // Good for large datasets, lightweight
+    return "csv"; // Good for large datasets, lightweight
   } else {
-    return 'json'; // Best for very large datasets, structured format
+    return "json"; // Best for very large datasets, structured format
   }
 }
 
@@ -269,21 +266,21 @@ export function getRecommendedFormat(itemCount: number): ExportFormat {
  * Utility function to estimate export file size
  */
 export function estimateExportSize(
-  itemCount: number, 
-  format: ExportFormat
+  itemCount: number,
+  format: ExportFormat,
 ): string {
   const baseSize = itemCount * 100; // Rough estimate: 100 bytes per item
-  
+
   const multipliers = {
-    'csv': 0.5,
-    'json': 1.0,
-    'excel': 1.5,
-    'pdf': 2.0,
-    'anki': 0.8
+    csv: 0.5,
+    json: 1.0,
+    excel: 1.5,
+    pdf: 2.0,
+    anki: 0.8,
   };
-  
+
   const estimatedBytes = baseSize * (multipliers[format] || 1);
-  
+
   if (estimatedBytes < 1024) {
     return `${Math.round(estimatedBytes)} B`;
   } else if (estimatedBytes < 1024 * 1024) {
@@ -300,18 +297,19 @@ export function validateExportData(
   vocabulary?: VocabularyExportItem[],
   descriptions?: DescriptionExportItem[],
   qa?: QAExportItem[],
-  sessions?: SessionExportItem[]
+  sessions?: SessionExportItem[],
 ): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
 
   // Check if at least one data type has content
-  const hasData = (vocabulary && vocabulary.length > 0) ||
-                   (descriptions && descriptions.length > 0) ||
-                   (qa && qa.length > 0) ||
-                   (sessions && sessions.length > 0);
+  const hasData =
+    (vocabulary && vocabulary.length > 0) ||
+    (descriptions && descriptions.length > 0) ||
+    (qa && qa.length > 0) ||
+    (sessions && sessions.length > 0);
 
   if (!hasData) {
-    errors.push('No data available for export');
+    errors.push("No data available for export");
   }
 
   // Validate vocabulary items
@@ -352,6 +350,6 @@ export function validateExportData(
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 }

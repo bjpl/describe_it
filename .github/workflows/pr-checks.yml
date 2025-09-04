@@ -43,12 +43,12 @@ jobs:
     if: needs.changes.outputs.frontend == 'true'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -66,12 +66,12 @@ jobs:
     if: needs.changes.outputs.backend == 'true'
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -104,7 +104,7 @@ jobs:
             ${{ steps.vercel-deploy.outputs.preview-url }}
             ${{ steps.vercel-deploy.outputs.preview-url }}/learn
             ${{ steps.vercel-deploy.outputs.preview-url }}/practice
-          configPath: './lighthouserc.js'
+          configPath: "./lighthouserc.js"
           temporaryPublicStorage: true
           uploadArtifacts: true
 
@@ -118,8 +118,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -155,8 +155,8 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
-          cache: 'npm'
+          node-version: "18"
+          cache: "npm"
 
       - name: Install dependencies
         run: npm ci
@@ -173,7 +173,15 @@ jobs:
   pr-summary:
     name: PR Summary
     runs-on: ubuntu-latest
-    needs: [frontend-tests, backend-tests, preview-deployment, accessibility-check, security-review, size-check]
+    needs:
+      [
+        frontend-tests,
+        backend-tests,
+        preview-deployment,
+        accessibility-check,
+        security-review,
+        size-check,
+      ]
     if: always()
     steps:
       - name: Create PR Summary
@@ -189,13 +197,13 @@ jobs:
               { name: 'Security Review', status: '${{ needs.security-review.result }}' },
               { name: 'Bundle Size Check', status: '${{ needs.size-check.result }}' }
             ];
-            
+
             let summary = '## PR Check Summary\n\n';
             jobs.forEach(job => {
               const icon = job.status === 'success' ? '✅' : job.status === 'failure' ? '❌' : '⏭️';
               summary += `${icon} ${job.name}: ${job.status}\n`;
             });
-            
+
             github.rest.issues.createComment({
               issue_number: context.issue.number,
               owner: context.repo.owner,
@@ -214,4 +222,4 @@ jobs:
           vercel-token: ${{ secrets.VERCEL_TOKEN }}
           vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
           vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-          vercel-args: '--delete describe-it-pr-${{ github.event.number }}.vercel.app'
+          vercel-args: "--delete describe-it-pr-${{ github.event.number }}.vercel.app"

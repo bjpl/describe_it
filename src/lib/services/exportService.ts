@@ -2,10 +2,10 @@
  * Export Service - Multi-format export (CSV, JSON, PDF)
  */
 
-import { withRetry, RetryConfig } from '@/lib/utils/error-retry';
+import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
 
 interface ExportOptions {
-  format: 'csv' | 'json' | 'pdf' | 'xlsx';
+  format: "csv" | "json" | "pdf" | "xlsx";
   includeMetadata?: boolean;
   dateRange?: {
     start: string;
@@ -16,7 +16,7 @@ interface ExportOptions {
     difficulty?: string[];
     language?: string;
   };
-  template?: 'basic' | 'detailed' | 'summary';
+  template?: "basic" | "detailed" | "summary";
   customFields?: string[];
 }
 
@@ -138,7 +138,7 @@ export class ExportService {
       backoffFactor: 2,
       shouldRetry: (error: Error) => {
         const message = error.message.toLowerCase();
-        return message.includes('timeout') || message.includes('network');
+        return message.includes("timeout") || message.includes("network");
       },
     };
   }
@@ -146,17 +146,20 @@ export class ExportService {
   /**
    * Export data to specified format
    */
-  public async exportData(data: ExportData, options: ExportOptions): Promise<ExportResult> {
+  public async exportData(
+    data: ExportData,
+    options: ExportOptions,
+  ): Promise<ExportResult> {
     try {
       const result = await withRetry(async () => {
         switch (options.format) {
-          case 'csv':
+          case "csv":
             return await this.exportToCSV(data, options);
-          case 'json':
+          case "json":
             return await this.exportToJSON(data, options);
-          case 'pdf':
+          case "pdf":
             return await this.exportToPDF(data, options);
-          case 'xlsx':
+          case "xlsx":
             return await this.exportToExcel(data, options);
           default:
             throw new Error(`Unsupported export format: ${options.format}`);
@@ -176,11 +179,11 @@ export class ExportService {
       return {
         success: false,
         format: options.format,
-        filename: '',
+        filename: "",
         size: 0,
         recordCount: 0,
         generatedAt: new Date().toISOString(),
-        error: error instanceof Error ? error.message : 'Export failed',
+        error: error instanceof Error ? error.message : "Export failed",
       };
     }
   }
@@ -188,7 +191,11 @@ export class ExportService {
   /**
    * Generate export preview
    */
-  public async generatePreview(data: ExportData, options: ExportOptions, maxRows: number = 10): Promise<{
+  public async generatePreview(
+    data: ExportData,
+    options: ExportOptions,
+    maxRows: number = 10,
+  ): Promise<{
     headers: string[];
     rows: any[][];
     totalRows: number;
@@ -219,38 +226,39 @@ export class ExportService {
   }> {
     return [
       {
-        format: 'csv',
-        name: 'CSV',
-        description: 'Comma-separated values for spreadsheet applications',
-        mimeType: 'text/csv',
-        fileExtension: '.csv',
+        format: "csv",
+        name: "CSV",
+        description: "Comma-separated values for spreadsheet applications",
+        mimeType: "text/csv",
+        fileExtension: ".csv",
         supportsImages: false,
         supportsFormatting: false,
       },
       {
-        format: 'json',
-        name: 'JSON',
-        description: 'JavaScript Object Notation for data interchange',
-        mimeType: 'application/json',
-        fileExtension: '.json',
+        format: "json",
+        name: "JSON",
+        description: "JavaScript Object Notation for data interchange",
+        mimeType: "application/json",
+        fileExtension: ".json",
         supportsImages: true,
         supportsFormatting: false,
       },
       {
-        format: 'pdf',
-        name: 'PDF',
-        description: 'Portable Document Format for reports and documents',
-        mimeType: 'application/pdf',
-        fileExtension: '.pdf',
+        format: "pdf",
+        name: "PDF",
+        description: "Portable Document Format for reports and documents",
+        mimeType: "application/pdf",
+        fileExtension: ".pdf",
         supportsImages: true,
         supportsFormatting: true,
       },
       {
-        format: 'xlsx',
-        name: 'Excel',
-        description: 'Microsoft Excel format with advanced features',
-        mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        fileExtension: '.xlsx',
+        format: "xlsx",
+        name: "Excel",
+        description: "Microsoft Excel format with advanced features",
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        fileExtension: ".xlsx",
         supportsImages: false,
         supportsFormatting: true,
       },
@@ -281,21 +289,29 @@ export class ExportService {
 
     // Validate data
     if (stats.total === 0) {
-      errors.push('No data to export');
+      errors.push("No data to export");
     }
 
     // Check for data integrity issues
     if (data.descriptions) {
-      const invalidDescriptions = data.descriptions.filter(d => !d.content || !d.imageId);
+      const invalidDescriptions = data.descriptions.filter(
+        (d) => !d.content || !d.imageId,
+      );
       if (invalidDescriptions.length > 0) {
-        warnings.push(`${invalidDescriptions.length} descriptions have missing required fields`);
+        warnings.push(
+          `${invalidDescriptions.length} descriptions have missing required fields`,
+        );
       }
     }
 
     if (data.vocabulary) {
-      const invalidVocabulary = data.vocabulary.filter(v => !v.spanishText || !v.englishTranslation);
+      const invalidVocabulary = data.vocabulary.filter(
+        (v) => !v.spanishText || !v.englishTranslation,
+      );
       if (invalidVocabulary.length > 0) {
-        warnings.push(`${invalidVocabulary.length} vocabulary items have missing translations`);
+        warnings.push(
+          `${invalidVocabulary.length} vocabulary items have missing translations`,
+        );
       }
     }
 
@@ -308,7 +324,10 @@ export class ExportService {
   }
 
   // Private export methods
-  private async exportToCSV(data: ExportData, options: ExportOptions): Promise<{
+  private async exportToCSV(
+    data: ExportData,
+    options: ExportOptions,
+  ): Promise<{
     filename: string;
     size: number;
     recordCount: number;
@@ -318,18 +337,19 @@ export class ExportService {
     const headers = this.generateHeaders(processedData, options);
     const rows = this.generateRows(processedData, options);
 
-    let csvContent = '';
-    
+    let csvContent = "";
+
     // Add headers
-    csvContent += headers.map(h => this.escapeCSVField(h)).join(',') + '\n';
-    
+    csvContent += headers.map((h) => this.escapeCSVField(h)).join(",") + "\n";
+
     // Add data rows
-    rows.forEach(row => {
-      csvContent += row.map(cell => this.escapeCSVField(cell)).join(',') + '\n';
+    rows.forEach((row) => {
+      csvContent +=
+        row.map((cell) => this.escapeCSVField(cell)).join(",") + "\n";
     });
 
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const filename = this.generateFilename('csv', options);
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const filename = this.generateFilename("csv", options);
     const downloadUrl = URL.createObjectURL(blob);
 
     return {
@@ -340,27 +360,30 @@ export class ExportService {
     };
   }
 
-  private async exportToJSON(data: ExportData, options: ExportOptions): Promise<{
+  private async exportToJSON(
+    data: ExportData,
+    options: ExportOptions,
+  ): Promise<{
     filename: string;
     size: number;
     recordCount: number;
     downloadUrl: string;
   }> {
     const processedData = this.processDataForExport(data, options);
-    
+
     const exportObject = {
       metadata: {
         exportedAt: new Date().toISOString(),
-        format: 'json',
-        version: '1.0',
+        format: "json",
+        version: "1.0",
         options,
       },
       data: processedData,
     };
 
     const jsonContent = JSON.stringify(exportObject, null, 2);
-    const blob = new Blob([jsonContent], { type: 'application/json' });
-    const filename = this.generateFilename('json', options);
+    const blob = new Blob([jsonContent], { type: "application/json" });
+    const filename = this.generateFilename("json", options);
     const downloadUrl = URL.createObjectURL(blob);
 
     const totalRecords = Object.values(processedData).reduce((sum, items) => {
@@ -375,7 +398,10 @@ export class ExportService {
     };
   }
 
-  private async exportToPDF(data: ExportData, options: ExportOptions): Promise<{
+  private async exportToPDF(
+    data: ExportData,
+    options: ExportOptions,
+  ): Promise<{
     filename: string;
     size: number;
     recordCount: number;
@@ -383,15 +409,15 @@ export class ExportService {
   }> {
     // This is a simplified PDF generation
     // In a real implementation, you would use a library like jsPDF or PDFKit
-    
+
     const processedData = this.processDataForExport(data, options);
     const htmlContent = this.generateHTMLReport(processedData, options);
-    
+
     // Convert HTML to PDF (would require a PDF library)
     const pdfContent = await this.htmlToPDF(htmlContent);
-    
-    const blob = new Blob([pdfContent], { type: 'application/pdf' });
-    const filename = this.generateFilename('pdf', options);
+
+    const blob = new Blob([pdfContent], { type: "application/pdf" });
+    const filename = this.generateFilename("pdf", options);
     const downloadUrl = URL.createObjectURL(blob);
 
     const totalRecords = Object.values(processedData).reduce((sum, items) => {
@@ -406,7 +432,10 @@ export class ExportService {
     };
   }
 
-  private async exportToExcel(data: ExportData, options: ExportOptions): Promise<{
+  private async exportToExcel(
+    data: ExportData,
+    options: ExportOptions,
+  ): Promise<{
     filename: string;
     size: number;
     recordCount: number;
@@ -414,12 +443,15 @@ export class ExportService {
   }> {
     // This would require a library like xlsx or exceljs
     // For now, fallback to CSV format
-    console.warn('Excel export not fully implemented, falling back to CSV');
+    console.warn("Excel export not fully implemented, falling back to CSV");
     return await this.exportToCSV(data, options);
   }
 
   // Helper methods
-  private processDataForExport(data: ExportData, options: ExportOptions): ExportData {
+  private processDataForExport(
+    data: ExportData,
+    options: ExportOptions,
+  ): ExportData {
     const processed: ExportData = {};
 
     // Apply date range filter
@@ -428,28 +460,28 @@ export class ExportService {
       const endDate = new Date(options.dateRange.end);
 
       if (data.descriptions) {
-        processed.descriptions = data.descriptions.filter(item => {
+        processed.descriptions = data.descriptions.filter((item) => {
           const createdAt = new Date(item.createdAt);
           return createdAt >= startDate && createdAt <= endDate;
         });
       }
 
       if (data.qaResponses) {
-        processed.qaResponses = data.qaResponses.filter(item => {
+        processed.qaResponses = data.qaResponses.filter((item) => {
           const createdAt = new Date(item.createdAt);
           return createdAt >= startDate && createdAt <= endDate;
         });
       }
 
       if (data.vocabulary) {
-        processed.vocabulary = data.vocabulary.filter(item => {
+        processed.vocabulary = data.vocabulary.filter((item) => {
           const createdAt = new Date(item.createdAt);
           return createdAt >= startDate && createdAt <= endDate;
         });
       }
 
       if (data.sessions) {
-        processed.sessions = data.sessions.filter(item => {
+        processed.sessions = data.sessions.filter((item) => {
           const startTime = new Date(item.startTime);
           return startTime >= startDate && startTime <= endDate;
         });
@@ -468,20 +500,20 @@ export class ExportService {
       }
 
       if (options.filters.difficulty && processed.qaResponses) {
-        processed.qaResponses = processed.qaResponses.filter(item => 
-          options.filters!.difficulty!.includes(item.difficulty)
+        processed.qaResponses = processed.qaResponses.filter((item) =>
+          options.filters!.difficulty!.includes(item.difficulty),
         );
       }
 
       if (options.filters.language) {
         if (processed.descriptions) {
-          processed.descriptions = processed.descriptions.filter(item => 
-            item.language === options.filters!.language
+          processed.descriptions = processed.descriptions.filter(
+            (item) => item.language === options.filters!.language,
           );
         }
         if (processed.qaResponses) {
-          processed.qaResponses = processed.qaResponses.filter(item => 
-            item.language === options.filters!.language
+          processed.qaResponses = processed.qaResponses.filter(
+            (item) => item.language === options.filters!.language,
           );
         }
       }
@@ -496,19 +528,44 @@ export class ExportService {
 
   private generateHeaders(data: ExportData, options: ExportOptions): string[] {
     const headers: string[] = [];
-    
+
     if (data.descriptions?.length) {
-      headers.push('Description ID', 'Image ID', 'Style', 'Content', 'Language', 'Word Count', 'Created At');
+      headers.push(
+        "Description ID",
+        "Image ID",
+        "Style",
+        "Content",
+        "Language",
+        "Word Count",
+        "Created At",
+      );
     }
-    
+
     if (data.qaResponses?.length) {
-      if (headers.length > 0) headers.push(''); // Separator
-      headers.push('Q&A ID', 'Question', 'Answer', 'User Answer', 'Is Correct', 'Difficulty', 'Category', 'Language');
+      if (headers.length > 0) headers.push(""); // Separator
+      headers.push(
+        "Q&A ID",
+        "Question",
+        "Answer",
+        "User Answer",
+        "Is Correct",
+        "Difficulty",
+        "Category",
+        "Language",
+      );
     }
-    
+
     if (data.vocabulary?.length) {
-      if (headers.length > 0) headers.push(''); // Separator
-      headers.push('Vocab ID', 'Spanish Text', 'English Translation', 'Category', 'Difficulty', 'Part of Speech', 'Mastery Level');
+      if (headers.length > 0) headers.push(""); // Separator
+      headers.push(
+        "Vocab ID",
+        "Spanish Text",
+        "English Translation",
+        "Category",
+        "Difficulty",
+        "Part of Speech",
+        "Mastery Level",
+      );
     }
 
     return headers;
@@ -516,10 +573,10 @@ export class ExportService {
 
   private generateRows(data: ExportData, options: ExportOptions): any[][] {
     const rows: any[][] = [];
-    
+
     // Add descriptions
     if (data.descriptions?.length) {
-      data.descriptions.forEach(item => {
+      data.descriptions.forEach((item) => {
         rows.push([
           item.id,
           item.imageId,
@@ -531,28 +588,28 @@ export class ExportService {
         ]);
       });
     }
-    
+
     // Add Q&A responses
     if (data.qaResponses?.length) {
       if (rows.length > 0) rows.push([]); // Separator row
-      data.qaResponses.forEach(item => {
+      data.qaResponses.forEach((item) => {
         rows.push([
           item.id,
           item.question,
           item.answer,
-          item.userAnswer || '',
-          item.isCorrect ? 'Yes' : 'No',
+          item.userAnswer || "",
+          item.isCorrect ? "Yes" : "No",
           item.difficulty,
           item.category,
           item.language,
         ]);
       });
     }
-    
+
     // Add vocabulary
     if (data.vocabulary?.length) {
       if (rows.length > 0) rows.push([]); // Separator row
-      data.vocabulary.forEach(item => {
+      data.vocabulary.forEach((item) => {
         rows.push([
           item.id,
           item.spanishText,
@@ -569,25 +626,25 @@ export class ExportService {
   }
 
   private generateFilename(format: string, options: ExportOptions): string {
-    const date = new Date().toISOString().split('T')[0];
-    const time = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-    const template = options.template || 'export';
-    
+    const date = new Date().toISOString().split("T")[0];
+    const time = new Date().toTimeString().split(" ")[0].replace(/:/g, "-");
+    const template = options.template || "export";
+
     return `${template}-${date}-${time}.${format}`;
   }
 
   private escapeCSVField(field: any): string {
     if (field === null || field === undefined) {
-      return '';
+      return "";
     }
-    
+
     const str = String(field);
-    
+
     // If field contains comma, newline, or quote, wrap in quotes and escape internal quotes
-    if (str.includes(',') || str.includes('\n') || str.includes('"')) {
+    if (str.includes(",") || str.includes("\n") || str.includes('"')) {
       return '"' + str.replace(/"/g, '""') + '"';
     }
-    
+
     return str;
   }
 
@@ -610,35 +667,37 @@ export class ExportService {
         <h1>Learning Progress Report</h1>
         <div class="metadata">
             <p><strong>Generated:</strong> ${new Date().toLocaleString()}</p>
-            <p><strong>Template:</strong> ${options.template || 'basic'}</p>
+            <p><strong>Template:</strong> ${options.template || "basic"}</p>
         </div>
     `;
 
     if (data.descriptions?.length) {
-      html += '<h2>Image Descriptions</h2>';
-      html += '<table><tr><th>Style</th><th>Language</th><th>Content</th><th>Created</th></tr>';
-      data.descriptions.forEach(desc => {
+      html += "<h2>Image Descriptions</h2>";
+      html +=
+        "<table><tr><th>Style</th><th>Language</th><th>Content</th><th>Created</th></tr>";
+      data.descriptions.forEach((desc) => {
         html += `<tr><td>${desc.style}</td><td>${desc.language}</td><td>${desc.content.substring(0, 100)}...</td><td>${new Date(desc.createdAt).toLocaleDateString()}</td></tr>`;
       });
-      html += '</table>';
+      html += "</table>";
     }
 
     if (data.vocabulary?.length) {
-      html += '<h2>Vocabulary Progress</h2>';
-      html += '<table><tr><th>Spanish</th><th>English</th><th>Category</th><th>Mastery</th></tr>';
-      data.vocabulary.forEach(vocab => {
+      html += "<h2>Vocabulary Progress</h2>";
+      html +=
+        "<table><tr><th>Spanish</th><th>English</th><th>Category</th><th>Mastery</th></tr>";
+      data.vocabulary.forEach((vocab) => {
         html += `<tr><td>${vocab.spanishText}</td><td>${vocab.englishTranslation}</td><td>${vocab.category}</td><td>${Math.round((vocab.masteryLevel || 0) * 100)}%</td></tr>`;
       });
-      html += '</table>';
+      html += "</table>";
     }
 
-    html += '</body></html>';
+    html += "</body></html>";
     return html;
   }
 
   private async htmlToPDF(html: string): Promise<string> {
     // This is a placeholder - would need a real PDF library
-    console.warn('PDF generation not fully implemented');
+    console.warn("PDF generation not fully implemented");
     return html; // Return HTML as fallback
   }
 }

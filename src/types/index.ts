@@ -42,12 +42,12 @@ export interface Description {
   error?: string;
 }
 
-export type DescriptionStyle = 
-  | 'narrativo'
-  | 'poetico'
-  | 'academico'
-  | 'conversacional'
-  | 'infantil';
+export type DescriptionStyle =
+  | "narrativo"
+  | "poetico"
+  | "academico"
+  | "conversacional"
+  | "infantil";
 
 export interface DescriptionRequest {
   imageUrl: string;
@@ -77,7 +77,7 @@ export interface ExtractedPhrase {
   phrase: string;
   definition: string;
   partOfSpeech: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   context: string;
   createdAt: Date;
 }
@@ -107,12 +107,12 @@ export interface SearchHistoryItem {
 }
 
 export interface UserPreferences {
-  theme: 'light' | 'dark' | 'auto';
+  theme: "light" | "dark" | "auto";
   language: string;
   defaultDescriptionStyle: DescriptionStyle;
   autoSaveDescriptions: boolean;
   maxHistoryItems: number;
-  exportFormat: 'json' | 'csv' | 'pdf';
+  exportFormat: "json" | "csv" | "pdf";
 }
 
 // Export Types
@@ -126,7 +126,7 @@ export interface ExportData {
 }
 
 export interface ExportOptions {
-  format: 'json' | 'csv' | 'pdf';
+  format: "json" | "csv" | "pdf";
   includeImages: boolean;
   includeDescriptions: boolean;
   includeQA: boolean;
@@ -183,13 +183,13 @@ export interface PhraseState {
   isLoading: boolean;
   error: string | null;
   activeImageId: string | null;
-  selectedDifficulty: ExtractedPhrase['difficulty'] | null;
+  selectedDifficulty: ExtractedPhrase["difficulty"] | null;
 }
 
 export interface AppState {
   currentImage: Image | null;
   sidebarOpen: boolean;
-  activeTab: 'search' | 'descriptions' | 'qa' | 'phrases' | 'export';
+  activeTab: "search" | "descriptions" | "qa" | "phrases" | "export";
   isFullscreen: boolean;
 }
 
@@ -221,10 +221,10 @@ export interface DescriptionNotebookState {
 // Component Props Types
 export interface ImageComponentProps {
   id: string;
-  urls: Image['urls'];
+  urls: Image["urls"];
   alt_description: string | null;
   description: string | null;
-  user: Image['user'];
+  user: Image["user"];
   width: number;
   height: number;
   color: string;
@@ -254,8 +254,8 @@ export type {
   BulkOperationResult,
   VocabularyExportOptions,
   VocabularyImportOptions,
-  VocabularyImportResult
-} from './unified';
+  VocabularyImportResult,
+} from "./unified";
 
 // Re-export utility functions
 export {
@@ -268,8 +268,8 @@ export {
   vocabularyItemsToUI,
   vocabularyItemsFromUI,
   normalizeLegacyVocabularyItem,
-  validateVocabularyItem
-} from './unified';
+  validateVocabularyItem,
+} from "./unified";
 
 export interface ExportableData {
   descriptions?: DescriptionExportItem[];
@@ -296,13 +296,13 @@ export interface SessionInteractionExport {
 
 // Settings Types
 export interface UserSettings {
-  theme: 'light' | 'dark' | 'auto';
-  language: 'en' | 'es';
+  theme: "light" | "dark" | "auto";
+  language: "en" | "es";
   autoSave: boolean;
   notifications: boolean;
   defaultDescriptionStyle: DescriptionStyle;
   maxHistoryItems: number;
-  exportFormat: 'json' | 'csv' | 'pdf';
+  exportFormat: "json" | "csv" | "pdf";
 }
 
 export interface SettingsUpdateRequest {
@@ -347,7 +347,9 @@ export interface UsePhraseExtractionReturn {
   phrases: ExtractedPhrase[];
   isLoading: boolean;
   error: string | null;
-  extractPhrases: (request: PhraseExtractionRequest) => Promise<ExtractedPhrase[]>;
+  extractPhrases: (
+    request: PhraseExtractionRequest,
+  ) => Promise<ExtractedPhrase[]>;
   deletePhrase: (phraseId: string) => void;
   clearPhrases: () => void;
 }
@@ -355,7 +357,7 @@ export interface UsePhraseExtractionReturn {
 export interface UseSessionReturn {
   session: UserSession;
   updatePreferences: (preferences: Partial<UserPreferences>) => void;
-  addToHistory: (item: Omit<SearchHistoryItem, 'id'>) => void;
+  addToHistory: (item: Omit<SearchHistoryItem, "id">) => void;
   clearHistory: () => void;
   exportSession: () => Promise<Blob>;
 }
@@ -409,7 +411,7 @@ export interface VocabularyFilter {
 
 export interface DescriptionFilter {
   style?: DescriptionStyle;
-  language?: 'en' | 'es';
+  language?: "en" | "es";
   imageId?: string;
   dateRange?: {
     start: string;
@@ -420,7 +422,7 @@ export interface DescriptionFilter {
 // Bulk Operations Types
 export interface BulkVocabularyRequest {
   userId: string;
-  vocabularyItems: Omit<VocabularyItem, 'id' | 'created_at'>[];
+  vocabularyItems: Omit<VocabularyItem, "id" | "created_at">[];
   collectionName: string;
   metadata?: {
     source: string;

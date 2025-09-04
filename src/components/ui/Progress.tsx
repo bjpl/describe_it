@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface ProgressProps {
   value: number;
@@ -6,15 +6,15 @@ interface ProgressProps {
   className?: string;
 }
 
-export const Progress: React.FC<ProgressProps> = ({ 
-  value, 
-  max = 100, 
-  className = '' 
+export const Progress: React.FC<ProgressProps> = ({
+  value,
+  max = 100,
+  className = "",
 }) => {
   const percentage = Math.min(100, Math.max(0, (value / max) * 100));
-  
+
   return (
-    <div 
+    <div
       className={`relative h-2 w-full overflow-hidden rounded-full bg-gray-200 ${className}`}
       role="progressbar"
       aria-valuenow={value}

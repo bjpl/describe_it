@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { motion } from 'framer-motion';
-import { ChevronLeft, ChevronRight, MoreHorizontal } from 'lucide-react';
+import React from "react";
+import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 
 interface PaginationControlsProps {
   currentPage: number;
@@ -17,19 +17,23 @@ export function PaginationControls({
   totalPages,
   onPageChange,
   isLoading = false,
-  className = ''
+  className = "",
 }: PaginationControlsProps) {
   const getVisiblePages = () => {
     const delta = 2;
     const range = [];
     const rangeWithDots = [];
 
-    for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+    for (
+      let i = Math.max(2, currentPage - delta);
+      i <= Math.min(totalPages - 1, currentPage + delta);
+      i++
+    ) {
       range.push(i);
     }
 
     if (currentPage - delta > 2) {
-      rangeWithDots.push(1, '...');
+      rangeWithDots.push(1, "...");
     } else {
       rangeWithDots.push(1);
     }
@@ -37,7 +41,7 @@ export function PaginationControls({
     rangeWithDots.push(...range);
 
     if (currentPage + delta < totalPages - 1) {
-      rangeWithDots.push('...', totalPages);
+      rangeWithDots.push("...", totalPages);
     } else {
       rangeWithDots.push(totalPages);
     }
@@ -65,9 +69,10 @@ export function PaginationControls({
         disabled={currentPage <= 1 || isLoading}
         className={`
           flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all
-          ${currentPage <= 1 || isLoading
-            ? 'text-gray-400 cursor-not-allowed'
-            : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+          ${
+            currentPage <= 1 || isLoading
+              ? "text-gray-400 cursor-not-allowed"
+              : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
           }
         `}
         whileHover={currentPage > 1 && !isLoading ? { scale: 1.05 } : {}}
@@ -81,7 +86,7 @@ export function PaginationControls({
       <div className="flex items-center space-x-1">
         {visiblePages.map((page, index) => (
           <React.Fragment key={index}>
-            {page === '...' ? (
+            {page === "..." ? (
               <span className="px-3 py-2 text-gray-400">
                 <MoreHorizontal className="h-4 w-4" />
               </span>
@@ -91,14 +96,19 @@ export function PaginationControls({
                 disabled={isLoading}
                 className={`
                   px-3 py-2 rounded-lg text-sm font-medium transition-all
-                  ${page === currentPage
-                    ? 'bg-blue-600 text-white shadow-md'
-                    : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+                  ${
+                    page === currentPage
+                      ? "bg-blue-600 text-white shadow-md"
+                      : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
                   }
-                  ${isLoading ? 'cursor-not-allowed opacity-50' : ''}
+                  ${isLoading ? "cursor-not-allowed opacity-50" : ""}
                 `}
-                whileHover={page !== currentPage && !isLoading ? { scale: 1.05 } : {}}
-                whileTap={page !== currentPage && !isLoading ? { scale: 0.95 } : {}}
+                whileHover={
+                  page !== currentPage && !isLoading ? { scale: 1.05 } : {}
+                }
+                whileTap={
+                  page !== currentPage && !isLoading ? { scale: 0.95 } : {}
+                }
               >
                 {page}
               </motion.button>
@@ -113,12 +123,15 @@ export function PaginationControls({
         disabled={currentPage >= totalPages || isLoading}
         className={`
           flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all
-          ${currentPage >= totalPages || isLoading
-            ? 'text-gray-400 cursor-not-allowed'
-            : 'text-gray-600 hover:text-blue-600 hover:bg-blue-50'
+          ${
+            currentPage >= totalPages || isLoading
+              ? "text-gray-400 cursor-not-allowed"
+              : "text-gray-600 hover:text-blue-600 hover:bg-blue-50"
           }
         `}
-        whileHover={currentPage < totalPages && !isLoading ? { scale: 1.05 } : {}}
+        whileHover={
+          currentPage < totalPages && !isLoading ? { scale: 1.05 } : {}
+        }
         whileTap={currentPage < totalPages && !isLoading ? { scale: 0.95 } : {}}
       >
         <span className="hidden sm:inline">Next</span>

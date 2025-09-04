@@ -1,4 +1,4 @@
-export * from './SkeletonScreens';
+export * from "./SkeletonScreens";
 export {
   Skeleton,
   ImageSkeleton,
@@ -9,6 +9,10 @@ export {
   DescriptionSkeleton,
   QASkeleton,
   PhrasesSkeleton,
-  PageSkeleton
-} from './SkeletonScreens';
-export { LoadingSpinner, ContentSkeleton, CardSkeleton } from './LoadingSpinner';
+  PageSkeleton,
+} from "./SkeletonScreens";
+export {
+  LoadingSpinner,
+  ContentSkeleton,
+  CardSkeleton,
+} from "./LoadingSpinner";

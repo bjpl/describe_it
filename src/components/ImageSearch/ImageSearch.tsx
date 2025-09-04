@@ -1,37 +1,61 @@
 "use client";
 
-import React, { useState, useCallback, useMemo, memo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Filter } from 'lucide-react';
-import { useDebounce, useImageSearch } from '@/hooks';
-import { ImageGrid } from './ImageGrid';
-import { PaginationControls } from './PaginationControls';
-import { LoadingSpinner } from '@/components/Loading/LoadingSpinner';
-import { SearchFilters } from './SearchFilters';
-import { UnsplashImage } from '@/types';
-import { performanceProfiler, useRenderCount, optimizeAnimations } from '@/lib/utils/performance-helpers';
+import React, { useState, useCallback, useMemo, memo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Search, X, Filter } from "lucide-react";
+import { useDebounce, useImageSearch } from "@/hooks";
+import { ImageGrid } from "./ImageGrid";
+import { PaginationControls } from "./PaginationControls";
+import { LoadingSpinner } from "@/components/Loading/LoadingSpinner";
+import { SearchFilters } from "./SearchFilters";
+import { UnsplashImage } from "@/types";
+import {
+  performanceProfiler,
+  useRenderCount,
+  optimizeAnimations,
+} from "@/lib/utils/performance-helpers";
 
 interface ImageSearchProps {
   onImageSelect?: (image: UnsplashImage) => void;
   className?: string;
 }
 
-const ImageSearchBase: React.FC<ImageSearchProps> = ({ onImageSelect, className = '' }) => {
+const ImageSearchBase: React.FC<ImageSearchProps> = ({
+  onImageSelect,
+  className = "",
+}) => {
   // Performance monitoring
-  const renderCount = useRenderCount('ImageSearch');
-  
+  const renderCount = useRenderCount("ImageSearch");
+
   React.useEffect(() => {
-    performanceProfiler.startMark('ImageSearch-render');
+    performanceProfiler.startMark("ImageSearch-render");
     return () => {
-      performanceProfiler.endMark('ImageSearch-render');
+      performanceProfiler.endMark("ImageSearch-render");
     };
   });
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
-    orientation: 'all' as 'all' | 'landscape' | 'portrait' | 'squarish',
-    category: 'all' as 'all' | 'nature' | 'people' | 'technology' | 'architecture',
-    color: 'all' as 'all' | 'black_and_white' | 'black' | 'white' | 'yellow' | 'orange' | 'red' | 'purple' | 'magenta' | 'green' | 'teal' | 'blue'
+    orientation: "all" as "all" | "landscape" | "portrait" | "squarish",
+    category: "all" as
+      | "all"
+      | "nature"
+      | "people"
+      | "technology"
+      | "architecture",
+    color: "all" as
+      | "all"
+      | "black_and_white"
+      | "black"
+      | "white"
+      | "yellow"
+      | "orange"
+      | "red"
+      | "purple"
+      | "magenta"
+      | "green"
+      | "teal"
+      | "blue",
   });
 
   const debouncedQuery = useDebounce(searchQuery, 500);
@@ -57,52 +81,72 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({ onImageSelect, className 
   }, [debouncedQuery, filters, searchImages, clearResults]);
 
   // Memoize stable callbacks
-  const handleImageClick = useCallback((image: UnsplashImage) => {
-    if (onImageSelect) {
-      onImageSelect(image);
-    }
-  }, [onImageSelect]);
-  
+  const handleImageClick = useCallback(
+    (image: UnsplashImage) => {
+      if (onImageSelect) {
+        onImageSelect(image);
+      }
+    },
+    [onImageSelect],
+  );
+
   const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
+    setSearchQuery("");
     clearResults();
   }, [clearResults]);
-  
-  const handleFiltersChange = useCallback((newFilters: typeof filters) => {
-    setFilters(newFilters);
-    // Re-search with new filters if we have a query
-    if (debouncedQuery.trim()) {
-      searchImages(debouncedQuery, 1, newFilters);
-    }
-  }, [debouncedQuery, searchImages]);
-  
+
+  const handleFiltersChange = useCallback(
+    (newFilters: typeof filters) => {
+      setFilters(newFilters);
+      // Re-search with new filters if we have a query
+      if (debouncedQuery.trim()) {
+        searchImages(debouncedQuery, 1, newFilters);
+      }
+    },
+    [debouncedQuery, searchImages],
+  );
+
   const handleToggleFilters = useCallback(() => {
-    setShowFilters(prev => !prev);
+    setShowFilters((prev) => !prev);
   }, []);
 
   // Memoize animation variants
-  const containerVariants = useMemo(() => optimizeAnimations.createOptimizedVariants({
-    hidden: { opacity: 0, y: 20 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: {
-        duration: 0.5,
-        staggerChildren: 0.1
-      }
-    }
-  }), []);
+  const containerVariants = useMemo(
+    () =>
+      optimizeAnimations.createOptimizedVariants({
+        hidden: { opacity: 0, y: 20 },
+        visible: {
+          opacity: 1,
+          y: 0,
+          transition: {
+            duration: 0.5,
+            staggerChildren: 0.1,
+          },
+        },
+      }),
+    [],
+  );
 
-  const itemVariants = useMemo(() => optimizeAnimations.createOptimizedVariants({
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  }), []);
-  
+  const itemVariants = useMemo(
+    () =>
+      optimizeAnimations.createOptimizedVariants({
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0 },
+      }),
+    [],
+  );
+
   // Memoize expensive computations
   const hasResults = useMemo(() => images.length > 0, [images.length]);
-  const hasQuery = useMemo(() => Boolean(searchParams.query), [searchParams.query]);
+  const hasQuery = useMemo(
+    () => Boolean(searchParams.query),
+    [searchParams.query],
+  );
   const shouldShowPagination = useMemo(() => totalPages > 1, [totalPages]);
-  const shouldShowLoadMore = useMemo(() => searchParams.page < totalPages, [searchParams.page, totalPages]);
+  const shouldShowLoadMore = useMemo(
+    () => searchParams.page < totalPages,
+    [searchParams.page, totalPages],
+  );
 
   return (
     <motion.div
@@ -183,7 +227,9 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({ onImageSelect, className 
             className="flex flex-col items-center justify-center py-12 space-y-4"
           >
             <LoadingSpinner size="lg" />
-            <p className="text-gray-600">{loading.message || 'Searching images...'}</p>
+            <p className="text-gray-600">
+              {loading.message || "Searching images..."}
+            </p>
           </motion.div>
         )}
       </AnimatePresence>
@@ -242,7 +288,8 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({ onImageSelect, className 
           <div className="text-6xl mb-4">🔍</div>
           <h3 className="text-xl font-medium text-gray-700">No images found</h3>
           <p className="text-gray-500 max-w-md mx-auto">
-            Try different keywords or check your spelling. Popular searches include nature, people, technology, and architecture.
+            Try different keywords or check your spelling. Popular searches
+            include nature, people, technology, and architecture.
           </p>
         </motion.div>
       )}
@@ -255,22 +302,27 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({ onImageSelect, className 
           className="text-center py-16 space-y-4"
         >
           <div className="text-6xl mb-6">📸</div>
-          <h2 className="text-2xl font-bold text-gray-800">Discover Amazing Images</h2>
+          <h2 className="text-2xl font-bold text-gray-800">
+            Discover Amazing Images
+          </h2>
           <p className="text-gray-600 max-w-md mx-auto">
-            Search through millions of high-quality photos to practice your language skills.
+            Search through millions of high-quality photos to practice your
+            language skills.
           </p>
           <div className="flex flex-wrap justify-center gap-2 mt-6">
-            {['nature', 'people', 'city', 'food', 'animals', 'travel'].map((suggestion) => (
-              <motion.button
-                key={suggestion}
-                onClick={() => setSearchQuery(suggestion)}
-                className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-colors"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                {suggestion}
-              </motion.button>
-            ))}
+            {["nature", "people", "city", "food", "animals", "travel"].map(
+              (suggestion) => (
+                <motion.button
+                  key={suggestion}
+                  onClick={() => setSearchQuery(suggestion)}
+                  className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-colors"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  {suggestion}
+                </motion.button>
+              ),
+            )}
           </div>
         </motion.div>
       )}

@@ -2,24 +2,12 @@
   "mcpServers": {
     "claude-flow": {
       "command": "cmd",
-      "args": [
-        "/c",
-        "npx",
-        "claude-flow@alpha",
-        "mcp",
-        "start"
-      ],
+      "args": ["/c", "npx", "claude-flow@alpha", "mcp", "start"],
       "type": "stdio"
     },
     "ruv-swarm": {
       "command": "cmd",
-      "args": [
-        "/c",
-        "npx",
-        "ruv-swarm@latest",
-        "mcp",
-        "start"
-      ],
+      "args": ["/c", "npx", "ruv-swarm@latest", "mcp", "start"],
       "type": "stdio"
     }
   }

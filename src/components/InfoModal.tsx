@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { memo, useCallback, useEffect } from 'react';
-import { HelpContent } from './HelpContent';
-import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
+import { memo, useCallback, useEffect } from "react";
+import { HelpContent } from "./HelpContent";
+import { useKeyboardShortcuts } from "@/hooks/useKeyboardShortcuts";
 
 interface InfoModalProps {
   isOpen: boolean;
@@ -11,40 +11,46 @@ interface InfoModalProps {
 
 export const InfoModal = memo<InfoModalProps>(function InfoModal({
   isOpen,
-  onClose
+  onClose,
 }) {
-  const handleOverlayClick = useCallback((e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  }, [onClose]);
+  const handleOverlayClick = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.target === e.currentTarget) {
+        onClose();
+      }
+    },
+    [onClose],
+  );
 
   // Keyboard shortcuts for modal
-  useKeyboardShortcuts([
-    {
-      key: 'Escape',
-      action: onClose,
-      description: 'Close help modal'
-    }
-  ], { enabled: isOpen });
+  useKeyboardShortcuts(
+    [
+      {
+        key: "Escape",
+        action: onClose,
+        description: "Close help modal",
+      },
+    ],
+    { enabled: isOpen },
+  );
 
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
+      document.body.style.overflow = "hidden";
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     }
 
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = "unset";
     };
   }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
       onClick={handleOverlayClick}
     >
@@ -53,4 +59,4 @@ export const InfoModal = memo<InfoModalProps>(function InfoModal({
   );
 });
 
-InfoModal.displayName = 'InfoModal';
+InfoModal.displayName = "InfoModal";

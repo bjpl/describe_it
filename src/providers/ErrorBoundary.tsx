@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { Component, ErrorInfo, ReactNode } from "react";
 
 interface Props {
   children: ReactNode;
@@ -20,47 +20,49 @@ class ErrorBoundaryClass extends Component<Props, State> {
     this.state = {
       hasError: false,
       error: null,
-      errorInfo: null
+      errorInfo: null,
     };
   }
-  
+
   static getDerivedStateFromError(error: Error): State {
     return {
       hasError: true,
       error,
-      errorInfo: null
+      errorInfo: null,
     };
   }
-  
+
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
-    
+    console.error("ErrorBoundary caught an error:", error, errorInfo);
+
     this.setState({
       error,
-      errorInfo
+      errorInfo,
     });
-    
+
     // Call the onError callback if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
   }
-  
+
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
         return this.props.fallback;
       }
-      
+
       return (
         <ErrorFallback
           error={this.state.error}
           errorInfo={this.state.errorInfo}
-          resetError={() => this.setState({ hasError: false, error: null, errorInfo: null })}
+          resetError={() =>
+            this.setState({ hasError: false, error: null, errorInfo: null })
+          }
         />
       );
     }
-    
+
     return this.props.children;
   }
 }
@@ -71,9 +73,13 @@ interface ErrorFallbackProps {
   resetError: () => void;
 }
 
-const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo, resetError }) => {
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  
+const ErrorFallback: React.FC<ErrorFallbackProps> = ({
+  error,
+  errorInfo,
+  resetError,
+}) => {
+  const isDevelopment = process.env.NODE_ENV === "development";
+
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
@@ -99,13 +105,14 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo, resetEr
             </h1>
           </div>
         </div>
-        
+
         <div className="mb-4">
           <p className="text-sm text-gray-600">
-            We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.
+            We encountered an unexpected error. Please try refreshing the page
+            or contact support if the problem persists.
           </p>
         </div>
-        
+
         {isDevelopment && error && (
           <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded">
             <h3 className="text-sm font-medium text-red-800 mb-2">
@@ -126,7 +133,7 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo, resetEr
             )}
           </div>
         )}
-        
+
         <div className="flex space-x-3">
           <button
             onClick={resetError}
@@ -150,14 +157,14 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({ error, errorInfo, resetEr
 export const withErrorBoundary = <P extends object>(
   Component: React.ComponentType<P>,
   fallback?: ReactNode,
-  onError?: (error: Error, errorInfo: ErrorInfo) => void
+  onError?: (error: Error, errorInfo: ErrorInfo) => void,
 ) => {
   const WrappedComponent = (props: P) => (
     <ErrorBoundaryClass fallback={fallback} onError={onError}>
       <Component {...props} />
     </ErrorBoundaryClass>
   );
-  
+
   WrappedComponent.displayName = `withErrorBoundary(${Component.displayName || Component.name})`;
   return WrappedComponent;
 };
@@ -165,15 +172,19 @@ export const withErrorBoundary = <P extends object>(
 // Hook for manually reporting errors
 export const useErrorHandler = () => {
   const reportError = React.useCallback((error: Error | string) => {
-    const errorMessage = typeof error === 'string' ? error : error.message;
-    console.error('Manual error report:', errorMessage);
+    const errorMessage = typeof error === "string" ? error : error.message;
+    console.error("Manual error report:", errorMessage);
   }, []);
-  
+
   return { reportError };
 };
 
 // Main ErrorBoundary component
-export const ErrorBoundary: React.FC<Props> = ({ children, fallback, onError }) => {
+export const ErrorBoundary: React.FC<Props> = ({
+  children,
+  fallback,
+  onError,
+}) => {
   return (
     <ErrorBoundaryClass fallback={fallback} onError={onError}>
       {children}

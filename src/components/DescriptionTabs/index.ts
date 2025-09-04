@@ -1,1 +1,1 @@
-export { DescriptionTabs, default } from '../DescriptionTabs';
+export { DescriptionTabs, default } from "../DescriptionTabs";

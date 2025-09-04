@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Globe, BookOpen, Copy, Check, Volume2 } from 'lucide-react';
-import { DescriptionStyle } from '@/types';
+import React, { useState, useCallback, useMemo } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Globe, BookOpen, Copy, Check, Volume2 } from "lucide-react";
+import { DescriptionStyle } from "@/types";
 
 interface DescriptionTabsProps {
   englishDescription: string;
@@ -20,9 +20,9 @@ export const DescriptionTabs: React.FC<DescriptionTabsProps> = ({
   selectedStyle,
   onStyleChange,
   isGenerating = false,
-  className = ''
+  className = "",
 }) => {
-  const [activeTab, setActiveTab] = useState<'english' | 'spanish'>('spanish');
+  const [activeTab, setActiveTab] = useState<"english" | "spanish">("spanish");
   const [copiedText, setCopiedText] = useState<string | null>(null);
 
   const handleCopy = useCallback(async (text: string, language: string) => {
@@ -31,54 +31,60 @@ export const DescriptionTabs: React.FC<DescriptionTabsProps> = ({
       setCopiedText(language);
       setTimeout(() => setCopiedText(null), 2000);
     } catch (error) {
-      console.error('Failed to copy text:', error);
+      console.error("Failed to copy text:", error);
     }
   }, []);
 
-  const handleSpeak = useCallback((text: string, language: 'en' | 'es') => {
-    if ('speechSynthesis' in window) {
+  const handleSpeak = useCallback((text: string, language: "en" | "es") => {
+    if ("speechSynthesis" in window) {
       const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = language === 'en' ? 'en-US' : 'es-ES';
+      utterance.lang = language === "en" ? "en-US" : "es-ES";
       utterance.rate = 0.9;
       speechSynthesis.speak(utterance);
     }
   }, []);
 
-  const tabContent = useMemo(() => ({
-    english: {
-      label: 'English',
-      icon: Globe,
-      content: englishDescription,
-      language: 'en' as const
-    },
-    spanish: {
-      label: 'Español',
-      icon: BookOpen,
-      content: spanishDescription,
-      language: 'es' as const
-    }
-  }), [englishDescription, spanishDescription]);
+  const tabContent = useMemo(
+    () => ({
+      english: {
+        label: "English",
+        icon: Globe,
+        content: englishDescription,
+        language: "en" as const,
+      },
+      spanish: {
+        label: "Español",
+        icon: BookOpen,
+        content: spanishDescription,
+        language: "es" as const,
+      },
+    }),
+    [englishDescription, spanishDescription],
+  );
 
   const activeContent = tabContent[activeTab];
 
   return (
-    <div className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}>
+    <div
+      className={`bg-white rounded-lg shadow-sm border border-gray-200 ${className}`}
+    >
       {/* Tab Headers */}
       <div className="flex border-b border-gray-200">
         {Object.entries(tabContent).map(([key, tab]) => {
           const Icon = tab.icon;
           const isActive = key === activeTab;
-          
+
           return (
             <button
               key={key}
-              onClick={() => setActiveTab(key as 'english' | 'spanish')}
+              onClick={() => setActiveTab(key as "english" | "spanish")}
               className={`
                 flex-1 px-4 py-3 flex items-center justify-center gap-2
                 font-medium transition-all duration-200
-                ${isActive 
-                  ? 'text-blue-600 border-b-2 border-blue-600 bg-blue-50/50' 
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+                ${
+                  isActive
+                    ? "text-blue-600 border-b-2 border-blue-600 bg-blue-50/50"
+                    : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                 }
               `}
               disabled={isGenerating}
@@ -141,7 +147,9 @@ export const DescriptionTabs: React.FC<DescriptionTabsProps> = ({
                   </button>
 
                   <button
-                    onClick={() => handleSpeak(activeContent.content, activeContent.language)}
+                    onClick={() =>
+                      handleSpeak(activeContent.content, activeContent.language)
+                    }
                     className="
                       inline-flex items-center gap-2 px-3 py-1.5
                       text-sm text-gray-700 bg-gray-100

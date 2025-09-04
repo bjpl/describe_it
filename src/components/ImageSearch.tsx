@@ -1,46 +1,48 @@
-'use client'
+"use client";
 
-import { useState, useCallback } from 'react'
-import { Search, Image as ImageIcon } from 'lucide-react'
-import { UnsplashImage } from '@/types'
+import { useState, useCallback } from "react";
+import { Search, Image as ImageIcon } from "lucide-react";
+import { UnsplashImage } from "@/types";
 
 interface ImageSearchProps {
-  onImageSelect: (image: UnsplashImage) => void
+  onImageSelect: (image: UnsplashImage) => void;
 }
 
 export function ImageSearch({ onImageSelect }: ImageSearchProps) {
-  const [query, setQuery] = useState('')
-  const [images, setImages] = useState<UnsplashImage[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [query, setQuery] = useState("");
+  const [images, setImages] = useState<UnsplashImage[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const searchImages = useCallback(async () => {
-    if (!query.trim()) return
+    if (!query.trim()) return;
 
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
 
     try {
-      const response = await fetch(`/api/images/search?query=${encodeURIComponent(query)}&limit=12`)
-      const data = await response.json()
+      const response = await fetch(
+        `/api/images/search?query=${encodeURIComponent(query)}&limit=12`,
+      );
+      const data = await response.json();
 
       if (data.success && data.data?.images) {
-        setImages(data.data.images)
+        setImages(data.data.images);
       } else {
-        setError(data.error || 'Failed to search images')
+        setError(data.error || "Failed to search images");
       }
     } catch (err) {
-      setError('Failed to search images')
-      console.error('Search error:', err)
+      setError("Failed to search images");
+      console.error("Search error:", err);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }, [query])
+  }, [query]);
 
   const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    searchImages()
-  }
+    e.preventDefault();
+    searchImages();
+  };
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
@@ -91,13 +93,13 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
             >
               <img
                 src={image.urls.small}
-                alt={image.alt_description || 'Image'}
+                alt={image.alt_description || "Image"}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="absolute bottom-2 left-2 right-2">
                   <p className="text-white text-xs truncate">
-                    by {image.user?.name || 'Unknown'}
+                    by {image.user?.name || "Unknown"}
                   </p>
                 </div>
               </div>
@@ -106,5 +108,5 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
         </div>
       )}
     </div>
-  )
+  );
 }

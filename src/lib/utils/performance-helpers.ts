@@ -1,6 +1,7 @@
-'use client';
+"use client";
 
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState } from "react";
+import { logger } from "@/lib/logger";
 
 // Performance profiler class
 export class PerformanceProfiler {
@@ -14,18 +15,19 @@ export class PerformanceProfiler {
   endMark(name: string): number {
     const startTime = this.marks.get(name);
     if (startTime === undefined) {
-      console.warn(`Performance mark '${name}' not found`);
+      logger.warn(`Performance mark '${name}' not found`, {
+        component: "performance-profiler",
+        mark: name,
+      });
       return 0;
     }
 
     const duration = performance.now() - startTime;
     this.measurements.set(name, duration);
     this.marks.delete(name);
-    
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`Performance: ${name} took ${duration.toFixed(2)}ms`);
-    }
-    
+
+    logger.performance(name, duration);
+
     return duration;
   }
 
@@ -48,7 +50,7 @@ export function useRenderCount(componentName: string) {
 
   useEffect(() => {
     renderCount.current += 1;
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       console.log(`${componentName} rendered ${renderCount.current} times`);
     }
   });
@@ -60,13 +62,16 @@ export function useRenderCount(componentName: string) {
 export const optimizeAnimations = {
   // Create optimized animation variants with reduced motion support
   createOptimizedVariants: (variants: any) => {
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       // Return variants with no animation for users who prefer reduced motion
       const reducedVariants: any = {};
-      Object.keys(variants).forEach(key => {
+      Object.keys(variants).forEach((key) => {
         reducedVariants[key] = {
           ...variants[key],
-          transition: { duration: 0 }
+          transition: { duration: 0 },
         };
       });
       return reducedVariants;
@@ -76,15 +81,21 @@ export const optimizeAnimations = {
 
   // Get optimized transition settings
   getOptimizedTransition: (transition: any) => {
-    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       return { duration: 0 };
     }
     return transition;
-  }
+  },
 };
 
 // Shallow comparison utility for React.memo
-export function shallowCompare<T extends Record<string, any>>(obj1: T, obj2: T): boolean {
+export function shallowCompare<T extends Record<string, any>>(
+  obj1: T,
+  obj2: T,
+): boolean {
   const keys1 = Object.keys(obj1);
   const keys2 = Object.keys(obj2);
 
@@ -104,10 +115,10 @@ export function shallowCompare<T extends Record<string, any>>(obj1: T, obj2: T):
 // Debounce utility
 export function debounce<T extends (...args: any[]) => any>(
   func: T,
-  wait: number
+  wait: number,
 ): (...args: Parameters<T>) => void {
   let timeout: NodeJS.Timeout;
-  
+
   return (...args: Parameters<T>) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func.apply(null, args), wait);
@@ -117,15 +128,15 @@ export function debounce<T extends (...args: any[]) => any>(
 // Throttle utility
 export function throttle<T extends (...args: any[]) => any>(
   func: T,
-  limit: number
+  limit: number,
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  
+
   return (...args: Parameters<T>) => {
     if (!inThrottle) {
       func.apply(null, args);
       inThrottle = true;
-      setTimeout(() => inThrottle = false, limit);
+      setTimeout(() => (inThrottle = false), limit);
     }
   };
 }
@@ -133,7 +144,7 @@ export function throttle<T extends (...args: any[]) => any>(
 // Memory usage tracking (for development)
 export const memoryTracker = {
   getMemoryUsage: () => {
-    if (typeof window !== 'undefined' && 'memory' in performance) {
+    if (typeof window !== "undefined" && "memory" in performance) {
       const memory = (performance as any).memory;
       return {
         used: Math.round(memory.usedJSHeapSize / 1048576), // MB
@@ -145,13 +156,13 @@ export const memoryTracker = {
   },
 
   logMemoryUsage: (label: string) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       const usage = memoryTracker.getMemoryUsage();
       if (usage) {
         console.log(`Memory ${label}:`, usage);
       }
     }
-  }
+  },
 };
 
 // Image loading optimization
@@ -166,7 +177,7 @@ export const imageOptimization = {
   },
 
   preloadImages: async (sources: string[]): Promise<void> => {
-    const promises = sources.map(src => imageOptimization.preloadImage(src));
+    const promises = sources.map((src) => imageOptimization.preloadImage(src));
     await Promise.all(promises);
   },
 
@@ -174,13 +185,13 @@ export const imageOptimization = {
     // This would integrate with your image optimization service
     // For now, return the original src
     return src;
-  }
+  },
 };
 
 // Viewport detection hook
 export function useIntersectionObserver(
   ref: React.RefObject<Element>,
-  options: IntersectionObserverInit = {}
+  options: IntersectionObserverInit = {},
 ) {
   const [isIntersecting, setIsIntersecting] = useState(false);
 
@@ -188,12 +199,9 @@ export function useIntersectionObserver(
     const element = ref.current;
     if (!element) return;
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsIntersecting(entry.isIntersecting);
-      },
-      options
-    );
+    const observer = new IntersectionObserver(([entry]) => {
+      setIsIntersecting(entry.isIntersecting);
+    }, options);
 
     observer.observe(element);
 
@@ -208,11 +216,11 @@ export function useIntersectionObserver(
 // Bundle size analyzer (development only)
 export const bundleAnalyzer = {
   logComponentSize: (componentName: string, component: any) => {
-    if (process.env.NODE_ENV === 'development') {
+    if (process.env.NODE_ENV === "development") {
       const size = JSON.stringify(component).length;
       console.log(`Component ${componentName} approximate size: ${size} bytes`);
     }
-  }
+  },
 };
 
 // Performance monitoring hook
@@ -225,9 +233,11 @@ export function usePerformanceMonitor(componentName: string) {
     renderCount.current = 0;
 
     return () => {
-      if (mountTime.current && process.env.NODE_ENV === 'development') {
+      if (mountTime.current && process.env.NODE_ENV === "development") {
         const totalTime = performance.now() - mountTime.current;
-        console.log(`Component ${componentName} was mounted for ${totalTime.toFixed(2)}ms with ${renderCount.current} renders`);
+        console.log(
+          `Component ${componentName} was mounted for ${totalTime.toFixed(2)}ms with ${renderCount.current} renders`,
+        );
       }
     };
   }, [componentName]);
@@ -238,6 +248,6 @@ export function usePerformanceMonitor(componentName: string) {
 
   return {
     renderCount: renderCount.current,
-    mountTime: mountTime.current
+    mountTime: mountTime.current,
   };
 }

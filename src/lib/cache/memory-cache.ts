@@ -35,13 +35,14 @@ export class MemoryCache<T = any> {
     sets: 0,
     deletes: 0,
     evictions: 0,
-    cleanups: 0
+    cleanups: 0,
   };
 
-  constructor(maxSize: number = 1000, defaultTTL: number = 3600000) { // 1 hour default TTL
+  constructor(maxSize: number = 1000, defaultTTL: number = 3600000) {
+    // 1 hour default TTL
     this.maxSize = maxSize;
     this.defaultTTL = defaultTTL;
-    
+
     // Start periodic cleanup every 5 minutes
     this.startCleanupTimer();
   }
@@ -51,14 +52,14 @@ export class MemoryCache<T = any> {
    */
   set(key: string, value: T, ttlSeconds?: number): void {
     const now = Date.now();
-    const ttl = (ttlSeconds ?? (this.defaultTTL / 1000)) * 1000; // convert to ms
-    
+    const ttl = (ttlSeconds ?? this.defaultTTL / 1000) * 1000; // convert to ms
+
     const entry: CacheEntry<T> = {
       data: value,
       timestamp: now,
       ttl,
       accessCount: 1,
-      lastAccessed: now
+      lastAccessed: now,
     };
 
     // If key exists, just update it
@@ -84,7 +85,7 @@ export class MemoryCache<T = any> {
    */
   get(key: string): T | null {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       this.stats.misses++;
       return null;
@@ -103,7 +104,7 @@ export class MemoryCache<T = any> {
     entry.lastAccessed = now;
     this.accessOrder.set(key, now);
     this.stats.hits++;
-    
+
     return entry.data;
   }
 
@@ -113,11 +114,11 @@ export class MemoryCache<T = any> {
   delete(key: string): boolean {
     const existed = this.cache.delete(key);
     this.accessOrder.delete(key);
-    
+
     if (existed) {
       this.stats.deletes++;
     }
-    
+
     return existed;
   }
 
@@ -126,7 +127,7 @@ export class MemoryCache<T = any> {
    */
   has(key: string): boolean {
     const entry = this.cache.get(key);
-    
+
     if (!entry) {
       return false;
     }
@@ -145,7 +146,7 @@ export class MemoryCache<T = any> {
    * Get multiple values at once
    */
   mget(keys: string[]): Array<T | null> {
-    return keys.map(key => this.get(key));
+    return keys.map((key) => this.get(key));
   }
 
   /**
@@ -172,8 +173,8 @@ export class MemoryCache<T = any> {
       }
 
       // Apply pattern filter if provided
-      if (pattern && pattern !== '*') {
-        const regex = new RegExp(pattern.replace(/\*/g, '.*'));
+      if (pattern && pattern !== "*") {
+        const regex = new RegExp(pattern.replace(/\*/g, ".*"));
         if (!regex.test(key)) {
           continue;
         }
@@ -189,7 +190,7 @@ export class MemoryCache<T = any> {
    * Clear all entries or entries matching a pattern
    */
   clear(pattern?: string): number {
-    if (!pattern || pattern === '*') {
+    if (!pattern || pattern === "*") {
       const size = this.cache.size;
       this.cache.clear();
       this.accessOrder.clear();
@@ -197,7 +198,7 @@ export class MemoryCache<T = any> {
     }
 
     const keysToDelete = this.keys(pattern);
-    keysToDelete.forEach(key => this.delete(key));
+    keysToDelete.forEach((key) => this.delete(key));
     return keysToDelete.length;
   }
 
@@ -215,7 +216,7 @@ export class MemoryCache<T = any> {
     for (const [key, entry] of this.cache) {
       if (now - entry.timestamp <= entry.ttl) {
         validEntries.push(entry);
-        
+
         if (oldestEntry === null || entry.timestamp < oldestEntry) {
           oldestEntry = entry.timestamp;
         }
@@ -231,7 +232,7 @@ export class MemoryCache<T = any> {
     }
 
     const totalRequests = this.stats.hits + this.stats.misses;
-    
+
     return {
       size: validEntries.length,
       maxSize: this.maxSize,
@@ -241,7 +242,7 @@ export class MemoryCache<T = any> {
       totalItems: this.cache.size,
       oldestEntry,
       newestEntry,
-      memoryEstimate
+      memoryEstimate,
     };
   }
 
@@ -251,10 +252,10 @@ export class MemoryCache<T = any> {
   async getOrSet<R = T>(
     key: string,
     fetcher: () => Promise<R>,
-    ttlSeconds?: number
+    ttlSeconds?: number,
   ): Promise<R> {
     const cached = this.get(key) as R | null;
-    
+
     if (cached !== null) {
       return cached;
     }
@@ -269,7 +270,7 @@ export class MemoryCache<T = any> {
    */
   increment(key: string, delta: number = 1, ttlSeconds?: number): number {
     const current = this.get(key);
-    const newValue = (typeof current === 'number' ? current : 0) + delta;
+    const newValue = (typeof current === "number" ? current : 0) + delta;
     this.set(key, newValue as unknown as T, ttlSeconds);
     return newValue;
   }
@@ -278,13 +279,13 @@ export class MemoryCache<T = any> {
    * Set with callback on expiration
    */
   setWithCallback(
-    key: string, 
-    value: T, 
+    key: string,
+    value: T,
     ttlSeconds: number,
-    onExpire: (key: string, value: T) => void
+    onExpire: (key: string, value: T) => void,
   ): void {
     this.set(key, value, ttlSeconds);
-    
+
     setTimeout(() => {
       const entry = this.cache.get(key);
       if (entry && entry.data === value) {
@@ -297,23 +298,25 @@ export class MemoryCache<T = any> {
   /**
    * Batch operations for performance
    */
-  batch<R>(operations: Array<{
-    type: 'get' | 'set' | 'delete';
-    key: string;
-    value?: T;
-    ttl?: number;
-  }>): Array<R | boolean | null> {
-    return operations.map(op => {
+  batch<R>(
+    operations: Array<{
+      type: "get" | "set" | "delete";
+      key: string;
+      value?: T;
+      ttl?: number;
+    }>,
+  ): Array<R | boolean | null> {
+    return operations.map((op) => {
       switch (op.type) {
-        case 'get':
+        case "get":
           return this.get(op.key) as R;
-        case 'set':
+        case "set":
           if (op.value !== undefined) {
             this.set(op.key, op.value, op.ttl);
             return true;
           }
           return false;
-        case 'delete':
+        case "delete":
           return this.delete(op.key);
         default:
           return null;
@@ -326,13 +329,13 @@ export class MemoryCache<T = any> {
    */
   healthCheck(): boolean {
     try {
-      const testKey = '__health_check__';
-      const testValue = 'ok' as T;
-      
+      const testKey = "__health_check__";
+      const testValue = "ok" as T;
+
       this.set(testKey, testValue, 10);
       const retrieved = this.get(testKey);
       this.delete(testKey);
-      
+
       return retrieved === testValue;
     } catch {
       return false;
@@ -377,11 +380,13 @@ export class MemoryCache<T = any> {
       }
     }
 
-    keysToDelete.forEach(key => this.delete(key));
+    keysToDelete.forEach((key) => this.delete(key));
     this.stats.cleanups++;
-    
+
     if (keysToDelete.length > 0) {
-      console.log(`Memory cache cleanup: removed ${keysToDelete.length} expired entries`);
+      console.log(
+        `Memory cache cleanup: removed ${keysToDelete.length} expired entries`,
+      );
     }
   }
 
@@ -394,9 +399,12 @@ export class MemoryCache<T = any> {
     }
 
     // Run cleanup every 5 minutes
-    this.cleanupInterval = setInterval(() => {
-      this.cleanup();
-    }, 5 * 60 * 1000);
+    this.cleanupInterval = setInterval(
+      () => {
+        this.cleanup();
+      },
+      5 * 60 * 1000,
+    );
   }
 
   /**
@@ -420,13 +428,16 @@ export class MemoryCache<T = any> {
    * Export cache data for persistence
    */
   export(): Record<string, { data: T; ttl: number; timestamp: number }> {
-    const exported: Record<string, { data: T; ttl: number; timestamp: number }> = {};
-    
+    const exported: Record<
+      string,
+      { data: T; ttl: number; timestamp: number }
+    > = {};
+
     for (const [key, entry] of this.cache) {
       exported[key] = {
         data: entry.data,
         ttl: entry.ttl,
-        timestamp: entry.timestamp
+        timestamp: entry.timestamp,
       };
     }
 
@@ -436,7 +447,9 @@ export class MemoryCache<T = any> {
   /**
    * Import cache data from persistence
    */
-  import(data: Record<string, { data: T; ttl: number; timestamp: number }>): number {
+  import(
+    data: Record<string, { data: T; ttl: number; timestamp: number }>,
+  ): number {
     let importedCount = 0;
     const now = Date.now();
 
@@ -457,13 +470,13 @@ export class MemoryCache<T = any> {
 
 // Export singleton instance for app-wide usage
 export const memoryCache = new MemoryCache(
-  parseInt(process.env.MAX_CACHE_SIZE || '1000'),
-  parseInt(process.env.DEFAULT_CACHE_TTL || '3600')
+  parseInt(process.env.MAX_CACHE_SIZE || "1000"),
+  parseInt(process.env.DEFAULT_CACHE_TTL || "3600"),
 );
 
 // Graceful shutdown cleanup
-if (typeof process !== 'undefined') {
-  process.on('beforeExit', () => {
+if (typeof process !== "undefined") {
+  process.on("beforeExit", () => {
     memoryCache.stop();
   });
 }

@@ -1,59 +1,61 @@
-import { z } from 'zod';
-import { devLog, devWarn, devError } from '@/lib/logger';
+import { z } from "zod";
+import { devLog, devWarn, devError } from "@/lib/logger";
 
 // Environment variable schema with optional values for demo mode
 const envSchema = z.object({
   // Core Application
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
-  NEXT_PUBLIC_APP_URL: z.string().default('http://localhost:3000'),
-  
+  NODE_ENV: z
+    .enum(["development", "test", "production"])
+    .default("development"),
+  NEXT_PUBLIC_APP_URL: z.string().default("http://localhost:3000"),
+
   // API Keys (all optional for demo mode)
   NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
-  
+
   // Supabase (optional)
   NEXT_PUBLIC_SUPABASE_URL: z.string().optional(),
   NEXT_PUBLIC_SUPABASE_ANON_KEY: z.string().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
-  
+
   // Vercel Storage (optional)
   KV_REST_API_URL: z.string().optional(),
   KV_REST_API_TOKEN: z.string().optional(),
   BLOB_READ_WRITE_TOKEN: z.string().optional(),
-  
+
   // Monitoring & Analytics (optional)
   SENTRY_DSN: z.string().optional(),
   SENTRY_ORG: z.string().optional(),
   SENTRY_PROJECT: z.string().optional(),
   SENTRY_AUTH_TOKEN: z.string().optional(),
-  
+
   // Deployment (optional)
   VERCEL_TOKEN: z.string().optional(),
   VERCEL_ORG_ID: z.string().optional(),
   VERCEL_PROJECT_ID: z.string().optional(),
-  
+
   // Security Scanning (optional)
   SNYK_TOKEN: z.string().optional(),
   SEMGREP_APP_TOKEN: z.string().optional(),
-  
+
   // Notifications (optional)
   SLACK_WEBHOOK_URL: z.string().optional(),
-  
+
   // Performance Monitoring (optional)
   LHCI_GITHUB_APP_TOKEN: z.string().optional(),
-  
+
   // Rate Limiting Configuration
   UNSPLASH_RATE_LIMIT_PER_HOUR: z.coerce.number().default(1000),
   OPENAI_RATE_LIMIT_PER_MINUTE: z.coerce.number().default(3000),
-  
+
   // Cache Configuration
   DEFAULT_CACHE_TTL: z.coerce.number().default(3600),
   MAX_CACHE_SIZE: z.coerce.number().default(1000),
-  
+
   // Feature Flags
   ENABLE_FEATURE_FLAGS: z.coerce.boolean().default(false),
   NEXT_TELEMETRY_DISABLED: z.coerce.number().default(1),
-  
+
   // Demo Mode Configuration
   ENABLE_DEMO_MODE: z.coerce.boolean().default(false),
   DEMO_MODE_AUTO: z.coerce.boolean().default(true), // Auto-enable demo mode when keys missing
@@ -61,8 +63,10 @@ const envSchema = z.object({
 
 export type Environment = z.infer<typeof envSchema>;
 
-// Parse and validate environment variables
-export const env = envSchema.parse({
+// Environment validation with better error handling
+function validateEnvironment() {
+  try {
+    return envSchema.parse({
   NODE_ENV: process.env.NODE_ENV,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
@@ -92,7 +96,26 @@ export const env = envSchema.parse({
   NEXT_TELEMETRY_DISABLED: process.env.NEXT_TELEMETRY_DISABLED,
   ENABLE_DEMO_MODE: process.env.ENABLE_DEMO_MODE,
   DEMO_MODE_AUTO: process.env.DEMO_MODE_AUTO,
-});
+    });
+  } catch (error) {
+    console.error('Environment validation failed:', error);
+    // Return a safe default configuration in demo mode
+    return {
+      NODE_ENV: 'development' as const,
+      NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+      UNSPLASH_RATE_LIMIT_PER_HOUR: 1000,
+      OPENAI_RATE_LIMIT_PER_MINUTE: 3000,
+      DEFAULT_CACHE_TTL: 3600,
+      MAX_CACHE_SIZE: 1000,
+      ENABLE_FEATURE_FLAGS: false,
+      NEXT_TELEMETRY_DISABLED: 1,
+      ENABLE_DEMO_MODE: true,
+      DEMO_MODE_AUTO: true,
+    };
+  }
+}
+
+export const env = validateEnvironment();
 
 // Feature flag configuration
 export interface FeatureFlags {
@@ -108,24 +131,33 @@ export interface FeatureFlags {
 
 // Calculate feature flags
 const calculateFeatureFlags = (): FeatureFlags => {
-  const unsplashService = Boolean(env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY && env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY !== 'your_unsplash_access_key_here');
-  const openaiService = Boolean(env.OPENAI_API_KEY && env.OPENAI_API_KEY !== 'your_openai_api_key_here');
-  const supabaseService = Boolean(
-    env.NEXT_PUBLIC_SUPABASE_URL && 
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY && 
-    env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
-    env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'placeholder_anon_key'
+  const unsplashService = Boolean(
+    env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY &&
+      env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY !== "your_unsplash_access_key_here",
   );
-  
+  const openaiService = Boolean(
+    env.OPENAI_API_KEY && env.OPENAI_API_KEY !== "your_openai_api_key_here",
+  );
+  const supabaseService = Boolean(
+    env.NEXT_PUBLIC_SUPABASE_URL &&
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+      env.NEXT_PUBLIC_SUPABASE_URL !== "https://placeholder.supabase.co" &&
+      env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== "placeholder_anon_key",
+  );
+
   return {
     unsplashService,
     openaiService,
     supabaseService,
-    vercelStorage: Boolean(env.KV_REST_API_URL && env.KV_REST_API_TOKEN && env.BLOB_READ_WRITE_TOKEN),
+    vercelStorage: Boolean(
+      env.KV_REST_API_URL && env.KV_REST_API_TOKEN && env.BLOB_READ_WRITE_TOKEN,
+    ),
     monitoring: Boolean(env.SENTRY_DSN),
     analytics: Boolean(env.LHCI_GITHUB_APP_TOKEN),
     notifications: Boolean(env.SLACK_WEBHOOK_URL),
-    demoMode: env.ENABLE_DEMO_MODE || (env.DEMO_MODE_AUTO && (!unsplashService || !openaiService)),
+    demoMode:
+      env.ENABLE_DEMO_MODE ||
+      (env.DEMO_MODE_AUTO && (!unsplashService || !openaiService)),
   };
 };
 
@@ -152,19 +184,21 @@ export const getEnvironmentInfo = () => ({
 });
 
 // Validation helper
-export const validateRequiredEnvVars = (requiredVars: (keyof Environment)[]) => {
+export const validateRequiredEnvVars = (
+  requiredVars: (keyof Environment)[],
+) => {
   const missing: string[] = [];
-  
+
   for (const varName of requiredVars) {
     if (!env[varName]) {
       missing.push(varName);
     }
   }
-  
+
   if (missing.length > 0) {
     const isDemo = featureFlags.demoMode;
-    const message = `Missing required environment variables: ${missing.join(', ')}`;
-    
+    const message = `Missing required environment variables: ${missing.join(", ")}`;
+
     if (isDemo) {
       devWarn(`${message} - Running in demo mode`);
       return { valid: false, missing, demo: true };
@@ -173,7 +207,7 @@ export const validateRequiredEnvVars = (requiredVars: (keyof Environment)[]) => 
       return { valid: false, missing, demo: false };
     }
   }
-  
+
   return { valid: true, missing: [], demo: false };
 };
 
@@ -184,8 +218,8 @@ export const getServiceConfig = (serviceName: keyof FeatureFlags) => ({
 });
 
 export const isDemoMode = () => featureFlags.demoMode;
-export const isProduction = () => env.NODE_ENV === 'production';
-export const isDevelopment = () => env.NODE_ENV === 'development';
+export const isProduction = () => env.NODE_ENV === "production";
+export const isDevelopment = () => env.NODE_ENV === "development";
 
 // Export env as default
 export default env;

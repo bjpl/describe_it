@@ -4,52 +4,59 @@
  */
 
 // Core Export Formats
-export type ExportFormat = 'csv' | 'json' | 'pdf' | 'anki' | 'excel';
+export type ExportFormat = "csv" | "json" | "pdf" | "anki" | "excel";
 
 // Export Data Categories
-export type ExportCategory = 
-  | 'vocabulary' 
-  | 'descriptions' 
-  | 'qa' 
-  | 'phrases' 
-  | 'session' 
-  | 'images'
-  | 'all';
+export type ExportCategory =
+  | "vocabulary"
+  | "descriptions"
+  | "qa"
+  | "phrases"
+  | "session"
+  | "images"
+  | "all";
 
 // Enhanced Export Options
 export interface ExportOptions {
   format: ExportFormat;
   categories: ExportCategory[];
-  
+
   // Date filtering
   dateRange?: {
     start: Date;
     end: Date;
   };
-  
+
   // Content filtering
   includeMedia?: boolean;
   includeMetadata?: boolean;
-  
+
   // Category-specific filters
   vocabularyFilters?: {
-    difficulty?: ('beginner' | 'intermediate' | 'advanced')[];
+    difficulty?: ("beginner" | "intermediate" | "advanced")[];
     partOfSpeech?: string[];
     minWordCount?: number;
   };
-  
+
   descriptionFilters?: {
-    styles?: ('detailed' | 'simple' | 'creative' | 'technical' | 'educational' | 'artistic')[];
+    styles?: (
+      | "detailed"
+      | "simple"
+      | "creative"
+      | "technical"
+      | "educational"
+      | "artistic"
+    )[];
     minLength?: number;
     language?: string;
   };
-  
+
   qaFilters?: {
     categories?: string[];
     difficulty?: string[];
     minConfidence?: number;
   };
-  
+
   // Format-specific options
   pdfOptions?: PDFExportOptions;
   excelOptions?: ExcelExportOptions;
@@ -59,8 +66,8 @@ export interface ExportOptions {
 
 // PDF Export Configuration
 export interface PDFExportOptions {
-  pageSize?: 'A4' | 'Letter' | 'A3';
-  orientation?: 'portrait' | 'landscape';
+  pageSize?: "A4" | "Letter" | "A3";
+  orientation?: "portrait" | "landscape";
   includeImages?: boolean;
   studySheetFormat?: boolean;
   fontSize?: number;
@@ -105,7 +112,7 @@ export interface ExcelExportOptions {
 // Anki Deck Configuration
 export interface AnkiExportOptions {
   deckName?: string;
-  noteType?: 'basic' | 'cloze' | 'image-occlusion';
+  noteType?: "basic" | "cloze" | "image-occlusion";
   tags?: string[];
   includeImages?: boolean;
   mediaFolder?: string;
@@ -116,10 +123,10 @@ export interface AnkiExportOptions {
   };
 }
 
-// CSV Export Configuration  
+// CSV Export Configuration
 export interface CSVExportOptions {
-  delimiter?: ',' | ';' | '\t';
-  encoding?: 'utf-8' | 'utf-16' | 'ascii';
+  delimiter?: "," | ";" | "\t";
+  encoding?: "utf-8" | "utf-16" | "ascii";
   includeHeaders?: boolean;
   quoteStrings?: boolean;
   escapeHtml?: boolean;
@@ -131,7 +138,7 @@ export interface VocabularyExportItem {
   translation: string;
   definition: string;
   partOfSpeech: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   context: string;
   category: string;
   imageId?: string;
@@ -211,14 +218,14 @@ export interface ExportData {
       sessionId: string;
     };
   };
-  
+
   vocabulary?: VocabularyExportItem[];
   descriptions?: DescriptionExportItem[];
   qa?: QAExportItem[];
-  phrases?: VocabularyExportItem[];  // Using same structure
+  phrases?: VocabularyExportItem[]; // Using same structure
   sessions?: SessionExportItem[];
   images?: ImageExportItem[];
-  
+
   summary?: {
     totalVocabulary: number;
     totalDescriptions: number;
@@ -289,7 +296,7 @@ export interface ScheduledExport {
   name: string;
   template: ExportTemplate;
   schedule: {
-    frequency: 'daily' | 'weekly' | 'monthly';
+    frequency: "daily" | "weekly" | "monthly";
     time?: string; // HH:MM format
     dayOfWeek?: number; // 0-6
     dayOfMonth?: number; // 1-31
@@ -298,7 +305,7 @@ export interface ScheduledExport {
   lastRun?: string;
   nextRun?: string;
   destination?: {
-    type: 'download' | 'email' | 'cloud';
+    type: "download" | "email" | "cloud";
     config?: Record<string, any>;
   };
 }
@@ -308,18 +315,20 @@ export interface IExportManager {
   // Core export functions
   exportData(options: ExportOptions): Promise<ExportResult>;
   batchExport(request: BatchExportRequest): Promise<BatchExportResult>;
-  
+
   // Template management
-  saveTemplate(template: Omit<ExportTemplate, 'id' | 'createdAt'>): Promise<ExportTemplate>;
+  saveTemplate(
+    template: Omit<ExportTemplate, "id" | "createdAt">,
+  ): Promise<ExportTemplate>;
   loadTemplate(id: string): Promise<ExportTemplate | null>;
   listTemplates(): Promise<ExportTemplate[]>;
   deleteTemplate(id: string): Promise<void>;
-  
+
   // Scheduled exports
   scheduleExport(exportData: ScheduledExport): Promise<void>;
   cancelScheduledExport(id: string): Promise<void>;
   listScheduledExports(): Promise<ScheduledExport[]>;
-  
+
   // Utility functions
   validateOptions(options: ExportOptions): boolean;
   estimateSize(options: ExportOptions): Promise<number>;
@@ -328,7 +337,7 @@ export interface IExportManager {
 
 // Export Event Types
 export interface ExportEvent {
-  type: 'start' | 'progress' | 'complete' | 'error';
+  type: "start" | "progress" | "complete" | "error";
   exportId: string;
   format: ExportFormat;
   progress?: number;

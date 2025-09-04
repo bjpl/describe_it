@@ -1,10 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { BookOpen, ChevronDown, AlertCircle, RefreshCw, Download } from 'lucide-react';
-import { exportVocabulary, getCurrentDateString } from '../lib/export/csvExporter';
-import type { VocabularyItem } from '../types/unified';
-import { PhrasesProgressIndicator, TextContentSkeleton } from './ProgressIndicator';
+import { useState, useEffect, useCallback, useMemo, memo } from "react";
+import {
+  BookOpen,
+  ChevronDown,
+  AlertCircle,
+  RefreshCw,
+  Download,
+} from "lucide-react";
+import {
+  exportVocabulary,
+  getCurrentDateString,
+} from "../lib/export/csvExporter";
+import type { VocabularyItem } from "../types/unified";
+import {
+  PhrasesProgressIndicator,
+  TextContentSkeleton,
+} from "./ProgressIndicator";
 
 interface Phrase {
   id: string;
@@ -31,27 +43,33 @@ interface UnsplashImage {
 interface PhrasePanelProps {
   selectedImage: UnsplashImage | null;
   descriptionText: string | null;
-  style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
+  style: "narrativo" | "poetico" | "academico" | "conversacional" | "infantil";
 }
 
-import type { DifficultyLevel } from '../types/unified';
+import type { DifficultyLevel } from "../types/unified";
 
-const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImage, descriptionText, style }) {
+const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
+  selectedImage,
+  descriptionText,
+  style,
+}) {
   const [phrases, setPhrases] = useState<Phrase[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('intermediate');
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>("intermediate");
   const [maxPhrases, setMaxPhrases] = useState(5);
 
   // Safe API call function
   const extractPhrases = useCallback(async () => {
     if (!selectedImage?.urls?.regular) {
-      setError('No image selected for phrase extraction');
+      setError("No image selected for phrase extraction");
       return;
     }
-    
+
     if (!descriptionText) {
-      setError('Please generate a description first to extract phrases based on the content.');
+      setError(
+        "Please generate a description first to extract phrases based on the content.",
+      );
       return;
     }
 
@@ -60,11 +78,11 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
 
     try {
       const imageUrl = selectedImage.urls?.regular;
-      
-      const response = await fetch('/api/phrases/extract', {
-        method: 'POST',
+
+      const response = await fetch("/api/phrases/extract", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           imageUrl,
@@ -77,16 +95,18 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
 
       // Parse response body once and handle errors properly
       const responseData = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(responseData.message || 'Failed to extract phrases');
+        throw new Error(responseData.message || "Failed to extract phrases");
       }
 
       const extractedPhrases = responseData;
       setPhrases(extractedPhrases);
     } catch (err) {
       // Error logged to structured logging service
-      setError(err instanceof Error ? err.message : 'Failed to extract phrases');
+      setError(
+        err instanceof Error ? err.message : "Failed to extract phrases",
+      );
     } finally {
       setLoading(false);
     }
@@ -95,7 +115,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
   // Memoize dependencies to prevent unnecessary re-extractions
   const imageId = selectedImage?.id;
   const imageUrl = selectedImage?.urls?.regular || selectedImage?.url;
-  
+
   // Auto-extract when image or description changes (with debouncing)
   useEffect(() => {
     if (!selectedImage) {
@@ -103,7 +123,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
       setError(null);
       return;
     }
-    
+
     if (!descriptionText) {
       setPhrases([]);
       setError(null);
@@ -119,40 +139,45 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
 
   const getDifficultyColor = useCallback((level: string) => {
     switch (level) {
-      case 'beginner':
-        return 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300';
-      case 'intermediate':
-        return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300';
-      case 'advanced':
-        return 'bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300';
+      case "beginner":
+        return "bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-300";
+      case "intermediate":
+        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-300";
+      case "advanced":
+        return "bg-red-100 text-red-800 dark:bg-red-900/20 dark:text-red-300";
       default:
-        return 'bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300';
+        return "bg-gray-100 text-gray-800 dark:bg-gray-900/20 dark:text-gray-300";
     }
   }, []);
 
   // Export vocabulary function
   const handleExportVocabulary = useCallback(() => {
     if (phrases.length === 0) {
-      alert('No vocabulary data to export. Please extract phrases first.');
+      alert("No vocabulary data to export. Please extract phrases first.");
       return;
     }
 
     try {
-      const vocabularyData: VocabularyItem[] = phrases.map(phrase => ({
+      const vocabularyData: VocabularyItem[] = phrases.map((phrase) => ({
         id: phrase.id,
         spanish_text: phrase.phrase,
         english_translation: phrase.definition,
         category: phrase.partOfSpeech,
-        difficulty_level: phrase.difficulty === 'beginner' ? 3 : phrase.difficulty === 'intermediate' ? 6 : 9,
+        difficulty_level:
+          phrase.difficulty === "beginner"
+            ? 3
+            : phrase.difficulty === "intermediate"
+              ? 6
+              : 9,
         part_of_speech: phrase.partOfSpeech,
         context_sentence_spanish: phrase.context,
-        created_at: getCurrentDateString()
+        created_at: getCurrentDateString(),
       }));
 
       exportVocabulary(vocabularyData);
     } catch (error) {
       // Export error logged to structured logging service
-      alert('Failed to export vocabulary data. Please try again.');
+      alert("Failed to export vocabulary data. Please try again.");
     }
   }, [phrases]);
 
@@ -166,7 +191,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
       </div>
     );
   }
-  
+
   if (!descriptionText) {
     return (
       <div className="space-y-6">
@@ -179,7 +204,8 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
                 Description Required
               </h3>
               <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
-                Please generate a description first. The phrases will be extracted from the actual description content.
+                Please generate a description first. The phrases will be
+                extracted from the actual description content.
               </p>
             </div>
           </div>
@@ -193,13 +219,17 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
       {/* Header with Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <h2 className="text-2xl font-bold">Phrases & Vocabulary</h2>
-        
+
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Difficulty Selector */}
           <div className="relative">
             <select
               value={difficulty}
-              onChange={useCallback((e: React.ChangeEvent<HTMLSelectElement>) => setDifficulty(e.target.value as DifficultyLevel), [])}
+              onChange={useCallback(
+                (e: React.ChangeEvent<HTMLSelectElement>) =>
+                  setDifficulty(e.target.value as DifficultyLevel),
+                [],
+              )}
               className="appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             >
@@ -214,7 +244,11 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
           <div className="relative">
             <select
               value={maxPhrases}
-              onChange={useCallback((e: React.ChangeEvent<HTMLSelectElement>) => setMaxPhrases(Number(e.target.value)), [])}
+              onChange={useCallback(
+                (e: React.ChangeEvent<HTMLSelectElement>) =>
+                  setMaxPhrases(Number(e.target.value)),
+                [],
+              )}
               className="appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             >
@@ -232,7 +266,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
             disabled={loading}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm"
           >
-            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`h-4 w-4 ${loading ? "animate-spin" : ""}`} />
             Extract
           </button>
         </div>
@@ -267,7 +301,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
           <PhrasesProgressIndicator isExtracting={true} />
           <div className="space-y-4 mt-6">
             {/* Show skeleton for phrases while loading */}
-            {[1, 2, 3, 4, 5].map(index => (
+            {[1, 2, 3, 4, 5].map((index) => (
               <div
                 key={index}
                 className="bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800 rounded-lg p-4"
@@ -299,8 +333,17 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
             <p className="text-sm text-gray-600 dark:text-gray-400">
               Found {phrases.length} {difficulty} level phrases
             </p>
-            <span className={useMemo(() => `px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`, [difficulty, getDifficultyColor])}>
-              {useMemo(() => difficulty.charAt(0).toUpperCase() + difficulty.slice(1), [difficulty])}
+            <span
+              className={useMemo(
+                () =>
+                  `px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`,
+                [difficulty, getDifficultyColor],
+              )}
+            >
+              {useMemo(
+                () => difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
+                [difficulty],
+              )}
             </span>
           </div>
 
@@ -360,7 +403,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
               <button className="px-3 py-1.5 bg-purple-600 text-white text-sm rounded-md hover:bg-purple-700 transition-colors">
                 Quiz Me
               </button>
-              <button 
+              <button
                 onClick={handleExportVocabulary}
                 className="px-3 py-1.5 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700 transition-colors flex items-center gap-1"
                 title="Export vocabulary as CSV"
@@ -392,6 +435,6 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
   );
 });
 
-PhrasesPanel.displayName = 'PhrasesPanel';
+PhrasesPanel.displayName = "PhrasesPanel";
 
 export default PhrasesPanel;

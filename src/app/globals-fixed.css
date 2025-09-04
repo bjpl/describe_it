@@ -41,7 +41,7 @@
   * {
     @apply border-gray-200;
   }
-  
+
   html {
     /* Prevent flash of unstyled content */
     visibility: visible !important;
@@ -49,29 +49,32 @@
     /* Set color scheme to prevent flashing */
     color-scheme: light dark;
   }
-  
+
   body {
     @apply bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100;
     /* Prevent layout shift during hydration */
     min-height: 100vh;
     /* Smooth transitions for theme changes */
-    transition: background-color 0.2s ease, color 0.2s ease;
+    transition:
+      background-color 0.2s ease,
+      color 0.2s ease;
     /* Ensure body takes full height */
     margin: 0;
     padding: 0;
   }
-  
+
   /* Prevent hydration flash for animations */
   .animate-pulse {
     animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
-  
+
   @keyframes pulse {
-    0%, 100% {
+    0%,
+    100% {
       opacity: 1;
     }
     50% {
-      opacity: .5;
+      opacity: 0.5;
     }
   }
 }
@@ -102,7 +105,7 @@
     opacity: 0;
     transition: opacity 0.3s ease-in-out;
   }
-  
+
   .hydration-safe.loaded {
     opacity: 1;
   }

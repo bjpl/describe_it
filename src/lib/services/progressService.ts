@@ -2,9 +2,9 @@
  * Progress Service - User progress tracking and analytics
  */
 
-import { withRetry, RetryConfig } from '@/lib/utils/error-retry';
-import { supabase } from '@/lib/supabase';
-import { getEnvironment } from '@/config/env';
+import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
+import { supabase } from "@/lib/supabase";
+import { getEnvironment } from "@/config/env";
 
 interface UserProgress {
   userId: string;
@@ -27,7 +27,7 @@ interface UserProgress {
 interface SessionProgress {
   id: string;
   userId?: string;
-  sessionType: 'study' | 'quiz' | 'review' | 'exploration';
+  sessionType: "study" | "quiz" | "review" | "exploration";
   startTime: string;
   endTime?: string;
   duration?: number; // in seconds
@@ -37,10 +37,10 @@ interface SessionProgress {
   topicsStudied: string[];
   imagesViewed: string[];
   vocabularyLearned: string[];
-  difficultyLevel: 'beginner' | 'intermediate' | 'advanced';
+  difficultyLevel: "beginner" | "intermediate" | "advanced";
   experienceGained: number;
   metadata?: {
-    deviceType?: 'mobile' | 'desktop' | 'tablet';
+    deviceType?: "mobile" | "desktop" | "tablet";
     userAgent?: string;
     location?: string;
   };
@@ -87,7 +87,7 @@ interface MonthlyTrends {
 
 interface SkillProgress {
   skillName: string;
-  category: 'vocabulary' | 'comprehension' | 'analysis' | 'interpretation';
+  category: "vocabulary" | "comprehension" | "analysis" | "interpretation";
   currentLevel: number;
   totalQuestions: number;
   correctAnswers: number;
@@ -99,7 +99,11 @@ interface SkillProgress {
 }
 
 interface LearningPattern {
-  type: 'peak_performance' | 'difficulty_preference' | 'learning_speed' | 'retention_rate';
+  type:
+    | "peak_performance"
+    | "difficulty_preference"
+    | "learning_speed"
+    | "retention_rate";
   description: string;
   data: any;
   confidence: number;
@@ -111,9 +115,9 @@ interface Badge {
   name: string;
   description: string;
   iconUrl?: string;
-  category: 'streak' | 'accuracy' | 'vocabulary' | 'exploration' | 'milestone';
+  category: "streak" | "accuracy" | "vocabulary" | "exploration" | "milestone";
   earnedAt: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  rarity: "common" | "rare" | "epic" | "legendary";
 }
 
 interface Achievement {
@@ -157,7 +161,11 @@ export class ProgressService {
       backoffFactor: 2,
       shouldRetry: (error: Error) => {
         const message = error.message.toLowerCase();
-        return message.includes('503') || message.includes('502') || message.includes('timeout');
+        return (
+          message.includes("503") ||
+          message.includes("502") ||
+          message.includes("timeout")
+        );
       },
     };
   }
@@ -167,9 +175,9 @@ export class ProgressService {
    */
   public async startSession(config: {
     userId?: string;
-    sessionType: SessionProgress['sessionType'];
-    difficultyLevel: SessionProgress['difficultyLevel'];
-    metadata?: SessionProgress['metadata'];
+    sessionType: SessionProgress["sessionType"];
+    difficultyLevel: SessionProgress["difficultyLevel"];
+    metadata?: SessionProgress["metadata"];
   }): Promise<string> {
     const sessionId = this.generateId();
     const sessionData: SessionProgress = {
@@ -191,7 +199,7 @@ export class ProgressService {
     try {
       await this.saveSessionToDatabase(sessionData);
     } catch (error) {
-      console.warn('Failed to save session to database:', error);
+      console.warn("Failed to save session to database:", error);
     }
 
     return sessionId;
@@ -200,28 +208,32 @@ export class ProgressService {
   /**
    * Update session progress
    */
-  public async updateSessionProgress(sessionId: string, updates: {
-    questionsAnswered?: number;
-    correctAnswers?: number;
-    topicsStudied?: string[];
-    imagesViewed?: string[];
-    vocabularyLearned?: string[];
-  }): Promise<void> {
+  public async updateSessionProgress(
+    sessionId: string,
+    updates: {
+      questionsAnswered?: number;
+      correctAnswers?: number;
+      topicsStudied?: string[];
+      imagesViewed?: string[];
+      vocabularyLearned?: string[];
+    },
+  ): Promise<void> {
     try {
       await withRetry(async () => {
         if (supabase) {
-          const accuracy = updates.questionsAnswered && updates.questionsAnswered > 0 
-            ? (updates.correctAnswers || 0) / updates.questionsAnswered
-            : 0;
+          const accuracy =
+            updates.questionsAnswered && updates.questionsAnswered > 0
+              ? (updates.correctAnswers || 0) / updates.questionsAnswered
+              : 0;
 
           const { error } = await supabase
-            .from('session_progress')
+            .from("session_progress")
             .update({
               ...updates,
               accuracy,
               updatedAt: new Date().toISOString(),
             })
-            .eq('id', sessionId);
+            .eq("id", sessionId);
 
           if (error) throw error;
         }
@@ -229,7 +241,7 @@ export class ProgressService {
 
       this.clearCacheByPattern(`session_${sessionId}`);
     } catch (error) {
-      console.warn('Failed to update session progress:', error);
+      console.warn("Failed to update session progress:", error);
     }
   }
 
@@ -242,8 +254,12 @@ export class ProgressService {
       if (!session) return null;
 
       const endTime = new Date().toISOString();
-      const duration = session.startTime 
-        ? Math.floor((new Date(endTime).getTime() - new Date(session.startTime).getTime()) / 1000)
+      const duration = session.startTime
+        ? Math.floor(
+            (new Date(endTime).getTime() -
+              new Date(session.startTime).getTime()) /
+              1000,
+          )
         : 0;
 
       const experienceGained = this.calculateExperienceGained(session);
@@ -251,13 +267,13 @@ export class ProgressService {
       const updatedSession = await withRetry(async () => {
         if (supabase) {
           const { data, error } = await supabase
-            .from('session_progress')
+            .from("session_progress")
             .update({
               endTime,
               duration,
               experienceGained,
             })
-            .eq('id', sessionId)
+            .eq("id", sessionId)
             .select()
             .single();
 
@@ -278,10 +294,10 @@ export class ProgressService {
         });
       }
 
-      this.clearCacheByPattern('progress_');
+      this.clearCacheByPattern("progress_");
       return updatedSession;
     } catch (error) {
-      console.warn('Failed to end session:', error);
+      console.warn("Failed to end session:", error);
       return null;
     }
   }
@@ -301,12 +317,12 @@ export class ProgressService {
       const result = await withRetry(async () => {
         if (supabase) {
           const { data, error } = await supabase
-            .from('user_progress')
-            .select('*')
-            .eq('userId', userId)
+            .from("user_progress")
+            .select("*")
+            .eq("userId", userId)
             .single();
 
-          if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "not found"
+          if (error && error.code !== "PGRST116") throw error; // PGRST116 is "not found"
           return data;
         }
         return null;
@@ -322,7 +338,7 @@ export class ProgressService {
       this.setCache(cacheKey, result);
       return result;
     } catch (error) {
-      console.warn('Failed to get user progress:', error);
+      console.warn("Failed to get user progress:", error);
       return null;
     }
   }
@@ -330,7 +346,10 @@ export class ProgressService {
   /**
    * Get learning metrics
    */
-  public async getLearningMetrics(userId: string, timeframe: 'week' | 'month' | 'all' = 'week'): Promise<LearningMetrics> {
+  public async getLearningMetrics(
+    userId: string,
+    timeframe: "week" | "month" | "all" = "week",
+  ): Promise<LearningMetrics> {
     const cacheKey = `metrics_${userId}_${timeframe}`;
     const cached = this.getFromCache(cacheKey);
 
@@ -341,7 +360,9 @@ export class ProgressService {
     try {
       const [dailyStats, sessions, userProgress] = await Promise.all([
         this.getDailyStats(userId, timeframe),
-        this.getUserSessions(userId, { dateRange: this.getDateRange(timeframe) }),
+        this.getUserSessions(userId, {
+          dateRange: this.getDateRange(timeframe),
+        }),
         this.getUserProgress(userId),
       ]);
 
@@ -350,13 +371,16 @@ export class ProgressService {
         weeklyProgress: await this.calculateWeeklyProgress(sessions),
         monthlyTrends: await this.calculateMonthlyTrends(sessions),
         skillProgress: await this.calculateSkillProgress(userId),
-        learningPatterns: await this.identifyLearningPatterns(sessions, userProgress),
+        learningPatterns: await this.identifyLearningPatterns(
+          sessions,
+          userProgress,
+        ),
       };
 
       this.setCache(cacheKey, metrics, 600000); // 10 minutes
       return metrics;
     } catch (error) {
-      console.warn('Failed to get learning metrics:', error);
+      console.warn("Failed to get learning metrics:", error);
       return {
         dailyStats: [],
         weeklyProgress: {
@@ -386,7 +410,10 @@ export class ProgressService {
   /**
    * Get user sessions
    */
-  public async getUserSessions(userId: string, filter: ProgressFilter = {}): Promise<SessionProgress[]> {
+  public async getUserSessions(
+    userId: string,
+    filter: ProgressFilter = {},
+  ): Promise<SessionProgress[]> {
     const cacheKey = `sessions_${userId}_${this.hashString(JSON.stringify(filter))}`;
     const cached = this.getFromCache(cacheKey);
 
@@ -398,30 +425,35 @@ export class ProgressService {
       const result = await withRetry(async () => {
         if (supabase) {
           let query = supabase
-            .from('session_progress')
-            .select('*')
-            .eq('userId', userId);
+            .from("session_progress")
+            .select("*")
+            .eq("userId", userId);
 
           if (filter.sessionType?.length) {
-            query = query.in('sessionType', filter.sessionType);
+            query = query.in("sessionType", filter.sessionType);
           }
 
           if (filter.dateRange) {
-            query = query.gte('startTime', filter.dateRange.start);
-            query = query.lte('startTime', filter.dateRange.end);
+            query = query.gte("startTime", filter.dateRange.start);
+            query = query.lte("startTime", filter.dateRange.end);
           }
 
           if (filter.difficultyLevel?.length) {
-            query = query.in('difficultyLevel', filter.difficultyLevel);
+            query = query.in("difficultyLevel", filter.difficultyLevel);
           }
 
           if (filter.offset) {
-            query = query.range(filter.offset, (filter.offset + (filter.limit || 50)) - 1);
+            query = query.range(
+              filter.offset,
+              filter.offset + (filter.limit || 50) - 1,
+            );
           } else if (filter.limit) {
             query = query.limit(filter.limit);
           }
 
-          const { data, error } = await query.order('startTime', { ascending: false });
+          const { data, error } = await query.order("startTime", {
+            ascending: false,
+          });
 
           if (error) throw error;
           return data || [];
@@ -432,7 +464,7 @@ export class ProgressService {
       this.setCache(cacheKey, result);
       return result;
     } catch (error) {
-      console.warn('Failed to get user sessions:', error);
+      console.warn("Failed to get user sessions:", error);
       return [];
     }
   }
@@ -446,23 +478,31 @@ export class ProgressService {
       if (!userProgress) return false;
 
       // Check if badge already exists
-      const existingBadge = userProgress.badges.find(b => b.id === badgeId);
+      const existingBadge = userProgress.badges.find((b) => b.id === badgeId);
       if (existingBadge) return false;
 
       const badge = this.getBadgeById(badgeId);
       if (!badge) return false;
 
-      const updatedBadges = [...userProgress.badges, { ...badge, earnedAt: new Date().toISOString() }];
+      const updatedBadges = [
+        ...userProgress.badges,
+        { ...badge, earnedAt: new Date().toISOString() },
+      ];
 
       await this.updateUserProgress(userId, {
         badges: updatedBadges,
-        experienceGained: badge.category === 'legendary' ? 500 : badge.category === 'epic' ? 200 : 50,
+        experienceGained:
+          badge.category === "legendary"
+            ? 500
+            : badge.category === "epic"
+              ? 200
+              : 50,
       });
 
       this.clearCacheByPattern(`user_progress_${userId}`);
       return true;
     } catch (error) {
-      console.warn('Failed to award badge:', error);
+      console.warn("Failed to award badge:", error);
       return false;
     }
   }
@@ -470,23 +510,32 @@ export class ProgressService {
   /**
    * Update achievement progress
    */
-  public async updateAchievementProgress(userId: string, achievementId: string, progress: number): Promise<void> {
+  public async updateAchievementProgress(
+    userId: string,
+    achievementId: string,
+    progress: number,
+  ): Promise<void> {
     try {
       const userProgress = await this.getUserProgress(userId);
       if (!userProgress) return;
 
-      const updatedAchievements = userProgress.achievements.map(achievement => {
-        if (achievement.id === achievementId) {
-          const isNowCompleted = progress >= achievement.target && !achievement.isCompleted;
-          return {
-            ...achievement,
-            progress: Math.min(progress, achievement.target),
-            isCompleted: progress >= achievement.target,
-            completedAt: isNowCompleted ? new Date().toISOString() : achievement.completedAt,
-          };
-        }
-        return achievement;
-      });
+      const updatedAchievements = userProgress.achievements.map(
+        (achievement) => {
+          if (achievement.id === achievementId) {
+            const isNowCompleted =
+              progress >= achievement.target && !achievement.isCompleted;
+            return {
+              ...achievement,
+              progress: Math.min(progress, achievement.target),
+              isCompleted: progress >= achievement.target,
+              completedAt: isNowCompleted
+                ? new Date().toISOString()
+                : achievement.completedAt,
+            };
+          }
+          return achievement;
+        },
+      );
 
       await this.updateUserProgress(userId, {
         achievements: updatedAchievements,
@@ -494,7 +543,7 @@ export class ProgressService {
 
       this.clearCacheByPattern(`user_progress_${userId}`);
     } catch (error) {
-      console.warn('Failed to update achievement progress:', error);
+      console.warn("Failed to update achievement progress:", error);
     }
   }
 
@@ -519,36 +568,45 @@ export class ProgressService {
 
     try {
       if (supabase) {
-        await supabase.from('user_progress').insert([initialProgress]);
+        await supabase.from("user_progress").insert([initialProgress]);
       }
     } catch (error) {
-      console.warn('Failed to save initial progress:', error);
+      console.warn("Failed to save initial progress:", error);
     }
 
     return initialProgress;
   }
 
-  private async updateUserProgress(userId: string, updates: {
-    sessionCompleted?: boolean;
-    experienceGained?: number;
-    questionsAnswered?: number;
-    correctAnswers?: number;
-    timeSpent?: number;
-    badges?: Badge[];
-    achievements?: Achievement[];
-  }): Promise<void> {
+  private async updateUserProgress(
+    userId: string,
+    updates: {
+      sessionCompleted?: boolean;
+      experienceGained?: number;
+      questionsAnswered?: number;
+      correctAnswers?: number;
+      timeSpent?: number;
+      badges?: Badge[];
+      achievements?: Achievement[];
+    },
+  ): Promise<void> {
     const currentProgress = await this.getUserProgress(userId);
     if (!currentProgress) return;
 
-    const newTotalQuestions = currentProgress.totalQuestions + (updates.questionsAnswered || 0);
-    const newCorrectAnswers = currentProgress.correctAnswers + (updates.correctAnswers || 0);
-    const newAverageAccuracy = newTotalQuestions > 0 ? newCorrectAnswers / newTotalQuestions : 0;
-    const newExperiencePoints = currentProgress.experiencePoints + (updates.experienceGained || 0);
+    const newTotalQuestions =
+      currentProgress.totalQuestions + (updates.questionsAnswered || 0);
+    const newCorrectAnswers =
+      currentProgress.correctAnswers + (updates.correctAnswers || 0);
+    const newAverageAccuracy =
+      newTotalQuestions > 0 ? newCorrectAnswers / newTotalQuestions : 0;
+    const newExperiencePoints =
+      currentProgress.experiencePoints + (updates.experienceGained || 0);
     const newLevel = Math.floor(newExperiencePoints / 1000) + 1;
 
     const updatedProgress = {
       ...currentProgress,
-      totalSessions: updates.sessionCompleted ? currentProgress.totalSessions + 1 : currentProgress.totalSessions,
+      totalSessions: updates.sessionCompleted
+        ? currentProgress.totalSessions + 1
+        : currentProgress.totalSessions,
       totalQuestions: newTotalQuestions,
       correctAnswers: newCorrectAnswers,
       averageAccuracy: newAverageAccuracy,
@@ -564,29 +622,31 @@ export class ProgressService {
     try {
       if (supabase) {
         await supabase
-          .from('user_progress')
+          .from("user_progress")
           .update(updatedProgress)
-          .eq('userId', userId);
+          .eq("userId", userId);
       }
     } catch (error) {
-      console.warn('Failed to update user progress:', error);
+      console.warn("Failed to update user progress:", error);
     }
   }
 
-  private async getSessionById(sessionId: string): Promise<SessionProgress | null> {
+  private async getSessionById(
+    sessionId: string,
+  ): Promise<SessionProgress | null> {
     try {
       if (supabase) {
         const { data, error } = await supabase
-          .from('session_progress')
-          .select('*')
-          .eq('id', sessionId)
+          .from("session_progress")
+          .select("*")
+          .eq("id", sessionId)
           .single();
 
         if (error) return null;
         return data;
       }
     } catch (error) {
-      console.warn('Failed to get session:', error);
+      console.warn("Failed to get session:", error);
     }
     return null;
   }
@@ -594,11 +654,11 @@ export class ProgressService {
   private async saveSessionToDatabase(session: SessionProgress): Promise<void> {
     if (supabase) {
       const { error } = await supabase
-        .from('session_progress')
+        .from("session_progress")
         .insert([session]);
 
       if (error) {
-        console.warn('Failed to save session to database:', error);
+        console.warn("Failed to save session to database:", error);
       }
     }
   }
@@ -606,48 +666,67 @@ export class ProgressService {
   private calculateExperienceGained(session: SessionProgress): number {
     const basePoints = session.questionsAnswered * 10;
     const accuracyBonus = Math.floor(session.accuracy * 50);
-    const difficultyMultiplier = {
-      'beginner': 1,
-      'intermediate': 1.5,
-      'advanced': 2,
-    }[session.difficultyLevel] || 1;
+    const difficultyMultiplier =
+      {
+        beginner: 1,
+        intermediate: 1.5,
+        advanced: 2,
+      }[session.difficultyLevel] || 1;
 
     return Math.floor((basePoints + accuracyBonus) * difficultyMultiplier);
   }
 
-  private async getDailyStats(userId: string, timeframe: string): Promise<DailyStats[]> {
+  private async getDailyStats(
+    userId: string,
+    timeframe: string,
+  ): Promise<DailyStats[]> {
     // Implementation would query database for daily statistics
     // This is a simplified version
     return [];
   }
 
-  private async calculateWeeklyProgress(sessions: SessionProgress[]): Promise<WeeklyProgress> {
+  private async calculateWeeklyProgress(
+    sessions: SessionProgress[],
+  ): Promise<WeeklyProgress> {
     const weekStart = this.getWeekStart().toISOString();
-    const weekSessions = sessions.filter(s => s.startTime >= weekStart);
+    const weekSessions = sessions.filter((s) => s.startTime >= weekStart);
 
     return {
       weekStart,
-      totalQuestions: weekSessions.reduce((sum, s) => sum + s.questionsAnswered, 0),
-      averageAccuracy: weekSessions.length > 0 
-        ? weekSessions.reduce((sum, s) => sum + s.accuracy, 0) / weekSessions.length 
-        : 0,
-      totalTimeSpent: weekSessions.reduce((sum, s) => sum + (s.duration || 0), 0),
-      daysActive: new Set(weekSessions.map(s => s.startTime.split('T')[0])).size,
+      totalQuestions: weekSessions.reduce(
+        (sum, s) => sum + s.questionsAnswered,
+        0,
+      ),
+      averageAccuracy:
+        weekSessions.length > 0
+          ? weekSessions.reduce((sum, s) => sum + s.accuracy, 0) /
+            weekSessions.length
+          : 0,
+      totalTimeSpent: weekSessions.reduce(
+        (sum, s) => sum + (s.duration || 0),
+        0,
+      ),
+      daysActive: new Set(weekSessions.map((s) => s.startTime.split("T")[0]))
+        .size,
       topCategories: [],
       improvementAreas: [],
     };
   }
 
-  private async calculateMonthlyTrends(sessions: SessionProgress[]): Promise<MonthlyTrends> {
+  private async calculateMonthlyTrends(
+    sessions: SessionProgress[],
+  ): Promise<MonthlyTrends> {
     const monthStart = this.getMonthStart().toISOString();
-    const monthSessions = sessions.filter(s => s.startTime >= monthStart);
+    const monthSessions = sessions.filter((s) => s.startTime >= monthStart);
 
     return {
       monthStart,
       totalSessions: monthSessions.length,
-      averageSessionTime: monthSessions.length > 0 
-        ? monthSessions.reduce((sum, s) => sum + (s.duration || 0), 0) / monthSessions.length 
-        : 0,
+      averageSessionTime:
+        monthSessions.length > 0
+          ? monthSessions.reduce((sum, s) => sum + (s.duration || 0), 0) /
+            monthSessions.length
+          : 0,
       accuracyTrend: [],
       vocabularyGrowth: [],
       strongestSkills: [],
@@ -655,12 +734,17 @@ export class ProgressService {
     };
   }
 
-  private async calculateSkillProgress(userId: string): Promise<SkillProgress[]> {
+  private async calculateSkillProgress(
+    userId: string,
+  ): Promise<SkillProgress[]> {
     // Implementation would analyze user performance across different skill areas
     return [];
   }
 
-  private async identifyLearningPatterns(sessions: SessionProgress[], userProgress: UserProgress | null): Promise<LearningPattern[]> {
+  private async identifyLearningPatterns(
+    sessions: SessionProgress[],
+    userProgress: UserProgress | null,
+  ): Promise<LearningPattern[]> {
     // Implementation would analyze patterns in learning behavior
     return [];
   }
@@ -668,20 +752,20 @@ export class ProgressService {
   private getInitialAchievements(): Achievement[] {
     return [
       {
-        id: 'first_question',
-        name: 'First Question',
-        description: 'Answer your first question',
-        category: 'milestone',
+        id: "first_question",
+        name: "First Question",
+        description: "Answer your first question",
+        category: "milestone",
         progress: 0,
         target: 1,
         isCompleted: false,
         reward: { experiencePoints: 50 },
       },
       {
-        id: 'vocabulary_collector',
-        name: 'Vocabulary Collector',
-        description: 'Learn 50 new vocabulary words',
-        category: 'vocabulary',
+        id: "vocabulary_collector",
+        name: "Vocabulary Collector",
+        description: "Learn 50 new vocabulary words",
+        category: "vocabulary",
         progress: 0,
         target: 50,
         isCompleted: false,
@@ -693,24 +777,24 @@ export class ProgressService {
   private getBadgeById(badgeId: string): Badge | null {
     const badges: Badge[] = [
       {
-        id: 'accuracy_master',
-        name: 'Accuracy Master',
-        description: 'Achieve 90% accuracy in a session',
-        category: 'accuracy',
-        earnedAt: '',
-        rarity: 'rare',
+        id: "accuracy_master",
+        name: "Accuracy Master",
+        description: "Achieve 90% accuracy in a session",
+        category: "accuracy",
+        earnedAt: "",
+        rarity: "rare",
       },
       {
-        id: 'streak_champion',
-        name: 'Streak Champion',
-        description: 'Maintain a 7-day learning streak',
-        category: 'streak',
-        earnedAt: '',
-        rarity: 'epic',
+        id: "streak_champion",
+        name: "Streak Champion",
+        description: "Maintain a 7-day learning streak",
+        category: "streak",
+        earnedAt: "",
+        rarity: "epic",
       },
     ];
 
-    return badges.find(b => b.id === badgeId) || null;
+    return badges.find((b) => b.id === badgeId) || null;
   }
 
   private getDateRange(timeframe: string): { start: string; end: string } {
@@ -718,10 +802,10 @@ export class ProgressService {
     const start = new Date();
 
     switch (timeframe) {
-      case 'week':
+      case "week":
         start.setDate(now.getDate() - 7);
         break;
-      case 'month':
+      case "month":
         start.setMonth(now.getMonth() - 1);
         break;
       default:
@@ -759,7 +843,11 @@ export class ProgressService {
     return cached.data;
   }
 
-  private setCache(key: string, data: any, ttl: number = this.defaultTTL): void {
+  private setCache(
+    key: string,
+    data: any,
+    ttl: number = this.defaultTTL,
+  ): void {
     if (this.cache.size >= this.maxCacheSize) {
       const firstKey = this.cache.keys().next().value;
       if (firstKey) this.cache.delete(firstKey);
@@ -788,7 +876,7 @@ export class ProgressService {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
     return Math.abs(hash).toString(36);

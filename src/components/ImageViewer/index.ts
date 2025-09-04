@@ -1,2 +1,2 @@
-export { ImageViewer } from './ImageViewer';
-export { InlineImageViewer } from './InlineImageViewer';
+export { ImageViewer } from "./ImageViewer";
+export { InlineImageViewer } from "./InlineImageViewer";

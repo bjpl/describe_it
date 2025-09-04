@@ -1,2 +1,6 @@
-export * from './PerformanceMonitor';
-export { PerformanceMonitor, useAPIPerformanceMonitor, useWebVitals } from './PerformanceMonitor';
+export * from "./PerformanceMonitor";
+export {
+  PerformanceMonitor,
+  useAPIPerformanceMonitor,
+  useWebVitals,
+} from "./PerformanceMonitor";

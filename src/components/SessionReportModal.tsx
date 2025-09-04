@@ -1,9 +1,9 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { X, BarChart3, FileText, TrendingUp } from 'lucide-react';
-import SessionReport from './SessionReport';
-import { SessionLogger } from '@/lib/logging/sessionLogger';
+import React, { useState } from "react";
+import { X, BarChart3, FileText, TrendingUp } from "lucide-react";
+import SessionReport from "./SessionReport";
+import { SessionLogger } from "@/lib/logging/sessionLogger";
 
 interface SessionReportModalProps {
   isOpen: boolean;
@@ -11,10 +11,10 @@ interface SessionReportModalProps {
   sessionLogger?: SessionLogger;
 }
 
-export function SessionReportModal({ 
-  isOpen, 
-  onClose, 
-  sessionLogger 
+export function SessionReportModal({
+  isOpen,
+  onClose,
+  sessionLogger,
 }: SessionReportModalProps) {
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,7 +38,7 @@ export function SessionReportModal({
               </p>
             </div>
           </div>
-          
+
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
@@ -50,7 +50,7 @@ export function SessionReportModal({
 
         {/* Modal Content */}
         <div className="overflow-y-auto max-h-[calc(90vh-120px)]">
-          <SessionReport 
+          <SessionReport
             sessionLogger={sessionLogger}
             showExportOptions={true}
             className=""
@@ -62,10 +62,10 @@ export function SessionReportModal({
 }
 
 // Quick Stats Component for dashboard
-export function SessionQuickStats({ 
+export function SessionQuickStats({
   sessionLogger,
-  onOpenFullReport
-}: { 
+  onOpenFullReport,
+}: {
   sessionLogger?: SessionLogger;
   onOpenFullReport: () => void;
 }) {
@@ -83,7 +83,7 @@ export function SessionQuickStats({
         totalInteractions: summary.totalInteractions,
         learningScore: summary.learningScore,
         sessionTime: Math.round(summary.totalDuration / 1000 / 60),
-        vocabularyWords: summary.vocabularySelected
+        vocabularyWords: summary.vocabularySelected,
       });
     }
   }, [sessionLogger]);
@@ -105,26 +105,34 @@ export function SessionQuickStats({
           Full Report
         </button>
       </div>
-      
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <div className="text-center">
-          <div className="text-2xl font-bold text-blue-600">{stats.totalInteractions}</div>
+          <div className="text-2xl font-bold text-blue-600">
+            {stats.totalInteractions}
+          </div>
           <div className="text-xs text-gray-600">Interactions</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-green-600">{stats.learningScore}</div>
+          <div className="text-2xl font-bold text-green-600">
+            {stats.learningScore}
+          </div>
           <div className="text-xs text-gray-600">Learning Score</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-purple-600">{stats.sessionTime}m</div>
+          <div className="text-2xl font-bold text-purple-600">
+            {stats.sessionTime}m
+          </div>
           <div className="text-xs text-gray-600">Session Time</div>
         </div>
         <div className="text-center">
-          <div className="text-2xl font-bold text-orange-600">{stats.vocabularyWords}</div>
+          <div className="text-2xl font-bold text-orange-600">
+            {stats.vocabularyWords}
+          </div>
           <div className="text-xs text-gray-600">Vocabulary</div>
         </div>
       </div>
-      
+
       {/* Progress Bar */}
       <div className="mt-3">
         <div className="flex justify-between text-xs text-gray-600 mb-1">
@@ -132,7 +140,7 @@ export function SessionQuickStats({
           <span>{stats.learningScore}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
-          <div 
+          <div
             className="bg-gradient-to-r from-blue-500 to-purple-500 h-2 rounded-full transition-all duration-500"
             style={{ width: `${Math.min(stats.learningScore, 100)}%` }}
           />

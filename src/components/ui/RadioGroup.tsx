@@ -1,32 +1,34 @@
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext } from "react";
 
 interface RadioGroupContextValue {
   value: string;
   onValueChange: (value: string) => void;
 }
 
-const RadioGroupContext = createContext<RadioGroupContextValue | undefined>(undefined);
+const RadioGroupContext = createContext<RadioGroupContextValue | undefined>(
+  undefined,
+);
 
 interface RadioGroupProps {
   value: string;
   onValueChange: (value: string) => void;
   className?: string;
   children: React.ReactNode;
-  orientation?: 'horizontal' | 'vertical';
+  orientation?: "horizontal" | "vertical";
 }
 
-export const RadioGroup: React.FC<RadioGroupProps> = ({ 
-  value, 
-  onValueChange, 
-  className = '',
+export const RadioGroup: React.FC<RadioGroupProps> = ({
+  value,
+  onValueChange,
+  className = "",
   children,
-  orientation = 'vertical'
+  orientation = "vertical",
 }) => {
   return (
     <RadioGroupContext.Provider value={{ value, onValueChange }}>
-      <div 
+      <div
         role="radiogroup"
-        className={`${orientation === 'horizontal' ? 'flex flex-row gap-4' : 'flex flex-col gap-2'} ${className}`}
+        className={`${orientation === "horizontal" ? "flex flex-row gap-4" : "flex flex-col gap-2"} ${className}`}
       >
         {children}
       </div>
@@ -41,15 +43,16 @@ interface RadioGroupItemProps {
   disabled?: boolean;
 }
 
-export const RadioGroupItem: React.FC<RadioGroupItemProps> = ({ 
-  value, 
+export const RadioGroupItem: React.FC<RadioGroupItemProps> = ({
+  value,
   id,
-  className = '',
-  disabled = false
+  className = "",
+  disabled = false,
 }) => {
   const context = useContext(RadioGroupContext);
-  if (!context) throw new Error('RadioGroupItem must be used within RadioGroup');
-  
+  if (!context)
+    throw new Error("RadioGroupItem must be used within RadioGroup");
+
   const { value: selectedValue, onValueChange } = context;
   const isSelected = selectedValue === value;
 

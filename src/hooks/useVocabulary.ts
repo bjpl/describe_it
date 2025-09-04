@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo } from "react";
 import type {
   VocabularyItem,
   VocabularyItemUI,
@@ -7,8 +7,8 @@ import type {
   DifficultyLevel,
   vocabularyItemsToUI,
   vocabularyItemsFromUI,
-  normalizeLegacyVocabularyItem
-} from '../types/unified';
+  normalizeLegacyVocabularyItem,
+} from "../types/unified";
 
 // Use unified types for consistency
 export type VocabularyStats = UnifiedVocabularyStats;
@@ -23,137 +23,149 @@ export interface UseVocabularyOptions {
 // Sample data for demonstration
 const SAMPLE_VOCABULARY: VocabularyItem[] = [
   {
-    id: 'v1',
-    spanish_text: 'casa',
-    english_translation: 'house',
-    category: 'home',
+    id: "v1",
+    spanish_text: "casa",
+    english_translation: "house",
+    category: "home",
     difficulty_level: 1,
-    part_of_speech: 'noun',
+    part_of_speech: "noun",
     frequency_score: 95,
-    context_sentence_spanish: 'Mi casa es muy grande.',
-    context_sentence_english: 'My house is very big.',
+    context_sentence_spanish: "Mi casa es muy grande.",
+    context_sentence_english: "My house is very big.",
     created_at: new Date().toISOString(),
     mastery_level: 3,
-    review_count: 5
+    review_count: 5,
   },
   {
-    id: 'v2',
-    spanish_text: 'hermoso',
-    english_translation: 'beautiful',
-    category: 'adjectives',
+    id: "v2",
+    spanish_text: "hermoso",
+    english_translation: "beautiful",
+    category: "adjectives",
     difficulty_level: 2,
-    part_of_speech: 'adjective',
+    part_of_speech: "adjective",
     frequency_score: 80,
-    context_sentence_spanish: 'El paisaje es muy hermoso.',
-    context_sentence_english: 'The landscape is very beautiful.',
+    context_sentence_spanish: "El paisaje es muy hermoso.",
+    context_sentence_english: "The landscape is very beautiful.",
     created_at: new Date().toISOString(),
     mastery_level: 2,
-    review_count: 3
+    review_count: 3,
   },
   {
-    id: 'v3',
-    spanish_text: 'caminar',
-    english_translation: 'to walk',
-    category: 'actions',
+    id: "v3",
+    spanish_text: "caminar",
+    english_translation: "to walk",
+    category: "actions",
     difficulty_level: 2,
-    part_of_speech: 'verb',
+    part_of_speech: "verb",
     frequency_score: 88,
-    context_sentence_spanish: 'Me gusta caminar en el parque.',
-    context_sentence_english: 'I like to walk in the park.',
+    context_sentence_spanish: "Me gusta caminar en el parque.",
+    context_sentence_english: "I like to walk in the park.",
     created_at: new Date().toISOString(),
     mastery_level: 4,
-    review_count: 8
+    review_count: 8,
   },
   {
-    id: 'v4',
-    spanish_text: 'montaña',
-    english_translation: 'mountain',
-    category: 'nature',
+    id: "v4",
+    spanish_text: "montaña",
+    english_translation: "mountain",
+    category: "nature",
     difficulty_level: 3,
-    part_of_speech: 'noun',
+    part_of_speech: "noun",
     frequency_score: 65,
-    context_sentence_spanish: 'La montaña está cubierta de nieve.',
-    context_sentence_english: 'The mountain is covered with snow.',
+    context_sentence_spanish: "La montaña está cubierta de nieve.",
+    context_sentence_english: "The mountain is covered with snow.",
     created_at: new Date().toISOString(),
     mastery_level: 1,
-    review_count: 1
+    review_count: 1,
   },
   {
-    id: 'v5',
-    spanish_text: 'rápidamente',
-    english_translation: 'quickly',
-    category: 'adverbs',
+    id: "v5",
+    spanish_text: "rápidamente",
+    english_translation: "quickly",
+    category: "adverbs",
     difficulty_level: 4,
-    part_of_speech: 'adverb',
+    part_of_speech: "adverb",
     frequency_score: 72,
-    context_sentence_spanish: 'Corrió rápidamente hacia la meta.',
-    context_sentence_english: 'He ran quickly towards the finish line.',
+    context_sentence_spanish: "Corrió rápidamente hacia la meta.",
+    context_sentence_english: "He ran quickly towards the finish line.",
     created_at: new Date().toISOString(),
     mastery_level: 2,
-    review_count: 4
+    review_count: 4,
   },
   {
-    id: 'v6',
-    spanish_text: 'esperanza',
-    english_translation: 'hope',
-    category: 'emotions',
+    id: "v6",
+    spanish_text: "esperanza",
+    english_translation: "hope",
+    category: "emotions",
     difficulty_level: 5,
-    part_of_speech: 'noun',
+    part_of_speech: "noun",
     frequency_score: 60,
-    context_sentence_spanish: 'Nunca pierdas la esperanza.',
-    context_sentence_english: 'Never lose hope.',
+    context_sentence_spanish: "Nunca pierdas la esperanza.",
+    context_sentence_english: "Never lose hope.",
     created_at: new Date().toISOString(),
     mastery_level: 1,
-    review_count: 2
-  }
+    review_count: 2,
+  },
 ];
 
 export function useVocabulary(options: UseVocabularyOptions = {}) {
-  const { autoLoad = false, enableRealTime = false, cacheTimeout = 300000 } = options;
+  const {
+    autoLoad = false,
+    enableRealTime = false,
+    cacheTimeout = 300000,
+  } = options;
 
   // State - using unified types
   const [items, setItems] = useState<VocabularyItem[]>([]);
   const [filteredItems, setFilteredItems] = useState<VocabularyItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'connected' | 'disconnected' | 'connecting'>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<
+    "connected" | "disconnected" | "connecting"
+  >("disconnected");
   const [filters, setFilters] = useState<VocabularyFilters>({});
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   // Connection status simulation
-  const isConnected = connectionStatus === 'connected';
+  const isConnected = connectionStatus === "connected";
 
   // Load vocabulary data
   const loadVocabulary = useCallback(async () => {
     setLoading(true);
     setError(null);
-    setConnectionStatus('connecting');
+    setConnectionStatus("connecting");
 
     try {
       // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-      
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
       // Simulate random connection success/failure
       const shouldConnect = Math.random() > 0.2; // 80% success rate
-      
+
       if (shouldConnect) {
         // Use sample data (in real app, this would be an API call)
         // Normalize sample data to ensure consistency
-        const normalizedSample = SAMPLE_VOCABULARY.map(normalizeLegacyVocabularyItem);
+        const normalizedSample = SAMPLE_VOCABULARY.map(
+          normalizeLegacyVocabularyItem,
+        );
         setItems(normalizedSample);
         setFilteredItems(normalizedSample);
-        setConnectionStatus('connected');
+        setConnectionStatus("connected");
         setLastUpdated(new Date());
       } else {
-        throw new Error('Unable to connect to vocabulary database');
+        throw new Error("Unable to connect to vocabulary database");
       }
     } catch (err) {
-      console.error('Vocabulary loading error:', err);
-      setError(err instanceof Error ? err.message : 'Failed to load vocabulary');
-      setConnectionStatus('disconnected');
-      
+      console.error("Vocabulary loading error:", err);
+      setError(
+        err instanceof Error ? err.message : "Failed to load vocabulary",
+      );
+      setConnectionStatus("disconnected");
+
       // Fall back to sample data
-      const normalizedSample = SAMPLE_VOCABULARY.map(normalizeLegacyVocabularyItem);
+      const normalizedSample = SAMPLE_VOCABULARY.map(
+        normalizeLegacyVocabularyItem,
+      );
       setItems(normalizedSample);
       setFilteredItems(normalizedSample);
     } finally {
@@ -184,51 +196,70 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
   }, [enableRealTime]);
 
   // Filter functionality
-  const applyFilters = useCallback((vocabulary: VocabularyItem[], currentFilters: VocabularyFilters) => {
-    let filtered = [...vocabulary];
+  const applyFilters = useCallback(
+    (vocabulary: VocabularyItem[], currentFilters: VocabularyFilters) => {
+      let filtered = [...vocabulary];
 
-    // Search filter
-    if (currentFilters.search && currentFilters.search.trim()) {
-      const searchTerm = currentFilters.search.toLowerCase();
-      filtered = filtered.filter(item =>
-        item.spanish_text.toLowerCase().includes(searchTerm) ||
-        item.english_translation.toLowerCase().includes(searchTerm) ||
-        (item.context_sentence_spanish?.toLowerCase().includes(searchTerm)) ||
-        (item.context_sentence_english?.toLowerCase().includes(searchTerm))
-      );
-    }
-
-    // Category filter
-    if (currentFilters.category && currentFilters.category !== 'all') {
-      filtered = filtered.filter(item => item.category === currentFilters.category);
-    }
-
-    // Difficulty filter (handle both string and numeric formats)
-    if (currentFilters.difficulty && currentFilters.difficulty !== 'all') {
-      if (typeof currentFilters.difficulty === 'string') {
-        const difficultyLevel = currentFilters.difficulty as DifficultyLevel;
-        filtered = filtered.filter(item => {
-          const itemDifficulty = item.difficulty_level <= 3 ? 'beginner' : 
-                                 item.difficulty_level <= 7 ? 'intermediate' : 'advanced';
-          return itemDifficulty === difficultyLevel;
-        });
-      } else {
-        filtered = filtered.filter(item => item.difficulty_level === currentFilters.difficulty);
+      // Search filter
+      if (currentFilters.search && currentFilters.search.trim()) {
+        const searchTerm = currentFilters.search.toLowerCase();
+        filtered = filtered.filter(
+          (item) =>
+            item.spanish_text.toLowerCase().includes(searchTerm) ||
+            item.english_translation.toLowerCase().includes(searchTerm) ||
+            item.context_sentence_spanish?.toLowerCase().includes(searchTerm) ||
+            item.context_sentence_english?.toLowerCase().includes(searchTerm),
+        );
       }
-    }
 
-    // Part of speech filter
-    if (currentFilters.partOfSpeech && currentFilters.partOfSpeech !== 'all') {
-      filtered = filtered.filter(item => item.part_of_speech === currentFilters.partOfSpeech);
-    }
+      // Category filter
+      if (currentFilters.category && currentFilters.category !== "all") {
+        filtered = filtered.filter(
+          (item) => item.category === currentFilters.category,
+        );
+      }
 
-    // Mastery level filter
-    if (typeof currentFilters.masteryLevel === 'number') {
-      filtered = filtered.filter(item => (item.mastery_level || 0) === currentFilters.masteryLevel);
-    }
+      // Difficulty filter (handle both string and numeric formats)
+      if (currentFilters.difficulty && currentFilters.difficulty !== "all") {
+        if (typeof currentFilters.difficulty === "string") {
+          const difficultyLevel = currentFilters.difficulty as DifficultyLevel;
+          filtered = filtered.filter((item) => {
+            const itemDifficulty =
+              item.difficulty_level <= 3
+                ? "beginner"
+                : item.difficulty_level <= 7
+                  ? "intermediate"
+                  : "advanced";
+            return itemDifficulty === difficultyLevel;
+          });
+        } else {
+          filtered = filtered.filter(
+            (item) => item.difficulty_level === currentFilters.difficulty,
+          );
+        }
+      }
 
-    return filtered;
-  }, []);
+      // Part of speech filter
+      if (
+        currentFilters.partOfSpeech &&
+        currentFilters.partOfSpeech !== "all"
+      ) {
+        filtered = filtered.filter(
+          (item) => item.part_of_speech === currentFilters.partOfSpeech,
+        );
+      }
+
+      // Mastery level filter
+      if (typeof currentFilters.masteryLevel === "number") {
+        filtered = filtered.filter(
+          (item) => (item.mastery_level || 0) === currentFilters.masteryLevel,
+        );
+      }
+
+      return filtered;
+    },
+    [],
+  );
 
   // Apply filters whenever items or filters change
   useEffect(() => {
@@ -242,12 +273,23 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
       total: items.length,
       byCategory: {},
       byDifficulty: { beginner: 0, intermediate: 0, advanced: 0 },
-      byPartOfSpeech: { noun: 0, verb: 0, adjective: 0, adverb: 0, preposition: 0, conjunction: 0, interjection: 0, article: 0, pronoun: 0, other: 0 },
+      byPartOfSpeech: {
+        noun: 0,
+        verb: 0,
+        adjective: 0,
+        adverb: 0,
+        preposition: 0,
+        conjunction: 0,
+        interjection: 0,
+        article: 0,
+        pronoun: 0,
+        other: 0,
+      },
       averageDifficulty: 0,
       averageFrequency: 0,
       masteryDistribution: {},
       withAudio: 0,
-      withContext: 0
+      withContext: 0,
     };
 
     if (items.length === 0) return stats;
@@ -256,20 +298,27 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
     let totalFrequency = 0;
     let frequencyCount = 0;
 
-    items.forEach(item => {
+    items.forEach((item) => {
       // Category distribution
-      stats.byCategory[item.category] = (stats.byCategory[item.category] || 0) + 1;
+      stats.byCategory[item.category] =
+        (stats.byCategory[item.category] || 0) + 1;
 
       // Difficulty distribution (convert numeric to string)
-      const difficultyLevel = item.difficulty_level <= 3 ? 'beginner' : 
-                             item.difficulty_level <= 7 ? 'intermediate' : 'advanced';
-      stats.byDifficulty[difficultyLevel] = (stats.byDifficulty[difficultyLevel] || 0) + 1;
+      const difficultyLevel =
+        item.difficulty_level <= 3
+          ? "beginner"
+          : item.difficulty_level <= 7
+            ? "intermediate"
+            : "advanced";
+      stats.byDifficulty[difficultyLevel] =
+        (stats.byDifficulty[difficultyLevel] || 0) + 1;
       totalDifficulty += item.difficulty_level;
 
       // Part of speech distribution
-      const pos = item.part_of_speech as keyof VocabularyStats['byPartOfSpeech'];
+      const pos =
+        item.part_of_speech as keyof VocabularyStats["byPartOfSpeech"];
       stats.byPartOfSpeech[pos] = (stats.byPartOfSpeech[pos] || 0) + 1;
-      
+
       // Count items with audio and context
       if (item.audio_url) stats.withAudio++;
       if (item.context_sentence_spanish) stats.withContext++;
@@ -282,130 +331,154 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
 
       // Mastery distribution
       const masteryLevel = item.mastery_level || 0;
-      stats.masteryDistribution[masteryLevel] = (stats.masteryDistribution[masteryLevel] || 0) + 1;
+      stats.masteryDistribution[masteryLevel] =
+        (stats.masteryDistribution[masteryLevel] || 0) + 1;
     });
 
-    stats.averageDifficulty = Math.round(totalDifficulty / items.length * 10) / 10;
-    stats.averageFrequency = frequencyCount > 0 ? Math.round(totalFrequency / frequencyCount) : 0;
+    stats.averageDifficulty =
+      Math.round((totalDifficulty / items.length) * 10) / 10;
+    stats.averageFrequency =
+      frequencyCount > 0 ? Math.round(totalFrequency / frequencyCount) : 0;
 
     return stats;
   }, [items]);
 
   // Filter management
-  const setFilter = useCallback(<K extends keyof VocabularyFilters>(
-    key: K,
-    value: VocabularyFilters[K]
-  ) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value === 'all' ? undefined : value
-    }));
-  }, []);
+  const setFilter = useCallback(
+    <K extends keyof VocabularyFilters>(
+      key: K,
+      value: VocabularyFilters[K],
+    ) => {
+      setFilters((prev) => ({
+        ...prev,
+        [key]: value === "all" ? undefined : value,
+      }));
+    },
+    [],
+  );
 
   const clearFilters = useCallback(() => {
     setFilters({});
   }, []);
 
   const hasFilters = useMemo(() => {
-    return Object.values(filters).some(value => value !== undefined && value !== '');
+    return Object.values(filters).some(
+      (value) => value !== undefined && value !== "",
+    );
   }, [filters]);
 
   // Search functionality
-  const search = useCallback((query: string) => {
-    setFilter('search', query);
-  }, [setFilter]);
+  const search = useCallback(
+    (query: string) => {
+      setFilter("search", query);
+    },
+    [setFilter],
+  );
 
   // Utility functions
   const getUniqueCategories = useCallback(() => {
-    return Array.from(new Set(items.map(item => item.category))).sort();
+    return Array.from(new Set(items.map((item) => item.category))).sort();
   }, [items]);
 
   const getUniqueDifficulties = useCallback(() => {
-    return Array.from(new Set(items.map(item => item.difficulty_level))).sort((a, b) => a - b);
+    return Array.from(new Set(items.map((item) => item.difficulty_level))).sort(
+      (a, b) => a - b,
+    );
   }, [items]);
 
   const getUniquePartsOfSpeech = useCallback(() => {
-    return Array.from(new Set(items.map(item => item.part_of_speech))).sort();
+    return Array.from(new Set(items.map((item) => item.part_of_speech))).sort();
   }, [items]);
 
   // CRUD operations (would connect to actual API in real implementation)
-  const addItem = useCallback(async (item: Omit<VocabularyItem, 'id' | 'created_at'>) => {
-    const newItem: VocabularyItem = {
-      ...item,
-      id: `v_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      created_at: new Date().toISOString()
-    };
+  const addItem = useCallback(
+    async (item: Omit<VocabularyItem, "id" | "created_at">) => {
+      const newItem: VocabularyItem = {
+        ...item,
+        id: `v_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        created_at: new Date().toISOString(),
+      };
 
-    setItems(prev => [...prev, newItem]);
-    return newItem;
-  }, []);
+      setItems((prev) => [...prev, newItem]);
+      return newItem;
+    },
+    [],
+  );
 
-  const updateItem = useCallback(async (id: string, updates: Partial<VocabularyItem>) => {
-    setItems(prev => 
-      prev.map(item => 
-        item.id === id 
-          ? { ...item, ...updates, updated_at: new Date().toISOString() }
-          : item
-      )
-    );
-  }, []);
+  const updateItem = useCallback(
+    async (id: string, updates: Partial<VocabularyItem>) => {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id
+            ? { ...item, ...updates, updated_at: new Date().toISOString() }
+            : item,
+        ),
+      );
+    },
+    [],
+  );
 
   const removeItem = useCallback(async (id: string) => {
-    setItems(prev => prev.filter(item => item.id !== id));
+    setItems((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
   // Bulk operations
-  const addBulkItems = useCallback(async (items: Omit<VocabularyItem, 'id' | 'created_at'>[]) => {
-    const newItems = items.map(item => ({
-      ...item,
-      id: `v_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      created_at: new Date().toISOString()
-    }));
+  const addBulkItems = useCallback(
+    async (items: Omit<VocabularyItem, "id" | "created_at">[]) => {
+      const newItems = items.map((item) => ({
+        ...item,
+        id: `v_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        created_at: new Date().toISOString(),
+      }));
 
-    setItems(prev => [...prev, ...newItems]);
-    return newItems;
-  }, []);
+      setItems((prev) => [...prev, ...newItems]);
+      return newItems;
+    },
+    [],
+  );
 
   const removeBulkItems = useCallback(async (ids: string[]) => {
-    setItems(prev => prev.filter(item => !ids.includes(item.id)));
+    setItems((prev) => prev.filter((item) => !ids.includes(item.id)));
   }, []);
 
   // Export functionality
   const exportToCSV = useCallback(() => {
     const headers = [
-      'Spanish Text',
-      'English Translation',
-      'Category',
-      'Difficulty Level',
-      'Part of Speech',
-      'Frequency Score',
-      'Context Spanish',
-      'Context English',
-      'Mastery Level',
-      'Review Count',
-      'Created At'
+      "Spanish Text",
+      "English Translation",
+      "Category",
+      "Difficulty Level",
+      "Part of Speech",
+      "Frequency Score",
+      "Context Spanish",
+      "Context English",
+      "Mastery Level",
+      "Review Count",
+      "Created At",
     ];
 
-    const rows = filteredItems.map(item => [
+    const rows = filteredItems.map((item) => [
       item.spanish_text,
       item.english_translation,
       item.category,
       item.difficulty_level.toString(),
       item.part_of_speech,
-      (item.frequency_score || '').toString(),
-      item.context_sentence_spanish || '',
-      item.context_sentence_english || '',
-      (item.mastery_level || '').toString(),
-      (item.review_count || '').toString(),
-      item.created_at
+      (item.frequency_score || "").toString(),
+      item.context_sentence_spanish || "",
+      item.context_sentence_english || "",
+      (item.mastery_level || "").toString(),
+      (item.review_count || "").toString(),
+      item.created_at,
     ]);
 
-    const csvContent = [headers, ...rows].map(row => 
-      row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')
-    ).join('\n');
+    const csvContent = [headers, ...rows]
+      .map((row) =>
+        row.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(","),
+      )
+      .join("\n");
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `vocabulary-${new Date().toISOString().slice(0, 10)}.csv`;
     link.click();
@@ -417,26 +490,26 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
     items: filteredItems, // Return filtered items as the main items
     allItems: items, // Provide access to all items if needed
     stats,
-    
+
     // State
     loading,
     error,
     connectionStatus,
     isConnected,
     lastUpdated,
-    
+
     // Filters
     filters,
     setFilter,
     clearFilters,
     hasFilters,
     search,
-    
+
     // Utilities
     getUniqueCategories,
     getUniqueDifficulties,
     getUniquePartsOfSpeech,
-    
+
     // CRUD operations
     loadVocabulary,
     addItem,
@@ -444,8 +517,8 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
     removeItem,
     addBulkItems,
     removeBulkItems,
-    
+
     // Export
-    exportToCSV
+    exportToCSV,
   };
 }

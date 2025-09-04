@@ -1,8 +1,18 @@
-'use client';
+"use client";
 
-import { useState, useCallback, useEffect } from 'react';
-import { Search, ArrowLeft, ArrowRight, RefreshCw, Shuffle, History, Eye, EyeOff, RotateCcw } from 'lucide-react';
-import { getUsageStats, clearExpiredImages } from '@/lib/tracking/imageTracker';
+import { useState, useCallback, useEffect } from "react";
+import {
+  Search,
+  ArrowLeft,
+  ArrowRight,
+  RefreshCw,
+  Shuffle,
+  History,
+  Eye,
+  EyeOff,
+  RotateCcw,
+} from "lucide-react";
+import { getUsageStats, clearExpiredImages } from "@/lib/tracking/imageTracker";
 
 interface ImageSearchControlsProps {
   searchQuery: string;
@@ -37,24 +47,30 @@ export function ImageSearchControls({
   onAnotherImage,
   onToggleUsedImages,
   onClearHistory,
-  className = ''
+  className = "",
 }: ImageSearchControlsProps) {
   const [inputValue, setInputValue] = useState(searchQuery);
 
-  const handleSubmit = useCallback((e: React.FormEvent) => {
-    e.preventDefault();
-    if (inputValue.trim()) {
-      onSearchQueryChange(inputValue.trim());
-      onSearch(true); // Reset to page 1 on new search
-    }
-  }, [inputValue, onSearchQueryChange, onSearch]);
+  const handleSubmit = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (inputValue.trim()) {
+        onSearchQueryChange(inputValue.trim());
+        onSearch(true); // Reset to page 1 on new search
+      }
+    },
+    [inputValue, onSearchQueryChange, onSearch],
+  );
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setInputValue(e.target.value);
-  }, []);
+  const handleInputChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setInputValue(e.target.value);
+    },
+    [],
+  );
 
   const handleNewSearch = useCallback(() => {
-    setInputValue('');
+    setInputValue("");
     onNewSearch();
   }, [onNewSearch]);
 
@@ -79,7 +95,11 @@ export function ImageSearchControls({
   }, [onToggleUsedImages]);
 
   const handleClearHistory = useCallback(() => {
-    if (confirm('Are you sure you want to clear your image usage history? This cannot be undone.')) {
+    if (
+      confirm(
+        "Are you sure you want to clear your image usage history? This cannot be undone.",
+      )
+    ) {
       onClearHistory?.();
     }
   }, [onClearHistory]);
@@ -89,15 +109,19 @@ export function ImageSearchControls({
     if (cleared > 0) {
       alert(`Cleared ${cleared} expired entries from image history.`);
     } else {
-      alert('No expired entries found.');
+      alert("No expired entries found.");
     }
   }, []);
 
-  const [usageStats, setUsageStats] = useState({ totalUsed: 0, usedToday: 0, usedThisWeek: 0 });
-  
+  const [usageStats, setUsageStats] = useState({
+    totalUsed: 0,
+    usedToday: 0,
+    usedThisWeek: 0,
+  });
+
   useEffect(() => {
     // Only get usage stats on client side
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       setUsageStats(getUsageStats());
     }
   }, [showUsedImages, hasImages]);
@@ -168,10 +192,18 @@ export function ImageSearchControls({
             <button
               onClick={handleToggleUsedImages}
               className="flex items-center gap-2 px-3 py-1 rounded-md bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              title={showUsedImages ? 'Hide previously used images' : 'Show previously used images'}
+              title={
+                showUsedImages
+                  ? "Hide previously used images"
+                  : "Show previously used images"
+              }
             >
-              {showUsedImages ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              {showUsedImages ? 'Hide Used' : 'Show Used'}
+              {showUsedImages ? (
+                <EyeOff className="h-4 w-4" />
+              ) : (
+                <Eye className="h-4 w-4" />
+              )}
+              {showUsedImages ? "Hide Used" : "Show Used"}
             </button>
 
             {usageStats.totalUsed > 0 && (
@@ -268,8 +300,9 @@ export function ImageSearchControls({
                 {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
                   const page = i < 3 ? i + 1 : totalPages - (4 - i);
                   const isCurrentPage = page === currentPage;
-                  const shouldShow = totalPages <= 5 || 
-                    (i < 2) || 
+                  const shouldShow =
+                    totalPages <= 5 ||
+                    i < 2 ||
                     (i >= 3 && page > totalPages - 2);
 
                   if (!shouldShow) return null;
@@ -281,8 +314,8 @@ export function ImageSearchControls({
                       disabled={loading}
                       className={`px-2 py-1 text-xs rounded transition-colors focus:ring-1 focus:ring-blue-500 ${
                         isCurrentPage
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+                          ? "bg-blue-600 text-white"
+                          : "bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600"
                       }`}
                     >
                       {page}

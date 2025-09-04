@@ -1,15 +1,19 @@
-import { useState, useEffect, useCallback } from 'react';
-import { settingsManager, type AppSettings, DEFAULT_SETTINGS } from '@/lib/settings/settingsManager';
+import { useState, useEffect, useCallback } from "react";
+import {
+  settingsManager,
+  type AppSettings,
+  DEFAULT_SETTINGS,
+} from "@/lib/settings/settingsManager";
 
 export function useSettings() {
   const [settings, setSettings] = useState<AppSettings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     // Only initialize on client side
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Load current settings
       setSettings(settingsManager.getSettings());
-      
+
       // Listen for changes
       const unsubscribe = settingsManager.addListener(setSettings);
       return unsubscribe;
@@ -20,12 +24,15 @@ export function useSettings() {
     settingsManager.updateSettings(updates);
   }, []);
 
-  const updateSection = useCallback(<K extends keyof AppSettings>(
-    section: K, 
-    updates: Partial<AppSettings[K]>
-  ) => {
-    settingsManager.updateSection(section, updates);
-  }, []);
+  const updateSection = useCallback(
+    <K extends keyof AppSettings>(
+      section: K,
+      updates: Partial<AppSettings[K]>,
+    ) => {
+      settingsManager.updateSection(section, updates);
+    },
+    [],
+  );
 
   const resetSettings = useCallback(() => {
     settingsManager.resetSettings();

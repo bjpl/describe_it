@@ -6,16 +6,16 @@
 export interface HiveAgent {
   id: string;
   name: string;
-  role: 'alpha-1' | 'gamma-3' | 'delta-4';
+  role: "alpha-1" | "gamma-3" | "delta-4";
   capabilities: string[];
-  status: 'ready' | 'busy' | 'offline';
+  status: "ready" | "busy" | "offline";
   lastHeartbeat: Date;
 }
 
 export interface CoordinationMessage {
   from: string;
   to: string | string[];
-  type: 'data-share' | 'request' | 'response' | 'notification' | 'heartbeat';
+  type: "data-share" | "request" | "response" | "notification" | "heartbeat";
   payload: any;
   timestamp: Date;
   messageId: string;
@@ -64,34 +64,34 @@ export class HiveCoordinator {
    */
   registerGamma3(): void {
     const gamma3Agent: HiveAgent = {
-      id: 'gamma-3',
-      name: 'Vocabulary Extraction Specialist',
-      role: 'gamma-3',
+      id: "gamma-3",
+      name: "Vocabulary Extraction Specialist",
+      role: "gamma-3",
       capabilities: [
-        'phrase-extraction',
-        'vocabulary-categorization',
-        'csv-export',
-        'translation-coordination',
-        'alphabetical-sorting'
+        "phrase-extraction",
+        "vocabulary-categorization",
+        "csv-export",
+        "translation-coordination",
+        "alphabetical-sorting",
       ],
-      status: 'ready',
-      lastHeartbeat: new Date()
+      status: "ready",
+      lastHeartbeat: new Date(),
     };
 
-    this.agents.set('gamma-3', gamma3Agent);
+    this.agents.set("gamma-3", gamma3Agent);
     this.startHeartbeat();
-    
+
     // Announce presence to other agents
     this.broadcastMessage({
-      from: 'gamma-3',
-      to: ['alpha-1', 'delta-4'],
-      type: 'notification',
+      from: "gamma-3",
+      to: ["alpha-1", "delta-4"],
+      type: "notification",
       payload: {
-        event: 'agent-registered',
-        agent: gamma3Agent
+        event: "agent-registered",
+        agent: gamma3Agent,
       },
       timestamp: new Date(),
-      messageId: this.generateMessageId()
+      messageId: this.generateMessageId(),
     });
   }
 
@@ -100,30 +100,36 @@ export class HiveCoordinator {
    */
   shareVocabularyWithAlpha1(data: VocabularyCoordinationData): void {
     const message: CoordinationMessage = {
-      from: 'gamma-3',
-      to: 'alpha-1',
-      type: 'data-share',
+      from: "gamma-3",
+      to: "alpha-1",
+      type: "data-share",
       payload: {
-        type: 'vocabulary-data',
+        type: "vocabulary-data",
         data,
         capabilities: {
           canExtractFromDescriptions: true,
-          supportedCategories: ['sustantivos', 'verbos', 'adjetivos', 'adverbios', 'frasesClaves'],
-          exportFormats: ['csv', 'json'],
-          translationSupport: true
-        }
+          supportedCategories: [
+            "sustantivos",
+            "verbos",
+            "adjetivos",
+            "adverbios",
+            "frasesClaves",
+          ],
+          exportFormats: ["csv", "json"],
+          translationSupport: true,
+        },
       },
       timestamp: new Date(),
-      messageId: this.generateMessageId()
+      messageId: this.generateMessageId(),
     };
 
     this.sendMessage(message);
-    
+
     // Store in session storage for persistence
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       const coordinationKey = `hive-coordination-${Date.now()}`;
       window.sessionStorage.setItem(coordinationKey, JSON.stringify(message));
-      
+
       // Clean up old coordination data (keep last 10)
       this.cleanupStoredCoordination();
     }
@@ -132,23 +138,26 @@ export class HiveCoordinator {
   /**
    * Request description text from Alpha-1
    */
-  requestDescriptionFromAlpha1(imageId: string, descriptionStyle?: string): void {
+  requestDescriptionFromAlpha1(
+    imageId: string,
+    descriptionStyle?: string,
+  ): void {
     const message: CoordinationMessage = {
-      from: 'gamma-3',
-      to: 'alpha-1',
-      type: 'request',
+      from: "gamma-3",
+      to: "alpha-1",
+      type: "request",
       payload: {
-        type: 'description-request',
+        type: "description-request",
         imageId,
-        requesterCapabilities: ['vocabulary-extraction'],
+        requesterCapabilities: ["vocabulary-extraction"],
         preferences: {
           style: descriptionStyle,
           minLength: 50,
-          includeContext: true
-        }
+          includeContext: true,
+        },
       },
       timestamp: new Date(),
-      messageId: this.generateMessageId()
+      messageId: this.generateMessageId(),
     };
 
     this.sendMessage(message);
@@ -157,22 +166,24 @@ export class HiveCoordinator {
   /**
    * Share vocabulary statistics with Delta-4
    */
-  shareStatisticsWithDelta4(stats: VocabularyCoordinationData['vocabularyStats']): void {
+  shareStatisticsWithDelta4(
+    stats: VocabularyCoordinationData["vocabularyStats"],
+  ): void {
     const message: CoordinationMessage = {
-      from: 'gamma-3',
-      to: 'delta-4',
-      type: 'data-share',
+      from: "gamma-3",
+      to: "delta-4",
+      type: "data-share",
       payload: {
-        type: 'vocabulary-statistics',
+        type: "vocabulary-statistics",
         data: stats,
         metadata: {
           timestamp: new Date().toISOString(),
-          agent: 'gamma-3',
-          dataVersion: '1.0'
-        }
+          agent: "gamma-3",
+          dataVersion: "1.0",
+        },
       },
       timestamp: new Date(),
-      messageId: this.generateMessageId()
+      messageId: this.generateMessageId(),
     };
 
     this.sendMessage(message);
@@ -187,29 +198,29 @@ export class HiveCoordinator {
 
     // Process message based on type
     switch (message.type) {
-      case 'request':
+      case "request":
         this.handleRequest(message);
         break;
-      case 'data-share':
+      case "data-share":
         this.handleDataShare(message);
         break;
-      case 'response':
+      case "response":
         this.handleResponse(message);
         break;
-      case 'notification':
+      case "notification":
         this.handleNotification(message);
         break;
-      case 'heartbeat':
+      case "heartbeat":
         this.handleHeartbeat(message);
         break;
     }
 
     // Notify listeners
-    this.listeners.forEach(listener => {
+    this.listeners.forEach((listener) => {
       try {
         listener(message);
       } catch (error) {
-        console.error('Error in coordination listener:', error);
+        console.error("Error in coordination listener:", error);
       }
     });
   }
@@ -223,11 +234,11 @@ export class HiveCoordinator {
     vocabularySharing: VocabularyCoordinationData | null;
   } {
     const vocabularySharing = this.extractStoredVocabularyData();
-    
+
     return {
       agents: Array.from(this.agents.values()),
       messageHistory: this.messageQueue.slice(-50), // Last 50 messages
-      vocabularySharing
+      vocabularySharing,
     };
   }
 
@@ -250,7 +261,7 @@ export class HiveCoordinator {
    */
   getActiveAgents(): HiveAgent[] {
     const now = new Date();
-    return Array.from(this.agents.values()).filter(agent => {
+    return Array.from(this.agents.values()).filter((agent) => {
       const timeSinceHeartbeat = now.getTime() - agent.lastHeartbeat.getTime();
       return timeSinceHeartbeat < 60000; // Active within last minute
     });
@@ -261,9 +272,9 @@ export class HiveCoordinator {
    */
   private initializeCoordination(): void {
     // Initialize browser-based coordination if available
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       // Listen for custom events from other agents
-      window.addEventListener('hive-coordination', (event: any) => {
+      window.addEventListener("hive-coordination", (event: any) => {
         const message = event.detail as CoordinationMessage;
         this.handleIncomingMessage(message);
       });
@@ -281,16 +292,18 @@ export class HiveCoordinator {
     this.messageQueue.push(message);
 
     // Broadcast via custom event if in browser
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('hive-coordination', {
-        detail: message
-      }));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("hive-coordination", {
+          detail: message,
+        }),
+      );
     }
 
     // Store important messages
-    if (message.type === 'data-share' || message.type === 'request') {
+    if (message.type === "data-share" || message.type === "request") {
       const storageKey = `hive-message-${message.messageId}`;
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.sessionStorage.setItem(storageKey, JSON.stringify(message));
       }
     }
@@ -298,7 +311,7 @@ export class HiveCoordinator {
 
   private broadcastMessage(message: CoordinationMessage): void {
     if (Array.isArray(message.to)) {
-      message.to.forEach(recipient => {
+      message.to.forEach((recipient) => {
         const individualMessage = { ...message, to: recipient };
         this.sendMessage(individualMessage);
       });
@@ -308,37 +321,49 @@ export class HiveCoordinator {
   }
 
   private handleRequest(message: CoordinationMessage): void {
-    if (message.payload?.type === 'vocabulary-capabilities') {
+    if (message.payload?.type === "vocabulary-capabilities") {
       // Respond with Gamma-3 capabilities
       const response: CoordinationMessage = {
-        from: 'gamma-3',
+        from: "gamma-3",
         to: message.from,
-        type: 'response',
+        type: "response",
         payload: {
           requestId: message.messageId,
           capabilities: {
             phraseExtraction: true,
-            categorization: ['sustantivos', 'verbos', 'adjetivos', 'adverbios', 'frasesClaves'],
-            exportFormats: ['target_word_list.csv', 'json'],
+            categorization: [
+              "sustantivos",
+              "verbos",
+              "adjetivos",
+              "adverbios",
+              "frasesClaves",
+            ],
+            exportFormats: ["target_word_list.csv", "json"],
             translation: true,
             alphabeticalSorting: true,
-            descriptionCoordination: true
-          }
+            descriptionCoordination: true,
+          },
         },
         timestamp: new Date(),
-        messageId: this.generateMessageId()
+        messageId: this.generateMessageId(),
       };
-      
+
       this.sendMessage(response);
     }
   }
 
   private handleDataShare(message: CoordinationMessage): void {
     // Process shared data from other agents
-    if (message.from === 'alpha-1' && message.payload?.type === 'description-data') {
+    if (
+      message.from === "alpha-1" &&
+      message.payload?.type === "description-data"
+    ) {
       // Handle description data from Alpha-1
       this.processAlpha1Description(message.payload.data);
-    } else if (message.from === 'delta-4' && message.payload?.type === 'analysis-request') {
+    } else if (
+      message.from === "delta-4" &&
+      message.payload?.type === "analysis-request"
+    ) {
       // Handle analysis request from Delta-4
       this.processDelta4AnalysisRequest(message.payload.data);
     }
@@ -351,7 +376,7 @@ export class HiveCoordinator {
 
   private handleNotification(message: CoordinationMessage): void {
     // Handle notifications from other agents
-    if (message.payload?.event === 'agent-registered') {
+    if (message.payload?.event === "agent-registered") {
       const agent = message.payload.agent as HiveAgent;
       this.agents.set(agent.id, agent);
     }
@@ -361,7 +386,7 @@ export class HiveCoordinator {
     const agent = this.agents.get(message.from);
     if (agent) {
       agent.lastHeartbeat = message.timestamp;
-      agent.status = 'ready';
+      agent.status = "ready";
     }
   }
 
@@ -372,16 +397,20 @@ export class HiveCoordinator {
 
     this.heartbeatInterval = setInterval(() => {
       const heartbeat: CoordinationMessage = {
-        from: 'gamma-3',
-        to: ['alpha-1', 'delta-4'],
-        type: 'heartbeat',
+        from: "gamma-3",
+        to: ["alpha-1", "delta-4"],
+        type: "heartbeat",
         payload: {
-          status: 'ready',
-          capabilities: ['phrase-extraction', 'vocabulary-categorization', 'csv-export'],
-          timestamp: new Date().toISOString()
+          status: "ready",
+          capabilities: [
+            "phrase-extraction",
+            "vocabulary-categorization",
+            "csv-export",
+          ],
+          timestamp: new Date().toISOString(),
         },
         timestamp: new Date(),
-        messageId: this.generateMessageId()
+        messageId: this.generateMessageId(),
       };
 
       this.broadcastMessage(heartbeat);
@@ -390,41 +419,43 @@ export class HiveCoordinator {
 
   private processAlpha1Description(data: any): void {
     // Process description data received from Alpha-1
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('alpha1-description-received', {
-        detail: data
-      }));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(
+        new CustomEvent("alpha1-description-received", {
+          detail: data,
+        }),
+      );
     }
   }
 
   private processDelta4AnalysisRequest(data: any): void {
     // Process analysis request from Delta-4
     const analysisData = this.exportCoordinationData();
-    
+
     const response: CoordinationMessage = {
-      from: 'gamma-3',
-      to: 'delta-4',
-      type: 'response',
+      from: "gamma-3",
+      to: "delta-4",
+      type: "response",
       payload: {
-        type: 'analysis-data',
+        type: "analysis-data",
         data: analysisData,
-        requestId: data.requestId
+        requestId: data.requestId,
       },
       timestamp: new Date(),
-      messageId: this.generateMessageId()
+      messageId: this.generateMessageId(),
     };
 
     this.sendMessage(response);
   }
 
   private extractStoredVocabularyData(): VocabularyCoordinationData | null {
-    if (typeof window === 'undefined') return null;
+    if (typeof window === "undefined") return null;
 
     try {
-      const storedData = window.sessionStorage.getItem('gamma3-coordination');
+      const storedData = window.sessionStorage.getItem("gamma3-coordination");
       return storedData ? JSON.parse(storedData) : null;
     } catch (error) {
-      console.error('Error extracting stored vocabulary data:', error);
+      console.error("Error extracting stored vocabulary data:", error);
       return null;
     }
   }
@@ -437,31 +468,32 @@ export class HiveCoordinator {
   }
 
   private cleanupStoredCoordination(): void {
-    if (typeof window === 'undefined') return;
+    if (typeof window === "undefined") return;
 
     try {
       // Get all coordination keys
-      const keys = Object.keys(window.sessionStorage)
-        .filter(key => key.startsWith('hive-') || key.startsWith('gamma3-'));
+      const keys = Object.keys(window.sessionStorage).filter(
+        (key) => key.startsWith("hive-") || key.startsWith("gamma3-"),
+      );
 
       // Sort by timestamp and keep only recent ones
       const sortedKeys = keys
-        .map(key => ({
+        .map((key) => ({
           key,
-          timestamp: this.extractTimestampFromKey(key)
+          timestamp: this.extractTimestampFromKey(key),
         }))
         .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, 20) // Keep only last 20 items
-        .map(item => item.key);
+        .map((item) => item.key);
 
       // Remove old keys
-      keys.forEach(key => {
+      keys.forEach((key) => {
         if (!sortedKeys.includes(key)) {
           window.sessionStorage.removeItem(key);
         }
       });
     } catch (error) {
-      console.error('Error cleaning up stored coordination:', error);
+      console.error("Error cleaning up stored coordination:", error);
     }
   }
 

@@ -3,19 +3,19 @@
  * Provides functions to export vocabulary, responses, and session data with advanced formatting
  */
 
-import { saveAs } from 'file-saver';
-import { 
+import { saveAs } from "file-saver";
+import {
   ExportData,
   CSVExportOptions,
   VocabularyExportItem,
   DescriptionExportItem,
   QAExportItem,
-  SessionExportItem
-} from '../../types/export';
+  SessionExportItem,
+} from "../../types/export";
 
 // Types for export data
 // Use the unified VocabularyItem type from types/unified.ts
-export type { VocabularyItem } from '@/types/unified';
+export type { VocabularyItem } from "@/types/unified";
 
 export interface ResponseItem {
   question: string;
@@ -26,7 +26,7 @@ export interface ResponseItem {
 
 export interface SessionData {
   timestamp: string;
-  activity_type: 'vocabulary' | 'qa' | 'search' | 'description';
+  activity_type: "vocabulary" | "qa" | "search" | "description";
   content: string;
   details: string;
 }
@@ -36,38 +36,40 @@ export interface SessionData {
  */
 function arrayToCSV(data: any[], headers: string[]): string {
   const csvRows = [];
-  
+
   // Add headers
-  csvRows.push(headers.join(','));
-  
+  csvRows.push(headers.join(","));
+
   // Add data rows
   for (const row of data) {
-    const values = headers.map(header => {
-      const value = row[header] || '';
+    const values = headers.map((header) => {
+      const value = row[header] || "";
       // Escape quotes and wrap in quotes if contains comma, newline, or quote
       const escaped = String(value).replace(/"/g, '""');
-      return escaped.includes(',') || escaped.includes('\n') || escaped.includes('"') 
-        ? `"${escaped}"` 
+      return escaped.includes(",") ||
+        escaped.includes("\n") ||
+        escaped.includes('"')
+        ? `"${escaped}"`
         : escaped;
     });
-    csvRows.push(values.join(','));
+    csvRows.push(values.join(","));
   }
-  
-  return csvRows.join('\n');
+
+  return csvRows.join("\n");
 }
 
 /**
  * Downloads CSV content as a file
  */
 function downloadCSV(content: string, filename: string): void {
-  const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
-  const link = document.createElement('a');
-  
+  const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+
   if (link.download !== undefined) {
     const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', filename);
-    link.style.visibility = 'hidden';
+    link.setAttribute("href", url);
+    link.setAttribute("download", filename);
+    link.style.visibility = "hidden";
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -81,13 +83,20 @@ function downloadCSV(content: string, filename: string): void {
  */
 export function exportVocabulary(vocabularyData: VocabularyItem[]): void {
   try {
-    const headers = ['spanish_text', 'english_translation', 'category', 'part_of_speech', 'difficulty_level', 'created_at'];
+    const headers = [
+      "spanish_text",
+      "english_translation",
+      "category",
+      "part_of_speech",
+      "difficulty_level",
+      "created_at",
+    ];
     const csvContent = arrayToCSV(vocabularyData, headers);
-    downloadCSV(csvContent, 'target_word_list.csv');
-    console.log('Vocabulary exported successfully');
+    downloadCSV(csvContent, "target_word_list.csv");
+    console.log("Vocabulary exported successfully");
   } catch (error) {
-    console.error('Error exporting vocabulary:', error);
-    throw new Error('Failed to export vocabulary data');
+    console.error("Error exporting vocabulary:", error);
+    throw new Error("Failed to export vocabulary data");
   }
 }
 
@@ -97,13 +106,13 @@ export function exportVocabulary(vocabularyData: VocabularyItem[]): void {
  */
 export function exportResponses(responsesData: ResponseItem[]): void {
   try {
-    const headers = ['question', 'user_answer', 'correct_answer', 'timestamp'];
+    const headers = ["question", "user_answer", "correct_answer", "timestamp"];
     const csvContent = arrayToCSV(responsesData, headers);
-    downloadCSV(csvContent, 'responses_export.csv');
-    console.log('Responses exported successfully');
+    downloadCSV(csvContent, "responses_export.csv");
+    console.log("Responses exported successfully");
   } catch (error) {
-    console.error('Error exporting responses:', error);
-    throw new Error('Failed to export responses data');
+    console.error("Error exporting responses:", error);
+    throw new Error("Failed to export responses data");
   }
 }
 
@@ -113,14 +122,14 @@ export function exportResponses(responsesData: ResponseItem[]): void {
  */
 export function exportSession(sessionData: SessionData[]): void {
   try {
-    const headers = ['timestamp', 'activity_type', 'content', 'details'];
+    const headers = ["timestamp", "activity_type", "content", "details"];
     const csvContent = arrayToCSV(sessionData, headers);
-    const timestamp = new Date().toISOString().split('T')[0];
+    const timestamp = new Date().toISOString().split("T")[0];
     downloadCSV(csvContent, `session_export_${timestamp}.csv`);
-    console.log('Session exported successfully');
+    console.log("Session exported successfully");
   } catch (error) {
-    console.error('Error exporting session:', error);
-    throw new Error('Failed to export session data');
+    console.error("Error exporting session:", error);
+    throw new Error("Failed to export session data");
   }
 }
 
@@ -128,7 +137,7 @@ export function exportSession(sessionData: SessionData[]): void {
  * Helper function to format current date for exports
  */
 export function getCurrentDateString(): string {
-  return new Date().toISOString().split('T')[0];
+  return new Date().toISOString().split("T")[0];
 }
 
 /**
@@ -141,15 +150,16 @@ export function getCurrentTimestamp(): string {
 /**
  * Validate export data before processing
  */
-export function validateExportData(data: any[], requiredFields: string[]): boolean {
+export function validateExportData(
+  data: any[],
+  requiredFields: string[],
+): boolean {
   if (!Array.isArray(data) || data.length === 0) {
     return false;
   }
-  
-  return data.every(item => 
-    requiredFields.every(field => 
-      item.hasOwnProperty(field)
-    )
+
+  return data.every((item) =>
+    requiredFields.every((field) => item.hasOwnProperty(field)),
   );
 }
 
@@ -161,12 +171,12 @@ export class CSVExporter {
 
   constructor(options: CSVExportOptions = {}) {
     this.options = {
-      delimiter: ',',
-      encoding: 'utf-8',
+      delimiter: ",",
+      encoding: "utf-8",
       includeHeaders: true,
       quoteStrings: true,
       escapeHtml: false,
-      ...options
+      ...options,
     };
   }
 
@@ -204,15 +214,14 @@ export class CSVExporter {
         csvSections.push(this.createSummarySection(data.summary));
       }
 
-      const csvContent = csvSections.join('\n\n');
-      
-      return new Blob([csvContent], { 
-        type: `text/csv;charset=${this.options.encoding}` 
-      });
+      const csvContent = csvSections.join("\n\n");
 
+      return new Blob([csvContent], {
+        type: `text/csv;charset=${this.options.encoding}`,
+      });
     } catch (error) {
-      console.error('Error generating CSV export:', error);
-      throw new Error('Failed to generate CSV export');
+      console.error("Error generating CSV export:", error);
+      throw new Error("Failed to generate CSV export");
     }
   }
 
@@ -221,16 +230,16 @@ export class CSVExporter {
    */
   private createMetadataSection(metadata: any): string {
     const lines = [
-      '# EXPORT METADATA',
+      "# EXPORT METADATA",
       `Export ID${this.options.delimiter}${metadata.exportId}`,
       `Created At${this.options.delimiter}${metadata.createdAt}`,
       `Format${this.options.delimiter}${metadata.format}`,
       `Total Items${this.options.delimiter}${metadata.totalItems}`,
-      `Categories${this.options.delimiter}${metadata.categories.join('; ')}`,
-      `Version${this.options.delimiter}${metadata.version}`
+      `Categories${this.options.delimiter}${metadata.categories.join("; ")}`,
+      `Version${this.options.delimiter}${metadata.version}`,
     ];
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   /**
@@ -238,26 +247,26 @@ export class CSVExporter {
    */
   private createVocabularySection(vocabulary: VocabularyExportItem[]): string {
     const headers = [
-      'Phrase',
-      'Translation',
-      'Definition',
-      'Part of Speech',
-      'Difficulty',
-      'Category',
-      'Context',
-      'Date Added',
-      'Last Reviewed',
-      'Review Count',
-      'Confidence Score'
+      "Phrase",
+      "Translation",
+      "Definition",
+      "Part of Speech",
+      "Difficulty",
+      "Category",
+      "Context",
+      "Date Added",
+      "Last Reviewed",
+      "Review Count",
+      "Confidence Score",
     ];
 
-    const lines = ['# VOCABULARY'];
-    
+    const lines = ["# VOCABULARY"];
+
     if (this.options.includeHeaders) {
       lines.push(headers.join(this.options.delimiter));
     }
 
-    vocabulary.forEach(item => {
+    vocabulary.forEach((item) => {
       const values = [
         item.phrase,
         item.translation,
@@ -267,39 +276,41 @@ export class CSVExporter {
         item.category,
         item.context,
         item.dateAdded,
-        item.lastReviewed || 'Never',
-        item.reviewCount?.toString() || '0',
-        item.confidence?.toString() || '0'
+        item.lastReviewed || "Never",
+        item.reviewCount?.toString() || "0",
+        item.confidence?.toString() || "0",
       ];
 
       lines.push(this.formatCSVRow(values));
     });
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   /**
    * Create descriptions section
    */
-  private createDescriptionsSection(descriptions: DescriptionExportItem[]): string {
+  private createDescriptionsSection(
+    descriptions: DescriptionExportItem[],
+  ): string {
     const headers = [
-      'ID',
-      'Image ID',
-      'Style',
-      'Content',
-      'Word Count',
-      'Language',
-      'Created At',
-      'Generation Time (ms)'
+      "ID",
+      "Image ID",
+      "Style",
+      "Content",
+      "Word Count",
+      "Language",
+      "Created At",
+      "Generation Time (ms)",
     ];
 
-    const lines = ['# DESCRIPTIONS'];
-    
+    const lines = ["# DESCRIPTIONS"];
+
     if (this.options.includeHeaders) {
       lines.push(headers.join(this.options.delimiter));
     }
 
-    descriptions.forEach(item => {
+    descriptions.forEach((item) => {
       const values = [
         item.id,
         item.imageId,
@@ -308,13 +319,13 @@ export class CSVExporter {
         item.wordCount.toString(),
         item.language,
         item.createdAt,
-        item.generationTime?.toString() || '0'
+        item.generationTime?.toString() || "0",
       ];
 
       lines.push(this.formatCSVRow(values));
     });
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   /**
@@ -322,42 +333,42 @@ export class CSVExporter {
    */
   private createQASection(qa: QAExportItem[]): string {
     const headers = [
-      'ID',
-      'Question',
-      'Answer',
-      'Category',
-      'Difficulty',
-      'Confidence',
-      'Created At',
-      'Response Time (ms)',
-      'Correct',
-      'User Answer'
+      "ID",
+      "Question",
+      "Answer",
+      "Category",
+      "Difficulty",
+      "Confidence",
+      "Created At",
+      "Response Time (ms)",
+      "Correct",
+      "User Answer",
     ];
 
-    const lines = ['# QUESTIONS & ANSWERS'];
-    
+    const lines = ["# QUESTIONS & ANSWERS"];
+
     if (this.options.includeHeaders) {
       lines.push(headers.join(this.options.delimiter));
     }
 
-    qa.forEach(item => {
+    qa.forEach((item) => {
       const values = [
         item.id,
         item.question,
         item.answer,
-        item.category || 'General',
-        item.difficulty || 'Medium',
-        item.confidence?.toString() || '0',
+        item.category || "General",
+        item.difficulty || "Medium",
+        item.confidence?.toString() || "0",
         item.createdAt,
-        item.responseTime?.toString() || '0',
-        item.correct ? 'Yes' : 'No',
-        item.userAnswer || ''
+        item.responseTime?.toString() || "0",
+        item.correct ? "Yes" : "No",
+        item.userAnswer || "",
       ];
 
       lines.push(this.formatCSVRow(values));
     });
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   /**
@@ -365,34 +376,34 @@ export class CSVExporter {
    */
   private createSessionsSection(sessions: SessionExportItem[]): string {
     const headers = [
-      'Timestamp',
-      'Session ID',
-      'Activity Type',
-      'Content',
-      'Details',
-      'Duration (ms)'
+      "Timestamp",
+      "Session ID",
+      "Activity Type",
+      "Content",
+      "Details",
+      "Duration (ms)",
     ];
 
-    const lines = ['# SESSIONS'];
-    
+    const lines = ["# SESSIONS"];
+
     if (this.options.includeHeaders) {
       lines.push(headers.join(this.options.delimiter));
     }
 
-    sessions.forEach(item => {
+    sessions.forEach((item) => {
       const values = [
         item.timestamp,
         item.sessionId,
         item.activityType,
         item.content,
         item.details,
-        item.duration?.toString() || '0'
+        item.duration?.toString() || "0",
       ];
 
       lines.push(this.formatCSVRow(values));
     });
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   /**
@@ -400,56 +411,61 @@ export class CSVExporter {
    */
   private createSummarySection(summary: any): string {
     const lines = [
-      '# SUMMARY STATISTICS',
+      "# SUMMARY STATISTICS",
       `Total Vocabulary${this.options.delimiter}${summary.totalVocabulary || 0}`,
       `Total Descriptions${this.options.delimiter}${summary.totalDescriptions || 0}`,
       `Total Q&A${this.options.delimiter}${summary.totalQA || 0}`,
       `Total Sessions${this.options.delimiter}${summary.totalSessions || 0}`,
-      `Date Range Start${this.options.delimiter}${summary.dateRange?.start || 'N/A'}`,
-      `Date Range End${this.options.delimiter}${summary.dateRange?.end || 'N/A'}`,
+      `Date Range Start${this.options.delimiter}${summary.dateRange?.start || "N/A"}`,
+      `Date Range End${this.options.delimiter}${summary.dateRange?.end || "N/A"}`,
       `Beginner Words${this.options.delimiter}${summary.progress?.beginnerWords || 0}`,
       `Intermediate Words${this.options.delimiter}${summary.progress?.intermediateWords || 0}`,
-      `Advanced Words${this.options.delimiter}${summary.progress?.advancedWords || 0}`
+      `Advanced Words${this.options.delimiter}${summary.progress?.advancedWords || 0}`,
     ];
 
     // Add category breakdown
     if (summary.categories) {
-      lines.push('');
-      lines.push('# CATEGORY BREAKDOWN');
+      lines.push("");
+      lines.push("# CATEGORY BREAKDOWN");
       Object.entries(summary.categories).forEach(([category, count]) => {
         lines.push(`${category}${this.options.delimiter}${count}`);
       });
     }
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   /**
    * Format a single CSV row with proper escaping
    */
   private formatCSVRow(values: string[]): string {
-    return values.map(value => {
-      let processedValue = value || '';
-      
-      // Escape HTML if requested
-      if (this.options.escapeHtml) {
-        processedValue = processedValue.replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      }
+    return values
+      .map((value) => {
+        let processedValue = value || "";
 
-      // Handle quotes and special characters
-      if (this.options.quoteStrings) {
-        const needsQuoting = processedValue.includes(this.options.delimiter!) ||
-                           processedValue.includes('\n') ||
-                           processedValue.includes('\r') ||
-                           processedValue.includes('"');
-
-        if (needsQuoting) {
-          processedValue = `"${processedValue.replace(/"/g, '""')}"`;
+        // Escape HTML if requested
+        if (this.options.escapeHtml) {
+          processedValue = processedValue
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
         }
-      }
 
-      return processedValue;
-    }).join(this.options.delimiter);
+        // Handle quotes and special characters
+        if (this.options.quoteStrings) {
+          const needsQuoting =
+            processedValue.includes(this.options.delimiter!) ||
+            processedValue.includes("\n") ||
+            processedValue.includes("\r") ||
+            processedValue.includes('"');
+
+          if (needsQuoting) {
+            processedValue = `"${processedValue.replace(/"/g, '""')}"`;
+          }
+        }
+
+        return processedValue;
+      })
+      .join(this.options.delimiter);
   }
 }
 
@@ -458,7 +474,7 @@ export class CSVExporter {
  */
 export async function exportToEnhancedCSV(
   data: ExportData,
-  options: CSVExportOptions = {}
+  options: CSVExportOptions = {},
 ): Promise<Blob> {
   const exporter = new CSVExporter(options);
   return await exporter.exportToCSV(data);
@@ -471,34 +487,44 @@ export async function exportToEnhancedCSV(
 export async function exportAllData(
   vocabularyData: VocabularyItem[],
   responsesData: ResponseItem[],
-  sessionData: SessionData[]
+  sessionData: SessionData[],
 ): Promise<void> {
   try {
     const timestamp = getCurrentDateString();
-    
+
     // Export each data type with timestamped filenames
     if (vocabularyData.length > 0) {
-      const vocabHeaders = ['phrase', 'translation', 'category', 'date_added'];
+      const vocabHeaders = ["phrase", "translation", "category", "date_added"];
       const vocabCSV = arrayToCSV(vocabularyData, vocabHeaders);
       downloadCSV(vocabCSV, `vocabulary_export_${timestamp}.csv`);
     }
-    
+
     if (responsesData.length > 0) {
-      const responseHeaders = ['question', 'user_answer', 'correct_answer', 'timestamp'];
+      const responseHeaders = [
+        "question",
+        "user_answer",
+        "correct_answer",
+        "timestamp",
+      ];
       const responseCSV = arrayToCSV(responsesData, responseHeaders);
       downloadCSV(responseCSV, `responses_export_${timestamp}.csv`);
     }
-    
+
     if (sessionData.length > 0) {
-      const sessionHeaders = ['timestamp', 'activity_type', 'content', 'details'];
+      const sessionHeaders = [
+        "timestamp",
+        "activity_type",
+        "content",
+        "details",
+      ];
       const sessionCSV = arrayToCSV(sessionData, sessionHeaders);
       downloadCSV(sessionCSV, `session_export_${timestamp}.csv`);
     }
-    
-    console.log('All data exported successfully');
+
+    console.log("All data exported successfully");
   } catch (error) {
-    console.error('Error exporting all data:', error);
-    throw new Error('Failed to export all data');
+    console.error("Error exporting all data:", error);
+    throw new Error("Failed to export all data");
   }
 }
 
@@ -506,5 +532,5 @@ export async function exportAllData(
  * Download CSV file with enhanced options
  */
 export function downloadEnhancedCSV(blob: Blob, filename: string): void {
-  saveAs(blob, filename.endsWith('.csv') ? filename : `${filename}.csv`);
+  saveAs(blob, filename.endsWith(".csv") ? filename : `${filename}.csv`);
 }

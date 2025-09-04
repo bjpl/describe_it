@@ -66,11 +66,22 @@ export interface UnsplashSearchParams {
   query: string;
   page?: number;
   per_page?: number;
-  order_by?: 'latest' | 'oldest' | 'popular' | 'views' | 'downloads';
+  order_by?: "latest" | "oldest" | "popular" | "views" | "downloads";
   collections?: string;
-  content_filter?: 'low' | 'high';
-  color?: 'black_and_white' | 'black' | 'white' | 'yellow' | 'orange' | 'red' | 'purple' | 'magenta' | 'green' | 'teal' | 'blue';
-  orientation?: 'landscape' | 'portrait' | 'squarish';
+  content_filter?: "low" | "high";
+  color?:
+    | "black_and_white"
+    | "black"
+    | "white"
+    | "yellow"
+    | "orange"
+    | "red"
+    | "purple"
+    | "magenta"
+    | "green"
+    | "teal"
+    | "blue";
+  orientation?: "landscape" | "portrait" | "squarish";
 }
 
 export interface ProcessedImage extends UnsplashImage {
@@ -79,17 +90,17 @@ export interface ProcessedImage extends UnsplashImage {
   duplicateOf?: string;
 }
 
-export type DescriptionStyle = 
-  | 'narrativo' 
-  | 'poetico' 
-  | 'academico' 
-  | 'conversacional' 
-  | 'infantil';
+export type DescriptionStyle =
+  | "narrativo"
+  | "poetico"
+  | "academico"
+  | "conversacional"
+  | "infantil";
 
 export interface DescriptionRequest {
   imageUrl: string;
   style: DescriptionStyle;
-  language?: 'es' | 'en';
+  language?: "es" | "en";
   maxLength?: number;
 }
 
@@ -105,13 +116,13 @@ export interface GeneratedDescription {
 export interface MultiStyleRequest {
   imageUrl: string;
   styles: DescriptionStyle[];
-  language?: 'es' | 'en';
+  language?: "es" | "en";
   maxLength?: number;
 }
 
 export interface StyleGenerationStatus {
   style: DescriptionStyle;
-  status: 'pending' | 'generating' | 'completed' | 'error';
+  status: "pending" | "generating" | "completed" | "error";
   description?: GeneratedDescription;
   error?: string;
   retryCount?: number;
@@ -135,7 +146,7 @@ export interface StyleDisplaySettings {
 export interface QAGeneration {
   question: string;
   answer: string;
-  difficulty: 'facil' | 'medio' | 'dificil';
+  difficulty: "facil" | "medio" | "dificil";
   category: string;
 }
 
@@ -183,16 +194,36 @@ export class APIError extends Error {
   details?: Record<string, unknown>;
   retryAfter?: number;
 
-  constructor(params: { code: string; message: string; status: number; details?: Record<string, unknown>; retryAfter?: number });
-  constructor(message: string, code: string, status: number, details?: Record<string, unknown>, retryAfter?: number);
+  constructor(params: {
+    code: string;
+    message: string;
+    status: number;
+    details?: Record<string, unknown>;
+    retryAfter?: number;
+  });
   constructor(
-    messageOrParams: string | { code: string; message: string; status: number; details?: Record<string, unknown>; retryAfter?: number },
+    message: string,
+    code: string,
+    status: number,
+    details?: Record<string, unknown>,
+    retryAfter?: number,
+  );
+  constructor(
+    messageOrParams:
+      | string
+      | {
+          code: string;
+          message: string;
+          status: number;
+          details?: Record<string, unknown>;
+          retryAfter?: number;
+        },
     code?: string,
     status?: number,
     details?: Record<string, unknown>,
-    retryAfter?: number
+    retryAfter?: number,
   ) {
-    if (typeof messageOrParams === 'object') {
+    if (typeof messageOrParams === "object") {
       super(messageOrParams.message);
       this.code = messageOrParams.code;
       this.status = messageOrParams.status;
@@ -205,7 +236,7 @@ export class APIError extends Error {
       this.details = details;
       this.retryAfter = retryAfter;
     }
-    this.name = 'APIError';
+    this.name = "APIError";
   }
 }
 
@@ -240,13 +271,13 @@ export interface CategorizedPhrase {
   definition: string;
   category: string;
   partOfSpeech: string;
-  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  difficulty: "beginner" | "intermediate" | "advanced";
   context: string;
   sortKey: string;
   saved: boolean;
   createdAt: Date;
   // Spanish-specific properties
-  gender?: 'masculino' | 'femenino' | 'neutro';
+  gender?: "masculino" | "femenino" | "neutro";
   article?: string; // el, la, los, las
   conjugation?: string; // for verbs - infinitive form
 }
@@ -281,9 +312,15 @@ export interface VocabularySet {
 export interface VocabularyExtractionRequest {
   description: string;
   imageUrl: string;
-  targetLevel: 'beginner' | 'intermediate' | 'advanced';
+  targetLevel: "beginner" | "intermediate" | "advanced";
   maxPhrases: number;
-  categories?: ('sustantivos' | 'verbos' | 'adjetivos' | 'adverbios' | 'frasesClaves')[];
+  categories?: (
+    | "sustantivos"
+    | "verbos"
+    | "adjetivos"
+    | "adverbios"
+    | "frasesClaves"
+  )[];
 }
 
 export interface VocabularyExtractionResponse {

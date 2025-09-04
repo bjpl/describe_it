@@ -1,4 +1,4 @@
-import { QAGeneration } from '@/types/api';
+import { QAGeneration } from "@/types/api";
 
 export interface QASessionData {
   sessionId: string;
@@ -28,7 +28,7 @@ export interface QAUserResponse {
   timeSpent?: number; // in seconds
   hintsUsed?: number;
   timestamp: string;
-  difficulty: 'facil' | 'medio' | 'dificil';
+  difficulty: "facil" | "medio" | "dificil";
   category: string;
 }
 
@@ -38,45 +38,47 @@ export class QAExporter {
    */
   static exportToCSV(sessionData: QASessionData): string {
     const headers = [
-      'Session ID',
-      'Question Index', 
-      'Question',
-      'Correct Answer',
-      'User Answer',
-      'Is Correct',
-      'Confidence (%)',
-      'Time Spent (s)',
-      'Difficulty',
-      'Category',
-      'Hints Used',
-      'Timestamp',
-      'Language',
-      'Image URL',
-      'Description'
+      "Session ID",
+      "Question Index",
+      "Question",
+      "Correct Answer",
+      "User Answer",
+      "Is Correct",
+      "Confidence (%)",
+      "Time Spent (s)",
+      "Difficulty",
+      "Category",
+      "Hints Used",
+      "Timestamp",
+      "Language",
+      "Image URL",
+      "Description",
     ];
 
     const rows = [
-      headers.join(','),
-      ...sessionData.userResponses.map(response => [
-        sessionData.sessionId,
-        response.questionIndex + 1,
-        `"${response.question.replace(/"/g, '""')}"`,
-        `"${response.correctAnswer.replace(/"/g, '""')}"`,
-        `"${response.userAnswer.replace(/"/g, '""')}"`,
-        response.isCorrect ? 'Yes' : 'No',
-        response.confidence || '',
-        response.timeSpent || '',
-        response.difficulty,
-        response.category,
-        response.hintsUsed || 0,
-        response.timestamp,
-        sessionData.language,
-        sessionData.imageUrl,
-        `"${sessionData.description.substring(0, 100).replace(/"/g, '""')}..."`
-      ].join(','))
+      headers.join(","),
+      ...sessionData.userResponses.map((response) =>
+        [
+          sessionData.sessionId,
+          response.questionIndex + 1,
+          `"${response.question.replace(/"/g, '""')}"`,
+          `"${response.correctAnswer.replace(/"/g, '""')}"`,
+          `"${response.userAnswer.replace(/"/g, '""')}"`,
+          response.isCorrect ? "Yes" : "No",
+          response.confidence || "",
+          response.timeSpent || "",
+          response.difficulty,
+          response.category,
+          response.hintsUsed || 0,
+          response.timestamp,
+          sessionData.language,
+          sessionData.imageUrl,
+          `"${sessionData.description.substring(0, 100).replace(/"/g, '""')}..."`,
+        ].join(","),
+      ),
     ];
 
-    return rows.join('\\n');
+    return rows.join("\\n");
   }
 
   /**
@@ -84,31 +86,31 @@ export class QAExporter {
    */
   static exportSummaryToCSV(sessionData: QASessionData): string {
     const summary = this.generateSessionSummary(sessionData);
-    
+
     const headers = [
-      'Session ID',
-      'Start Time',
-      'End Time',
-      'Total Time (s)',
-      'Total Questions',
-      'Correct Answers',
-      'Accuracy (%)',
-      'Average Confidence (%)',
-      'Average Time per Question (s)',
-      'Longest Streak',
-      'Language',
-      'Easy Questions Correct',
-      'Medium Questions Correct', 
-      'Hard Questions Correct',
-      'Total Hints Used',
-      'Image URL'
+      "Session ID",
+      "Start Time",
+      "End Time",
+      "Total Time (s)",
+      "Total Questions",
+      "Correct Answers",
+      "Accuracy (%)",
+      "Average Confidence (%)",
+      "Average Time per Question (s)",
+      "Longest Streak",
+      "Language",
+      "Easy Questions Correct",
+      "Medium Questions Correct",
+      "Hard Questions Correct",
+      "Total Hints Used",
+      "Image URL",
     ];
 
     const row = [
       sessionData.sessionId,
       sessionData.sessionMetadata.startTime,
-      sessionData.sessionMetadata.endTime || '',
-      sessionData.sessionMetadata.totalTime || '',
+      sessionData.sessionMetadata.endTime || "",
+      sessionData.sessionMetadata.totalTime || "",
       summary.totalQuestions,
       summary.correctAnswers,
       summary.accuracy.toFixed(1),
@@ -120,10 +122,10 @@ export class QAExporter {
       summary.difficultyBreakdown.medio.correct,
       summary.difficultyBreakdown.dificil.correct,
       summary.totalHintsUsed,
-      sessionData.imageUrl
+      sessionData.imageUrl,
     ];
 
-    return [headers.join(','), row.join(',')].join('\\n');
+    return [headers.join(","), row.join(",")].join("\\n");
   }
 
   /**
@@ -132,33 +134,36 @@ export class QAExporter {
   static generateSessionSummary(sessionData: QASessionData) {
     const responses = sessionData.userResponses;
     const totalQuestions = responses.length;
-    const correctAnswers = responses.filter(r => r.isCorrect).length;
-    const accuracy = totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
+    const correctAnswers = responses.filter((r) => r.isCorrect).length;
+    const accuracy =
+      totalQuestions > 0 ? (correctAnswers / totalQuestions) * 100 : 0;
 
     // Confidence analysis
     const confidenceValues = responses
-      .filter(r => r.confidence !== undefined)
-      .map(r => r.confidence!);
-    const averageConfidence = confidenceValues.length > 0 
-      ? confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length 
-      : 0;
+      .filter((r) => r.confidence !== undefined)
+      .map((r) => r.confidence!);
+    const averageConfidence =
+      confidenceValues.length > 0
+        ? confidenceValues.reduce((a, b) => a + b, 0) / confidenceValues.length
+        : 0;
 
     // Time analysis
     const timeValues = responses
-      .filter(r => r.timeSpent !== undefined)
-      .map(r => r.timeSpent!);
-    const averageTimePerQuestion = timeValues.length > 0
-      ? timeValues.reduce((a, b) => a + b, 0) / timeValues.length
-      : 0;
+      .filter((r) => r.timeSpent !== undefined)
+      .map((r) => r.timeSpent!);
+    const averageTimePerQuestion =
+      timeValues.length > 0
+        ? timeValues.reduce((a, b) => a + b, 0) / timeValues.length
+        : 0;
 
     // Difficulty breakdown
     const difficultyBreakdown = {
       facil: { total: 0, correct: 0 },
       medio: { total: 0, correct: 0 },
-      dificil: { total: 0, correct: 0 }
+      dificil: { total: 0, correct: 0 },
     };
 
-    responses.forEach(response => {
+    responses.forEach((response) => {
       difficultyBreakdown[response.difficulty].total++;
       if (response.isCorrect) {
         difficultyBreakdown[response.difficulty].correct++;
@@ -166,8 +171,9 @@ export class QAExporter {
     });
 
     // Category analysis
-    const categoryStats: Record<string, { total: number; correct: number }> = {};
-    responses.forEach(response => {
+    const categoryStats: Record<string, { total: number; correct: number }> =
+      {};
+    responses.forEach((response) => {
       if (!categoryStats[response.category]) {
         categoryStats[response.category] = { total: 0, correct: 0 };
       }
@@ -178,7 +184,10 @@ export class QAExporter {
     });
 
     // Total hints used
-    const totalHintsUsed = responses.reduce((sum, r) => sum + (r.hintsUsed || 0), 0);
+    const totalHintsUsed = responses.reduce(
+      (sum, r) => sum + (r.hintsUsed || 0),
+      0,
+    );
 
     return {
       totalQuestions,
@@ -188,7 +197,7 @@ export class QAExporter {
       averageTimePerQuestion,
       difficultyBreakdown,
       categoryStats,
-      totalHintsUsed
+      totalHintsUsed,
     };
   }
 
@@ -196,18 +205,21 @@ export class QAExporter {
    * Export to downloadable CSV file
    */
   static downloadCSV(sessionData: QASessionData, includeDetails = true): void {
-    const csvContent = includeDetails 
+    const csvContent = includeDetails
       ? this.exportToCSV(sessionData)
       : this.exportSummaryToCSV(sessionData);
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+
     if (link.download !== undefined) {
       const url = URL.createObjectURL(blob);
-      link.setAttribute('href', url);
-      link.setAttribute('download', `qa_responses_${sessionData.sessionId}_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
+      link.setAttribute("href", url);
+      link.setAttribute(
+        "download",
+        `qa_responses_${sessionData.sessionId}_${new Date().toISOString().split("T")[0]}.csv`,
+      );
+      link.style.visibility = "hidden";
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -225,12 +237,12 @@ export class QAExporter {
         image: {
           url: sessionData.imageUrl,
           description: sessionData.description,
-          language: sessionData.language
-        }
+          language: sessionData.language,
+        },
       },
       questions: sessionData.questions,
       responses: sessionData.userResponses,
-      analytics: this.generateSessionSummary(sessionData)
+      analytics: this.generateSessionSummary(sessionData),
     };
   }
 
@@ -253,49 +265,53 @@ export class QAExporter {
     const insights = {
       strengths: [] as string[],
       improvements: [] as string[],
-      recommendations: [] as string[]
+      recommendations: [] as string[],
     };
 
     // Accuracy insights
     if (summary.accuracy >= 80) {
-      insights.strengths.push('High accuracy - excellent understanding');
+      insights.strengths.push("High accuracy - excellent understanding");
     } else if (summary.accuracy >= 60) {
-      insights.strengths.push('Good accuracy - solid foundation');
+      insights.strengths.push("Good accuracy - solid foundation");
     } else {
-      insights.improvements.push('Focus on improving accuracy');
+      insights.improvements.push("Focus on improving accuracy");
     }
 
     // Confidence insights
     if (summary.averageConfidence >= 70) {
-      insights.strengths.push('High confidence in answers');
+      insights.strengths.push("High confidence in answers");
     } else if (summary.averageConfidence < 50) {
-      insights.improvements.push('Build confidence through more practice');
+      insights.improvements.push("Build confidence through more practice");
     }
 
     // Difficulty analysis
     const { facil, medio, dificil } = summary.difficultyBreakdown;
-    
+
     if (facil.total > 0 && facil.correct / facil.total >= 0.8) {
-      insights.strengths.push('Strong performance on basic concepts');
+      insights.strengths.push("Strong performance on basic concepts");
     }
-    
+
     if (medio.total > 0 && medio.correct / medio.total < 0.6) {
-      insights.improvements.push('Practice intermediate level questions');
-      insights.recommendations.push('Review medium difficulty topics');
+      insights.improvements.push("Practice intermediate level questions");
+      insights.recommendations.push("Review medium difficulty topics");
     }
-    
+
     if (dificil.total > 0 && dificil.correct / dificil.total >= 0.5) {
-      insights.strengths.push('Good grasp of advanced concepts');
+      insights.strengths.push("Good grasp of advanced concepts");
     } else if (dificil.total > 0) {
-      insights.improvements.push('Focus on advanced topics');
-      insights.recommendations.push('Spend more time with complex questions');
+      insights.improvements.push("Focus on advanced topics");
+      insights.recommendations.push("Spend more time with complex questions");
     }
 
     // Time insights
     if (summary.averageTimePerQuestion < 30) {
-      insights.recommendations.push('Consider taking more time to think through answers');
+      insights.recommendations.push(
+        "Consider taking more time to think through answers",
+      );
     } else if (summary.averageTimePerQuestion > 120) {
-      insights.recommendations.push('Practice for faster recall and recognition');
+      insights.recommendations.push(
+        "Practice for faster recall and recognition",
+      );
     }
 
     return insights;
