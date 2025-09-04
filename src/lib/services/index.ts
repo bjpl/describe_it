@@ -74,7 +74,7 @@ export class ServiceRegistry {
 
     for (const [name, service] of this.services.entries()) {
       const startTime = Date.now();
-      let health: ServiceHealth = {
+      const health: ServiceHealth = {
         name,
         healthy: false,
         lastCheck: timestamp,

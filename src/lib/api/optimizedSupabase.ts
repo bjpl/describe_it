@@ -114,7 +114,7 @@ class OptimizedSupabaseClient {
 
     const startTime = performance.now();
     let retryCount = 0;
-    let cacheHit = false;
+    const cacheHit = false;
 
     // Check cache first
     if (cacheable) {
@@ -373,7 +373,7 @@ class OptimizedSupabaseClient {
     } = config;
 
     const startTime = performance.now();
-    let cacheHit = false;
+    const cacheHit = false;
 
     // Check cache for RPC calls
     if (cacheable) {

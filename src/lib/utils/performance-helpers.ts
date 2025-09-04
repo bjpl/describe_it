@@ -103,7 +103,7 @@ export function shallowCompare<T extends Record<string, any>>(
     return false;
   }
 
-  for (let key of keys1) {
+  for (const key of keys1) {
     if (obj1[key] !== obj2[key]) {
       return false;
     }

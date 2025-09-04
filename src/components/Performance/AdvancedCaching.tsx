@@ -258,7 +258,7 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
   const filteredEntries = useMemo(() => {
     if (!stats) return [];
 
-    let entries =
+    const entries =
       selectedType === "all"
         ? stats.entries
         : stats.entries.filter((entry) => entry.type === selectedType);

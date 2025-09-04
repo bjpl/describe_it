@@ -225,11 +225,9 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
           <div className="relative">
             <select
               value={difficulty}
-              onChange={useCallback(
-                (e: React.ChangeEvent<HTMLSelectElement>) =>
-                  setDifficulty(e.target.value as DifficultyLevel),
-                [],
-              )}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setDifficulty(e.target.value as DifficultyLevel)
+              }
               className="appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             >
@@ -244,11 +242,9 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
           <div className="relative">
             <select
               value={maxPhrases}
-              onChange={useCallback(
-                (e: React.ChangeEvent<HTMLSelectElement>) =>
-                  setMaxPhrases(Number(e.target.value)),
-                [],
-              )}
+              onChange={(e: React.ChangeEvent<HTMLSelectElement>) =>
+                setMaxPhrases(Number(e.target.value))
+              }
               className="appearance-none bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg px-4 py-2 pr-8 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               disabled={loading}
             >
@@ -334,16 +330,9 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
               Found {phrases.length} {difficulty} level phrases
             </p>
             <span
-              className={useMemo(
-                () =>
-                  `px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`,
-                [difficulty, getDifficultyColor],
-              )}
+              className={`px-2 py-1 rounded-full text-xs font-medium ${getDifficultyColor(difficulty)}`}
             >
-              {useMemo(
-                () => difficulty.charAt(0).toUpperCase() + difficulty.slice(1),
-                [difficulty],
-              )}
+              {difficulty.charAt(0).toUpperCase() + difficulty.slice(1)}
             </span>
           </div>
 

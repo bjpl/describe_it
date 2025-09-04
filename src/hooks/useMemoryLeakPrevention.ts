@@ -1,1 +1,138 @@
-'use client';\n\nimport { useEffect, useRef, useCallback } from 'react';\n\n// Hook to prevent memory leaks from event listeners\nexport const useEventListenerCleanup = () => {\n  const listenersRef = useRef<Array<{\n    element: EventTarget;\n    event: string;\n    handler: EventListener;\n    options?: boolean | AddEventListenerOptions;\n  }>>([]);\n\n  const addListener = useCallback(\n    (element: EventTarget, event: string, handler: EventListener, options?: boolean | AddEventListenerOptions) => {\n      element.addEventListener(event, handler, options);\n      listenersRef.current.push({ element, event, handler, options });\n    },\n    []\n  );\n\n  const removeListener = useCallback(\n    (element: EventTarget, event: string, handler: EventListener) => {\n      element.removeEventListener(event, handler);\n      listenersRef.current = listenersRef.current.filter(\n        listener => !(listener.element === element && listener.event === event && listener.handler === handler)\n      );\n    },\n    []\n  );\n\n  const removeAllListeners = useCallback(() => {\n    listenersRef.current.forEach(({ element, event, handler }) => {\n      element.removeEventListener(event, handler);\n    });\n    listenersRef.current = [];\n  }, []);\n\n  useEffect(() => {\n    return removeAllListeners;\n  }, [removeAllListeners]);\n\n  return { addListener, removeListener, removeAllListeners };\n};\n\n// Hook to prevent memory leaks from timers\nexport const useTimerCleanup = () => {\n  const timersRef = useRef<Array<NodeJS.Timeout | number>>([]);\n\n  const setTimeout = useCallback((callback: () => void, delay: number): NodeJS.Timeout => {\n    const timer = globalThis.setTimeout(callback, delay);\n    timersRef.current.push(timer);\n    return timer;\n  }, []);\n\n  const setInterval = useCallback((callback: () => void, delay: number): NodeJS.Timeout => {\n    const timer = globalThis.setInterval(callback, delay);\n    timersRef.current.push(timer);\n    return timer;\n  }, []);\n\n  const clearTimer = useCallback((timer: NodeJS.Timeout | number) => {\n    globalThis.clearTimeout(timer);\n    globalThis.clearInterval(timer);\n    timersRef.current = timersRef.current.filter(t => t !== timer);\n  }, []);\n\n  const clearAllTimers = useCallback(() => {\n    timersRef.current.forEach(timer => {\n      globalThis.clearTimeout(timer);\n      globalThis.clearInterval(timer);\n    });\n    timersRef.current = [];\n  }, []);\n\n  useEffect(() => {\n    return clearAllTimers;\n  }, [clearAllTimers]);\n\n  return { setTimeout, setInterval, clearTimer, clearAllTimers };\n};\n\n// Hook to prevent memory leaks from promises\nexport const usePromiseCleanup = () => {\n  const abortControllersRef = useRef<Array<AbortController>>([]);\n\n  const createAbortController = useCallback((): AbortController => {\n    const controller = new AbortController();\n    abortControllersRef.current.push(controller);\n    return controller;\n  }, []);\n\n  const abortController = useCallback((controller: AbortController) => {\n    controller.abort();\n    abortControllersRef.current = abortControllersRef.current.filter(c => c !== controller);\n  }, []);\n\n  const abortAllControllers = useCallback(() => {\n    abortControllersRef.current.forEach(controller => {\n      if (!controller.signal.aborted) {\n        controller.abort();\n      }\n    });\n    abortControllersRef.current = [];\n  }, []);\n\n  // Fetch wrapper with automatic abort signal\n  const abortableFetch = useCallback(\n    (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {\n      const controller = createAbortController();\n      return fetch(input, {\n        ...init,\n        signal: controller.signal\n      }).finally(() => {\n        // Remove from active controllers when done\n        abortControllersRef.current = abortControllersRef.current.filter(c => c !== controller);\n      });\n    },\n    [createAbortController]\n  );\n\n  useEffect(() => {\n    return abortAllControllers;\n  }, [abortAllControllers]);\n\n  return {\n    createAbortController,\n    abortController,\n    abortAllControllers,\n    abortableFetch\n  };\n};\n\n// Hook to monitor memory usage\nexport const useMemoryMonitor = (componentName: string, interval: number = 5000) => {\n  const [memoryInfo, setMemoryInfo] = useState<{\n    usedJSHeapSize: number;\n    totalJSHeapSize: number;\n    jsHeapSizeLimit: number;\n    usagePercentage: number;\n  } | null>(null);\n\n  const [alerts, setAlerts] = useState<string[]>([]);\n  const { setTimeout, clearAllTimers } = useTimerCleanup();\n\n  const checkMemoryUsage = useCallback(() => {\n    if ('memory' in performance) {\n      const memory = (performance as any).memory;\n      const usagePercentage = (memory.usedJSHeapSize / memory.totalJSHeapSize) * 100;\n      \n      setMemoryInfo({\n        usedJSHeapSize: memory.usedJSHeapSize,\n        totalJSHeapSize: memory.totalJSHeapSize,\n        jsHeapSizeLimit: memory.jsHeapSizeLimit,\n        usagePercentage\n      });\n      \n      // Alert if memory usage is high\n      if (usagePercentage > 80) {\n        setAlerts(prev => [...prev.slice(-4), \n          `[${componentName}] High memory usage: ${usagePercentage.toFixed(1)}%`\n        ]);\n      }\n      \n      // Alert if heap size is approaching limit\n      const limitPercentage = (memory.usedJSHeapSize / memory.jsHeapSizeLimit) * 100;\n      if (limitPercentage > 70) {\n        setAlerts(prev => [...prev.slice(-4),\n          `[${componentName}] Approaching heap limit: ${limitPercentage.toFixed(1)}%`\n        ]);\n      }\n    }\n  }, [componentName]);\n\n  useEffect(() => {\n    checkMemoryUsage();\n    const timer = setTimeout(() => {\n      checkMemoryUsage();\n    }, interval);\n    \n    return () => {\n      clearAllTimers();\n    };\n  }, [checkMemoryUsage, interval, setTimeout, clearAllTimers]);\n\n  const clearAlerts = useCallback(() => {\n    setAlerts([]);\n  }, []);\n\n  return { memoryInfo, alerts, clearAlerts, checkMemoryUsage };\n};\n\n// Hook to prevent closure memory leaks\nexport const useClosureCleanup = () => {\n  const refsRef = useRef<Map<string, any>>(new Map());\n\n  const setRef = useCallback((key: string, value: any) => {\n    refsRef.current.set(key, value);\n  }, []);\n\n  const getRef = useCallback((key: string) => {\n    return refsRef.current.get(key);\n  }, []);\n\n  const deleteRef = useCallback((key: string) => {\n    refsRef.current.delete(key);\n  }, []);\n\n  const clearAllRefs = useCallback(() => {\n    refsRef.current.clear();\n  }, []);\n\n  useEffect(() => {\n    return clearAllRefs;\n  }, [clearAllRefs]);\n\n  return { setRef, getRef, deleteRef, clearAllRefs };\n};\n\n// Hook to detect and prevent DOM element leaks\nexport const useDOMCleanup = () => {\n  const elementsRef = useRef<Set<Element>>(new Set());\n\n  const trackElement = useCallback((element: Element) => {\n    elementsRef.current.add(element);\n  }, []);\n\n  const untrackElement = useCallback((element: Element) => {\n    elementsRef.current.delete(element);\n  }, []);\n\n  const checkDetachedElements = useCallback(() => {\n    const detachedElements: Element[] = [];\n    \n    elementsRef.current.forEach(element => {\n      if (!document.contains(element)) {\n        detachedElements.push(element);\n        elementsRef.current.delete(element);\n      }\n    });\n    \n    if (detachedElements.length > 0 && process.env.NODE_ENV === 'development') {\n      console.warn(`Found ${detachedElements.length} detached DOM elements:`, detachedElements);\n    }\n    \n    return detachedElements;\n  }, []);\n\n  const clearAllElements = useCallback(() => {\n    elementsRef.current.clear();\n  }, []);\n\n  useEffect(() => {\n    return clearAllElements;\n  }, [clearAllElements]);\n\n  return { trackElement, untrackElement, checkDetachedElements, clearAllElements };\n};\n\n// Comprehensive memory leak prevention hook\nexport const useMemoryLeakPrevention = (componentName: string) => {\n  const eventCleanup = useEventListenerCleanup();\n  const timerCleanup = useTimerCleanup();\n  const promiseCleanup = usePromiseCleanup();\n  const memoryMonitor = useMemoryMonitor(componentName);\n  const closureCleanup = useClosureCleanup();\n  const domCleanup = useDOMCleanup();\n\n  // Cleanup everything on unmount\n  useEffect(() => {\n    return () => {\n      eventCleanup.removeAllListeners();\n      timerCleanup.clearAllTimers();\n      promiseCleanup.abortAllControllers();\n      closureCleanup.clearAllRefs();\n      domCleanup.clearAllElements();\n    };\n  }, [eventCleanup, timerCleanup, promiseCleanup, closureCleanup, domCleanup]);\n\n  // Periodic cleanup check\n  useEffect(() => {\n    const cleanupTimer = timerCleanup.setInterval(() => {\n      domCleanup.checkDetachedElements();\n      memoryMonitor.checkMemoryUsage();\n    }, 30000); // Every 30 seconds\n\n    return () => {\n      timerCleanup.clearTimer(cleanupTimer);\n    };\n  }, [timerCleanup, domCleanup, memoryMonitor]);\n\n  return {\n    ...eventCleanup,\n    ...timerCleanup,\n    ...promiseCleanup,\n    ...memoryMonitor,\n    ...closureCleanup,\n    ...domCleanup\n  };\n};\n\n// React import fix\nimport { useState } from 'react';
+'use client';
+
+import { useEffect, useRef, useCallback, useState } from 'react';
+
+// Hook to prevent memory leaks from event listeners
+export const useEventListenerCleanup = () => {
+  const listenersRef = useRef<Array<{
+    element: EventTarget;
+    event: string;
+    handler: EventListener;
+    options?: boolean | AddEventListenerOptions;
+  }>>([]);
+
+  const addListener = useCallback(
+    (element: EventTarget, event: string, handler: EventListener, options?: boolean | AddEventListenerOptions) => {
+      element.addEventListener(event, handler, options);
+      listenersRef.current.push({ element, event, handler, options });
+    },
+    []
+  );
+
+  const removeListener = useCallback(
+    (element: EventTarget, event: string, handler: EventListener) => {
+      element.removeEventListener(event, handler);
+      listenersRef.current = listenersRef.current.filter(
+        listener => !(listener.element === element && listener.event === event && listener.handler === handler)
+      );
+    },
+    []
+  );
+
+  const removeAllListeners = useCallback(() => {
+    listenersRef.current.forEach(({ element, event, handler }) => {
+      element.removeEventListener(event, handler);
+    });
+    listenersRef.current = [];
+  }, []);
+
+  useEffect(() => {
+    return removeAllListeners;
+  }, [removeAllListeners]);
+
+  return { addListener, removeListener, removeAllListeners };
+};
+
+// Hook to prevent memory leaks from timers
+export const useTimerCleanup = () => {
+  const timersRef = useRef<Array<NodeJS.Timeout | number>>([]);
+
+  const setTimeout = useCallback((callback: () => void, delay: number): NodeJS.Timeout => {
+    const timer = globalThis.setTimeout(callback, delay);
+    timersRef.current.push(timer);
+    return timer;
+  }, []);
+
+  const setInterval = useCallback((callback: () => void, delay: number): NodeJS.Timeout => {
+    const timer = globalThis.setInterval(callback, delay);
+    timersRef.current.push(timer);
+    return timer;
+  }, []);
+
+  const clearTimer = useCallback((timer: NodeJS.Timeout | number) => {
+    globalThis.clearTimeout(timer);
+    globalThis.clearInterval(timer);
+    timersRef.current = timersRef.current.filter(t => t !== timer);
+  }, []);
+
+  const clearAllTimers = useCallback(() => {
+    timersRef.current.forEach(timer => {
+      globalThis.clearTimeout(timer);
+      globalThis.clearInterval(timer);
+    });
+    timersRef.current = [];
+  }, []);
+
+  useEffect(() => {
+    return clearAllTimers;
+  }, [clearAllTimers]);
+
+  return { setTimeout, setInterval, clearTimer, clearAllTimers };
+};
+
+// Hook to prevent memory leaks from promises
+export const usePromiseCleanup = () => {
+  const abortControllersRef = useRef<Array<AbortController>>([]);
+
+  const createAbortController = useCallback((): AbortController => {
+    const controller = new AbortController();
+    abortControllersRef.current.push(controller);
+    return controller;
+  }, []);
+
+  const abortController = useCallback((controller: AbortController) => {
+    controller.abort();
+    abortControllersRef.current = abortControllersRef.current.filter(c => c !== controller);
+  }, []);
+
+  const abortAllControllers = useCallback(() => {
+    abortControllersRef.current.forEach(controller => {
+      if (!controller.signal.aborted) {
+        controller.abort();
+      }
+    });
+    abortControllersRef.current = [];
+  }, []);
+
+  useEffect(() => {
+    return abortAllControllers;
+  }, [abortAllControllers]);
+
+  return {
+    createAbortController,
+    abortController,
+    abortAllControllers
+  };
+};
+
+// Comprehensive memory leak prevention hook
+export const useMemoryLeakPrevention = (componentName: string) => {
+  const eventCleanup = useEventListenerCleanup();
+  const timerCleanup = useTimerCleanup();
+  const promiseCleanup = usePromiseCleanup();
+
+  // Cleanup everything on unmount
+  useEffect(() => {
+    return () => {
+      eventCleanup.removeAllListeners();
+      timerCleanup.clearAllTimers();
+      promiseCleanup.abortAllControllers();
+    };
+  }, [eventCleanup, timerCleanup, promiseCleanup]);
+
+  return {
+    ...eventCleanup,
+    ...timerCleanup,
+    ...promiseCleanup
+  };
+};
