@@ -71,7 +71,6 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     logger.error("Error generating Q&A pairs", error, {
       component: "qa-api",
-      language,
     });
 
     // Return appropriate error response
