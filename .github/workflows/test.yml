@@ -294,14 +294,14 @@ jobs:
           path: test-results/
 
       - name: Deploy test results to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./test-results
           destination_dir: test-reports/${{ github.run_number }}
 
       - name: Update latest test results
-        uses: peaceiris/actions-gh-pages@v3
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./test-results
