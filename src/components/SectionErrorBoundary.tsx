@@ -137,8 +137,9 @@ export const SectionErrorBoundary = memo<SectionErrorBoundaryProps>(
     const config = useMemo(() => getSectionConfig(), [getSectionConfig]);
 
     const customFallback = useMemo(
-      () =>
-        fallback || (
+      () => fallback ? 
+        ({ error, reset }: { error: Error; reset: () => void }) => fallback :
+        ({ error, reset }: { error: Error; reset: () => void }) => (
           <div
             className={`
       w-full rounded-lg border p-6
@@ -199,16 +200,7 @@ export const SectionErrorBoundary = memo<SectionErrorBoundaryProps>(
     );
 
     return (
-      <ErrorBoundary
-        fallback={customFallback}
-        onError={(error, errorInfo) => {
-          console.error(
-            `Section Error in ${sectionName} (${sectionType}):`,
-            error,
-            errorInfo,
-          );
-        }}
-      >
+      <ErrorBoundary fallback={customFallback}>
         {children}
       </ErrorBoundary>
     );

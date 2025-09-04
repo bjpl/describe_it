@@ -17,6 +17,9 @@ export interface PDFExportOptions {
   quality: "high" | "medium" | "low";
 }
 
+// Export data interface for compatibility with exportManager
+import { ExportData, PDFOptions } from "@/types/export";
+
 export class PDFExporter {
   private pdf: jsPDF;
   private options: PDFExportOptions;
@@ -520,5 +523,216 @@ export class PDFExporter {
   ): Promise<Blob> {
     const exporter = new PDFExporter(options);
     return await exporter.generatePDF(report, visualData, reportGenerator);
+  }
+}
+
+/**
+ * Export function compatible with exportManager interface
+ */
+export async function exportToPDF(
+  data: ExportData,
+  options?: PDFOptions,
+): Promise<Blob> {
+  try {
+    // Create simplified PDF for general export data
+    const pdf = new jsPDF({
+      orientation: options?.orientation || "portrait",
+      unit: "mm",
+      format: options?.pageSize || "a4",
+    });
+
+    const margin = 20;
+    let currentY = margin;
+    const pageWidth = pdf.internal.pageSize.width;
+    const pageHeight = pdf.internal.pageSize.height;
+
+    // Helper function for page breaks
+    const checkPageBreak = (requiredSpace: number) => {
+      if (currentY + requiredSpace > pageHeight - 30) {
+        pdf.addPage();
+        currentY = margin;
+      }
+    };
+
+    // Title
+    pdf.setFontSize(24);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Export Report", margin, currentY);
+    currentY += 15;
+
+    // Metadata
+    if (data.metadata) {
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Created: ${new Date(data.metadata.createdAt).toLocaleString()}`, margin, currentY);
+      currentY += 8;
+      pdf.text(`Total Items: ${data.metadata.totalItems}`, margin, currentY);
+      currentY += 8;
+      pdf.text(`Categories: ${data.metadata.categories.join(", ")}`, margin, currentY);
+      currentY += 15;
+    }
+
+    // Vocabulary section
+    if (data.vocabulary && data.vocabulary.length > 0) {
+      checkPageBreak(30);
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Vocabulary", margin, currentY);
+      currentY += 10;
+
+      data.vocabulary.slice(0, 50).forEach((item) => { // Limit to first 50 items
+        checkPageBreak(15);
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(`• ${item.spanish} - ${item.english}`, margin + 5, currentY);
+        if (item.description) {
+          currentY += 5;
+          pdf.setFont("helvetica", "italic");
+          pdf.text(`  ${item.description.slice(0, 100)}${item.description.length > 100 ? "..." : ""}`, margin + 10, currentY);
+        }
+        currentY += 8;
+      });
+
+      if (data.vocabulary.length > 50) {
+        pdf.setFont("helvetica", "italic");
+        pdf.text(`... and ${data.vocabulary.length - 50} more items`, margin + 5, currentY);
+        currentY += 10;
+      }
+    }
+
+    // Descriptions section
+    if (data.descriptions && data.descriptions.length > 0) {
+      checkPageBreak(30);
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Descriptions", margin, currentY);
+      currentY += 10;
+
+      data.descriptions.slice(0, 20).forEach((item) => { // Limit to first 20 items
+        checkPageBreak(20);
+        pdf.setFontSize(10);
+        pdf.setFont("helvetica", "normal");
+        const description = item.description.slice(0, 150) + (item.description.length > 150 ? "..." : "");
+        pdf.text(`• ${description}`, margin + 5, currentY);
+        currentY += 8;
+      });
+
+      if (data.descriptions.length > 20) {
+        pdf.setFont("helvetica", "italic");
+        pdf.text(`... and ${data.descriptions.length - 20} more descriptions`, margin + 5, currentY);
+        currentY += 10;
+      }
+    }
+
+    // Summary section
+    if (data.summary) {
+      checkPageBreak(50);
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Summary", margin, currentY);
+      currentY += 10;
+
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      
+      const summaryItems = [
+        `Total Vocabulary: ${data.summary.totalVocabulary || 0}`,
+        `Total Descriptions: ${data.summary.totalDescriptions || 0}`,
+        `Total Q&A: ${data.summary.totalQA || 0}`,
+        `Total Sessions: ${data.summary.totalSessions || 0}`,
+      ];
+
+      summaryItems.forEach((item) => {
+        pdf.text(`• ${item}`, margin + 5, currentY);
+        currentY += 6;
+      });
+    }
+
+    return new Blob([pdf.output("blob")], { type: "application/pdf" });
+  } catch (error) {
+    console.error("PDF export failed:", error);
+    throw new Error("Failed to export PDF");
+  }
+}
+
+/**
+ * Export study sheet format PDF
+ */
+export async function exportStudySheet(
+  data: ExportData,
+  options?: PDFOptions,
+): Promise<Blob> {
+  try {
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm", 
+      format: "a4",
+    });
+
+    const margin = 20;
+    let currentY = margin;
+    const pageWidth = pdf.internal.pageSize.width;
+    const pageHeight = pdf.internal.pageSize.height;
+
+    // Helper function for page breaks
+    const checkPageBreak = (requiredSpace: number) => {
+      if (currentY + requiredSpace > pageHeight - 30) {
+        pdf.addPage();
+        currentY = margin;
+      }
+    };
+
+    // Title
+    pdf.setFontSize(20);
+    pdf.setFont("helvetica", "bold");
+    pdf.text("Spanish Learning Study Sheet", margin, currentY);
+    currentY += 15;
+
+    // Date
+    pdf.setFontSize(12);
+    pdf.setFont("helvetica", "normal");
+    pdf.text(`Generated: ${new Date().toLocaleDateString()}`, margin, currentY);
+    currentY += 20;
+
+    // Vocabulary section for study
+    if (data.vocabulary && data.vocabulary.length > 0) {
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Vocabulary to Study", margin, currentY);
+      currentY += 15;
+
+      // Create study format with Spanish | English columns
+      pdf.setFontSize(12);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Spanish", margin, currentY);
+      pdf.text("English", margin + 80, currentY);
+      currentY += 5;
+      
+      // Draw header line
+      pdf.setDrawColor(0, 0, 0);
+      pdf.line(margin, currentY, pageWidth - margin, currentY);
+      currentY += 10;
+
+      data.vocabulary.slice(0, 30).forEach((item) => { // Limit for study sheet
+        checkPageBreak(15);
+        pdf.setFontSize(11);
+        pdf.setFont("helvetica", "normal");
+        pdf.text(item.spanish, margin, currentY);
+        pdf.text(item.english, margin + 80, currentY);
+        
+        // Add dotted line for writing practice
+        pdf.setDrawColor(200, 200, 200);
+        for (let x = margin; x < pageWidth - margin; x += 5) {
+          pdf.circle(x, currentY + 5, 0.2, "F");
+        }
+        
+        currentY += 15;
+      });
+    }
+
+    return new Blob([pdf.output("blob")], { type: "application/pdf" });
+  } catch (error) {
+    console.error("Study sheet export failed:", error);
+    throw new Error("Failed to export study sheet");
   }
 }

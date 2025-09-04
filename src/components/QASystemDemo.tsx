@@ -423,4 +423,6 @@ export const QASystemDemo = memo(QASystemDemoBase, (prevProps, nextProps) => {
   );
 });
 
+QASystemDemo.displayName = 'QASystemDemo';
+
 export default QASystemDemo;

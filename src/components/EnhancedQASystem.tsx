@@ -745,4 +745,6 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 };
 
 export const EnhancedQASystem = memo(EnhancedQASystemBase);
+EnhancedQASystem.displayName = 'EnhancedQASystem';
+
 export default EnhancedQASystem;

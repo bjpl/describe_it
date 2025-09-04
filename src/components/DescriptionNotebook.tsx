@@ -393,3 +393,5 @@ export const DescriptionNotebook = memo(
     );
   },
 );
+
+DescriptionNotebook.displayName = 'DescriptionNotebook';

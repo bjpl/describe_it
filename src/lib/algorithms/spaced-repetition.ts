@@ -67,3 +67,23 @@ export class SpacedRepetitionAlgorithm extends BaseAlgorithm {
     };
   }
 }
+
+export const SpacedRepetitionUtils = {
+  createCard: (id: string, content: string): ReviewCard => ({
+    id,
+    content,
+    interval: 1,
+    easeFactor: 2.5,
+    nextReviewDate: new Date(),
+    reviewCount: 0,
+    successStreak: 0
+  }),
+  
+  isCardDue: (card: ReviewCard): boolean => {
+    return new Date() >= card.nextReviewDate;
+  },
+  
+  getDueCards: (cards: ReviewCard[]): ReviewCard[] => {
+    return cards.filter(card => SpacedRepetitionUtils.isCardDue(card));
+  }
+};

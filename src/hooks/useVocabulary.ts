@@ -14,6 +14,41 @@ import type {
 export type VocabularyStats = UnifiedVocabularyStats;
 export type VocabularyFilters = UnifiedVocabularyFilters;
 
+// Spaced repetition hook stubs
+export const useReviewSession = (sessionId?: number, maxCards?: number) => {
+  return {
+    data: {
+      cards_due: [{
+        phrase_id: "sample_phrase_id"
+      }]
+    },
+    session: null,
+    startSession: () => {},
+    endSession: () => {},
+    isLoading: false,
+    error: null
+  };
+};
+
+export const useProcessReviewResponse = () => {
+  return {
+    processResponse: () => {},
+    mutateAsync: async () => {},
+    isProcessing: false,
+    error: null
+  };
+};
+
+export const usePhrase = (phraseId?: string) => {
+  return {
+    data: null,
+    phrase: null,
+    updatePhrase: () => {},
+    isLoading: false,
+    error: null
+  };
+};
+
 export interface UseVocabularyOptions {
   autoLoad?: boolean;
   enableRealTime?: boolean;

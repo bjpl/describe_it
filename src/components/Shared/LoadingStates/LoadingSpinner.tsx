@@ -30,3 +30,43 @@ export function LoadingSpinner({
     </div>
   );
 }
+
+// LoadingOverlay component
+interface LoadingOverlayProps {
+  show?: boolean;
+  message?: string;
+  className?: string;
+}
+
+export function LoadingOverlay({
+  show = true,
+  message = "Loading...",
+  className = "",
+}: LoadingOverlayProps) {
+  if (!show) return null;
+
+  return (
+    <div className={`fixed inset-0 z-50 flex items-center justify-center bg-white/80 backdrop-blur-sm ${className}`}>
+      <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm mx-4">
+        <LoadingSpinner size="lg" message={message} />
+      </div>
+    </div>
+  );
+}
+
+// PageLoader component
+interface PageLoaderProps {
+  message?: string;
+  className?: string;
+}
+
+export function PageLoader({
+  message = "Loading page...",
+  className = "",
+}: PageLoaderProps) {
+  return (
+    <div className={`min-h-screen flex items-center justify-center ${className}`}>
+      <LoadingSpinner size="xl" message={message} />
+    </div>
+  );
+}

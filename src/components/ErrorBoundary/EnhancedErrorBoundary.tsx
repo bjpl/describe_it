@@ -245,8 +245,8 @@ ${errorInfo?.componentStack}
               </h2>
               <p className="text-gray-600">
                 {isolate
-                  ? "This component encountered an error and couldn't render properly."
-                  : "We're sorry, but something unexpected happened."}
+                  ? "This component encountered an error and couldn&apos;t render properly."
+                  : "We&apos;re sorry, but something unexpected happened."}
               </p>
               {errorCount > 1 && (
                 <p className="text-sm text-orange-600">

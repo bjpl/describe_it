@@ -504,7 +504,7 @@ function ChartsTab({ visualData }: { visualData: VisualReportData }) {
                   (_, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={PIE_COLORS[index % PIE_COLORS.length]}
+                      fill={`hsl(${index * 30}, 70%, 60%)`}
                     />
                   ),
                 )}
@@ -521,7 +521,7 @@ function ChartsTab({ visualData }: { visualData: VisualReportData }) {
                   <div
                     className="w-4 h-4 rounded"
                     style={{
-                      backgroundColor: PIE_COLORS[index % PIE_COLORS.length],
+                      backgroundColor: `hsl(${index * 30}, 70%, 60%)`,
                     }}
                   />
                   <span className="flex-1">{label}</span>
@@ -636,7 +636,7 @@ function AnalyticsTab({
                   ).map((_, index) => (
                     <Cell
                       key={`cell-${index}`}
-                      fill={PIE_COLORS[index % PIE_COLORS.length]}
+                      fill={`hsl(${index * 30}, 70%, 60%)`}
                     />
                   ))}
                 </Pie>

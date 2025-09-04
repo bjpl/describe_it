@@ -356,8 +356,8 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
       {/* Keyboard shortcuts help */}
       <div className="text-center mt-4 text-xs text-gray-500 dark:text-gray-400">
         <p>
-          <strong>Shortcuts:</strong> Space/Enter = Flip • 1-5 = Rate • ← → =
-          Navigate • H = Hint
+          <strong>Shortcuts:</strong> Space/Enter = Flip &bull; 1-5 = Rate &bull; &larr; &rarr; =
+          Navigate &bull; H = Hint
         </p>
       </div>
 

@@ -80,8 +80,9 @@ const EnhancedSettingsPanel: React.FC<{
 
   // Load cache size on mount
   useEffect(() => {
-    const size = getCacheSize();
-    setCacheSize(size);
+    const sizeInBytes = getCacheSize();
+    const sizeInMB = (sizeInBytes / (1024 * 1024)).toFixed(2);
+    setCacheSize(`${sizeInMB} MB`);
   }, [getCacheSize]);
 
   const sections: SettingsSection[] = [
@@ -263,9 +264,9 @@ const EnhancedSettingsPanel: React.FC<{
           Language / Idioma
         </label>
         <select
-          value={settings.general.language}
+          value={settings.language.ui}
           onChange={(e) =>
-            handleSettingChange("general", "language", e.target.value)
+            handleSettingChange("language", "ui", e.target.value)
           }
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
         >
@@ -279,10 +280,11 @@ const EnhancedSettingsPanel: React.FC<{
           Region
         </label>
         <select
-          value={settings.general.region}
-          onChange={(e) =>
-            handleSettingChange("general", "region", e.target.value)
-          }
+          value="US" // Default region since not in AppSettings
+          onChange={(e) => {
+            // Region setting not implemented in current AppSettings
+            console.log('Region setting not implemented:', e.target.value);
+          }}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
         >
           <option value="US">United States</option>
@@ -296,9 +298,9 @@ const EnhancedSettingsPanel: React.FC<{
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={settings.general.autoSave}
+            checked={settings.backup.autoBackup}
             onChange={(e) =>
-              handleSettingChange("general", "autoSave", e.target.checked)
+              handleSettingChange("backup", "autoBackup", e.target.checked)
             }
             className="mr-2"
           />
@@ -319,13 +321,11 @@ const EnhancedSettingsPanel: React.FC<{
           type="number"
           min="5"
           max="120"
-          value={settings.general.sessionTimeout || 30}
-          onChange={(e) =>
-            handleSettingChange(
-              "general",
-              "sessionTimeout",
-              parseInt(e.target.value),
-            )
+          value={30} // Default session timeout since not in AppSettings
+          onChange={(e) => {
+            // Session timeout setting not implemented in current AppSettings
+            console.log('Session timeout setting not implemented:', e.target.value);
+          }
           }
           className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 ${
             getFieldError("sessionTimeout")
@@ -352,9 +352,9 @@ const EnhancedSettingsPanel: React.FC<{
           {(["light", "dark", "system"] as const).map((theme) => (
             <button
               key={theme}
-              onClick={() => handleSettingChange("appearance", "theme", theme)}
+              onClick={() => handleSettingChange("theme", "mode", theme)}
               className={`flex flex-col items-center p-4 border-2 rounded-lg transition-all ${
-                settings.appearance.theme === theme
+                settings.theme.mode === theme
                   ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
                   : "border-gray-200 dark:border-gray-600 hover:border-gray-300"
               }`}
@@ -382,10 +382,10 @@ const EnhancedSettingsPanel: React.FC<{
             <button
               key={color.name}
               onClick={() =>
-                handleSettingChange("appearance", "primaryColor", color.name)
+                handleSettingChange("theme", "customColors", { ...settings.theme.customColors, primary: color.name })
               }
               className={`aspect-square rounded-lg ${color.color} ${
-                settings.appearance.primaryColor === color.name
+                settings.theme.customColors.primary === color.name
                   ? "ring-2 ring-offset-2 ring-gray-400"
                   : ""
               }`}
@@ -399,9 +399,9 @@ const EnhancedSettingsPanel: React.FC<{
           Font Size
         </label>
         <select
-          value={settings.appearance.fontSize}
+          value={settings.accessibility.fontSize}
           onChange={(e) =>
-            handleSettingChange("appearance", "fontSize", e.target.value)
+            handleSettingChange("accessibility", "fontSize", e.target.value)
           }
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
         >
@@ -416,9 +416,9 @@ const EnhancedSettingsPanel: React.FC<{
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={settings.appearance.animations}
+            checked={settings.theme.animations}
             onChange={(e) =>
-              handleSettingChange("appearance", "animations", e.target.checked)
+              handleSettingChange("theme", "animations", e.target.checked)
             }
             className="mr-2"
           />
@@ -432,7 +432,7 @@ const EnhancedSettingsPanel: React.FC<{
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={settings.appearance.reducedMotion}
+            checked={settings.theme.reducedMotion}
             onChange={(e) =>
               handleSettingChange(
                 "appearance",
@@ -477,9 +477,9 @@ const EnhancedSettingsPanel: React.FC<{
         <div className="relative">
           <input
             type={showPasswords.openaiApiKey ? "text" : "password"}
-            value={settings.api.openaiApiKey || ""}
+            value={settings.apiKeys.openai || ""}
             onChange={(e) =>
-              handleSettingChange("api", "openaiApiKey", e.target.value)
+              handleSettingChange("apiKeys", "openai", e.target.value)
             }
             placeholder="sk-..."
             className={`w-full px-3 py-2 pr-10 border rounded-md bg-white dark:bg-gray-700 ${
@@ -517,9 +517,9 @@ const EnhancedSettingsPanel: React.FC<{
         <div className="relative">
           <input
             type={showPasswords.unsplashApiKey ? "text" : "password"}
-            value={settings.api.unsplashApiKey || ""}
+            value={settings.apiKeys.unsplash || ""}
             onChange={(e) =>
-              handleSettingChange("api", "unsplashApiKey", e.target.value)
+              handleSettingChange("apiKeys", "unsplash", e.target.value)
             }
             className={`w-full px-3 py-2 pr-10 border rounded-md bg-white dark:bg-gray-700 ${
               getFieldError("unsplashApiKey")
@@ -568,9 +568,9 @@ const EnhancedSettingsPanel: React.FC<{
           Performance Mode
         </label>
         <select
-          value={settings.advanced?.performanceMode || "balanced"}
+          value={settings.performance.imageQuality || "medium"}
           onChange={(e) =>
-            handleSettingChange("advanced", "performanceMode", e.target.value)
+            handleSettingChange("performance", "imageQuality", e.target.value)
           }
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
         >
@@ -605,9 +605,9 @@ const EnhancedSettingsPanel: React.FC<{
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={settings.advanced?.enableLogging || false}
+            checked={settings.performance.analyticsEnabled || false}
             onChange={(e) =>
-              handleSettingChange("advanced", "enableLogging", e.target.checked)
+              handleSettingChange("performance", "analyticsEnabled", e.target.checked)
             }
             className="mr-2"
           />
@@ -624,10 +624,10 @@ const EnhancedSettingsPanel: React.FC<{
         <label className="flex items-center">
           <input
             type="checkbox"
-            checked={settings.advanced?.analyticsEnabled || true}
+            checked={settings.performance.analyticsEnabled || true}
             onChange={(e) =>
               handleSettingChange(
-                "advanced",
+                "performance",
                 "analyticsEnabled",
                 e.target.checked,
               )

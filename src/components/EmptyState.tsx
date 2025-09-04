@@ -287,7 +287,7 @@ export function SearchEmptyState({
       <p className="text-base text-gray-600 leading-relaxed">
         {query
           ? "Try adjusting your search terms or browse our content."
-          : "Enter a search term to find what you're looking for."}
+          : "Enter a search term to find what you&apos;re looking for."}
       </p>
 
       {/* Actions */}

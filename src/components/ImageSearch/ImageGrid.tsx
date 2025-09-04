@@ -250,3 +250,5 @@ export const ImageGrid = memo(ImageGridBase, (prevProps, nextProps) => {
     prevProps.images.every((img, idx) => img.id === nextProps.images[idx]?.id)
   );
 });
+
+ImageGrid.displayName = 'ImageGrid';

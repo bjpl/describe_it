@@ -337,3 +337,5 @@ export const ImageSearch = memo(ImageSearchBase, (prevProps, nextProps) => {
     prevProps.className === nextProps.className
   );
 });
+
+ImageSearch.displayName = 'ImageSearch';
