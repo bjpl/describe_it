@@ -85,5 +85,18 @@ export const SpacedRepetitionUtils = {
   
   getDueCards: (cards: ReviewCard[]): ReviewCard[] => {
     return cards.filter(card => SpacedRepetitionUtils.isCardDue(card));
+  },
+
+  getMasteryLevel: (card: any): string => {
+    if (!card || !card.successStreak) return "Beginner";
+    if (card.successStreak >= 10) return "Master";
+    if (card.successStreak >= 5) return "Advanced";
+    if (card.successStreak >= 2) return "Intermediate";
+    return "Beginner";
+  },
+
+  getDifficultyDescription: (difficulty: any): string => {
+    if (!difficulty) return "Easy";
+    return difficulty.toString();
   }
 };

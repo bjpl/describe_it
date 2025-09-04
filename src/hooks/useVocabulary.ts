@@ -19,7 +19,9 @@ export const useReviewSession = (sessionId?: number, maxCards?: number) => {
   return {
     data: {
       cards_due: [{
-        phrase_id: "sample_phrase_id"
+        phrase_id: "sample_phrase_id",
+        easiness_factor: 2.5,
+        successStreak: 0
       }]
     },
     session: null,
