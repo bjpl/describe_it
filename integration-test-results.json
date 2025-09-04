@@ -1,0 +1,165 @@
+{
+  "timestamp": "2025-09-04T17:03:54.280Z",
+  "server": {
+    "status": "running",
+    "port": 3010,
+    "compilation": "success"
+  },
+  "mainPage": {
+    "accessible": false,
+    "statusCode": null,
+    "error": "Request timeout",
+    "contentLength": 0
+  },
+  "apiRoutes": {
+    "/api/export/generate": {
+      "get": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      },
+      "post": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      }
+    },
+    "/api/images/search": {
+      "get": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      },
+      "post": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      }
+    },
+    "/api/phrases/extract": {
+      "get": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      },
+      "post": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      }
+    },
+    "/api/progress/track": {
+      "get": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      },
+      "post": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      }
+    },
+    "/api/qa/generate": {
+      "get": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      },
+      "post": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      }
+    },
+    "/api/settings/save": {
+      "get": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      },
+      "post": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      }
+    },
+    "/api/translate": {
+      "get": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      },
+      "post": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      }
+    },
+    "/api/vocabulary/save": {
+      "get": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      },
+      "post": {
+        "statusCode": null,
+        "success": false,
+        "error": "Request timeout"
+      }
+    }
+  },
+  "environment": {
+    "variables": {
+      "OPENAI_API_KEY": {
+        "defined": false,
+        "hasValue": false,
+        "masked": "undefined"
+      },
+      "UNSPLASH_ACCESS_KEY": {
+        "defined": false,
+        "hasValue": false,
+        "masked": "undefined"
+      },
+      "NEXT_PUBLIC_SUPABASE_URL": {
+        "defined": false,
+        "hasValue": false,
+        "masked": "undefined"
+      },
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY": {
+        "defined": false,
+        "hasValue": false,
+        "masked": "undefined"
+      },
+      "SUPABASE_SERVICE_ROLE_KEY": {
+        "defined": false,
+        "hasValue": false,
+        "masked": "undefined"
+      }
+    },
+    "errors": [
+      "OPENAI_API_KEY is not defined",
+      "UNSPLASH_ACCESS_KEY is not defined",
+      "NEXT_PUBLIC_SUPABASE_URL is not defined",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY is not defined",
+      "SUPABASE_SERVICE_ROLE_KEY is not defined"
+    ]
+  },
+  "errors": [
+    "Main page: Request timeout",
+    "/api/export/generate: Both GET and POST failed",
+    "/api/images/search: Both GET and POST failed",
+    "/api/phrases/extract: Both GET and POST failed",
+    "/api/progress/track: Both GET and POST failed",
+    "/api/qa/generate: Both GET and POST failed",
+    "/api/settings/save: Both GET and POST failed",
+    "/api/translate: Both GET and POST failed",
+    "/api/vocabulary/save: Both GET and POST failed"
+  ],
+  "summary": {
+    "total": 22,
+    "passed": 0,
+    "failed": 22,
+    "successRate": "0.0"
+  }
+}

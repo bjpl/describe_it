@@ -14,12 +14,8 @@ import {
 } from '../../types/export';
 
 // Types for export data
-export interface VocabularyItem {
-  phrase: string;
-  translation: string;
-  category: string;
-  date_added: string;
-}
+// Use the unified VocabularyItem type from types/unified.ts
+export type { VocabularyItem } from '@/types/unified';
 
 export interface ResponseItem {
   question: string;
@@ -85,7 +81,7 @@ function downloadCSV(content: string, filename: string): void {
  */
 export function exportVocabulary(vocabularyData: VocabularyItem[]): void {
   try {
-    const headers = ['phrase', 'translation', 'category', 'date_added'];
+    const headers = ['spanish_text', 'english_translation', 'category', 'part_of_speech', 'difficulty_level', 'created_at'];
     const csvContent = arrayToCSV(vocabularyData, headers);
     downloadCSV(csvContent, 'target_word_list.csv');
     console.log('Vocabulary exported successfully');

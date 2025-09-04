@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import * as Tabs from '@radix-ui/react-tabs';
+import * as Tabs from '@/components/ui/Tabs';
 import { Search, Image as ImageIcon, Download, Settings, Info, Loader2 } from 'lucide-react';
 // Dynamic imports for heavy components with code splitting
 import { QAPanel, PhrasesPanel, LoadingState } from '@/components';

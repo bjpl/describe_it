@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import * as RadioGroup from '@radix-ui/react-radio-group';
+import * as RadioGroup from '../ui/RadioGroup';
 
 interface SearchFiltersProps {
   filters: {

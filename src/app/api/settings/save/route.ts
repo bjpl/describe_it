@@ -253,7 +253,7 @@ class SettingsService {
             timestamp: new Date().toISOString(),
             source: 'defaults_fallback',
             isDefault: true,
-            error: error.message
+            error: (error as Error).message
           }
         };
       }

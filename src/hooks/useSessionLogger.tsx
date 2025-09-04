@@ -1,6 +1,6 @@
 // React Hook for Session Logging Integration
 'use client';
-import { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef } from 'react';
 import { SessionLogger, getSessionLogger } from '@/lib/logging/sessionLogger';
 import { SessionReportGenerator } from '@/lib/logging/sessionReportGenerator';
 import { SessionPersistence } from '@/lib/logging/sessionPersistence';

@@ -130,7 +130,9 @@ const ImageGridBase: React.FC<ImageGridProps> = ({ images, onImageClick, loading
   
   React.useEffect(() => {
     performanceProfiler.startMark('ImageGrid-render');
-    return () => performanceProfiler.endMark('ImageGrid-render');
+    return () => {
+      performanceProfiler.endMark('ImageGrid-render');
+    };
   });
 
   // Memoize animation variants with reduced motion support

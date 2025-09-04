@@ -62,7 +62,9 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
   
   React.useEffect(() => {
     performanceProfiler.startMark('DescriptionNotebook-render')
-    return () => performanceProfiler.endMark('DescriptionNotebook-render')
+    return () => {
+      performanceProfiler.endMark('DescriptionNotebook-render')
+    }
   })
   const [languageVisibility, setLanguageVisibility] = useState<LanguageVisibility>({
     showEnglish: true,

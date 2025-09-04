@@ -4,6 +4,7 @@ import { memo, useCallback, useState } from 'react';
 import { Download, Settings, Info, BarChart3 } from 'lucide-react';
 import { exportSession, exportAllData, getCurrentTimestamp, type SessionData, type ResponseItem } from '../lib/export/csvExporter';
 import { VocabularyItem, ImageComponentProps } from '@/types';
+import { vocabularyItemToUI } from '@/types/unified';
 import { SessionReportModal } from './SessionReportModal';
 import ExportModal from './ExportModal';
 
@@ -43,19 +44,23 @@ export const AppHeader = memo<AppHeaderProps>(function AppHeader({
   const getExportData = useCallback(() => {
     if (!sessionData) return { vocabulary: [], descriptions: [], qa: [], sessions: [] };
 
-    const vocabulary = sessionData.phrases?.map(phrase => ({
-      phrase: phrase.phrase,
-      translation: phrase.translation || '',
-      definition: phrase.definition,
-      partOfSpeech: phrase.partOfSpeech,
-      difficulty: phrase.difficulty || 'intermediate',
-      category: phrase.category || 'general',
-      context: phrase.context || '',
-      dateAdded: new Date().toISOString(),
-      lastReviewed: null,
-      reviewCount: 0,
-      confidence: 0
-    })) || [];
+    const vocabulary = sessionData.phrases?.map(phrase => {
+      // Convert to UI format first to handle difficulty level properly
+      const uiPhrase = vocabularyItemToUI(phrase);
+      return {
+        phrase: phrase.spanish_text,
+        translation: phrase.english_translation || '',
+        definition: phrase.english_translation,
+        partOfSpeech: phrase.part_of_speech,
+        difficulty: uiPhrase.difficulty_level,
+        category: phrase.category || 'general',
+        context: phrase.context_sentence_spanish || '',
+        dateAdded: new Date().toISOString(),
+        lastReviewed: undefined,
+        reviewCount: 0,
+        confidence: 0
+      };
+    }) || [];
 
     const descriptions = sessionData.descriptions ? Object.entries(sessionData.descriptions).map(([imageId, content], index) => ({
       id: `desc-${imageId}-${index}`,
@@ -66,7 +71,7 @@ export const AppHeader = memo<AppHeaderProps>(function AppHeader({
       wordCount: content.split(' ').length,
       language: 'en',
       createdAt: new Date().toISOString(),
-      generationTime: null
+      generationTime: undefined
     })) : [];
 
     const qa = sessionData.responses?.map((response, index) => ({
@@ -79,12 +84,12 @@ export const AppHeader = memo<AppHeaderProps>(function AppHeader({
       difficulty: 'medium',
       confidence: response.user_answer === response.correct_answer ? 1 : 0.5,
       createdAt: response.timestamp,
-      responseTime: null,
+      responseTime: undefined,
       correct: response.user_answer === response.correct_answer,
       userAnswer: response.user_answer
     })) || [];
 
-    const sessions = [];
+    const sessions: any[] = [];
     const timestamp = getCurrentTimestamp();
 
     // Add search activities
@@ -96,7 +101,7 @@ export const AppHeader = memo<AppHeaderProps>(function AppHeader({
           activityType: 'search_query',
           content: query,
           details: 'Image search query',
-          duration: null
+          duration: undefined
         });
       });
     }
@@ -110,12 +115,14 @@ export const AppHeader = memo<AppHeaderProps>(function AppHeader({
           activityType: 'description_generated',
           content: description,
           details: `Description for image ${imageId}`,
-          duration: null
+          duration: undefined
         });
       });
     }
 
-    return { vocabulary, descriptions, qa, sessions };
+    const images: any[] = []; // No images data in sessionData, providing empty array
+    
+    return { vocabulary, descriptions, qa, sessions, images };
   }, [sessionData]);
 
   return (

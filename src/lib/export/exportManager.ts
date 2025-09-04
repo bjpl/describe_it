@@ -763,7 +763,7 @@ export const DEFAULT_EXPORT_OPTIONS: Record<string, ExportOptions> = {
   
   progressReportExcel: {
     format: 'excel',
-    categories: ['vocabulary', 'sessions'],
+    categories: ['vocabulary', 'session'],
     excelOptions: {
       charts: {
         progressChart: true,

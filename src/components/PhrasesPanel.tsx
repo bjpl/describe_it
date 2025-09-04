@@ -2,7 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo, memo } from 'react';
 import { BookOpen, ChevronDown, AlertCircle, RefreshCw, Download } from 'lucide-react';
-import { exportVocabulary, getCurrentDateString, type VocabularyItem } from '../lib/export/csvExporter';
+import { exportVocabulary, getCurrentDateString } from '../lib/export/csvExporter';
+import type { VocabularyItem } from '../types/unified';
 import { PhrasesProgressIndicator, TextContentSkeleton } from './ProgressIndicator';
 
 interface Phrase {
@@ -33,7 +34,7 @@ interface PhrasePanelProps {
   style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
 }
 
-type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
+import type { DifficultyLevel } from '../types/unified';
 
 const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImage, descriptionText, style }) {
   const [phrases, setPhrases] = useState<Phrase[]>([]);
@@ -44,7 +45,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
 
   // Safe API call function
   const extractPhrases = useCallback(async () => {
-    if (!selectedImage?.urls?.regular && !selectedImage?.url) {
+    if (!selectedImage?.urls?.regular) {
       setError('No image selected for phrase extraction');
       return;
     }
@@ -58,7 +59,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
     setError(null);
 
     try {
-      const imageUrl = selectedImage.urls?.regular || selectedImage.url;
+      const imageUrl = selectedImage.urls?.regular;
       
       const response = await fetch('/api/phrases/extract', {
         method: 'POST',
@@ -138,10 +139,14 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
 
     try {
       const vocabularyData: VocabularyItem[] = phrases.map(phrase => ({
-        phrase: phrase.phrase,
-        translation: phrase.definition,
+        id: phrase.id,
+        spanish_text: phrase.phrase,
+        english_translation: phrase.definition,
         category: phrase.partOfSpeech,
-        date_added: getCurrentDateString()
+        difficulty_level: phrase.difficulty === 'beginner' ? 3 : phrase.difficulty === 'intermediate' ? 6 : 9,
+        part_of_speech: phrase.partOfSpeech,
+        context_sentence_spanish: phrase.context,
+        created_at: getCurrentDateString()
       }));
 
       exportVocabulary(vocabularyData);

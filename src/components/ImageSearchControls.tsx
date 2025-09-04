@@ -45,7 +45,7 @@ export function ImageSearchControls({
     e.preventDefault();
     if (inputValue.trim()) {
       onSearchQueryChange(inputValue.trim());
-      onSearch(true, inputValue.trim()); // Reset to page 1 on new search, pass query
+      onSearch(true); // Reset to page 1 on new search
     }
   }, [inputValue, onSearchQueryChange, onSearch]);
 

@@ -19,7 +19,7 @@ export const ImageDisplay = memo<ImageDisplayProps>(function ImageDisplay({
     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm p-4">
       <div className="relative w-full h-64 rounded-lg overflow-hidden">
         <img
-          src={selectedImage.urls?.regular || selectedImage.url}
+          src={selectedImage.urls?.regular}
           alt={selectedImage.alt_description || 'Selected image'}
           className="w-full h-full object-cover transition-opacity duration-300"
           loading="eager"
@@ -68,7 +68,7 @@ export const ImageGrid = memo<ImageGridProps>(function ImageGrid({
               title={isUsed ? `Used ${new Date(usageInfo?.usedAt || 0).toLocaleDateString()}` : undefined}
             >
               <img
-                src={image.urls?.small || image.url}
+                src={image.urls?.small}
                 alt={image.alt_description || `Image ${index + 1}`}
                 className={`w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 ${
                   isUsed && showUsageIndicator ? 'opacity-75' : ''

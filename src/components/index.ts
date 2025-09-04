@@ -2,8 +2,7 @@
 export * from './ImageSearch';
 export * from './ImageViewer';
 export * from './DescriptionTabs';
-export * from './QuestionAnswerPanel';
-export * from './PhraseExtractor';
+// Note: QuestionAnswerPanel and PhraseExtractor are handled by existing QAPanel and PhrasesPanel components
 export * from './Shared';
 
 // Learning components
@@ -21,7 +20,7 @@ export * from './Performance';
 
 // Component exports for easier importing
 export { AccessibilityProvider, AccessibilityPanel, useAccessibility } from './Accessibility';
-export { EnhancedErrorBoundary, withErrorBoundary, useErrorHandler } from './ErrorBoundary';
+export { ErrorBoundary as EnhancedErrorBoundary, useErrorHandler, withErrorBoundary } from './ErrorBoundary';
 export { 
   Skeleton, ImageSkeleton, TextSkeleton, ImageCardSkeleton, 
   ImageGridSkeleton, SearchResultsSkeleton, DescriptionSkeleton, 
@@ -30,3 +29,10 @@ export {
 export { OptimizedImage, OptimizedImageGrid, ImagePreloader, useImagePerformance } from './Optimized';
 export { PerformanceMonitor, useAPIPerformanceMonitor, useWebVitals } from './Performance';
 export { LoadingSpinner, LoadingOverlay, PageLoader } from './Shared';
+
+// Default exports as named exports
+export { default as QAPanel } from './QAPanel';
+export { default as QuestionAnswerPanel } from './QAPanel';
+export { default as PhrasesPanel } from './PhrasesPanel';
+export { default as PhraseExtractor } from './PhrasesPanel';
+export { LoadingState } from './LoadingState';

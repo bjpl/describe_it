@@ -88,7 +88,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
       frasesClaves: []
     },
     selectedPhrases: new Set(),
-    activeCategories: new Set(['sustantivos', 'verbos', 'adjetivos', 'adverbios', 'frasesClaves']),
+    activeCategories: new Set(['sustantivos', 'verbos', 'adjetivos', 'adverbios', 'frasesClaves'] as PhraseCategory[]),
     searchTerm: '',
     showSettings: false,
     addedPhrases: new Set()
@@ -100,7 +100,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
     autoAddSmallExtractions: true,
     showTranslations: true,
     groupBySimilarity: false,
-    enabledCategories: new Set(['sustantivos', 'verbos', 'adjetivos', 'adverbios', 'frasesClaves'])
+    enabledCategories: new Set(['sustantivos', 'verbos', 'adjetivos', 'adverbios', 'frasesClaves'] as PhraseCategory[])
   });
 
   const [vocabularyManager] = useState(() => new VocabularyManager({

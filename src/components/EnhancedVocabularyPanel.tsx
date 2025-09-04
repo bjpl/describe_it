@@ -183,7 +183,7 @@ const EnhancedVocabularyPanel: React.FC<EnhancedVocabularyPanelProps> = ({
     if (!descriptionText || !selectedImage) return;
 
     try {
-      const imageUrl = selectedImage.urls?.regular || selectedImage.url;
+      const imageUrl = selectedImage.urls?.regular;
       const categorizedPhrases = await PhraseExtractor.extractCategorizedPhrases({
         description: descriptionText,
         imageUrl,

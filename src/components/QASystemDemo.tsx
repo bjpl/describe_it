@@ -26,7 +26,9 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
   
   React.useEffect(() => {
     performanceProfiler.startMark('QASystemDemo-render');
-    return () => performanceProfiler.endMark('QASystemDemo-render');
+    return () => {
+      performanceProfiler.endMark('QASystemDemo-render');
+    };
   });
 
   const {

@@ -100,14 +100,7 @@ export function ErrorBoundaryTest() {
       </SectionErrorBoundary>
     ) :
     ({ children }: { children: React.ReactNode }) => (
-      <ErrorBoundary 
-        level="component"
-        name="Test Component"
-        onRetry={resetError}
-        enableRetry={true}
-        resetOnPropsChange={true}
-        resetKeys={[errorConfig.shouldThrow.toString()]}
-      >
+      <ErrorBoundary>
         {children}
       </ErrorBoundary>
     );

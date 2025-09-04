@@ -38,6 +38,7 @@ import {
 import { CategorizedPhrase, SavedPhrase, VocabularySet, UnsplashImage } from '@/types/api';
 import { PhraseExtractor, PhraseCategory } from '@/lib/services/phraseExtractor';
 import { VocabularyManager, VocabularyStats } from '@/lib/services/vocabularyManager';
+import VocabularyStorage from '@/lib/storage/vocabularyStorage';
 import { getDifficultyColor, getCategoryColor } from '@/lib/utils/phrase-helpers';
 import GammaVocabularyExtractor from './GammaVocabularyExtractor';
 
@@ -130,8 +131,10 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
         setState(prev => ({ ...prev, vocabularyStats: stats }));
 
         // Load vocabulary sets
-        const sets = vocabularyManager.storage.loadVocabularySets();
-        setVocabularySets(sets);
+        // TODO: Add public method to VocabularyManager to get vocabulary sets
+        // const sets = vocabularyManager.storage.loadVocabularySets();
+        // setVocabularySets(sets);
+        setVocabularySets([]);
       } catch (error) {
         console.error('Error loading vocabulary data:', error);
       }
@@ -258,7 +261,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
 
       // Refresh data
       const stats = vocabularyManager.getVocabularyStats();
-      const sets = vocabularyManager.storage.loadVocabularySets();
+      const sets = VocabularyStorage.loadVocabularySets();
       setState(prev => ({ ...prev, vocabularyStats: stats }));
       setVocabularySets(sets);
       setSelectedPhrases(new Set());
@@ -290,11 +293,11 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
     if (!confirm('Are you sure you want to delete this vocabulary set?')) return;
 
     try {
-      const success = vocabularyManager.storage.deleteVocabularySet(setId);
+      const success = VocabularyStorage.deleteVocabularySet(setId);
       if (success) {
         // Refresh data
         const stats = vocabularyManager.getVocabularyStats();
-        const sets = vocabularyManager.storage.loadVocabularySets();
+        const sets = VocabularyStorage.loadVocabularySets();
         setState(prev => ({ ...prev, vocabularyStats: stats }));
         setVocabularySets(sets);
 

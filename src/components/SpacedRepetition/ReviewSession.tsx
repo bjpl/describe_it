@@ -4,10 +4,10 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@radix-ui/react-card';
-import { Button } from '@radix-ui/react-button';
-import { Progress } from '@radix-ui/react-progress';
-import { Badge } from '@radix-ui/react-badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
+import { Button } from '../ui/Button';
+import { Progress } from '../ui/Progress';
+import { Badge } from '../ui/Badge';
 import { 
   RotateCcw,
   Volume2,

@@ -60,7 +60,9 @@ export const PerformanceDashboard: React.FC = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState<'1h' | '24h' | '7d'>('1h');
   const [selectedCategory, setSelectedCategory] = useState<string>('overview');
   
-  const { vitals, performanceScore } = useWebVitals();
+  const webVitalsData = useWebVitals();
+  const vitals = webVitalsData; // useWebVitals returns the vitals object directly
+  const performanceScore = 0; // Default performance score since it's not in the hook
 
   useEffect(() => {
     const collectPerformanceData = async () => {

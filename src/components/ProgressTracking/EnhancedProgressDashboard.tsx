@@ -19,7 +19,7 @@ import {
   Zap,
   CheckCircle,
   Trophy,
-  TimeIcon,
+  Timer,
   Users,
   Globe,
   Filter,

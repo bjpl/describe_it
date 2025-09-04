@@ -4,9 +4,9 @@
  */
 
 import React from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@radix-ui/react-card';
-import { Progress } from '@radix-ui/react-progress';
-import { Badge } from '@radix-ui/react-badge';
+import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
+import { Progress } from '../ui/Progress';
+import { Badge } from '../ui/Badge';
 import { 
   TrendingUp, 
   TrendingDown, 

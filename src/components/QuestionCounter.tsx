@@ -1,7 +1,8 @@
 'use client';
 
 import React from 'react';
-import { TrendingUp, Target, Clock, CheckCircle, XCircle, Award } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Clock, Target, TrendingUp, Award, Timer } from 'lucide-react';
 
 interface QuestionCounterProps {
   currentIndex: number;
@@ -10,15 +11,16 @@ interface QuestionCounterProps {
   correctCount: number;
   timeSpent?: number; // in seconds
   averageTime?: number; // in seconds
-  streak?: number; // current correct streak
+  streak?: number;
   sessionScore?: {
     percentage: number;
     grade: string;
   };
   showDetails?: boolean;
+  className?: string;
 }
 
-export const QuestionCounter: React.FC<QuestionCounterProps> = ({
+export function QuestionCounter({
   currentIndex,
   totalQuestions,
   answeredCount,
@@ -27,207 +29,203 @@ export const QuestionCounter: React.FC<QuestionCounterProps> = ({
   averageTime = 0,
   streak = 0,
   sessionScore,
-  showDetails = true
-}) => {
-  const progress = ((currentIndex + 1) / totalQuestions) * 100;
+  showDetails = true,
+  className = ''
+}: QuestionCounterProps) {
   const accuracy = answeredCount > 0 ? Math.round((correctCount / answeredCount) * 100) : 0;
-  const incorrectCount = answeredCount - correctCount;
-  const remainingCount = totalQuestions - (currentIndex + 1);
+  const progress = totalQuestions > 0 ? (answeredCount / totalQuestions) * 100 : 0;
 
-  const formatTime = (seconds: number): string => {
-    if (seconds < 60) return `${seconds}s`;
-    const minutes = Math.floor(seconds / 60);
-    const remainingSeconds = seconds % 60;
-    return `${minutes}m ${remainingSeconds}s`;
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getGradeColor = (grade?: string) => {
+  const getAccuracyColor = (accuracy: number) => {
+    if (accuracy >= 80) return 'text-green-600';
+    if (accuracy >= 60) return 'text-yellow-600';
+    return 'text-red-600';
+  };
+
+  const getGradeColor = (grade: string) => {
     switch (grade) {
       case 'A+':
-      case 'A': return 'text-green-600 bg-green-100 dark:bg-green-900/20';
-      case 'B+':
-      case 'B': return 'text-blue-600 bg-blue-100 dark:bg-blue-900/20';
-      case 'C+':
-      case 'C': return 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900/20';
-      case 'D':
-      case 'F': return 'text-red-600 bg-red-100 dark:bg-red-900/20';
-      default: return 'text-gray-600 bg-gray-100 dark:bg-gray-900/20';
+      case 'A':
+        return 'bg-green-100 text-green-800 border-green-200';
+      case 'B':
+        return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'C':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      default:
+        return 'bg-red-100 text-red-800 border-red-200';
     }
   };
 
-  const getStreakMessage = (streakCount: number) => {
-    if (streakCount >= 5) return 'On fire! 🔥';
-    if (streakCount >= 3) return 'Great streak! ⭐';
-    if (streakCount >= 2) return 'Good job! ✨';
-    return null;
-  };
-
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-      <div className="space-y-4">
-        {/* Header */}
+    <div className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 ${className}`}>
+      {/* Header */}
+      <div className="p-4 border-b border-gray-200 dark:border-gray-700">
         <div className="flex items-center justify-between">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            Question Progress
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
+            Progress Overview
           </h3>
+          
           {sessionScore && (
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getGradeColor(sessionScore.grade)}`}>
-              {sessionScore.grade} ({sessionScore.percentage}%)
-            </span>
+            <motion.div
+              className={`px-3 py-1 rounded-full text-sm font-medium border ${getGradeColor(sessionScore.grade)}`}
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            >
+              {sessionScore.grade} • {sessionScore.percentage}%
+            </motion.div>
           )}
         </div>
+      </div>
 
-        {/* Current Progress */}
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-600 dark:text-gray-400">
-              Question {currentIndex + 1} of {totalQuestions}
-            </span>
-            <span className="text-gray-600 dark:text-gray-400">
-              {progress.toFixed(1)}% complete
-            </span>
+      {/* Main Stats */}
+      <div className="p-4">
+        {/* Progress Bar */}
+        <div className="mb-4">
+          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+            <span>Question {currentIndex + 1} of {totalQuestions}</span>
+            <span>{Math.round(progress)}% Complete</span>
           </div>
           
-          {/* Progress Bar */}
-          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <div
-              className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 ease-out"
+          <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+            <motion.div
+              className="bg-blue-600 h-2.5 rounded-full"
               style={{ width: `${progress}%` }}
+              initial={{ width: 0 }}
+              animate={{ width: `${progress}%` }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
             />
           </div>
         </div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        {/* Key Metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           {/* Answered */}
           <div className="text-center">
-            <div className="flex items-center justify-center w-10 h-10 bg-blue-100 dark:bg-blue-900/20 rounded-lg mx-auto mb-2">
-              <Target className="h-5 w-5 text-blue-600" />
+            <div className="flex items-center justify-center mb-1">
+              <Target className="w-4 h-4 text-blue-500 mr-1" />
+              <span className="text-lg font-semibold text-gray-900 dark:text-white">
+                {answeredCount}
+              </span>
             </div>
-            <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-              {answeredCount}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="text-xs text-gray-600 dark:text-gray-400">
               Answered
             </div>
           </div>
 
           {/* Correct */}
           <div className="text-center">
-            <div className="flex items-center justify-center w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-lg mx-auto mb-2">
-              <CheckCircle className="h-5 w-5 text-green-600" />
+            <div className="flex items-center justify-center mb-1">
+              <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
+              <span className="text-lg font-semibold text-green-600">
+                {correctCount}
+              </span>
             </div>
-            <div className="text-2xl font-bold text-green-600">
-              {correctCount}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="text-xs text-gray-600 dark:text-gray-400">
               Correct
-            </div>
-          </div>
-
-          {/* Incorrect */}
-          <div className="text-center">
-            <div className="flex items-center justify-center w-10 h-10 bg-red-100 dark:bg-red-900/20 rounded-lg mx-auto mb-2">
-              <XCircle className="h-5 w-5 text-red-600" />
-            </div>
-            <div className="text-2xl font-bold text-red-600">
-              {incorrectCount}
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
-              Incorrect
             </div>
           </div>
 
           {/* Accuracy */}
           <div className="text-center">
-            <div className="flex items-center justify-center w-10 h-10 bg-purple-100 dark:bg-purple-900/20 rounded-lg mx-auto mb-2">
-              <TrendingUp className="h-5 w-5 text-purple-600" />
+            <div className="flex items-center justify-center mb-1">
+              <Award className="w-4 h-4 text-yellow-500 mr-1" />
+              <span className={`text-lg font-semibold ${getAccuracyColor(accuracy)}`}>
+                {accuracy}%
+              </span>
             </div>
-            <div className="text-2xl font-bold text-purple-600">
-              {accuracy}%
-            </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="text-xs text-gray-600 dark:text-gray-400">
               Accuracy
+            </div>
+          </div>
+
+          {/* Streak */}
+          <div className="text-center">
+            <div className="flex items-center justify-center mb-1">
+              <Timer className="w-4 h-4 text-purple-500 mr-1" />
+              <span className="text-lg font-semibold text-purple-600">
+                {streak}
+              </span>
+            </div>
+            <div className="text-xs text-gray-600 dark:text-gray-400">
+              Streak
             </div>
           </div>
         </div>
 
-        {/* Additional Details */}
-        {showDetails && (
-          <div className="space-y-3 pt-2 border-t border-gray-200 dark:border-gray-700">
-            {/* Time Stats */}
-            {(timeSpent > 0 || averageTime > 0) && (
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2">
-                  <Clock className="h-4 w-4 text-gray-500" />
-                  <span className="text-gray-600 dark:text-gray-400">Time</span>
-                </div>
-                <div className="text-right">
-                  {timeSpent > 0 && (
-                    <div className="text-gray-900 dark:text-gray-100">
-                      Total: {formatTime(timeSpent)}
-                    </div>
-                  )}
-                  {averageTime > 0 && (
-                    <div className="text-gray-500 dark:text-gray-400 text-xs">
-                      Avg: {formatTime(Math.round(averageTime))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* Streak */}
-            {streak > 0 && (
-              <div className="flex items-center justify-between text-sm">
-                <div className="flex items-center space-x-2">
-                  <Award className="h-4 w-4 text-orange-500" />
-                  <span className="text-gray-600 dark:text-gray-400">Streak</span>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <span className="text-orange-600 font-medium">
-                    {streak} correct
+        {/* Detailed Stats */}
+        {showDetails && (timeSpent > 0 || averageTime > 0) && (
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Time Spent */}
+              {timeSpent > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Total Time
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {formatTime(timeSpent)}
                   </span>
-                  {getStreakMessage(streak) && (
-                    <span className="text-xs">{getStreakMessage(streak)}</span>
-                  )}
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Remaining */}
-            {remainingCount > 0 && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">
-                  Remaining
-                </span>
-                <span className="text-gray-900 dark:text-gray-100">
-                  {remainingCount} question{remainingCount !== 1 ? 's' : ''}
-                </span>
-              </div>
-            )}
+              {/* Average Time */}
+              {averageTime > 0 && (
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Timer className="w-4 h-4 text-gray-500" />
+                    <span className="text-sm text-gray-600 dark:text-gray-400">
+                      Avg. per Question
+                    </span>
+                  </div>
+                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                    {formatTime(averageTime)}
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* Motivational Message */}
+        {/* Performance Indicator */}
         {answeredCount > 0 && (
-          <div className="text-center pt-2 border-t border-gray-200 dark:border-gray-700">
-            <div className="text-sm text-gray-600 dark:text-gray-400">
-              {accuracy >= 80 ? (
-                <span className="text-green-600">Excellent work! Keep it up! 🌟</span>
-              ) : accuracy >= 60 ? (
-                <span className="text-blue-600">Good progress! You're learning! 📚</span>
-              ) : accuracy >= 40 ? (
-                <span className="text-yellow-600">Keep trying! Practice makes perfect! 💪</span>
-              ) : (
-                <span className="text-gray-600">Every mistake is a learning opportunity! 🎯</span>
-              )}
+          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                Performance
+              </span>
+              <div className="flex items-center gap-2">
+                {accuracy >= 80 ? (
+                  <span className="text-sm text-green-600 font-medium">Excellent!</span>
+                ) : accuracy >= 60 ? (
+                  <span className="text-sm text-yellow-600 font-medium">Good</span>
+                ) : (
+                  <span className="text-sm text-red-600 font-medium">Needs Improvement</span>
+                )}
+                
+                {streak >= 3 && (
+                  <motion.div
+                    className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  >
+                    🔥 {streak} streak!
+                  </motion.div>
+                )}
+              </div>
             </div>
           </div>
         )}
       </div>
     </div>
   );
-};
-
-export default QuestionCounter;
+}

@@ -22,7 +22,9 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({ onImageSelect, className 
   
   React.useEffect(() => {
     performanceProfiler.startMark('ImageSearch-render');
-    return () => performanceProfiler.endMark('ImageSearch-render');
+    return () => {
+      performanceProfiler.endMark('ImageSearch-render');
+    };
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
@@ -224,9 +226,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({ onImageSelect, className 
               currentPage={searchParams.page}
               totalPages={totalPages}
               onPageChange={setPage}
-              onLoadMore={loadMoreImages}
-              hasNextPage={shouldShowLoadMore}
-              loading={loading.isLoading}
+              isLoading={loading.isLoading}
             />
           )}
         </motion.div>

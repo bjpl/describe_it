@@ -21,7 +21,7 @@ interface TranslationResponse {
 export async function POST(request: NextRequest) {
   try {
     const body: TranslationRequest = await request.json();
-    const { text, context, targetLanguage, sourceLanguage } = body;
+    const { text, targetLanguage, sourceLanguage, context } = body;
 
     if (!text) {
       return NextResponse.json(
@@ -55,7 +55,8 @@ export async function POST(request: NextRequest) {
       try {
         translation = await translateWithOpenAI(text, sourceLanguage, targetLanguage, context);
       } catch (error) {
-        logger.warn('OpenAI translation error, falling back to mock', error instanceof Error ? error : new Error(String(error)), {
+        logger.warn('OpenAI translation error, falling back to mock', {
+          error: error instanceof Error ? error.message : String(error),
           component: 'translate-api',
           sourceLanguage,
           targetLanguage,
@@ -78,11 +79,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
     logger.error('Translation API error', error instanceof Error ? error : new Error(String(error)), {
       component: 'translate-api',
-      sourceLanguage,
-      targetLanguage,
-      textLength: text?.length
+      sourceLanguage: 'unknown',
+      targetLanguage: 'unknown',
+      textLength: 0
     });
     
     logApiResponse('POST', '/api/translate', 500);

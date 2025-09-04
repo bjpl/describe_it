@@ -207,7 +207,7 @@ export const EXPORT_PRESETS = {
    */
   PROGRESS_REPORT: {
     format: 'excel' as ExportFormat,
-    categories: ['vocabulary', 'sessions'] as const,
+    categories: ['vocabulary', 'session'] as const,
     excelOptions: {
       charts: {
         progressChart: true,

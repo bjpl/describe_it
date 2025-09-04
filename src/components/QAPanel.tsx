@@ -61,7 +61,7 @@ const QAPanel = memo<QAPanelProps>(function QAPanel({ selectedImage, description
     setUserResponses([]);
 
     try {
-      const imageUrl = selectedImage.urls?.regular || selectedImage.url;
+      const imageUrl = selectedImage.urls?.regular;
 
       // Generate multiple questions about the image and description
       const questionPrompts = [

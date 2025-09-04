@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { DatabaseService, createDatabaseService } from './services/database';
 import type { Database } from '../types/database';
+import type { VocabularyItem } from '../types/unified';
 
 // Environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -84,7 +85,10 @@ export interface VocabularyList {
   updated_at: string
 }
 
-export interface VocabularyItem {
+// Use unified VocabularyItem type for consistency
+// Legacy interface kept for backward compatibility
+// @deprecated Use VocabularyItem from unified types instead
+export interface LegacyVocabularyItem {
   id: string
   vocabulary_list_id: string
   spanish_text: string
@@ -99,6 +103,9 @@ export interface VocabularyItem {
   frequency_score: number | null
   created_at: string
 }
+
+// Re-export unified VocabularyItem as the primary type
+export type { VocabularyItem };
 
 export interface LearningProgress {
   id: string

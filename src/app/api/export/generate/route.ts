@@ -73,22 +73,22 @@ class ExportService {
     try {
       if (contentType === 'vocabulary' || contentType === 'all') {
         const vocabulary = await this.getVocabularyContent(userId, filters);
-        content.push(...vocabulary.map(item => ({ ...item, type: 'vocabulary' })));
+        content.push(...vocabulary.map((item: any) => ({ ...item, type: 'vocabulary' })));
       }
 
       if (contentType === 'phrases' || contentType === 'all') {
         const phrases = await this.getPhrasesContent(userId, filters);
-        content.push(...phrases.map(item => ({ ...item, type: 'phrase' })));
+        content.push(...phrases.map((item: any) => ({ ...item, type: 'phrase' })));
       }
 
       if (contentType === 'qa' || contentType === 'all') {
         const qa = await this.getQAContent(userId, filters);
-        content.push(...qa.map(item => ({ ...item, type: 'qa' })));
+        content.push(...qa.map((item: any) => ({ ...item, type: 'qa' })));
       }
 
       if (contentType === 'progress' || contentType === 'all') {
         const progress = await this.getProgressContent(userId, filters);
-        content.push(...progress.map(item => ({ ...item, type: 'progress' })));
+        content.push(...progress.map((item: any) => ({ ...item, type: 'progress' })));
       }
 
       return content;
@@ -163,7 +163,7 @@ class ExportService {
         formatting: formatting
       },
       content: formatting.template === 'minimal' 
-        ? content.map(item => ({
+        ? content.map((item: any) => ({
             phrase: item.phrase,
             definition: item.definition,
             type: item.type
@@ -187,7 +187,7 @@ class ExportService {
     const columns = this.getCSVColumns(content[0], formatting);
     const headers = columns.join(',');
     
-    const rows = content.map(item => 
+    const rows = content.map((item: any) => 
       columns.map(col => {
         const value = this.getNestedValue(item, col) || '';
         // Escape CSV values
@@ -294,7 +294,7 @@ class ExportService {
 
   generateAnki(content: any[], formatting: any) {
     // Anki format: Front\tBack\tTags
-    const ankiCards = content.map(item => {
+    const ankiCards = content.map((item: any) => {
       const front = item.phrase || item.question || '';
       const back = item.definition || item.answer || '';
       const tags = [
@@ -439,7 +439,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(
       { 
         error: 'Failed to generate export',
-        message: error.message || 'An error occurred while generating your export. Please try again.',
+        message: error instanceof Error ? error.message : 'An error occurred while generating your export. Please try again.',
         timestamp: new Date().toISOString(),
         retry: true
       },

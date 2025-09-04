@@ -64,7 +64,7 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
     setState(prev => ({ ...prev, isExtracting: true, error: null }));
 
     try {
-      const imageUrl = selectedImage.urls?.regular || selectedImage.url;
+      const imageUrl = selectedImage.urls?.regular;
       const categorizedPhrases = await PhraseExtractor.extractCategorizedPhrases({
         description: descriptionText,
         imageUrl,

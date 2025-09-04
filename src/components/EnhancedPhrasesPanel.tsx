@@ -48,7 +48,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(function EnhancedPh
 
   // Safe API call function
   const extractPhrases = useCallback(async () => {
-    if (!selectedImage?.urls?.regular && !selectedImage?.url) {
+    if (!selectedImage?.urls?.regular) {
       setError('No image selected for phrase extraction');
       return;
     }
@@ -62,7 +62,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(function EnhancedPh
     setError(null);
 
     try {
-      const imageUrl = selectedImage.urls?.regular || selectedImage.url;
+      const imageUrl = selectedImage.urls?.regular;
       
       const response = await fetch('/api/phrases/extract', {
         method: 'POST',
@@ -235,7 +235,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(function EnhancedPh
         
         result.translations.forEach((translation: { phrase: string; definition: string; category: string }, index: number) => {
           if (translation && phrasesToTranslate[index]) {
-            newTranslations[phrasesToTranslate[index].id] = translation.translatedText;
+            newTranslations[phrasesToTranslate[index].id] = translation.definition;
           }
         });
 
@@ -248,10 +248,10 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(function EnhancedPh
       // Handle failed translations
       if (result.failed && result.failed.length > 0) {
         const failedTranslations: Record<string, string> = {};
-        result.failed.forEach((failedItem: { phrase: string; error: string }) => {
-          if (phrasesToTranslate[failedItem.index]) {
-            failedTranslations[phrasesToTranslate[failedItem.index].id] = 
-              `Translation unavailable for "${failedItem.text}"`;
+        result.failed.forEach((failedItem: { phrase: string; error: string }, index: number) => {
+          if (phrasesToTranslate[index]) {
+            failedTranslations[phrasesToTranslate[index].id] = 
+              `Translation unavailable for "${failedItem.phrase}"`;
           }
         });
 

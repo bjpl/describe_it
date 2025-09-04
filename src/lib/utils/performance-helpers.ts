@@ -1,208 +1,243 @@
-/**
- * Performance Helper Utilities for React Component Optimizations
- * Used by Hive Mind Agent Gamma for performance optimization
- */
+'use client';
 
-import React, { useCallback, useMemo, useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
 
-// Memoization comparison functions
-export const shallowCompare = <T extends Record<string, any>>(
-  prevProps: T,
-  nextProps: T
-): boolean => {
-  const prevKeys = Object.keys(prevProps);
-  const nextKeys = Object.keys(nextProps);
+// Performance profiler class
+export class PerformanceProfiler {
+  private marks: Map<string, number> = new Map();
+  private measurements: Map<string, number> = new Map();
 
-  if (prevKeys.length !== nextKeys.length) {
+  startMark(name: string): void {
+    this.marks.set(name, performance.now());
+  }
+
+  endMark(name: string): number {
+    const startTime = this.marks.get(name);
+    if (startTime === undefined) {
+      console.warn(`Performance mark '${name}' not found`);
+      return 0;
+    }
+
+    const duration = performance.now() - startTime;
+    this.measurements.set(name, duration);
+    this.marks.delete(name);
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`Performance: ${name} took ${duration.toFixed(2)}ms`);
+    }
+    
+    return duration;
+  }
+
+  getMeasurement(name: string): number | undefined {
+    return this.measurements.get(name);
+  }
+
+  clearMeasurements(): void {
+    this.marks.clear();
+    this.measurements.clear();
+  }
+}
+
+export const performanceProfiler = new PerformanceProfiler();
+
+// Custom hook for tracking render count
+export function useRenderCount(componentName: string) {
+  const renderCount = useRef(0);
+  const [, forceUpdate] = useState({});
+
+  useEffect(() => {
+    renderCount.current += 1;
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`${componentName} rendered ${renderCount.current} times`);
+    }
+  });
+
+  return renderCount.current;
+}
+
+// Animation optimization utilities
+export const optimizeAnimations = {
+  // Create optimized animation variants with reduced motion support
+  createOptimizedVariants: (variants: any) => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      // Return variants with no animation for users who prefer reduced motion
+      const reducedVariants: any = {};
+      Object.keys(variants).forEach(key => {
+        reducedVariants[key] = {
+          ...variants[key],
+          transition: { duration: 0 }
+        };
+      });
+      return reducedVariants;
+    }
+    return variants;
+  },
+
+  // Get optimized transition settings
+  getOptimizedTransition: (transition: any) => {
+    if (typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return { duration: 0 };
+    }
+    return transition;
+  }
+};
+
+// Shallow comparison utility for React.memo
+export function shallowCompare<T extends Record<string, any>>(obj1: T, obj2: T): boolean {
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+
+  if (keys1.length !== keys2.length) {
     return false;
   }
 
-  for (let i = 0; i < prevKeys.length; i++) {
-    const key = prevKeys[i];
-    if (prevProps[key] !== nextProps[key]) {
+  for (let key of keys1) {
+    if (obj1[key] !== obj2[key]) {
       return false;
     }
   }
 
   return true;
+}
+
+// Debounce utility
+export function debounce<T extends (...args: any[]) => any>(
+  func: T,
+  wait: number
+): (...args: Parameters<T>) => void {
+  let timeout: NodeJS.Timeout;
+  
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(null, args), wait);
+  };
+}
+
+// Throttle utility
+export function throttle<T extends (...args: any[]) => any>(
+  func: T,
+  limit: number
+): (...args: Parameters<T>) => void {
+  let inThrottle: boolean;
+  
+  return (...args: Parameters<T>) => {
+    if (!inThrottle) {
+      func.apply(null, args);
+      inThrottle = true;
+      setTimeout(() => inThrottle = false, limit);
+    }
+  };
+}
+
+// Memory usage tracking (for development)
+export const memoryTracker = {
+  getMemoryUsage: () => {
+    if (typeof window !== 'undefined' && 'memory' in performance) {
+      const memory = (performance as any).memory;
+      return {
+        used: Math.round(memory.usedJSHeapSize / 1048576), // MB
+        total: Math.round(memory.totalJSHeapSize / 1048576), // MB
+        limit: Math.round(memory.jsHeapSizeLimit / 1048576), // MB
+      };
+    }
+    return null;
+  },
+
+  logMemoryUsage: (label: string) => {
+    if (process.env.NODE_ENV === 'development') {
+      const usage = memoryTracker.getMemoryUsage();
+      if (usage) {
+        console.log(`Memory ${label}:`, usage);
+      }
+    }
+  }
 };
 
-export const deepCompare = <T extends Record<string, any>>(
-  prevProps: T,
-  nextProps: T,
-  excludeKeys: string[] = []
-): boolean => {
-  return JSON.stringify(
-    Object.fromEntries(
-      Object.entries(prevProps).filter(([key]) => !excludeKeys.includes(key))
-    )
-  ) === JSON.stringify(
-    Object.fromEntries(
-      Object.entries(nextProps).filter(([key]) => !excludeKeys.includes(key))
-    )
-  );
+// Image loading optimization
+export const imageOptimization = {
+  preloadImage: (src: string): Promise<void> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => resolve();
+      img.onerror = reject;
+      img.src = src;
+    });
+  },
+
+  preloadImages: async (sources: string[]): Promise<void> => {
+    const promises = sources.map(src => imageOptimization.preloadImage(src));
+    await Promise.all(promises);
+  },
+
+  getOptimizedImageSrc: (src: string, width?: number, quality?: number) => {
+    // This would integrate with your image optimization service
+    // For now, return the original src
+    return src;
+  }
 };
 
-// Stable callback helpers
-export const useStableCallback = <T extends (...args: any[]) => any>(
-  callback: T,
-  deps: any[]
-): T => {
-  return useCallback(callback, deps);
-};
+// Viewport detection hook
+export function useIntersectionObserver(
+  ref: React.RefObject<Element>,
+  options: IntersectionObserverInit = {}
+) {
+  const [isIntersecting, setIsIntersecting] = useState(false);
 
-// Memoized complex calculations
-export const useMemoizedCalculation = <T>(
-  calculation: () => T,
-  deps: any[]
-): T => {
-  return useMemo(calculation, deps);
-};
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
 
-// Debounced state updates
-export const useDebounce = <T>(value: T, delay: number): T => {
-  const [debouncedValue, setDebouncedValue] = React.useState<T>(value);
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsIntersecting(entry.isIntersecting);
+      },
+      options
+    );
 
-  React.useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedValue(value);
-    }, delay);
+    observer.observe(element);
 
     return () => {
-      clearTimeout(handler);
+      observer.disconnect();
     };
-  }, [value, delay]);
+  }, [ref, options]);
 
-  return debouncedValue;
-};
+  return isIntersecting;
+}
 
-// Performance monitoring
-export const performanceProfiler = {
-  startMark: (name: string) => {
-    if (typeof window !== 'undefined' && window.performance) {
-      performance.mark(`${name}-start`);
-    }
-  },
-
-  endMark: (name: string) => {
-    if (typeof window !== 'undefined' && window.performance) {
-      performance.mark(`${name}-end`);
-      performance.measure(name, `${name}-start`, `${name}-end`);
-    }
-  },
-
-  getMeasurements: (name: string) => {
-    if (typeof window !== 'undefined' && window.performance) {
-      return performance.getEntriesByName(name, 'measure');
-    }
-    return [];
-  }
-};
-
-// List virtualization helpers
-export const calculateVisibleRange = (
-  scrollTop: number,
-  containerHeight: number,
-  itemHeight: number,
-  totalItems: number,
-  overscan: number = 5
-) => {
-  const start = Math.max(0, Math.floor(scrollTop / itemHeight) - overscan);
-  const visibleCount = Math.ceil(containerHeight / itemHeight);
-  const end = Math.min(totalItems, start + visibleCount + overscan * 2);
-  
-  return { start, end, visibleCount };
-};
-
-// Memory usage monitoring
-export const memoryProfiler = {
-  logMemoryUsage: (componentName: string) => {
-    if (typeof window !== 'undefined' && (window as any).performance?.memory) {
-      const memory = (window as any).performance.memory;
-      console.log(`[${componentName}] Memory Usage:`, {
-        used: `${Math.round(memory.usedJSHeapSize / 1048576)}MB`,
-        total: `${Math.round(memory.totalJSHeapSize / 1048576)}MB`,
-        limit: `${Math.round(memory.jsHeapSizeLimit / 1048576)}MB`
-      });
+// Bundle size analyzer (development only)
+export const bundleAnalyzer = {
+  logComponentSize: (componentName: string, component: any) => {
+    if (process.env.NODE_ENV === 'development') {
+      const size = JSON.stringify(component).length;
+      console.log(`Component ${componentName} approximate size: ${size} bytes`);
     }
   }
 };
 
-// Render count tracking
-export const useRenderCount = (componentName: string) => {
+// Performance monitoring hook
+export function usePerformanceMonitor(componentName: string) {
+  const mountTime = useRef<number>();
   const renderCount = useRef(0);
-  
-  renderCount.current += 1;
-  
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[${componentName}] Render count: ${renderCount.current}`);
-  }
-  
-  return renderCount.current;
-};
 
-// Component comparison helpers for React.memo
-export const createMemoCompare = <T extends Record<string, any>>(
-  compareKeys: (keyof T)[]
-) => {
-  return (prevProps: T, nextProps: T): boolean => {
-    return compareKeys.every(key => prevProps[key] === nextProps[key]);
-  };
-};
+  useEffect(() => {
+    mountTime.current = performance.now();
+    renderCount.current = 0;
 
-// Bundle size helpers
-export const lazyImport = <T extends Record<string, any>>(
-  importFn: () => Promise<T>,
-  fallback?: React.ComponentType
-) => {
-  return React.lazy(() => importFn());
-};
+    return () => {
+      if (mountTime.current && process.env.NODE_ENV === 'development') {
+        const totalTime = performance.now() - mountTime.current;
+        console.log(`Component ${componentName} was mounted for ${totalTime.toFixed(2)}ms with ${renderCount.current} renders`);
+      }
+    };
+  }, [componentName]);
 
-// Animation performance helpers
-export const optimizeAnimations = {
-  getReducedMotionPreference: (): boolean => {
-    if (typeof window === 'undefined') return false;
-    return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  },
-
-  createOptimizedVariants: (variants: any) => {
-    const reducedMotion = optimizeAnimations.getReducedMotionPreference();
-    if (reducedMotion) {
-      return Object.keys(variants).reduce((acc, key) => {
-        acc[key] = { opacity: variants[key].opacity || 1 };
-        return acc;
-      }, {} as any);
-    }
-    return variants;
-  }
-};
-
-// Image optimization helpers
-export const imageOptimizer = {
-  createSrcSet: (baseUrl: string, sizes: number[]) => {
-    return sizes.map(size => `${baseUrl}&w=${size} ${size}w`).join(', ');
-  },
-
-  optimizeImageLoading: {
-    loading: 'lazy' as const,
-    decoding: 'async' as const,
-    style: { contentVisibility: 'auto' }
-  }
-};
-
-// Export performance measurement HOC
-export const withPerformanceProfiler = <P extends Record<string, any>>(
-  Component: React.ComponentType<P>,
-  componentName: string
-) => {
-  return React.memo((props: P) => {
-    React.useEffect(() => {
-      performanceProfiler.startMark(componentName);
-      return () => {
-        performanceProfiler.endMark(componentName);
-      };
-    });
-
-    return React.createElement(Component, props);
+  useEffect(() => {
+    renderCount.current += 1;
   });
-};
+
+  return {
+    renderCount: renderCount.current,
+    mountTime: mountTime.current
+  };
+}

@@ -1,424 +1,175 @@
-// ==============================================
-// DATABASE TYPES - COMPREHENSIVE SUPABASE SCHEMA
-// ==============================================
-// Complete type definitions for Spanish learning app
+// Database types for Supabase or other database integration
+// Import unified types to ensure consistency
+import type { VocabularyItem } from './unified';
 
-// Core enums matching SQL schema
-export type SpanishLevel = 'beginner' | 'intermediate' | 'advanced';
-export type SessionType = 'description' | 'qa' | 'vocabulary' | 'mixed';
-export type DescriptionStyle = 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil' | 'creativo' | 'tecnico';
-export type PartOfSpeech = 'noun' | 'verb' | 'adjective' | 'adverb' | 'preposition' | 'article' | 'pronoun' | 'conjunction' | 'interjection' | 'other';
-export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
-export type LearningPhase = 'new' | 'learning' | 'review' | 'mastered';
-export type QADifficulty = 'facil' | 'medio' | 'dificil';
-export type VocabularyCategory = 'basic' | 'intermediate' | 'advanced' | 'custom' | 'thematic';
-export type SpanishGender = 'masculino' | 'femenino' | 'neutro';
-export type ThemePreference = 'light' | 'dark' | 'auto';
-export type LanguagePreference = 'en' | 'es';
-export type ExportFormat = 'json' | 'csv' | 'pdf';
-export type QuestionType = 'factual' | 'inferential' | 'analytical' | 'creative' | 'vocabulary' | 'grammar' | 'cultural';
+// Re-export unified VocabularyItem as the primary database type
+export type { VocabularyItem } from './unified';
 
-// Users table - Enhanced for Spanish learning
-export interface DatabaseUser {
+export interface VocabularyList {
   id: string;
-  email: string;
-  username?: string;
-  full_name?: string;
-  avatar_url?: string;
-  spanish_level: SpanishLevel;
-  is_authenticated: boolean;
-  profile_completed: boolean;
-  theme: ThemePreference;
-  language: LanguagePreference;
-  default_description_style: DescriptionStyle;
-  target_words_per_day: number;
-  preferred_difficulty: DifficultyLevel;
-  enable_notifications: boolean;
-  created_at: string;
-  updated_at: string;
-  last_login?: string;
-}
-
-export interface UserPreferences {
-  language: string;
-  theme: 'light' | 'dark' | 'system';
-  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
-  daily_goal_points: number;
-  notifications_enabled: boolean;
-  sound_enabled: boolean;
-  auto_play_pronunciation: boolean;
-  preferred_description_length: 'short' | 'medium' | 'detailed';
-  spaced_repetition_enabled: boolean;
-}
-
-export interface Phrase {
-  id: string;
-  spanish_text: string;
-  english_translation: string;
-  category: PhraseCategory;
-  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
-  word_type: 'noun' | 'verb' | 'adjective' | 'adverb' | 'phrase' | 'expression' | null;
-  formality_level: 'very_formal' | 'formal' | 'neutral' | 'informal' | 'very_informal';
-  phonetic_pronunciation: string | null;
-  usage_notes: string | null;
-  context_sentence_spanish: string | null;
-  context_sentence_english: string | null;
-  
-  // Study tracking
-  is_user_selected: boolean;
-  is_mastered: boolean;
-  study_count: number;
-  correct_count: number;
-  last_studied_at: string | null;
-  
-  // Spaced repetition
-  easiness_factor: number;
-  repetition_number: number;
-  inter_repetition_interval: number;
-  next_review_date: string | null;
-  
-  // User data
-  user_notes: string | null;
+  name: string;
+  description?: string;
   created_at: string;
   updated_at: string;
 }
 
-export type PhraseCategory = 
-  | 'vocabulary'
-  | 'expression' 
-  | 'idiom'
-  | 'phrase'
-  | 'grammar_pattern'
-  | 'verb_conjugation'
-  | 'cultural_reference';
-
-export interface LearningSession {
+export interface VocabularyListItem {
   id: string;
-  user_id: string;
-  session_type: 'description' | 'vocabulary_review' | 'spaced_repetition' | 'practice';
-  start_time: string;
-  end_time: string | null;
-  duration_minutes: number | null;
-  
-  // Performance metrics
-  total_questions: number;
-  correct_answers: number;
-  points_earned: number;
-  accuracy_percentage: number;
-  
-  // Content
-  image_id: string | null;
-  phrases_studied: string[]; // Array of phrase IDs
-  description_generated: string | null;
-  
-  // Session data
-  session_data: Record<string, any>;
-  completed: boolean;
+  list_id: string;
+  vocabulary_item_id: string;
+  order_index: number;
   created_at: string;
-  updated_at: string;
 }
 
 export interface UserProgress {
   id: string;
   user_id: string;
-  
-  // Overall stats
-  total_points: number;
-  total_sessions: number;
-  total_study_time_minutes: number;
-  phrases_learned_count: number;
-  phrases_mastered_count: number;
-  
-  // Streaks
-  current_streak_days: number;
-  longest_streak_days: number;
-  last_activity_date: string | null;
-  
-  // Performance
-  overall_accuracy: number;
-  improvement_trend: 'improving' | 'stable' | 'declining';
-  skill_breakdown: Record<string, number>; // skill -> proficiency score
-  
-  // Achievements
-  achievements_unlocked: string[];
-  badges_earned: string[];
-  milestones_reached: string[];
-  
-  // Weekly/Monthly stats
-  this_week_stats: WeeklyStats;
-  this_month_stats: MonthlyStats;
-  
-  created_at: string;
-  updated_at: string;
-}
-
-export interface WeeklyStats {
-  sessions_completed: number;
-  points_earned: number;
-  accuracy_percentage: number;
-  study_time_minutes: number;
-  new_phrases_learned: number;
-  phrases_reviewed: number;
-}
-
-export interface MonthlyStats {
-  sessions_completed: number;
-  points_earned: number;
-  accuracy_percentage: number;
-  study_time_minutes: number;
-  new_phrases_learned: number;
-  phrases_mastered: number;
-  best_streak_days: number;
-}
-
-export interface SpacedRepetitionCard {
-  id: string;
-  user_id: string;
-  phrase_id: string;
-  
-  // SM-2 Algorithm fields
-  easiness_factor: number; // E-Factor (2.5 default)
-  repetition_number: number; // n
-  inter_repetition_interval: number; // I(n) in days
+  vocabulary_item_id: string;
+  mastery_level: number; // 0-100
+  times_reviewed: number;
+  times_correct: number;
+  last_reviewed: string;
   next_review_date: string;
-  
-  // Review history
-  last_reviewed_at: string | null;
-  total_reviews: number;
-  consecutive_correct: number;
-  
-  // Performance tracking
-  average_response_time: number; // in seconds
-  difficulty_rating: number; // 1-5 scale
-  retention_strength: number; // calculated retention probability
-  
-  // Status
-  is_due_for_review: boolean;
-  is_new_card: boolean;
-  is_learning: boolean;
-  is_mature: boolean;
-  
   created_at: string;
   updated_at: string;
 }
 
-export interface ReviewResponse {
+export interface StudySession {
   id: string;
-  card_id: string;
   user_id: string;
-  session_id: string;
-  
-  // Response data
-  response_quality: number; // 0-4 scale (SM-2)
-  response_time_seconds: number;
-  was_correct: boolean;
-  
-  // Context
-  review_type: 'new' | 'learning' | 'review';
-  previous_interval: number;
-  new_interval: number;
-  previous_easiness: number;
-  new_easiness: number;
-  
+  session_type: 'flashcards' | 'quiz' | 'matching' | 'writing';
+  vocabulary_items: string[]; // Array of vocabulary item IDs
+  score: number;
+  accuracy: number;
+  time_spent: number; // in seconds
+  session_data: any; // JSON data for session specifics
+  started_at: string;
+  completed_at: string;
+}
+
+export interface UserSettings {
+  id: string;
+  user_id: string;
+  language_level: 'beginner' | 'intermediate' | 'advanced';
+  daily_goal: number; // words per day
+  reminder_enabled: boolean;
+  reminder_time: string;
+  theme_preference: 'light' | 'dark' | 'auto';
   created_at: string;
+  updated_at: string;
 }
 
 export interface ImageDescription {
   id: string;
-  user_id: string;
   image_url: string;
-  image_source: 'unsplash' | 'upload' | 'url';
-  unsplash_id: string | null;
-  
-  // Descriptions
-  description_spanish: string;
+  image_id: string; // Unsplash ID
   description_english: string;
-  description_length: 'short' | 'medium' | 'detailed';
-  
-  // Analysis data
-  extracted_phrases: string[]; // Array of phrase IDs
-  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
-  topics_covered: string[];
-  grammar_patterns: string[];
-  
-  // Generation metadata
-  ai_model_used: string;
-  generation_time_ms: number;
-  confidence_score: number;
-  
-  // User interaction
-  user_rating: number | null; // 1-5 stars
-  user_notes: string | null;
-  is_favorite: boolean;
-  
-  created_at: string;
-  updated_at: string;
+  description_spanish: string;
+  description_style: string;
+  generated_at: string;
+  user_id?: string;
 }
 
-export interface UnsplashImage {
+export interface QASession {
   id: string;
+  image_description_id: string;
+  questions: QAQuestion[];
+  user_responses: QAResponse[];
+  score: number;
+  accuracy: number;
+  time_spent: number;
   created_at: string;
-  updated_at: string;
-  promoted_at: string | null;
-  width: number;
-  height: number;
-  color: string;
-  blur_hash: string;
-  description: string | null;
-  alt_description: string | null;
-  urls: {
-    raw: string;
-    full: string;
-    regular: string;
-    small: string;
-    thumb: string;
-  };
-  links: {
-    self: string;
-    html: string;
-    download: string;
-    download_location: string;
-  };
-  categories: string[];
-  likes: number;
-  liked_by_user: boolean;
-  current_user_collections: any[];
-  sponsorship: any;
-  topic_submissions: Record<string, any>;
-  user: {
-    id: string;
-    updated_at: string;
-    username: string;
-    name: string;
-    first_name: string;
-    last_name: string | null;
-    twitter_username: string | null;
-    portfolio_url: string | null;
-    bio: string | null;
-    location: string | null;
-    links: {
-      self: string;
-      html: string;
-      photos: string;
-      likes: string;
-      portfolio: string;
-      following: string;
-      followers: string;
-    };
-    profile_image: {
-      small: string;
-      medium: string;
-      large: string;
-    };
-    instagram_username: string | null;
-    total_collections: number;
-    total_likes: number;
-    total_photos: number;
-    accepted_tos: boolean;
-    for_hire: boolean;
-    social: {
-      instagram_username: string | null;
-      portfolio_url: string | null;
-      twitter_username: string | null;
-    };
-  };
+  completed_at?: string;
+  user_id?: string;
 }
 
-// API Response Types
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  per_page: number;
-  total_pages: number;
-  has_more: boolean;
+export interface QAQuestion {
+  id: string;
+  question: string;
+  answer: string;
+  options?: string[];
+  difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
+  explanation?: string;
 }
 
-export interface ApiResponse<T> {
+export interface QAResponse {
+  question_id: string;
+  user_answer: string;
+  is_correct: boolean;
+  time_spent: number;
+  confidence_level?: number; // 1-5 scale
+  answered_at: string;
+}
+
+// API Response types
+export interface DatabaseResponse<T> {
   data: T | null;
   error: string | null;
   success: boolean;
-  message?: string;
 }
 
-// Hook return types
-export interface UsePhrasesResult {
-  phrases: Phrase[];
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
+export interface PaginatedResponse<T> {
+  data: T[];
+  count: number;
+  page: number;
+  limit: number;
+  totalPages: number;
 }
 
-export interface UseProgressResult {
-  progress: UserProgress | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
+// Filter and search types - use unified VocabularyFilters instead
+export type { VocabularyFilters } from './unified';
+
+// Legacy database-specific filters (deprecated)
+// @deprecated Use VocabularyFilters from unified types
+export interface DatabaseVocabularyFilters {
+  category?: string;
+  difficulty_min?: number;
+  difficulty_max?: number;
+  part_of_speech?: string;
+  search_term?: string;
+  mastery_level?: number;
 }
 
-export interface UseReviewSessionResult {
-  session: {
-    id: string;
-    cards_due: SpacedRepetitionCard[];
-    total_due: number;
-    new_cards: number;
-    learning_cards: number;
-    review_cards: number;
-  } | null;
-  loading: boolean;
-  error: string | null;
-  refetch: () => void;
+export interface StudySessionFilters {
+  session_type?: string;
+  date_from?: string;
+  date_to?: string;
+  min_score?: number;
+  max_score?: number;
 }
 
-// Form types
-export interface CreatePhraseForm {
-  spanish_text: string;
-  english_translation: string;
-  category: PhraseCategory;
-  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
-  word_type?: 'noun' | 'verb' | 'adjective' | 'adverb' | 'phrase' | 'expression';
-  formality_level?: 'very_formal' | 'formal' | 'neutral' | 'informal' | 'very_informal';
-  phonetic_pronunciation?: string;
-  usage_notes?: string;
-  context_sentence_spanish?: string;
-  context_sentence_english?: string;
-  user_notes?: string;
+// Statistics types
+export interface VocabularyStats {
+  total_words: number;
+  mastered_words: number;
+  learning_words: number;
+  new_words: number;
+  by_category: Record<string, number>;
+  by_difficulty: Record<string, number>;
+  by_part_of_speech: Record<string, number>;
+  mastery_distribution: Record<string, number>;
 }
 
-export interface UpdatePhraseForm extends Partial<CreatePhraseForm> {
-  id: string;
+export interface StudyStats {
+  total_sessions: number;
+  total_time_spent: number;
+  average_score: number;
+  average_accuracy: number;
+  streak_current: number;
+  streak_longest: number;
+  sessions_this_week: number;
+  sessions_this_month: number;
+  by_session_type: Record<string, number>;
 }
 
-export interface ProcessReviewForm {
-  phrase_id: string;
-  response_quality: number; // 0-4
-  response_time_seconds: number;
-}
-
-// Error types
-export interface DatabaseError {
-  message: string;
-  code?: string;
-  details?: any;
-}
-
-export interface ValidationError {
-  field: string;
-  message: string;
-}
-
-// Component prop types
-export interface PhrasesFilterOptions {
-  category?: PhraseCategory | 'all';
-  difficulty?: 'beginner' | 'intermediate' | 'advanced' | 'all';
-  isUserSelected?: boolean;
-  isMastered?: boolean;
-  search_query?: string;
-  limit?: number;
-  offset?: number;
-}
-
-export interface ProgressStatsOptions {
-  timeframe?: 'week' | 'month' | 'year' | 'all';
-  include_analytics?: boolean;
-}
+// Export types for convenience
+export type DatabaseTables = 
+  | 'vocabulary_items'
+  | 'vocabulary_lists'
+  | 'vocabulary_list_items'
+  | 'user_progress'
+  | 'study_sessions'
+  | 'user_settings'
+  | 'image_descriptions'
+  | 'qa_sessions';

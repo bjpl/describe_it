@@ -1,9 +1,16 @@
-import Redis from 'ioredis';
 import { CacheEntry } from '../../types/api';
 import { memoryCache } from '../cache/memory-cache';
 
+// Redis is optional - only import if available
+let Redis: any = null;
+try {
+  Redis = require('ioredis');
+} catch (error) {
+  console.log('ioredis not installed. Using memory cache only.');
+}
+
 class RedisAdapter {
-  private client: Redis | null = null;
+  private client: any | null = null;
   private defaultTTL: number = 3600; // 1 hour default
   private keyPrefix: string = 'describe_it:';
   private useMemoryFallback: boolean = true;
@@ -14,6 +21,11 @@ class RedisAdapter {
   }
 
   private async initializeRedis() {
+    if (!Redis) {
+      console.warn('Redis module not available. Using memory cache only.');
+      return;
+    }
+
     const redisUrl = process.env.REDIS_URL;
     
     if (!redisUrl) {

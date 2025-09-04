@@ -10,15 +10,11 @@ import { ShowAnswer } from './ShowAnswer';
 import { QuestionCounter } from './QuestionCounter';
 
 // Import export utilities
-import { 
-  exportQAResponses, 
-  exportQASession, 
-  exportCompleteQAReport,
-  calculateQAAnalytics,
-  type QAResponse,
-  type QASession,
-  getCurrentTimestamp 
+import QAExporter, { 
+  type QASessionData,
+  type QAUserResponse
 } from '../lib/export/qaExporter';
+import { getCurrentTimestamp } from '../lib/export/csvExporter';
 
 interface Question {
   id: string;
@@ -44,7 +40,7 @@ interface EnhancedQAPanelProps {
 interface SessionState {
   sessionId: string;
   startTime: string;
-  responses: QAResponse[];
+  responses: QAUserResponse[];
   timeSpent: number;
   streak: number;
 }
@@ -117,7 +113,7 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageUrl: selectedImage.urls?.regular || selectedImage.url,
+          imageUrl: selectedImage.urls?.regular,
           descriptionText: descriptionText,
           style: style,
           difficulty: settings.difficulty,
@@ -261,21 +257,20 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
     const confidence = confidenceScores[questionId] || 50;
     
     // Create response record
-    const response: QAResponse = {
+    const response: QAUserResponse = {
+      questionIndex: questions.findIndex(q => q.id === questionId),
       questionId: questionId,
       question: question.question,
-      userAnswer: question.options[selectedAnswerIndex] || 'No answer selected',
       correctAnswer: question.options[question.correctAnswer],
+      userAnswer: question.options[selectedAnswerIndex] || 'No answer selected',
       isCorrect: isCorrect,
       confidence: confidence,
-      responseTime: 0, // Could be tracked with timer
-      attempts: 1,
+      timeSpent: 0, // Could be tracked with timer
+      hintsUsed: 0,
       timestamp: getCurrentTimestamp(),
-      questionType: question.type,
-      difficulty: question.difficulty,
-      language: question.language,
-      imageId: selectedImage?.id,
-      imageUrl: selectedImage?.urls?.regular
+      difficulty: question.difficulty === 'beginner' ? 'facil' : 
+                 question.difficulty === 'intermediate' ? 'medio' : 'dificil',
+      category: 'general'
     };
 
     // Update session
@@ -313,42 +308,94 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
       alert('No responses to export. Please answer some questions first.');
       return;
     }
-    exportQAResponses(session.responses);
+    // Create session data for export
+    const sessionData: QASessionData = {
+      sessionId: session.sessionId,
+      imageUrl: selectedImage?.urls?.regular || '',
+      description: descriptionText || '',
+      language: 'es',
+      questions: questions.map((q, idx) => ({ 
+        id: q.id || `q_${idx}`, 
+        question: q.question, 
+        answer: q.options[q.correctAnswer],
+        options: q.options, 
+        correctAnswer: q.correctAnswer,
+        difficulty: q.difficulty === 'beginner' ? 'facil' : 
+                    q.difficulty === 'intermediate' ? 'medio' : 'dificil',
+        category: 'general'
+      })),
+      userResponses: session.responses,
+      sessionMetadata: {
+        startTime: session.startTime,
+        endTime: getCurrentTimestamp(),
+        totalTime: session.timeSpent,
+        score: (session.responses.filter(r => r.isCorrect).length / session.responses.length) * 100,
+        accuracy: (session.responses.filter(r => r.isCorrect).length / session.responses.length) * 100,
+        streak: session.streak
+      }
+    };
+    
+    const csvData = QAExporter.exportToCSV(sessionData);
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qa_session_${session.sessionId}_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }, [session.responses]);
 
   const handleExportSession = useCallback(() => {
-    const qaSession: QASession = {
+    const qaSession: QASessionData = {
       sessionId: session.sessionId,
-      startTime: session.startTime,
-      endTime: getCurrentTimestamp(),
-      totalQuestions: questions.length,
-      answeredQuestions: session.responses.length,
-      correctAnswers: session.responses.filter(r => r.isCorrect).length,
-      totalScore: session.responses.filter(r => r.isCorrect).length,
-      accuracy: session.responses.length > 0 
-        ? (session.responses.filter(r => r.isCorrect).length / session.responses.length) * 100
-        : 0,
-      averageResponseTime: 0,
-      totalTime: session.timeSpent,
-      imageContext: selectedImage ? {
-        imageId: selectedImage.id,
-        imageUrl: selectedImage.urls?.regular || selectedImage.url,
-        description: descriptionText || ''
-      } : undefined,
-      responses: session.responses
+      imageUrl: selectedImage?.urls?.regular || '',
+      description: descriptionText || '',
+      language: 'es',
+      questions: questions.map((q, idx) => ({ 
+        id: q.id || `q_${idx}`, 
+        question: q.question, 
+        answer: q.options[q.correctAnswer],
+        options: q.options, 
+        correctAnswer: q.correctAnswer,
+        difficulty: q.difficulty === 'beginner' ? 'facil' : 
+                    q.difficulty === 'intermediate' ? 'medio' : 'dificil',
+        category: 'general'
+      })),
+      userResponses: session.responses,
+      sessionMetadata: {
+        startTime: session.startTime,
+        endTime: getCurrentTimestamp(),
+        totalTime: session.timeSpent,
+        score: session.responses.filter(r => r.isCorrect).length,
+        accuracy: session.responses.length > 0 
+          ? (session.responses.filter(r => r.isCorrect).length / session.responses.length) * 100
+          : 0,
+        streak: session.streak
+      }
     };
     
-    exportQASession(qaSession);
+    const csvData = QAExporter.exportToCSV(qaSession);
+    const blob = new Blob([csvData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `qa_session_full_${session.sessionId}_${Date.now()}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
   }, [session, questions, selectedImage, descriptionText]);
 
   // Computed values
   const currentQuestion = questions[currentIndex];
-  const answeredQuestions = questions.map(q => submittedAnswers[q.id] || false);
-  const correctAnswers = questions.map((q, index) => {
-    if (!submittedAnswers[q.id]) return false;
+  const answeredQuestions = new Set(questions.map((q, index) => submittedAnswers[q.id] ? index : -1).filter(i => i !== -1));
+  const correctAnswers = new Set(questions.map((q, index) => {
+    if (!submittedAnswers[q.id]) return -1;
     const selectedIndex = parseInt(selectedAnswers[q.id] || '0');
-    return selectedIndex === q.correctAnswer;
-  });
+    return selectedIndex === q.correctAnswer ? index : -1;
+  }).filter(i => i !== -1));
   
   const stats = useMemo(() => {
     const answered = session.responses.length;
@@ -583,7 +630,7 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
             }))}
             selectedAnswer={selectedAnswers[currentQuestion.id] || null}
             isSubmitted={submittedAnswers[currentQuestion.id] || false}
-            isCorrect={correctAnswers[currentIndex]}
+            isCorrect={correctAnswers.has(currentIndex)}
             onAnswerSelect={(answerId) => handleAnswerSelect(currentQuestion.id, answerId)}
             onSubmit={() => handleSubmitAnswer(currentQuestion.id)}
             onConfidenceChange={(confidence) => handleConfidenceChange(currentQuestion.id, confidence)}
@@ -602,7 +649,6 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
           isRevealed={showAnswers[currentQuestion.id] || false}
           onReveal={() => setShowAnswers(prev => ({ ...prev, [currentQuestion.id]: true }))}
           onHide={() => setShowAnswers(prev => ({ ...prev, [currentQuestion.id]: false }))}
-          showHints={settings.includeHints}
           difficulty={currentQuestion.difficulty}
           category={currentQuestion.type}
         />

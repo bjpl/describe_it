@@ -1,106 +1,97 @@
-'use client'
+'use client';
 
-import React from 'react'
-import { motion } from 'framer-motion'
-import { Eye, EyeOff } from 'lucide-react'
-import { LanguageVisibility } from '@/types'
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Eye, EyeOff } from 'lucide-react';
+import { LanguageVisibility } from '@/types';
 
 interface LanguageTogglesProps {
-  visibility: LanguageVisibility
-  onVisibilityChange: (visibility: LanguageVisibility) => void
-  className?: string
+  visibility: LanguageVisibility;
+  onVisibilityChange: (visibility: LanguageVisibility) => void;
+  className?: string;
 }
 
-export function LanguageToggles({ 
-  visibility, 
-  onVisibilityChange, 
-  className = '' 
+export function LanguageToggles({
+  visibility,
+  onVisibilityChange,
+  className = ''
 }: LanguageTogglesProps) {
   const toggleEnglish = () => {
     onVisibilityChange({
       ...visibility,
       showEnglish: !visibility.showEnglish
-    })
-  }
+    });
+  };
 
   const toggleSpanish = () => {
     onVisibilityChange({
       ...visibility,
       showSpanish: !visibility.showSpanish
-    })
-  }
+    });
+  };
 
   return (
-    <div className={`flex items-center space-x-4 ${className}`}>
-      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-        Mostrar idiomas:
+    <div className={`flex items-center gap-2 ${className}`}>
+      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+        Show:
       </span>
       
       {/* English Toggle */}
       <motion.button
         onClick={toggleEnglish}
-        className={`
-          flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all duration-200
-          ${visibility.showEnglish 
-            ? 'bg-blue-100 border-blue-300 text-blue-700 dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-400' 
-            : 'bg-gray-100 border-gray-300 text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 hover:bg-gray-150'
-          }
-        `}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${
+          visibility.showEnglish
+            ? 'bg-blue-100 border-blue-200 text-blue-800 dark:bg-blue-900/30 dark:border-blue-600 dark:text-blue-300'
+            : 'bg-gray-100 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
+        }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         {visibility.showEnglish ? (
-          <Eye className="h-4 w-4" />
+          <Eye className="w-3 h-3" />
         ) : (
-          <EyeOff className="h-4 w-4" />
+          <EyeOff className="w-3 h-3" />
         )}
-        <span className="text-sm font-medium">English</span>
+        <span className="text-xs font-medium">EN</span>
+        <span className="text-xs">🇺🇸</span>
       </motion.button>
 
       {/* Spanish Toggle */}
       <motion.button
         onClick={toggleSpanish}
-        className={`
-          flex items-center space-x-2 px-3 py-2 rounded-lg border transition-all duration-200
-          ${visibility.showSpanish 
-            ? 'bg-green-100 border-green-300 text-green-700 dark:bg-green-900/30 dark:border-green-600 dark:text-green-400' 
-            : 'bg-gray-100 border-gray-300 text-gray-600 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-400 hover:bg-gray-150'
-          }
-        `}
+        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${
+          visibility.showSpanish
+            ? 'bg-green-100 border-green-200 text-green-800 dark:bg-green-900/30 dark:border-green-600 dark:text-green-300'
+            : 'bg-gray-100 border-gray-200 text-gray-600 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-400'
+        }`}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
         {visibility.showSpanish ? (
-          <Eye className="h-4 w-4" />
+          <Eye className="w-3 h-3" />
         ) : (
-          <EyeOff className="h-4 w-4" />
+          <EyeOff className="w-3 h-3" />
         )}
-        <span className="text-sm font-medium">Español</span>
+        <span className="text-xs font-medium">ES</span>
+        <span className="text-xs">🇪🇸</span>
       </motion.button>
 
-      {/* Status indicator */}
-      <div className="text-xs text-gray-500 dark:text-gray-400">
-        {!visibility.showEnglish && !visibility.showSpanish && (
-          <span className="text-amber-600 dark:text-amber-400">
-            ⚠️ Ningún idioma visible
-          </span>
-        )}
-        {visibility.showEnglish && visibility.showSpanish && (
-          <span className="text-emerald-600 dark:text-emerald-400">
-            ✓ Ambos idiomas
-          </span>
-        )}
-        {(visibility.showEnglish && !visibility.showSpanish) && (
-          <span className="text-blue-600 dark:text-blue-400">
-            Solo inglés
-          </span>
-        )}
-        {(!visibility.showEnglish && visibility.showSpanish) && (
-          <span className="text-green-600 dark:text-green-400">
-            Solo español
-          </span>
-        )}
+      {/* Quick Actions */}
+      <div className="border-l border-gray-300 dark:border-gray-600 pl-2 ml-2">
+        <button
+          onClick={() => onVisibilityChange({ showEnglish: true, showSpanish: true })}
+          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        >
+          Show All
+        </button>
+        <span className="mx-1 text-gray-300 dark:text-gray-600">•</span>
+        <button
+          onClick={() => onVisibilityChange({ showEnglish: false, showSpanish: true })}
+          className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 transition-colors"
+        >
+          ES Only
+        </button>
       </div>
     </div>
-  )
+  );
 }

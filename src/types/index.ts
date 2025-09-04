@@ -241,18 +241,35 @@ export interface QAResponse {
   explanation?: string;
 }
 
-export interface VocabularyItem {
-  id: string;
-  spanish_text: string;
-  english_translation: string;
-  category: string;
-  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
-  context_sentence_spanish: string;
-  context_sentence_english?: string;
-  part_of_speech: string;
-  usage_examples?: string[];
-  created_at: string;
-}
+// Re-export unified vocabulary types
+export type {
+  VocabularyItem,
+  VocabularyItemUI,
+  DifficultyLevel,
+  DifficultyNumber,
+  PartOfSpeech,
+  VocabularyFilters,
+  VocabularyStats,
+  BulkVocabularyOperation,
+  BulkOperationResult,
+  VocabularyExportOptions,
+  VocabularyImportOptions,
+  VocabularyImportResult
+} from './unified';
+
+// Re-export utility functions
+export {
+  isVocabularyItem,
+  isVocabularyItemUI,
+  difficultyNumberToString,
+  difficultyStringToNumber,
+  vocabularyItemToUI,
+  vocabularyItemFromUI,
+  vocabularyItemsToUI,
+  vocabularyItemsFromUI,
+  normalizeLegacyVocabularyItem,
+  validateVocabularyItem
+} from './unified';
 
 export interface ExportableData {
   descriptions?: DescriptionExportItem[];
@@ -378,10 +395,11 @@ export interface ValidationResult {
   errors: ValidationError[];
 }
 
-// Filter Types for APIs
+// Legacy filter types - use VocabularyFilters from unified types instead
+// @deprecated Use VocabularyFilters from unified types
 export interface VocabularyFilter {
   category?: string;
-  difficulty?: VocabularyItem['difficulty_level'];
+  difficulty?: DifficultyLevel;
   searchTerm?: string;
   dateRange?: {
     start: string;

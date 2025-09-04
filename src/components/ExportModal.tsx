@@ -29,11 +29,11 @@ interface VocabularyExportItem {
   translation: string;
   definition: string;
   partOfSpeech: string;
-  difficulty: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
   category: string;
   context: string;
   dateAdded: string;
-  lastReviewed: string | null;
+  lastReviewed: string | undefined;
   reviewCount: number;
   confidence: number;
 }
@@ -47,7 +47,7 @@ interface DescriptionExportItem {
   wordCount: number;
   language: string;
   createdAt: string;
-  generationTime: number | null;
+  generationTime: number | undefined;
 }
 
 interface QAExportItem {
@@ -60,7 +60,7 @@ interface QAExportItem {
   difficulty: string;
   confidence: number;
   createdAt: string;
-  responseTime: number | null;
+  responseTime: number | undefined;
   correct: boolean;
   userAnswer: string;
 }
@@ -71,7 +71,7 @@ interface SessionExportItem {
   activityType: string;
   content: string;
   details: string;
-  duration: number | null;
+  duration: number | undefined;
 }
 
 interface ImageExportItem {
@@ -81,6 +81,7 @@ interface ImageExportItem {
   width: number;
   height: number;
   photographer: string;
+  source: string;
 }
 
 interface ExportModalProps {
@@ -223,15 +224,15 @@ export default function ExportModal({
     const preset = EXPORT_PRESETS[presetKey as keyof typeof EXPORT_PRESETS];
     if (preset) {
       setSelectedFormat(preset.format);
-      setSelectedCategories(preset.categories);
+      setSelectedCategories([...preset.categories]);
       setCustomOptions({
-        pdfOptions: preset.pdfOptions,
-        excelOptions: preset.excelOptions,
-        ankiOptions: preset.ankiOptions,
-        csvOptions: preset.csvOptions
+        pdfOptions: 'pdfOptions' in preset ? preset.pdfOptions : undefined,
+        excelOptions: 'excelOptions' in preset ? preset.excelOptions : undefined,
+        ankiOptions: 'ankiOptions' in preset ? preset.ankiOptions : undefined,
+        csvOptions: 'csvOptions' in preset ? preset.csvOptions : undefined
       });
       
-      if (preset.dateRange) {
+      if ('dateRange' in preset && preset.dateRange) {
         setDateRange({
           start: preset.dateRange.start.toISOString().split('T')[0],
           end: preset.dateRange.end.toISOString().split('T')[0]
@@ -344,7 +345,7 @@ export default function ExportModal({
       case 'vocabulary': return sum + vocabulary.length;
       case 'descriptions': return sum + descriptions.length;
       case 'qa': return sum + qa.length;
-      case 'sessions': return sum + sessions.length;
+      case 'session': return sum + sessions.length;
       case 'images': return sum + images.length;
       case 'all': 
         return vocabulary.length + descriptions.length + qa.length + sessions.length + images.length;

@@ -18,6 +18,11 @@ import type {
   QuestionType,
   LearningPhase 
 } from '../../types/database';
+import type { 
+  VocabularyItem,
+  PartOfSpeech,
+  DifficultyNumber 
+} from '../../types/unified';
 
 // ==============================================
 // CONFIGURATION AND TYPES
@@ -133,7 +138,10 @@ export interface VocabularyList {
   updated_at: string;
 }
 
-export interface VocabularyItem {
+// Use unified VocabularyItem type for consistency
+// Legacy interface kept for backward compatibility - will be removed in next version
+// @deprecated Use VocabularyItem from unified types instead
+export interface LegacyDatabaseVocabularyItem {
   id: string;
   vocabulary_list_id: string;
   spanish_text: string;
@@ -167,6 +175,9 @@ export interface VocabularyItem {
   emoji_representation?: string;
   created_at: string;
 }
+
+// Use unified VocabularyItem type
+export type { VocabularyItem };
 
 export interface LearningProgress {
   id: string;

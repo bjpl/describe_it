@@ -7,7 +7,7 @@ import {
   QueryCache,
   MutationCache
 } from '@tanstack/react-query';
-import { logger } from '@/lib/logger';
+// import { logger } from '@/lib/logger';
 // Temporarily disabled for deployment
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 // import { useAppStore } from '../lib/store/appStore';
@@ -15,11 +15,8 @@ import { logger } from '@/lib/logger';
 
 // Global error handler
 const handleError = (error: unknown) => {
-  // Log error using centralized logger
-  logger.error('React Query Error', error instanceof Error ? error : new Error(String(error)), { 
-    component: 'ReactQueryProvider',
-    type: 'query-error'
-  });
+  // Log error using console for emergency mode
+  console.error('React Query Error:', error);
 };
 
 // Create query client with configuration
@@ -52,12 +49,12 @@ const createQueryClient = () =>
         refetchOnReconnect: 'always',
         
         // Error handling
-        onError: handleError
+        // onError: handleError
       },
       mutations: {
         // Retry failed mutations once
         retry: 1,
-        onError: handleError
+        // onError: handleError
       }
     },
     

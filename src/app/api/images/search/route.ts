@@ -105,10 +105,10 @@ export async function GET(request: NextRequest) {
       // Transform cached data to match expected interface
       const transformedCached = {
         images: cached.data.results || cached.data.images || [],
-        totalPages: cached.data.total_pages || cached.data.totalPages || 1,
+        totalPages: cached.data.totalPages || 1,
         currentPage: params.page,
         total: cached.data.total || 0,
-        hasNextPage: (params.page < (cached.data.total_pages || cached.data.totalPages || 1))
+        hasNextPage: (params.page < (cached.data.totalPages || 1))
       };
 
       return NextResponse.json(transformedCached, {
@@ -139,10 +139,10 @@ export async function GET(request: NextRequest) {
     // Transform results to match expected interface
     const transformedResults = {
       images: results.images || [],
-      totalPages: results.totalPages || results.total_pages || 1,
+      totalPages: results.totalPages || 1,
       currentPage: params.page,
       total: results.total || 0,
-      hasNextPage: (params.page < (results.totalPages || results.total_pages || 1))
+      hasNextPage: (params.page < (results.totalPages || 1))
     };
 
     return NextResponse.json(transformedResults, {
@@ -188,10 +188,10 @@ export async function GET(request: NextRequest) {
       // Transform stale cached data to match expected interface
       const transformedStale = {
         images: cached.data.results || cached.data.images || [],
-        totalPages: cached.data.total_pages || cached.data.totalPages || 1,
+        totalPages: cached.data.totalPages || 1,
         currentPage: searchParams.page || 1,
         total: cached.data.total || 0,
-        hasNextPage: ((searchParams.page || 1) < (cached.data.total_pages || cached.data.totalPages || 1))
+        hasNextPage: ((searchParams.page || 1) < (cached.data.totalPages || 1))
       };
       
       return NextResponse.json(transformedStale, {

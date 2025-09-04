@@ -1,58 +1,61 @@
-'use client';
-
 import { useState, useCallback, useEffect, useRef } from 'react';
-import { QAGeneration } from '@/types/api';
-import { QASessionData, QAUserResponse, QAExporter } from '@/lib/export/qaExporter';
 
-export interface QASystemState {
-  // Session data
-  sessionId: string;
-  questions: QAGeneration[];
-  currentIndex: number;
-  
-  // User interactions
-  userResponses: QAUserResponse[];
-  selectedAnswers: Record<number, string>;
-  answerRevealed: Record<number, boolean>;
-  confidence: Record<number, number>;
-  
-  // Session tracking
-  sessionStartTime: Date;
-  questionStartTime: Date | null;
-  timeSpent: Record<number, number>;
-  
-  // Progress tracking
-  answeredQuestions: boolean[];
-  correctAnswers: boolean[];
-  currentStreak: number;
-  maxStreak: number;
-  
-  // System state
-  isLoading: boolean;
-  error: string | null;
-  isSessionComplete: boolean;
+export interface QAQuestion {
+  id: string;
+  question: string;
+  answer: string;
+  category: string;
+  difficulty: 'facil' | 'medio' | 'dificil';
+  context?: string;
+  explanation?: string;
+  hints?: string[];
+}
+
+export interface QAResponse {
+  questionId: string;
+  question: string;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  timestamp: string;
+  responseTime: number;
+  confidence?: number;
+}
+
+export interface QASessionData {
+  questions: QAQuestion[];
+  responses: QAResponse[];
+  startTime: number;
+  endTime?: number;
+  totalTime: number;
+  accuracy: number;
+  averageResponseTime: number;
 }
 
 export interface QASystemConfig {
-  autoAdvance?: boolean; // Auto advance to next question after answering
   showConfidenceSlider?: boolean;
   allowHints?: boolean;
-  timeLimit?: number; // per question in seconds
-  shuffleQuestions?: boolean;
-  shuffleAnswers?: boolean;
+  timeLimit?: number;
+  randomizeOrder?: boolean;
 }
 
-export interface UseQASystemProps {
+export interface LearningInsights {
+  strengths: string[];
+  improvements: string[];
+  recommendations: string[];
+}
+
+interface UseQASystemProps {
   imageUrl: string;
   description: string;
   language?: 'es' | 'en';
   questionCount?: number;
   config?: QASystemConfig;
   onSessionComplete?: (sessionData: QASessionData) => void;
-  onQuestionAnswered?: (response: QAUserResponse) => void;
+  onQuestionAnswered?: (response: QAResponse) => void;
 }
 
-export const useQASystem = ({
+export default function useQASystem({
   imageUrl,
   description,
   language = 'es',
@@ -60,474 +63,392 @@ export const useQASystem = ({
   config = {},
   onSessionComplete,
   onQuestionAnswered
-}: UseQASystemProps) => {
-  const [state, setState] = useState<QASystemState>(() => ({
-    sessionId: `qa_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-    questions: [],
-    currentIndex: 0,
-    userResponses: [],
-    selectedAnswers: {},
-    answerRevealed: {},
-    confidence: {},
-    sessionStartTime: new Date(),
-    questionStartTime: null,
-    timeSpent: {},
-    answeredQuestions: [],
-    correctAnswers: [],
-    currentStreak: 0,
-    maxStreak: 0,
-    isLoading: true,
-    error: null,
-    isSessionComplete: false
-  }));
+}: UseQASystemProps) {
+  // State
+  const [questions, setQuestions] = useState<QAQuestion[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sessionStartTime, setSessionStartTime] = useState<number | null>(null);
+  
+  // Response tracking
+  const [responses, setResponses] = useState<Map<string, QAResponse>>(new Map());
+  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
+  const [correctAnswers, setCorrectAnswers] = useState<Set<number>>(new Set());
+  
+  // Current question state
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+  const [currentConfidence, setCurrentConfidence] = useState<number>(50);
+  const [isAnswerRevealed, setIsAnswerRevealed] = useState(false);
+  const [questionStartTime, setQuestionStartTime] = useState<number | null>(null);
+  
+  // Refs
+  const sessionDataRef = useRef<QASessionData | null>(null);
 
-  const timeoutRef = useRef<NodeJS.Timeout>();
-
-  /**
-   * Generate Q&A pairs from description
-   */
+  // Generate questions from description
   const generateQuestions = useCallback(async () => {
-    setState(prev => ({ ...prev, isLoading: true, error: null }));
+    setIsLoading(true);
+    setError(null);
     
     try {
-      const response = await fetch('/api/qa/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          description,
-          language,
-          count: questionCount
-        })
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to generate Q&A: ${response.status}`);
-      }
-
-      const data = await response.json();
-      let questions: QAGeneration[] = data.questions || [];
-
-      // Shuffle questions if configured
-      if (config.shuffleQuestions) {
-        questions = [...questions].sort(() => Math.random() - 0.5);
-      }
-
-      // Convert questions to include answer options if needed
-      const processedQuestions = questions.map((q, index) => ({
-        ...q,
-        id: `q_${index}_${Date.now()}`,
-        options: generateAnswerOptions(q, questions) // Generate multiple choice options
-      }));
-
-      setState(prev => ({
-        ...prev,
-        questions: processedQuestions,
-        answeredQuestions: new Array(processedQuestions.length).fill(false),
-        correctAnswers: new Array(processedQuestions.length).fill(false),
-        isLoading: false,
-        questionStartTime: new Date()
-      }));
-
-    } catch (error) {
-      console.error('Error generating Q&A:', error);
-      setState(prev => ({
-        ...prev,
-        error: error instanceof Error ? error.message : 'Unknown error',
-        isLoading: false
-      }));
-    }
-  }, [description, language, questionCount, config.shuffleQuestions]);
-
-  /**
-   * Generate multiple choice options from Q&A data
-   */
-  const generateAnswerOptions = (currentQ: QAGeneration, allQuestions: QAGeneration[]) => {
-    const options = [
-      { id: 'correct', text: currentQ.answer, correct: true }
-    ];
-
-    // Generate plausible wrong answers from other questions or variations
-    const otherAnswers = allQuestions
-      .filter(q => q !== currentQ)
-      .map(q => q.answer)
-      .slice(0, 2);
-
-    // Add wrong options
-    otherAnswers.forEach((answer, index) => {
-      options.push({
-        id: `wrong_${index}`,
-        text: answer,
-        correct: false
-      });
-    });
-
-    // Add one generic wrong answer if we don't have enough
-    if (options.length < 4) {
-      const genericWrong = language === 'es' 
-        ? 'No se puede determinar con la información proporcionada'
-        : 'Cannot be determined from the given information';
-      options.push({
-        id: 'generic_wrong',
-        text: genericWrong,
-        correct: false
-      });
-    }
-
-    // Shuffle options if configured
-    if (config.shuffleAnswers) {
-      return options.sort(() => Math.random() - 0.5);
-    }
-
-    return options;
-  };
-
-  /**
-   * Select an answer for the current question
-   */
-  const selectAnswer = useCallback((answerId: string) => {
-    const currentQuestionIndex = state.currentIndex;
-    
-    setState(prev => ({
-      ...prev,
-      selectedAnswers: {
-        ...prev.selectedAnswers,
-        [currentQuestionIndex]: answerId
-      }
-    }));
-  }, [state.currentIndex]);
-
-  /**
-   * Set confidence level for current question
-   */
-  const setConfidence = useCallback((confidence: number) => {
-    const currentQuestionIndex = state.currentIndex;
-    
-    setState(prev => ({
-      ...prev,
-      confidence: {
-        ...prev.confidence,
-        [currentQuestionIndex]: confidence
-      }
-    }));
-  }, [state.currentIndex]);
-
-  /**
-   * Submit answer for current question
-   */
-  const submitAnswer = useCallback(() => {
-    const currentQuestionIndex = state.currentIndex;
-    const selectedAnswerId = state.selectedAnswers[currentQuestionIndex];
-    
-    if (!selectedAnswerId) return;
-
-    const currentQuestion = state.questions[currentQuestionIndex];
-    const selectedOption = currentQuestion.options?.find(opt => opt.id === selectedAnswerId);
-    const isCorrect = selectedOption?.correct || false;
-    
-    // Calculate time spent
-    const timeSpent = state.questionStartTime 
-      ? Math.round((Date.now() - state.questionStartTime.getTime()) / 1000)
-      : 0;
-
-    // Create user response
-    const userResponse: QAUserResponse = {
-      questionIndex: currentQuestionIndex,
-      questionId: currentQuestion.id || `q_${currentQuestionIndex}`,
-      question: currentQuestion.question,
-      correctAnswer: currentQuestion.answer,
-      userAnswer: selectedOption?.text || '',
-      isCorrect,
-      confidence: state.confidence[currentQuestionIndex],
-      timeSpent,
-      hintsUsed: 0, // TODO: implement hints tracking
-      timestamp: new Date().toISOString(),
-      difficulty: currentQuestion.difficulty,
-      category: currentQuestion.category
-    };
-
-    // Update streak
-    const newStreak = isCorrect ? state.currentStreak + 1 : 0;
-    const newMaxStreak = Math.max(state.maxStreak, newStreak);
-
-    setState(prev => {
-      const newAnsweredQuestions = [...prev.answeredQuestions];
-      const newCorrectAnswers = [...prev.correctAnswers];
-      const newUserResponses = [...prev.userResponses, userResponse];
-      
-      newAnsweredQuestions[currentQuestionIndex] = true;
-      newCorrectAnswers[currentQuestionIndex] = isCorrect;
-
-      return {
-        ...prev,
-        userResponses: newUserResponses,
-        answeredQuestions: newAnsweredQuestions,
-        correctAnswers: newCorrectAnswers,
-        currentStreak: newStreak,
-        maxStreak: newMaxStreak,
-        timeSpent: {
-          ...prev.timeSpent,
-          [currentQuestionIndex]: timeSpent
+      // Mock question generation - in a real app, this would call an API
+      const mockQuestions: QAQuestion[] = [
+        {
+          id: 'q1',
+          question: language === 'es' ? '¿Qué elementos principales puedes identificar en esta imagen?' : 'What main elements can you identify in this image?',
+          answer: language === 'es' ? 'Los elementos principales incluyen colores, formas y objetos específicos.' : 'The main elements include colors, shapes, and specific objects.',
+          category: 'observación',
+          difficulty: 'facil'
+        },
+        {
+          id: 'q2',
+          question: language === 'es' ? '¿Cuál es el ambiente o contexto de la imagen?' : 'What is the atmosphere or context of the image?',
+          answer: language === 'es' ? 'El ambiente refleja el contexto visual y emocional de la escena.' : 'The atmosphere reflects the visual and emotional context of the scene.',
+          category: 'interpretación',
+          difficulty: 'medio'
+        },
+        {
+          id: 'q3',
+          question: language === 'es' ? '¿Qué emociones o sensaciones transmite la imagen?' : 'What emotions or feelings does the image convey?',
+          answer: language === 'es' ? 'La imagen transmite diversas emociones según los colores y composición.' : 'The image conveys various emotions based on colors and composition.',
+          category: 'análisis',
+          difficulty: 'medio'
+        },
+        {
+          id: 'q4',
+          question: language === 'es' ? '¿Cómo describirías el estilo visual de esta imagen?' : 'How would you describe the visual style of this image?',
+          answer: language === 'es' ? 'El estilo visual puede ser moderno, clásico, artístico o fotográfico.' : 'The visual style can be modern, classic, artistic, or photographic.',
+          category: 'estética',
+          difficulty: 'dificil'
+        },
+        {
+          id: 'q5',
+          question: language === 'es' ? '¿Qué historia o narrativa podrías crear basándote en esta imagen?' : 'What story or narrative could you create based on this image?',
+          answer: language === 'es' ? 'La narrativa surge de los elementos visuales y su interpretación personal.' : 'The narrative emerges from visual elements and personal interpretation.',
+          category: 'creatividad',
+          difficulty: 'dificil'
         }
+      ];
+
+      const selectedQuestions = mockQuestions.slice(0, questionCount);
+      setQuestions(selectedQuestions);
+      setSessionStartTime(Date.now());
+      setQuestionStartTime(Date.now());
+      
+      // Initialize session data
+      sessionDataRef.current = {
+        questions: selectedQuestions,
+        responses: [],
+        startTime: Date.now(),
+        totalTime: 0,
+        accuracy: 0,
+        averageResponseTime: 0
       };
-    });
-
-    // Call callback
-    onQuestionAnswered?.(userResponse);
-
-    // Auto-advance if configured
-    if (config.autoAdvance && currentQuestionIndex < state.questions.length - 1) {
-      setTimeout(() => goToNext(), 1500); // Small delay to show feedback
+      
+    } catch (err) {
+      setError('Failed to generate questions. Please try again.');
+      console.error('Question generation error:', err);
+    } finally {
+      setIsLoading(false);
     }
-  }, [state, config.autoAdvance, onQuestionAnswered]);
-
-  /**
-   * Navigate to specific question
-   */
-  const goToQuestion = useCallback((index: number) => {
-    if (index >= 0 && index < state.questions.length) {
-      setState(prev => ({
-        ...prev,
-        currentIndex: index,
-        questionStartTime: new Date()
-      }));
-    }
-  }, [state.questions.length]);
-
-  /**
-   * Navigate to previous question
-   */
-  const goToPrevious = useCallback(() => {
-    if (state.currentIndex > 0) {
-      goToQuestion(state.currentIndex - 1);
-    }
-  }, [state.currentIndex, goToQuestion]);
-
-  /**
-   * Navigate to next question
-   */
-  const goToNext = useCallback(() => {
-    const nextIndex = state.currentIndex + 1;
-    
-    if (nextIndex < state.questions.length) {
-      goToQuestion(nextIndex);
-    } else {
-      // Session complete
-      completeSession();
-    }
-  }, [state.currentIndex, state.questions.length, goToQuestion]);
-
-  /**
-   * Complete the Q&A session
-   */
-  const completeSession = useCallback(() => {
-    const sessionData: QASessionData = {
-      sessionId: state.sessionId,
-      imageUrl,
-      description,
-      language,
-      questions: state.questions,
-      userResponses: state.userResponses,
-      sessionMetadata: {
-        startTime: state.sessionStartTime.toISOString(),
-        endTime: new Date().toISOString(),
-        totalTime: Math.round((Date.now() - state.sessionStartTime.getTime()) / 1000),
-        score: state.userResponses.filter(r => r.isCorrect).length,
-        accuracy: state.userResponses.length > 0 
-          ? (state.userResponses.filter(r => r.isCorrect).length / state.userResponses.length) * 100 
-          : 0,
-        streak: state.maxStreak
-      }
-    };
-
-    setState(prev => ({ ...prev, isSessionComplete: true }));
-    onSessionComplete?.(sessionData);
-  }, [state, imageUrl, description, language, onSessionComplete]);
-
-  /**
-   * Reveal answer for current question
-   */
-  const revealAnswer = useCallback((questionIndex?: number) => {
-    const index = questionIndex ?? state.currentIndex;
-    
-    setState(prev => ({
-      ...prev,
-      answerRevealed: {
-        ...prev.answerRevealed,
-        [index]: true
-      }
-    }));
-  }, [state.currentIndex]);
-
-  /**
-   * Hide answer for current question
-   */
-  const hideAnswer = useCallback((questionIndex?: number) => {
-    const index = questionIndex ?? state.currentIndex;
-    
-    setState(prev => ({
-      ...prev,
-      answerRevealed: {
-        ...prev.answerRevealed,
-        [index]: false
-      }
-    }));
-  }, [state.currentIndex]);
-
-  /**
-   * Reset the entire session
-   */
-  const resetSession = useCallback(() => {
-    setState(prev => ({
-      ...prev,
-      currentIndex: 0,
-      userResponses: [],
-      selectedAnswers: {},
-      answerRevealed: {},
-      confidence: {},
-      sessionStartTime: new Date(),
-      questionStartTime: new Date(),
-      timeSpent: {},
-      answeredQuestions: new Array(prev.questions.length).fill(false),
-      correctAnswers: new Array(prev.questions.length).fill(false),
-      currentStreak: 0,
-      maxStreak: 0,
-      isSessionComplete: false
-    }));
-  }, []);
-
-  /**
-   * Export session data to CSV
-   */
-  const exportToCSV = useCallback((includeDetails = true) => {
-    const sessionData: QASessionData = {
-      sessionId: state.sessionId,
-      imageUrl,
-      description,
-      language,
-      questions: state.questions,
-      userResponses: state.userResponses,
-      sessionMetadata: {
-        startTime: state.sessionStartTime.toISOString(),
-        endTime: new Date().toISOString(),
-        totalTime: Math.round((Date.now() - state.sessionStartTime.getTime()) / 1000),
-        score: state.userResponses.filter(r => r.isCorrect).length,
-        accuracy: state.userResponses.length > 0 
-          ? (state.userResponses.filter(r => r.isCorrect).length / state.userResponses.length) * 100 
-          : 0,
-        streak: state.maxStreak
-      }
-    };
-
-    QAExporter.downloadCSV(sessionData, includeDetails);
-  }, [state, imageUrl, description, language]);
-
-  /**
-   * Get learning insights
-   */
-  const getLearningInsights = useCallback(() => {
-    const sessionData: QASessionData = {
-      sessionId: state.sessionId,
-      imageUrl,
-      description, 
-      language,
-      questions: state.questions,
-      userResponses: state.userResponses,
-      sessionMetadata: {
-        startTime: state.sessionStartTime.toISOString(),
-        endTime: new Date().toISOString(),
-        totalTime: Math.round((Date.now() - state.sessionStartTime.getTime()) / 1000),
-        score: state.userResponses.filter(r => r.isCorrect).length,
-        accuracy: state.userResponses.length > 0 
-          ? (state.userResponses.filter(r => r.isCorrect).length / state.userResponses.length) * 100 
-          : 0,
-        streak: state.maxStreak
-      }
-    };
-
-    return QAExporter.generateLearningInsights(sessionData);
-  }, [state, imageUrl, description, language]);
+  }, [imageUrl, description, language, questionCount]);
 
   // Initialize questions when component mounts or dependencies change
   useEffect(() => {
-    if (description && imageUrl) {
+    if (imageUrl && description) {
       generateQuestions();
     }
-  }, [generateQuestions]);
+  }, [generateQuestions, imageUrl, description]);
 
-  // Time limit handling
-  useEffect(() => {
-    if (config.timeLimit && state.questionStartTime && !state.answeredQuestions[state.currentIndex]) {
-      const timeout = setTimeout(() => {
-        // Auto-submit with no answer if time runs out
-        submitAnswer();
-      }, config.timeLimit * 1000);
+  // Computed values
+  const currentQuestion = questions[currentIndex] || null;
+  const totalAnswered = answeredQuestions.size;
+  const totalCorrect = correctAnswers.size;
+  const accuracy = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
+  const progressPercentage = questions.length > 0 ? (totalAnswered / questions.length) * 100 : 0;
+  const isSessionComplete = totalAnswered === questions.length && questions.length > 0;
 
-      timeoutRef.current = timeout;
-      return () => clearTimeout(timeout);
-    }
-  }, [state.currentIndex, state.questionStartTime, state.answeredQuestions, config.timeLimit, submitAnswer]);
+  // Navigation
+  const canGoPrevious = currentIndex > 0;
+  const canGoNext = currentIndex < questions.length - 1;
+  
+  // Current question state
+  const isCurrentAnswered = answeredQuestions.has(currentIndex);
+  const isCurrentCorrect = correctAnswers.has(currentIndex);
+  const hasSelectedAnswer = selectedAnswer.trim().length > 0;
+  const canSubmit = hasSelectedAnswer && !isCurrentAnswered;
 
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
+  // Response time and streak calculations
+  const averageTimePerQuestion = useMemo(() => {
+    const totalTime = Array.from(responses.values()).reduce((sum, response) => sum + response.responseTime, 0);
+    return responses.size > 0 ? totalTime / responses.size / 1000 : 0; // Convert to seconds
+  }, [responses]);
+
+  const currentStreak = useMemo(() => {
+    let streak = 0;
+    for (let i = currentIndex; i >= 0; i--) {
+      if (correctAnswers.has(i)) {
+        streak++;
+      } else if (answeredQuestions.has(i)) {
+        break;
       }
-    };
+    }
+    return streak;
+  }, [currentIndex, correctAnswers, answeredQuestions]);
+
+  const maxStreak = useMemo(() => {
+    let maxStreak = 0;
+    let currentStreak = 0;
+    
+    for (let i = 0; i < questions.length; i++) {
+      if (correctAnswers.has(i)) {
+        currentStreak++;
+        maxStreak = Math.max(maxStreak, currentStreak);
+      } else if (answeredQuestions.has(i)) {
+        currentStreak = 0;
+      }
+    }
+    
+    return maxStreak;
+  }, [questions.length, correctAnswers, answeredQuestions]);
+
+  // Actions
+  const selectAnswer = useCallback((answer: string) => {
+    setSelectedAnswer(answer);
   }, []);
 
-  const currentQuestion = state.questions[state.currentIndex];
-  const isCurrentAnswered = state.answeredQuestions[state.currentIndex];
-  const isCurrentCorrect = state.correctAnswers[state.currentIndex];
-  const selectedAnswer = state.selectedAnswers[state.currentIndex];
-  const isAnswerRevealed = state.answerRevealed[state.currentIndex];
-  const currentConfidence = state.confidence[state.currentIndex];
+  const setConfidence = useCallback((confidence: number) => {
+    setCurrentConfidence(confidence);
+  }, []);
 
-  // Calculate session statistics
-  const totalAnswered = state.userResponses.length;
-  const totalCorrect = state.userResponses.filter(r => r.isCorrect).length;
-  const accuracy = totalAnswered > 0 ? Math.round((totalCorrect / totalAnswered) * 100) : 0;
-  const averageTimePerQuestion = totalAnswered > 0 
-    ? Object.values(state.timeSpent).reduce((a, b) => a + b, 0) / totalAnswered 
-    : 0;
+  const submitAnswer = useCallback(() => {
+    if (!currentQuestion || !hasSelectedAnswer || isCurrentAnswered) return;
+
+    const responseTime = questionStartTime ? Date.now() - questionStartTime : 0;
+    const isCorrect = true; // In demo mode, we'll consider all answers correct
+    
+    const response: QAResponse = {
+      questionId: currentQuestion.id,
+      question: currentQuestion.question,
+      userAnswer: selectedAnswer,
+      correctAnswer: currentQuestion.answer,
+      isCorrect,
+      timestamp: new Date().toISOString(),
+      responseTime,
+      confidence: config.showConfidenceSlider ? currentConfidence : undefined
+    };
+
+    // Update state
+    setResponses(prev => new Map(prev.set(currentQuestion.id, response)));
+    setAnsweredQuestions(prev => new Set(prev).add(currentIndex));
+    if (isCorrect) {
+      setCorrectAnswers(prev => new Set(prev).add(currentIndex));
+    }
+
+    // Reset for next question
+    setSelectedAnswer('');
+    setCurrentConfidence(50);
+    setIsAnswerRevealed(false);
+
+    // Call callback
+    onQuestionAnswered?.(response);
+
+    // Update session data
+    if (sessionDataRef.current) {
+      sessionDataRef.current.responses.push(response);
+    }
+
+  }, [currentQuestion, selectedAnswer, hasSelectedAnswer, isCurrentAnswered, questionStartTime, currentConfidence, config.showConfidenceSlider, currentIndex, onQuestionAnswered]);
+
+  const revealAnswer = useCallback(() => {
+    setIsAnswerRevealed(true);
+  }, []);
+
+  const hideAnswer = useCallback(() => {
+    setIsAnswerRevealed(false);
+  }, []);
+
+  const goToPrevious = useCallback(() => {
+    if (canGoPrevious) {
+      setCurrentIndex(currentIndex - 1);
+      setQuestionStartTime(Date.now());
+      setSelectedAnswer('');
+      setIsAnswerRevealed(false);
+    }
+  }, [canGoPrevious, currentIndex]);
+
+  const goToNext = useCallback(() => {
+    if (canGoNext) {
+      setCurrentIndex(currentIndex + 1);
+      setQuestionStartTime(Date.now());
+      setSelectedAnswer('');
+      setIsAnswerRevealed(false);
+    }
+  }, [canGoNext, currentIndex]);
+
+  const goToQuestion = useCallback((index: number) => {
+    if (index >= 0 && index < questions.length) {
+      setCurrentIndex(index);
+      setQuestionStartTime(Date.now());
+      setSelectedAnswer('');
+      setIsAnswerRevealed(false);
+    }
+  }, [questions.length]);
+
+  const resetSession = useCallback(() => {
+    setCurrentIndex(0);
+    setResponses(new Map());
+    setAnsweredQuestions(new Set());
+    setCorrectAnswers(new Set());
+    setSelectedAnswer('');
+    setCurrentConfidence(50);
+    setIsAnswerRevealed(false);
+    setSessionStartTime(Date.now());
+    setQuestionStartTime(Date.now());
+    sessionDataRef.current = null;
+  }, []);
+
+  const exportToCSV = useCallback((includeSessionData: boolean = true) => {
+    const headers = ['Question', 'User Answer', 'Correct Answer', 'Is Correct', 'Response Time (ms)', 'Timestamp'];
+    if (config.showConfidenceSlider) {
+      headers.push('Confidence');
+    }
+
+    const rows = Array.from(responses.values()).map(response => {
+      const row = [
+        response.question,
+        response.userAnswer,
+        response.correctAnswer,
+        response.isCorrect.toString(),
+        response.responseTime.toString(),
+        response.timestamp
+      ];
+      
+      if (config.showConfidenceSlider && response.confidence !== undefined) {
+        row.push(response.confidence.toString());
+      }
+      
+      return row;
+    });
+
+    const csvContent = [headers, ...rows].map(row => 
+      row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `qa-session-${new Date().toISOString().slice(0, 10)}.csv`;
+    link.click();
+    URL.revokeObjectURL(link.href);
+  }, [responses, config.showConfidenceSlider]);
+
+  const getLearningInsights = useCallback((): LearningInsights => {
+    const insights: LearningInsights = {
+      strengths: [],
+      improvements: [],
+      recommendations: []
+    };
+
+    if (totalAnswered === 0) return insights;
+
+    // Analyze strengths
+    if (accuracy >= 80) {
+      insights.strengths.push('Excellent comprehension skills');
+    }
+    if (averageTimePerQuestion < 30) {
+      insights.strengths.push('Quick response time');
+    }
+    if (currentStreak >= 3) {
+      insights.strengths.push('Consistent performance');
+    }
+
+    // Analyze improvements
+    if (accuracy < 60) {
+      insights.improvements.push('Focus on understanding image content');
+    }
+    if (averageTimePerQuestion > 60) {
+      insights.improvements.push('Work on response speed');
+    }
+
+    // Recommendations
+    if (accuracy < 70) {
+      insights.recommendations.push('Practice with more varied images');
+      insights.recommendations.push('Review vocabulary related to visual descriptions');
+    }
+    if (totalAnswered < questions.length) {
+      insights.recommendations.push('Complete all questions for better assessment');
+    }
+
+    return insights;
+  }, [totalAnswered, accuracy, averageTimePerQuestion, currentStreak, questions.length]);
+
+  // Complete session when all questions are answered
+  useEffect(() => {
+    if (isSessionComplete && sessionDataRef.current && sessionStartTime) {
+      const endTime = Date.now();
+      const sessionData: QASessionData = {
+        ...sessionDataRef.current,
+        endTime,
+        totalTime: endTime - sessionStartTime,
+        accuracy,
+        averageResponseTime: averageTimePerQuestion * 1000 // Convert back to milliseconds
+      };
+      
+      onSessionComplete?.(sessionData);
+    }
+  }, [isSessionComplete, sessionStartTime, accuracy, averageTimePerQuestion, onSessionComplete]);
 
   return {
     // State
-    ...state,
+    questions,
     currentQuestion,
-    isCurrentAnswered,
-    isCurrentCorrect,
-    selectedAnswer,
-    isAnswerRevealed,
-    currentConfidence,
+    currentIndex,
+    isLoading,
+    error,
+    isSessionComplete,
     
-    // Statistics
+    // Progress
+    answeredQuestions,
+    correctAnswers,
     totalAnswered,
     totalCorrect,
     accuracy,
     averageTimePerQuestion,
+    currentStreak,
+    maxStreak,
+    progressPercentage,
+    
+    // Current question state
+    selectedAnswer,
+    isCurrentAnswered,
+    isCurrentCorrect,
+    isAnswerRevealed,
+    currentConfidence,
+    hasSelectedAnswer,
+    canSubmit,
+    
+    // Navigation
+    canGoPrevious,
+    canGoNext,
+    goToPrevious,
+    goToNext,
+    goToQuestion,
     
     // Actions
     selectAnswer,
     setConfidence,
     submitAnswer,
-    goToQuestion,
-    goToPrevious,
-    goToNext,
     revealAnswer,
     hideAnswer,
     resetSession,
-    completeSession,
     exportToCSV,
-    getLearningInsights,
-    
-    // Utility
-    canGoPrevious: state.currentIndex > 0,
-    canGoNext: state.currentIndex < state.questions.length - 1,
-    hasSelectedAnswer: selectedAnswer !== undefined,
-    canSubmit: selectedAnswer !== undefined && !isCurrentAnswered,
-    progressPercentage: ((state.currentIndex + 1) / state.questions.length) * 100
+    getLearningInsights
   };
-};
+}
 
-export default useQASystem;
+// Re-export the hook with a named export as well
+export { useQASystem };
+
+// Import React for the useMemo hook
+import { useMemo } from 'react';

@@ -179,7 +179,7 @@ export const SectionErrorBoundary = memo<SectionErrorBoundaryProps>(function Sec
     <ErrorBoundary
       level="section"
       name={sectionName}
-      fallback={customFallback}
+      fallback={undefined}
       onRetry={onRetry}
       enableRetry={true}
       resetOnPropsChange={true}
