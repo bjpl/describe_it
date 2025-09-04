@@ -33,7 +33,10 @@ export const useReviewSession = (sessionId?: number, maxCards?: number) => {
 export const useProcessReviewResponse = () => {
   return {
     processResponse: () => {},
-    mutateAsync: async () => {},
+    mutateAsync: async (params: any) => {
+      // Accept params: phrase_id, response_quality, response_time_seconds
+      return {};
+    },
     isProcessing: false,
     error: null
   };
