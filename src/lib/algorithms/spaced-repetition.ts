@@ -98,5 +98,11 @@ export const SpacedRepetitionUtils = {
   getDifficultyDescription: (difficulty: any): string => {
     if (!difficulty) return "Easy";
     return difficulty.toString();
+  },
+
+  getNextReviewDescription: (nextReviewDate: any): string => {
+    if (!nextReviewDate) return "Soon";
+    const date = new Date(nextReviewDate);
+    return date.toLocaleDateString();
   }
 };

@@ -21,7 +21,8 @@ export const useReviewSession = (sessionId?: number, maxCards?: number) => {
       cards_due: [{
         phrase_id: "sample_phrase_id",
         easiness_factor: 2.5,
-        successStreak: 0
+        successStreak: 0,
+        next_review_date: new Date().toISOString()
       }]
     },
     session: null,
