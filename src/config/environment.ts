@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { devLog, devWarn, devError } from '@/lib/logger';
 
 // Environment variable schema with optional values for demo mode
 const envSchema = z.object({
@@ -165,10 +166,10 @@ export const validateRequiredEnvVars = (requiredVars: (keyof Environment)[]) => 
     const message = `Missing required environment variables: ${missing.join(', ')}`;
     
     if (isDemo) {
-      console.warn(`${message} - Running in demo mode`);
+      devWarn(`${message} - Running in demo mode`);
       return { valid: false, missing, demo: true };
     } else {
-      console.error(message);
+      devError(message);
       return { valid: false, missing, demo: false };
     }
   }

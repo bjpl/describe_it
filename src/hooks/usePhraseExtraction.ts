@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { ExtractedPhrase, PhraseExtractionRequest } from '@/types';
+import { logger, devWarn } from '@/lib/logger';
 
 // Enhanced error types for better error handling
 interface PhraseError {
@@ -131,20 +132,21 @@ export function usePhraseExtraction(imageId: string) {
       
       clearTimeout(timeoutId);
       
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          // If we can't parse error response, create generic error
-        }
-        
-        const error = createPhraseError(null, response);
-        error.message = errorData?.message || error.message;
+      // Parse response body once to avoid "body locked" error
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        const error = createPhraseError(parseError, response);
+        error.message = 'Failed to parse response from phrase extraction service';
         throw error;
       }
       
-      const data = await response.json();
+      if (!response.ok) {
+        const error = createPhraseError(null, response);
+        error.message = data?.message || error.message;
+        throw error;
+      }
       
       // Validate response structure
       if (!Array.isArray(data)) {
@@ -161,7 +163,11 @@ export function usePhraseExtraction(imageId: string) {
       );
       
       if (validPhrases.length !== data.length) {
-        console.warn('Some phrases were filtered out due to invalid format');
+        devWarn('Some phrases were filtered out due to invalid format', {
+          component: 'usePhraseExtraction',
+          totalCount: data.length,
+          validCount: validPhrases.length
+        });
       }
       
       return validPhrases;
@@ -226,7 +232,12 @@ export function usePhraseExtraction(imageId: string) {
       setPhrases(prev => [...prev, ...newPhrases]);
       return newPhrases;
     } catch (err) {
-      console.error('Phrase extraction failed:', err);
+      logger.error('Phrase extraction failed', err instanceof Error ? err : new Error(String(err)), {
+        component: 'usePhraseExtraction',
+        imageId: request.imageId,
+        level: request.level,
+        function: 'extractPhrases'
+      });
       
       const phraseError = createPhraseError(err);
       setError(phraseError.message);

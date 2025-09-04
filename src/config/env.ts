@@ -1,4 +1,5 @@
 import { z } from 'zod';
+// Structured logging import removed for production build optimization
 
 // =============================================================================
 // Environment Variable Schema & Validation
@@ -585,31 +586,31 @@ export function validateOnStartup(): void {
   const result = loadEnvironment();
   
   if (!result.success) {
-    console.error('❌ Environment validation failed:');
+    devError('❌ Environment validation failed:');
     result.errors?.forEach(error => {
-      console.error(`  • ${error.field}: ${error.message}`);
+      devError(`  • ${error.field}: ${error.message}`);
     });
     
     if (result.errors?.some(e => e.required)) {
-      console.error('\n🚫 Required environment variables are missing. Application cannot start.');
+      devError('\n🚫 Required environment variables are missing. Application cannot start.');
       process.exit(1);
     } else {
-      console.warn('\n⚠️  Non-critical environment variables are missing. Continuing in demo mode.');
+      devWarn('\n⚠️  Non-critical environment variables are missing. Continuing in demo mode.');
     }
   }
   
   if (result.warnings && result.warnings.length > 0) {
-    console.warn('\n⚠️  Environment warnings:');
+    devWarn('\n⚠️  Environment warnings:');
     result.warnings.forEach(warning => {
-      console.warn(`  • ${warning}`);
+      devWarn(`  • ${warning}`);
     });
   }
   
   if (result.success && result.data) {
     const demoMode = isDemoMode();
-    console.log(`✅ Environment validated successfully (${result.data.NODE_ENV})`);
+    devLog(`✅ Environment validated successfully (${result.data.NODE_ENV})`);
     if (demoMode) {
-      console.log('🎭 Running in demo mode - some features will use mock data');
+      devLog('🎭 Running in demo mode - some features will use mock data');
     }
   }
 }

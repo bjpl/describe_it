@@ -1,4 +1,5 @@
 // React Hook for Session Logging Integration
+'use client';
 import { useEffect, useCallback, useRef } from 'react';
 import { SessionLogger, getSessionLogger } from '@/lib/logging/sessionLogger';
 import { SessionReportGenerator } from '@/lib/logging/sessionReportGenerator';
@@ -60,8 +61,11 @@ export function useSessionLogger(options: UseSessionLoggerOptions = {}): UseSess
   const reportGeneratorRef = useRef<SessionReportGenerator | null>(null);
   const persistenceRef = useRef<SessionPersistence | null>(null);
   
-  // Initialize session logger
+  // Initialize session logger (client-side only)
   useEffect(() => {
+    // Only initialize on client-side
+    if (typeof window === 'undefined') return;
+    
     if (!sessionLoggerRef.current && autoStart) {
       const loggerSettings: Partial<SessionLoggerSettings> = {
         persistToStorage,
@@ -87,8 +91,9 @@ export function useSessionLogger(options: UseSessionLoggerOptions = {}): UseSess
     }
   }, [autoStart, persistToStorage, settings]);
 
-  // Page visibility tracking
+  // Page visibility tracking (client-side only)
   useEffect(() => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') return;
     if (!sessionLoggerRef.current) return;
 
     const handleVisibilityChange = () => {
@@ -166,7 +171,7 @@ export function useSessionLogger(options: UseSessionLoggerOptions = {}): UseSess
     sessionLoggerRef.current?.logError(message, stack, code);
   }, []);
 
-  const logSettingsChange = useCallback((settingName: string, oldValue: any, newValue: any) => {
+  const logSettingsChange = useCallback((settingName: string, oldValue: unknown, newValue: unknown) => {
     sessionLoggerRef.current?.logSettingsChange(settingName, oldValue, newValue);
   }, []);
 
@@ -233,7 +238,11 @@ export function useSessionLogger(options: UseSessionLoggerOptions = {}): UseSess
     
     // Log settings change
     Object.keys(newSettings).forEach(key => {
-      logSettingsChange(key, currentSettings[key as keyof SessionLoggerSettings], newSettings[key as keyof SessionLoggerSettings]);
+      logSettingsChange(
+        key, 
+        currentSettings[key as keyof SessionLoggerSettings], 
+        newSettings[key as keyof SessionLoggerSettings]
+      );
     });
     
     // Recreate session logger with new settings
@@ -314,9 +323,11 @@ export function useSearchLogging() {
       
       logSearch(query, resultCount, duration);
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorStack = error instanceof Error ? error.stack : undefined;
       const duration = Date.now() - startTime;
-      logError(error.message, error.stack, 'search_error');
+      logError(errorMessage, errorStack, 'search_error');
       logSearch(query, 0, duration);
       throw error;
     }

@@ -24,14 +24,73 @@ import {
   validateExportData
 } from '../lib/export';
 
+interface VocabularyExportItem {
+  phrase: string;
+  translation: string;
+  definition: string;
+  partOfSpeech: string;
+  difficulty: string;
+  category: string;
+  context: string;
+  dateAdded: string;
+  lastReviewed: string | null;
+  reviewCount: number;
+  confidence: number;
+}
+
+interface DescriptionExportItem {
+  id: string;
+  imageId: string;
+  imageUrl: string;
+  style: string;
+  content: string;
+  wordCount: number;
+  language: string;
+  createdAt: string;
+  generationTime: number | null;
+}
+
+interface QAExportItem {
+  id: string;
+  imageId: string;
+  imageUrl: string;
+  question: string;
+  answer: string;
+  category: string;
+  difficulty: string;
+  confidence: number;
+  createdAt: string;
+  responseTime: number | null;
+  correct: boolean;
+  userAnswer: string;
+}
+
+interface SessionExportItem {
+  timestamp: string;
+  sessionId: string;
+  activityType: string;
+  content: string;
+  details: string;
+  duration: number | null;
+}
+
+interface ImageExportItem {
+  id: string;
+  url: string;
+  alt: string;
+  width: number;
+  height: number;
+  photographer: string;
+}
+
 interface ExportModalProps {
   isOpen: boolean;
   onClose: () => void;
-  vocabulary?: any[];
-  descriptions?: any[];
-  qa?: any[];
-  sessions?: any[];
-  images?: any[];
+  vocabulary?: VocabularyExportItem[];
+  descriptions?: DescriptionExportItem[];
+  qa?: QAExportItem[];
+  sessions?: SessionExportItem[];
+  images?: ImageExportItem[];
 }
 
 interface ExportProgress {
@@ -73,23 +132,30 @@ export default function ExportModal({
   // Initialize export manager
   useEffect(() => {
     if (isOpen) {
+      interface FilterOptions {
+        dateRange?: {
+          start: Date;
+          end: Date;
+        };
+      }
+      
       const dataSources = {
-        getVocabulary: async (filters?: any) => vocabulary.filter(item => 
+        getVocabulary: async (filters?: FilterOptions) => vocabulary.filter(item => 
           !filters?.dateRange || 
           (new Date(item.dateAdded) >= filters.dateRange.start && 
            new Date(item.dateAdded) <= filters.dateRange.end)
         ),
-        getDescriptions: async (filters?: any) => descriptions.filter(item =>
+        getDescriptions: async (filters?: FilterOptions) => descriptions.filter(item =>
           !filters?.dateRange ||
           (new Date(item.createdAt) >= filters.dateRange.start &&
            new Date(item.createdAt) <= filters.dateRange.end)
         ),
-        getQA: async (filters?: any) => qa.filter(item =>
+        getQA: async (filters?: FilterOptions) => qa.filter(item =>
           !filters?.dateRange ||
           (new Date(item.createdAt) >= filters.dateRange.start &&
            new Date(item.createdAt) <= filters.dateRange.end)
         ),
-        getSessions: async (filters?: any) => sessions.filter(item =>
+        getSessions: async (filters?: FilterOptions) => sessions.filter(item =>
           !filters?.dateRange ||
           (new Date(item.timestamp) >= filters.dateRange.start &&
            new Date(item.timestamp) <= filters.dateRange.end)

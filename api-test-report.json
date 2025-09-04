@@ -1,0 +1,118 @@
+{
+  "timestamp": "2025-09-01T08:18:48.483Z",
+  "summary": {
+    "unsplash_working": true,
+    "openai_working": true,
+    "demo_mode_needed": false,
+    "issues_count": 0
+  },
+  "details": {
+    "unsplash": {
+      "configured": true,
+      "working": true,
+      "error": null,
+      "sampleData": {
+        "total": 10000,
+        "total_pages": 3334,
+        "results_count": 3,
+        "first_image": {
+          "id": "ibikgDapcp4",
+          "description": null,
+          "alt_description": "brown and green mountains under blue sky during daytime",
+          "urls": {
+            "small": "https://images.unsplash.com/photo-1604223190546-a43e4c7f29d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3MDkwNzh8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMGxhbmRzY2FwZXxlbnwwfHx8fDE3NTY3MTQ2MDN8MA&ixlib=rb-4.1.0&q=80&w=400",
+            "regular": "https://images.unsplash.com/photo-1604223190546-a43e4c7f29d7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3MDkwNzh8MHwxfHNlYXJjaHwxfHxtb3VudGFpbiUyMGxhbmRzY2FwZXxlbnwwfHx8fDE3NTY3MTQ2MDN8MA&ixlib=rb-4.1.0&q=80&w=1080"
+          },
+          "user": "Sven Pieren"
+        }
+      },
+      "apiLimitRemaining": "49"
+    },
+    "openai": {
+      "configured": true,
+      "working": true,
+      "error": null,
+      "descriptions": {
+        "narrativo": {
+          "text": "El amanecer pinta el cielo de suaves tonos rosados y anaranjados mientras las majestuosas montañas se alzan imponentes, sus cumbres nevadas brillando bajo la primera luz del día. Un mar de nubes se extiende abajo, envolviendo el valle en un manto etéreo, creando un paisaje de ensueño que invita a la contemplación y la serenidad.",
+          "wordCount": 55
+        },
+        "poetico": {
+          "text": "Nubes susurran sueños en un mar blanco, mientras el sol pinta montañas de oro y carmín. Altas cumbres se alzan, guardianas del cielo, con sus picos nevados tocando el amanecer. Un horizonte sereno, donde la luz danza, invita al alma a perderse en su eterno abrazo.",
+          "wordCount": 46
+        },
+        "academico": {
+          "text": "La imagen presenta un paisaje montañoso al amanecer, donde se observa una cadena de montañas parcialmente cubiertas de nieve. El valle está cubierto por un mar de nubes bajas, creando un contraste visual con las cumbres iluminadas por la luz cálida del amanecer. El cielo muestra tonalidades de azul y naranja, indicando el inicio del día.",
+          "wordCount": 56
+        },
+        "conversacional": {
+          "text": "¡Vaya paisaje espectacular! Aquí vemos una impresionante cadena montañosa al amanecer, con picos nevados que se alzan majestuosamente sobre un mar de nubes. El cielo está teñido de suaves tonos rosados y anaranjados, creando una atmósfera mágica y serena. Es una verdadera obra maestra de la naturaleza.",
+          "wordCount": 47
+        },
+        "infantil": {
+          "text": "¡Mira, es un paisaje mágico! Hay montañas altas con nieve en la punta, como si tuvieran gorros blancos. Abajo, las nubes parecen un suave colchón de algodón. El cielo está pintado de colores rosados y naranjas, como si el sol estuviera diciendo \"buenos días\". ¡Qué bonito!",
+          "wordCount": 46
+        }
+      },
+      "qa_generation": {
+        "success": true,
+        "count": 3,
+        "sample": {
+          "question": "¿De qué color es el cielo en la descripción?",
+          "answer": "Azul cristalino",
+          "difficulty": "facil",
+          "category": "Comprensión de lectura"
+        }
+      },
+      "vocabulary_extraction": {
+        "success": true,
+        "categories": [
+          "objetos",
+          "acciones",
+          "lugares",
+          "colores",
+          "emociones",
+          "conceptos"
+        ],
+        "totalWords": 18,
+        "sample": {
+          "objetos": [
+            "montaña",
+            "nieve",
+            "cielo",
+            "sol",
+            "reflejos",
+            "laderas",
+            "árboles",
+            "paisaje"
+          ],
+          "acciones": [
+            "cubierta",
+            "crea",
+            "adornan"
+          ],
+          "lugares": [
+            "zonas más bajas",
+            "paisaje alpino"
+          ],
+          "colores": [
+            "azul",
+            "dorados",
+            "verdes"
+          ],
+          "emociones": [
+            "hermosa"
+          ],
+          "conceptos": [
+            "luz"
+          ]
+        }
+      }
+    }
+  },
+  "issues": [],
+  "recommendations": [
+    "All systems operational",
+    "Continue with full API integration"
+  ]
+}

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { descriptionCache } from '@/lib/cache/tiered-cache';
+import { descriptionCache } from '@/lib/cache';
 
 // Input validation schemas
 const userSettingsSchema = z.object({
@@ -184,7 +184,7 @@ class SettingsService {
 
     // Save settings
     const settingsKey = `${this.userPrefix(userId)}:config`;
-    await descriptionsCache.set(settingsKey, settingsData, {
+    await descriptionCache.set(settingsKey, settingsData, {
       kvTTL: 86400 * 365, // 1 year
       memoryTTL: 7200,    // 2 hours
       sessionTTL: 3600    // 1 hour
@@ -192,7 +192,7 @@ class SettingsService {
 
     // Save settings backup (for recovery)
     const backupKey = `${this.userPrefix(userId)}:backup:${Date.now()}`;
-    await descriptionsCache.set(backupKey, settingsData, {
+    await descriptionCache.set(backupKey, settingsData, {
       kvTTL: 86400 * 30,  // 30 days
       memoryTTL: 0,       // Don't cache in memory
       sessionTTL: 0       // Don't cache in session
@@ -208,7 +208,7 @@ class SettingsService {
     const settingsKey = `${this.userPrefix(userId)}:config`;
     
     try {
-      const settings = await descriptionsCache.get(settingsKey);
+      const settings = await descriptionCache.get(settingsKey);
       
       if (!settings) {
         if (includeDefaults) {
@@ -280,7 +280,7 @@ class SettingsService {
         }
       };
 
-      await descriptionsCache.set(profileKey, summary, {
+      await descriptionCache.set(profileKey, summary, {
         kvTTL: 86400 * 365, // 1 year
         memoryTTL: 7200,    // 2 hours
         sessionTTL: 3600    // 1 hour

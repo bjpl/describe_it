@@ -1,3 +1,7 @@
+---
+name: consensus-readme
+---
+
 # Distributed Consensus Builder Agents
 
 ## Overview

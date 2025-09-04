@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { Description, DescriptionRequest } from '@/types';
+import { logger } from '@/lib/logger';
 
 // Enhanced error types for better error handling
 interface DescriptionError {
@@ -131,20 +132,21 @@ export function useDescriptions(imageId: string) {
       
       clearTimeout(timeoutId);
       
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          // If we can't parse error response, create generic error
-        }
-        
-        const error = createDescriptionError(null, response);
-        error.message = errorData?.message || error.message;
+      // Parse response body once to avoid "body locked" error
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        const error = createDescriptionError(parseError, response);
+        error.message = 'Failed to parse response from description service';
         throw error;
       }
       
-      const data = await response.json();
+      if (!response.ok) {
+        const error = createDescriptionError(null, response);
+        error.message = data?.message || error.message;
+        throw error;
+      }
       
       // Validate response structure
       if (!data || typeof data !== 'object' || !data.id || !data.content) {
@@ -201,7 +203,12 @@ export function useDescriptions(imageId: string) {
       setDescriptions(prev => [...prev, newDescription]);
       return newDescription;
     } catch (err) {
-      console.error('Description generation failed:', err);
+      logger.error('Description generation failed', err instanceof Error ? err : new Error(String(err)), {
+        component: 'useDescriptions',
+        imageId: request.imageId,
+        style: request.style,
+        function: 'generateDescription'
+      });
       
       const descriptionError = createDescriptionError(err);
       setError(descriptionError.message);

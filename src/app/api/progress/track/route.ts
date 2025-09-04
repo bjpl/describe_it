@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { descriptionCache } from '@/lib/cache/tiered-cache';
+import { descriptionCache } from '@/lib/cache';
 
 // Input validation schemas
 const progressEventSchema = z.object({
@@ -84,7 +84,7 @@ class ProgressTracker {
 
     // Store individual event
     const eventKey = `${this.userPrefix(userId)}:events:${eventId}`;
-    await descriptionsCache.set(eventKey, progressEvent, {
+    await descriptionCache.set(eventKey, progressEvent, {
       kvTTL: 86400 * 90, // 90 days
       memoryTTL: 3600,   // 1 hour
       sessionTTL: 1800   // 30 minutes
@@ -111,7 +111,7 @@ class ProgressTracker {
     const progressKey = `${this.userPrefix(userId)}:summary`;
     
     try {
-      const progress = await descriptionsCache.get(progressKey) || {
+      const progress = await descriptionCache.get(progressKey) || {
         userId,
         totalEvents: 0,
         firstActivity: timestamp,
@@ -167,7 +167,7 @@ class ProgressTracker {
       // Check for achievements
       this.checkAchievements(progress, eventType, eventData);
 
-      await descriptionsCache.set(progressKey, progress, {
+      await descriptionCache.set(progressKey, progress, {
         kvTTL: 86400 * 90, // 90 days
         memoryTTL: 3600,   // 1 hour
         sessionTTL: 1800   // 30 minutes
@@ -182,7 +182,7 @@ class ProgressTracker {
     const sessionKey = `${this.sessionPrefix(sessionId)}:progress`;
     
     try {
-      const session = await descriptionsCache.get(sessionKey) || {
+      const session = await descriptionCache.get(sessionKey) || {
         sessionId,
         startTime: timestamp,
         lastActivity: timestamp,
@@ -230,7 +230,7 @@ class ProgressTracker {
         session.stats.completionRate = session.stats.correctAnswers / totalAnswers;
       }
 
-      await descriptionsCache.set(sessionKey, session, {
+      await descriptionCache.set(sessionKey, session, {
         kvTTL: 86400 * 7,  // 7 days
         memoryTTL: 3600,   // 1 hour
         sessionTTL: 7200   // 2 hours
@@ -246,7 +246,7 @@ class ProgressTracker {
     const dailyKey = `${this.userPrefix(userId)}:daily:${dateKey}`;
     
     try {
-      const daily = await descriptionsCache.get(dailyKey) || {
+      const daily = await descriptionCache.get(dailyKey) || {
         userId,
         date: dateKey,
         events: {},
@@ -275,7 +275,7 @@ class ProgressTracker {
         daily.difficulties[eventData.difficulty]++;
       }
 
-      await descriptionsCache.set(dailyKey, daily, {
+      await descriptionCache.set(dailyKey, daily, {
         kvTTL: 86400 * 90, // 90 days
         memoryTTL: 3600,   // 1 hour
         sessionTTL: 1800   // 30 minutes
@@ -290,7 +290,7 @@ class ProgressTracker {
     const goalsKey = `${this.userPrefix(userId)}:goals`;
     
     try {
-      const goals = await descriptionsCache.get(goalsKey) || { active: [], completed: [] };
+      const goals = await descriptionCache.get(goalsKey) || { active: [], completed: [] };
       
       for (const goal of goals.active) {
         let increment = 0;
@@ -323,7 +323,7 @@ class ProgressTracker {
         }
       }
       
-      await descriptionsCache.set(goalsKey, goals, {
+      await descriptionCache.set(goalsKey, goals, {
         kvTTL: 86400 * 90, // 90 days
         memoryTTL: 3600,   // 1 hour
         sessionTTL: 1800   // 30 minutes
@@ -365,7 +365,7 @@ class ProgressTracker {
 
   async getProgress(userId: string, filters: any = {}) {
     const progressKey = `${this.userPrefix(userId)}:summary`;
-    const progress = await descriptionsCache.get(progressKey) || {};
+    const progress = await descriptionCache.get(progressKey) || {};
     
     if (filters.aggregation) {
       const aggregatedData = await this.getAggregatedProgress(userId, filters);
@@ -387,7 +387,7 @@ class ProgressTracker {
       for (let date = startDate; date <= endDate; date.setDate(date.getDate() + 1)) {
         const dateKey = date.toISOString().split('T')[0];
         const dailyKey = `${this.userPrefix(userId)}:daily:${dateKey}`;
-        const daily = await descriptionsCache.get(dailyKey);
+        const daily = await descriptionCache.get(dailyKey);
         
         if (daily) {
           data.push(daily);

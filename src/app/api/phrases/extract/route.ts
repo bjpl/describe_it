@@ -1,11 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
+import { PhraseExtractor } from '@/lib/services/phraseExtractor';
 
 // Input validation schema
 const phraseExtractionSchema = z.object({
   imageUrl: z.string().url('Invalid image URL'),
+  descriptionText: z.string().min(10, 'Description must be at least 10 characters'),
+  style: z.enum(['narrativo', 'poetico', 'academico', 'conversacional', 'infantil']).optional().default('conversacional'),
   targetLevel: z.enum(['beginner', 'intermediate', 'advanced']).optional().default('intermediate'),
-  maxPhrases: z.coerce.number().int().min(1).max(20).optional().default(10),
+  maxPhrases: z.coerce.number().int().min(1).max(25).optional().default(15),
+  categories: z.array(z.enum(['sustantivos', 'verbos', 'adjetivos', 'adverbios', 'frasesClaves'])).optional()
 });
 
 export const runtime = 'nodejs';
@@ -137,18 +141,54 @@ export async function POST(request: NextRequest) {
   
   try {
     const body = await request.json();
-    const { imageUrl, targetLevel, maxPhrases } = phraseExtractionSchema.parse(body);
+    const { imageUrl, descriptionText, style, targetLevel, maxPhrases, categories } = phraseExtractionSchema.parse(body);
     
-    // Extract phrases
-    const phrases = await extractPhrases(imageUrl, targetLevel, maxPhrases);
+    // Extract categorized phrases using new service
+    const categorizedPhrases = await PhraseExtractor.extractCategorizedPhrases({
+      description: descriptionText,
+      imageUrl,
+      targetLevel,
+      maxPhrases,
+      categories
+    });
+    
+    // Flatten for backwards compatibility with existing PhrasesPanel
+    const flattenedPhrases = Object.values(categorizedPhrases).flat().map(phrase => ({
+      id: phrase.id,
+      phrase: phrase.phrase,
+      definition: phrase.definition,
+      partOfSpeech: phrase.partOfSpeech,
+      difficulty: phrase.difficulty,
+      context: phrase.context,
+      category: phrase.category,
+      gender: phrase.gender,
+      article: phrase.article,
+      conjugation: phrase.conjugation,
+      createdAt: phrase.createdAt
+    }));
     
     const responseTime = performance.now() - startTime;
     
-    return NextResponse.json(phrases, {
+    return NextResponse.json({
+      phrases: flattenedPhrases,
+      categorizedPhrases,
+      metadata: {
+        extractionMethod: 'enhanced_categorized',
+        totalPhrases: flattenedPhrases.length,
+        categoryCounts: Object.entries(categorizedPhrases).reduce((acc, [category, phrases]) => {
+          acc[category] = phrases.length;
+          return acc;
+        }, {} as Record<string, number>),
+        targetLevel,
+        style,
+        responseTime: `${responseTime}ms`
+      }
+    }, {
       headers: {
         'Cache-Control': 'private, no-cache',
         'X-Response-Time': `${responseTime}ms`,
-        'X-Phrases-Count': phrases.length.toString()
+        'X-Phrases-Count': flattenedPhrases.length.toString(),
+        'X-Categories': Object.keys(categorizedPhrases).join(',')
       }
     });
     

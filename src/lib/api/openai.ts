@@ -8,15 +8,15 @@ import {
 import { vercelKvCache } from './vercel-kv';
 
 class OpenAIService {
-  private client: OpenAI;
+  private client: OpenAI | null;
   private retryConfig: RetryConfig;
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
     
     if (!apiKey) {
-      console.warn('OPENAI_API_KEY not configured. Using demo mode.');
-      this.client = null as any; // Will use demo mode
+      // OPENAI_API_KEY not configured - demo mode enabled (structured logging)
+      this.client = null; // Will use demo mode
       this.initializeDemoMode();
       return;
     }
@@ -42,6 +42,81 @@ class OpenAIService {
    */
   private initializeDemoMode(): void {
     // Demo mode initialized - will use demo responses
+  }
+
+  /**
+   * Generate demo Q&A when API key is not available
+   */
+  private generateDemoQA(description: string, language: string = 'es', count: number = 5): QAGeneration[] {
+    const demoQA = {
+      es: [
+        {
+          question: "¿Qué elementos principales puedes identificar en esta imagen?",
+          answer: "En esta imagen se pueden identificar varios elementos visuales clave que incluyen colores, formas, texturas y composición general.",
+          difficulty: "facil" as const,
+          category: "Observación"
+        },
+        {
+          question: "¿Cómo describirías la atmósfera o el ambiente de esta escena?",
+          answer: "La atmósfera de la imagen transmite una sensación específica a través de la iluminación, los colores y la composición visual.",
+          difficulty: "medio" as const,
+          category: "Interpretación"
+        },
+        {
+          question: "¿Qué técnicas fotográficas o artísticas observas en esta imagen?",
+          answer: "Se pueden apreciar diversas técnicas como el uso de la luz, la profundidad de campo, la composición y el balance visual.",
+          difficulty: "dificil" as const,
+          category: "Técnica"
+        },
+        {
+          question: "¿Qué emociones o sensaciones te transmite esta imagen?",
+          answer: "La imagen puede evocar diferentes emociones dependiendo de los elementos visuales, colores y la narrativa visual presente.",
+          difficulty: "medio" as const,
+          category: "Emocional"
+        },
+        {
+          question: "¿Cuál crees que es el mensaje o propósito de esta imagen?",
+          answer: "El propósito puede ser artístico, narrativo, documental o expresivo, dependiendo del contexto y la intención del autor.",
+          difficulty: "dificil" as const,
+          category: "Análisis"
+        }
+      ],
+      en: [
+        {
+          question: "What main elements can you identify in this image?",
+          answer: "In this image, several key visual elements can be identified including colors, shapes, textures, and overall composition.",
+          difficulty: "facil" as const,
+          category: "Observation"
+        },
+        {
+          question: "How would you describe the atmosphere or mood of this scene?",
+          answer: "The atmosphere of the image conveys a specific feeling through lighting, colors, and visual composition.",
+          difficulty: "medio" as const,
+          category: "Interpretation"
+        },
+        {
+          question: "What photographic or artistic techniques do you observe in this image?",
+          answer: "Various techniques can be appreciated such as use of light, depth of field, composition, and visual balance.",
+          difficulty: "dificil" as const,
+          category: "Technique"
+        },
+        {
+          question: "What emotions or sensations does this image convey to you?",
+          answer: "The image can evoke different emotions depending on the visual elements, colors, and visual narrative present.",
+          difficulty: "medio" as const,
+          category: "Emotional"
+        },
+        {
+          question: "What do you think is the message or purpose of this image?",
+          answer: "The purpose could be artistic, narrative, documentary, or expressive, depending on context and author's intention.",
+          difficulty: "dificil" as const,
+          category: "Analysis"
+        }
+      ]
+    };
+
+    const langQA = demoQA[language as keyof typeof demoQA] || demoQA.es;
+    return langQA.slice(0, count);
   }
 
   /**
@@ -81,7 +156,7 @@ class OpenAIService {
    * Check if running in demo mode
    */
   private isDemoMode(): boolean {
-    return !this.client || this.client === null;
+    return this.client === null;
   }
 
   /**
@@ -120,34 +195,53 @@ class OpenAIService {
   }
 
   private transformError(error: any): APIError {
-    if (error instanceof APIError) {
+    // Handle null/undefined errors
+    if (!error) {
+      return new APIError({
+        code: 'UNKNOWN_ERROR',
+        message: 'Unknown error occurred',
+        status: 500,
+        details: null,
+      });
+    }
+
+    // Check if already an APIError instance
+    if (error && typeof error === 'object' && error.constructor && error.constructor.name === 'APIError') {
       return error;
     }
 
     let code = 'OPENAI_ERROR';
-    let message = error.message || 'Unknown OpenAI error';
+    let message = 'Unknown OpenAI error';
     let status = 500;
 
-    if (error.status) {
-      status = error.status;
+    // Safely extract message
+    if (typeof error === 'string') {
+      message = error;
+    } else if (error && typeof error === 'object') {
+      message = error.message || error.error?.message || message;
       
-      switch (status) {
-        case 400:
-          code = 'BAD_REQUEST';
-          message = 'Invalid request parameters';
-          break;
-        case 401:
-          code = 'UNAUTHORIZED';
-          message = 'Invalid API key';
-          break;
-        case 429:
-          code = 'RATE_LIMIT_EXCEEDED';
-          message = 'Rate limit exceeded';
-          break;
-        case 500:
-          code = 'SERVER_ERROR';
-          message = 'OpenAI server error';
-          break;
+      // Handle status codes
+      if (typeof error.status === 'number') {
+        status = error.status;
+        
+        switch (status) {
+          case 400:
+            code = 'BAD_REQUEST';
+            message = 'Invalid request parameters';
+            break;
+          case 401:
+            code = 'UNAUTHORIZED';
+            message = 'Invalid API key';
+            break;
+          case 429:
+            code = 'RATE_LIMIT_EXCEEDED';
+            message = 'Rate limit exceeded';
+            break;
+          case 500:
+            code = 'SERVER_ERROR';
+            message = 'OpenAI server error';
+            break;
+        }
       }
     }
 
@@ -155,7 +249,7 @@ class OpenAIService {
       code,
       message,
       status,
-      details: error.error || error,
+      details: error && typeof error === 'object' ? (error.error || error) : error,
     });
   }
 
@@ -248,7 +342,7 @@ class OpenAIService {
 
       const response = await this.withRetry(async () => {
         return await this.client.chat.completions.create({
-          model: 'gpt-4-vision-preview',
+          model: 'gpt-4o',
           messages: [
             {
               role: 'system',
@@ -296,7 +390,7 @@ class OpenAIService {
 
     } catch (error) {
       // Fallback to demo mode on error
-      console.warn('OpenAI API error, falling back to demo mode:', error);
+      // OpenAI API error, falling back to demo mode (structured logging)
       return this.generateDemoDescription(style, imageUrl, language);
     }
   }
@@ -305,6 +399,10 @@ class OpenAIService {
    * Generate Q&A pairs from a description
    */
   async generateQA(description: string, language: string = 'es', count: number = 5): Promise<QAGeneration[]> {
+    // Return demo Q&A if in demo mode
+    if (this.isDemoMode()) {
+      return this.generateDemoQA(description, language, count);
+    }
     const cacheKey = `openai:qa:${Buffer.from(description).toString('base64').slice(0, 32)}:${language}:${count}`;
 
     try {
@@ -378,12 +476,7 @@ class OpenAIService {
         
         return qaData;
       } catch (parseError) {
-        throw new Error({
-          code: 'PARSE_ERROR',
-          message: 'Failed to parse Q&A response',
-          status: 500,
-          details: { content, parseError }
-        });
+        throw new APIError('Failed to parse Q&A response', 'PARSE_ERROR', 500, { content, parseError });
       }
 
     } catch (error) {
@@ -484,12 +577,7 @@ class OpenAIService {
         
         return result;
       } catch (parseError) {
-        throw new Error({
-          code: 'PARSE_ERROR',
-          message: 'Failed to parse phrases response',
-          status: 500,
-          details: { content, parseError }
-        });
+        throw new APIError('Failed to parse phrases response', 'PARSE_ERROR', 500, { content, parseError });
       }
 
     } catch (error) {

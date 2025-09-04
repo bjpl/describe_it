@@ -1,5 +1,6 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { useAppStore } from '../lib/store/appStore';
+import { logger } from '@/lib/logger';
 
 interface Props {
   children: ReactNode;
@@ -32,7 +33,11 @@ class ErrorBoundaryClass extends Component<Props, State> {
   }
   
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    logger.error('ErrorBoundary caught an error', error, { 
+      component: 'ErrorBoundary',
+      componentStack: errorInfo.componentStack,
+      errorBoundary: true
+    });
     
     this.setState({
       error,
@@ -173,8 +178,11 @@ export const useErrorHandler = () => {
     const errorMessage = typeof error === 'string' ? error : error.message;
     setError(errorMessage);
     
-    // Log to console for debugging
-    console.error('Manual error report:', error);
+    // Log using centralized logger
+    logger.error('Manual error report', error instanceof Error ? error : new Error(String(error)), { 
+      component: 'ErrorBoundary',
+      manual: true 
+    });
     
     // Here you could also send to an error reporting service
     // e.g., Sentry, LogRocket, etc.

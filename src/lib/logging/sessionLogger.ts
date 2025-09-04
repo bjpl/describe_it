@@ -78,7 +78,7 @@ export class SessionLogger {
     
     // Log session start
     this.logInteraction('session_started', {
-      userAgent: this.settings.trackUserAgent ? navigator?.userAgent : undefined,
+      userAgent: this.settings.trackUserAgent && typeof navigator !== 'undefined' ? navigator.userAgent : undefined,
       url: typeof window !== 'undefined' ? window.location.href : undefined
     });
 
@@ -450,6 +450,8 @@ export class SessionLogger {
   }
 
   private saveToStorage(): void {
+    if (typeof localStorage === 'undefined') return;
+    
     try {
       const storage: SessionStorage = {
         currentSession: this.sessionMetadata,
@@ -464,6 +466,8 @@ export class SessionLogger {
   }
 
   private loadFromStorage(): void {
+    if (typeof localStorage === 'undefined') return;
+    
     try {
       const stored = localStorage.getItem(`session_${this.sessionId}`);
       if (stored) {
@@ -521,7 +525,7 @@ export class SessionLogger {
     this.lastActivity = Date.now();
     this.sessionMetadata.lastActivity = this.lastActivity;
     
-    if (this.settings.persistToStorage) {
+    if (this.settings.persistToStorage && typeof localStorage !== 'undefined') {
       localStorage.removeItem(`session_${this.sessionId}`);
     }
   }
@@ -608,10 +612,34 @@ Generated on: ${new Date(report.generatedAt).toLocaleString()}
   }
 }
 
-// Singleton instance for global use
+// Singleton instance for global use (client-side only)
 let globalSessionLogger: SessionLogger | null = null;
 
 export function getSessionLogger(): SessionLogger {
+  // Only create on client-side
+  if (typeof window === 'undefined') {
+    // Return a minimal mock for SSR
+    return {
+      logInteraction: () => {},
+      logSearch: () => {},
+      logImageSelection: () => {},
+      logDescriptionGeneration: () => {},
+      logQAGeneration: () => {},
+      logVocabularySelection: () => {},
+      logPhraseExtraction: () => {},
+      logError: () => {},
+      logSettingsChange: () => {},
+      generateSummary: () => ({} as any),
+      getLearningMetrics: () => ({} as any),
+      getSessionId: () => 'ssr-mock',
+      getInteractions: () => [],
+      getSessionMetadata: () => ({} as any),
+      getSettings: () => ({} as any),
+      clearSession: () => {},
+      exportSession: () => '{}'
+    } as SessionLogger;
+  }
+  
   if (!globalSessionLogger) {
     globalSessionLogger = new SessionLogger();
   }

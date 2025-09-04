@@ -21,6 +21,9 @@ const inter = Inter({
 })
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NODE_ENV === 'production' 
+    ? 'https://describe-it.vercel.app' 
+    : 'http://localhost:3007'),
   title: 'Describe It - Spanish Learning with Images',
   description: 'Learn Spanish through visual descriptions, Q&A, and vocabulary extraction',
   keywords: 'Spanish learning, language learning, visual learning, GPT-4, education, accessibility',

@@ -2,7 +2,8 @@
 
 import { memo, useCallback, useState } from 'react';
 import { Download, Settings, Info, BarChart3 } from 'lucide-react';
-import { exportSession, exportAllData, getCurrentTimestamp, type SessionData, type VocabularyItem, type ResponseItem } from '../lib/export/csvExporter';
+import { exportSession, exportAllData, getCurrentTimestamp, type SessionData, type ResponseItem } from '../lib/export/csvExporter';
+import { VocabularyItem, ImageComponentProps } from '@/types';
 import { SessionReportModal } from './SessionReportModal';
 import ExportModal from './ExportModal';
 
@@ -13,9 +14,9 @@ interface AppHeaderProps {
   onToggleInfo: () => void;
   // Session data for comprehensive export
   sessionData?: {
-    selectedImage?: any;
+    selectedImage?: ImageComponentProps;
     descriptions?: { [key: string]: string };
-    phrases?: any[];
+    phrases?: VocabularyItem[];
     responses?: ResponseItem[];
     searchHistory?: string[];
   };

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { descriptionCache } from '@/lib/cache/tiered-cache';
+import { descriptionCache } from '@/lib/cache';
 
 // Input validation schema
 const exportRequestSchema = z.object({
@@ -101,7 +101,7 @@ class ExportService {
   async getVocabularyContent(userId: string, filters: any) {
     // Get vocabulary from cache (this would typically integrate with the vocabulary API)
     const vocabularyKey = `vocabulary:user:${userId}:index`;
-    const vocabularyIndex = await descriptionsCache.get(vocabularyKey);
+    const vocabularyIndex = await descriptionCache.get(vocabularyKey);
     
     if (!vocabularyIndex?.items) return [];
     
@@ -124,7 +124,7 @@ class ExportService {
   async getPhrasesContent(userId: string, filters: any) {
     // Get phrases from recent sessions or saved phrases
     const phrasesKey = `phrases:user:${userId}:saved`;
-    const phrases = await descriptionsCache.get(phrasesKey) || [];
+    const phrases = await descriptionCache.get(phrasesKey) || [];
     
     let filteredPhrases = phrases;
     
@@ -141,7 +141,7 @@ class ExportService {
   async getQAContent(userId: string, filters: any) {
     // Get Q&A from recent sessions
     const qaKey = `qa:user:${userId}:history`;
-    const qa = await descriptionsCache.get(qaKey) || [];
+    const qa = await descriptionCache.get(qaKey) || [];
     
     return qa;
   }
@@ -149,7 +149,7 @@ class ExportService {
   async getProgressContent(userId: string, filters: any) {
     // Get progress data
     const progressKey = `progress:user:${userId}:summary`;
-    const progress = await descriptionsCache.get(progressKey);
+    const progress = await descriptionCache.get(progressKey);
     
     return progress ? [progress] : [];
   }
@@ -368,7 +368,7 @@ export async function POST(request: NextRequest) {
     const cacheKey = `export:${userId}:${exportType}:${contentType}:${JSON.stringify(filters).substring(0, 50)}`;
     
     // Check cache first
-    let exportResult = await descriptionsCache.get(cacheKey);
+    let exportResult = await descriptionCache.get(cacheKey);
     let fromCache = false;
     
     if (exportResult) {
@@ -380,7 +380,7 @@ export async function POST(request: NextRequest) {
       );
       
       // Cache the export for 1 hour
-      await descriptionsCache.set(cacheKey, exportResult, {
+      await descriptionCache.set(cacheKey, exportResult, {
         kvTTL: 3600,     // 1 hour
         memoryTTL: 1800, // 30 minutes
         sessionTTL: 900  // 15 minutes
@@ -470,7 +470,7 @@ export async function GET(request: NextRequest) {
   try {
     // Get export data from cache
     const exportKey = `export:download:${filename}`;
-    const exportData = await descriptionsCache.get(exportKey);
+    const exportData = await descriptionCache.get(exportKey);
     
     if (!exportData) {
       return NextResponse.json(

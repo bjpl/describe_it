@@ -62,8 +62,8 @@ export interface InteractionData {
   
   // Settings interactions
   settingName?: string;
-  oldValue?: any;
-  newValue?: any;
+  oldValue?: unknown;
+  newValue?: unknown;
   
   // Error data
   errorMessage?: string;

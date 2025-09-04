@@ -1,3 +1,7 @@
+---
+name: load-balancer
+---
+
 # Load Balancing Coordinator Agent
 
 ## Agent Profile

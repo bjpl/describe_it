@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from 'react';
 import { UnsplashImage } from '@/types';
+import { logger, logUserAction, devLog } from '@/lib/logger';
 
 // Enhanced error types for better error handling
 interface SearchError {
@@ -129,6 +130,19 @@ export function useImageSearch() {
       url.searchParams.set('query', query);
       url.searchParams.set('page', page.toString());
       
+      // Add filter parameters if provided
+      if (filters) {
+        if (filters.orientation && filters.orientation !== 'all') {
+          url.searchParams.set('orientation', filters.orientation);
+        }
+        if (filters.category && filters.category !== 'all') {
+          url.searchParams.set('category', filters.category);
+        }
+        if (filters.color && filters.color !== 'all') {
+          url.searchParams.set('color', filters.color);
+        }
+      }
+      
       const response = await fetch(url.toString(), {
         signal: abortControllerRef.current.signal,
         headers: {
@@ -185,7 +199,7 @@ export function useImageSearch() {
     throw lastError;
   };
 
-  const searchImages = useCallback(async (query: string, page: number = 1) => {
+  const searchImages = useCallback(async (query: string, page: number = 1, filters?: any) => {
     if (!query.trim()) {
       setError('Please enter a search query');
       return;
@@ -213,7 +227,12 @@ export function useImageSearch() {
       setLoading({ isLoading: false, message: '' });
       
     } catch (error) {
-      console.error('Image search failed:', error);
+      logger.error('Image search failed', error instanceof Error ? error : new Error(String(error)), {
+        component: 'useImageSearch',
+        query,
+        page,
+        function: 'searchImages'
+      });
       
       const searchError = createSearchError(error);
       
@@ -252,7 +271,11 @@ export function useImageSearch() {
 
   const selectImage = useCallback((image: UnsplashImage) => {
     // This would typically update a global state or trigger a callback
-    console.log('Selected image:', image);
+    logUserAction('Image selected', {
+      imageId: image.id,
+      component: 'useImageSearch'
+    });
+    devLog('Selected image details', image);
   }, []);
 
   // Cleanup function to cancel requests on unmount

@@ -1,8 +1,10 @@
 {
   "mcpServers": {
     "claude-flow": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "claude-flow@alpha",
         "mcp",
         "start"
@@ -10,8 +12,10 @@
       "type": "stdio"
     },
     "ruv-swarm": {
-      "command": "npx",
+      "command": "cmd",
       "args": [
+        "/c",
+        "npx",
         "ruv-swarm@latest",
         "mcp",
         "start"

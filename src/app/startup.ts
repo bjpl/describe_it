@@ -4,6 +4,7 @@
  */
 
 import { performStartupValidation } from '@/lib/startup-validation';
+import { logger } from '@/lib/logger';
 
 /**
  * Initialize the application on startup
@@ -15,7 +16,10 @@ function initializeApp() {
     try {
       performStartupValidation();
     } catch (error) {
-      console.error('Failed to initialize application:', error);
+      logger.error('Failed to initialize application', error instanceof Error ? error : new Error(String(error)), { 
+        component: 'startup',
+        phase: 'initialization'
+      });
       // Don't exit in development for better DX
       if (process.env.NODE_ENV === 'production') {
         process.exit(1);

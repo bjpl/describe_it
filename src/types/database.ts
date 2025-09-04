@@ -1,15 +1,42 @@
-// Database Types and Interfaces
+// ==============================================
+// DATABASE TYPES - COMPREHENSIVE SUPABASE SCHEMA
+// ==============================================
+// Complete type definitions for Spanish learning app
 
+// Core enums matching SQL schema
+export type SpanishLevel = 'beginner' | 'intermediate' | 'advanced';
+export type SessionType = 'description' | 'qa' | 'vocabulary' | 'mixed';
+export type DescriptionStyle = 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil' | 'creativo' | 'tecnico';
+export type PartOfSpeech = 'noun' | 'verb' | 'adjective' | 'adverb' | 'preposition' | 'article' | 'pronoun' | 'conjunction' | 'interjection' | 'other';
+export type DifficultyLevel = 'beginner' | 'intermediate' | 'advanced';
+export type LearningPhase = 'new' | 'learning' | 'review' | 'mastered';
+export type QADifficulty = 'facil' | 'medio' | 'dificil';
+export type VocabularyCategory = 'basic' | 'intermediate' | 'advanced' | 'custom' | 'thematic';
+export type SpanishGender = 'masculino' | 'femenino' | 'neutro';
+export type ThemePreference = 'light' | 'dark' | 'auto';
+export type LanguagePreference = 'en' | 'es';
+export type ExportFormat = 'json' | 'csv' | 'pdf';
+export type QuestionType = 'factual' | 'inferential' | 'analytical' | 'creative' | 'vocabulary' | 'grammar' | 'cultural';
+
+// Users table - Enhanced for Spanish learning
 export interface DatabaseUser {
   id: string;
   email: string;
-  username: string | null;
-  full_name: string | null;
-  avatar_url: string | null;
+  username?: string;
+  full_name?: string;
+  avatar_url?: string;
+  spanish_level: SpanishLevel;
+  is_authenticated: boolean;
+  profile_completed: boolean;
+  theme: ThemePreference;
+  language: LanguagePreference;
+  default_description_style: DescriptionStyle;
+  target_words_per_day: number;
+  preferred_difficulty: DifficultyLevel;
+  enable_notifications: boolean;
   created_at: string;
   updated_at: string;
-  preferences: UserPreferences | null;
-  subscription_tier: 'free' | 'premium' | 'pro';
+  last_login?: string;
 }
 
 export interface UserPreferences {

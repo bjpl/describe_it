@@ -43,12 +43,11 @@ export interface Description {
 }
 
 export type DescriptionStyle = 
-  | 'detailed'
-  | 'simple'
-  | 'creative'
-  | 'technical'
-  | 'educational'
-  | 'artistic';
+  | 'narrativo'
+  | 'poetico'
+  | 'academico'
+  | 'conversacional'
+  | 'infantil';
 
 export interface DescriptionRequest {
   imageUrl: string;
@@ -194,6 +193,111 @@ export interface AppState {
   isFullscreen: boolean;
 }
 
+// Multi-style Description Types
+export interface StyleDescription {
+  style: DescriptionStyle;
+  english: string;
+  spanish: string;
+  isLoading: boolean;
+  error?: string;
+}
+
+export interface LanguageVisibility {
+  showEnglish: boolean;
+  showSpanish: boolean;
+}
+
+export interface MultiStyleDescriptions {
+  [key: string]: StyleDescription; // key is the style name
+}
+
+export interface DescriptionNotebookState {
+  activeStyle: DescriptionStyle;
+  descriptions: MultiStyleDescriptions;
+  languageVisibility: LanguageVisibility;
+  isGenerating: boolean;
+}
+
+// Component Props Types
+export interface ImageComponentProps {
+  id: string;
+  urls: Image['urls'];
+  alt_description: string | null;
+  description: string | null;
+  user: Image['user'];
+  width: number;
+  height: number;
+  color: string;
+  likes?: number;
+  created_at: string;
+}
+
+export interface QAResponse {
+  question: string;
+  user_answer: string;
+  correct_answer: string;
+  timestamp: string;
+  isCorrect?: boolean;
+  explanation?: string;
+}
+
+export interface VocabularyItem {
+  id: string;
+  spanish_text: string;
+  english_translation: string;
+  category: string;
+  difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+  context_sentence_spanish: string;
+  context_sentence_english?: string;
+  part_of_speech: string;
+  usage_examples?: string[];
+  created_at: string;
+}
+
+export interface ExportableData {
+  descriptions?: DescriptionExportItem[];
+  qaResponses?: QAResponse[];
+  vocabulary?: VocabularyItem[];
+  sessionData?: SessionInteractionExport[];
+}
+
+export interface DescriptionExportItem {
+  imageId: string;
+  imageUrl: string;
+  style: DescriptionStyle;
+  english: string;
+  spanish: string;
+  timestamp: string;
+}
+
+export interface SessionInteractionExport {
+  interaction_type: string;
+  component: string;
+  data: string;
+  timestamp: string;
+}
+
+// Settings Types
+export interface UserSettings {
+  theme: 'light' | 'dark' | 'auto';
+  language: 'en' | 'es';
+  autoSave: boolean;
+  notifications: boolean;
+  defaultDescriptionStyle: DescriptionStyle;
+  maxHistoryItems: number;
+  exportFormat: 'json' | 'csv' | 'pdf';
+}
+
+export interface SettingsUpdateRequest {
+  userId: string;
+  settings: Partial<UserSettings>;
+  metadata?: {
+    timestamp: string;
+    source: string;
+    version?: string;
+  };
+}
+
 // Hook Return Types
 export interface UseImageSearchReturn {
   searchState: SearchState;
@@ -244,4 +348,112 @@ export interface UseExportReturn {
   error: string | null;
   exportData: (options: ExportOptions) => Promise<Blob>;
   downloadExport: (blob: Blob, filename: string) => void;
+}
+
+// Enhanced API Response Types
+export interface APIResponse<TData = unknown> {
+  success: boolean;
+  data?: TData;
+  message?: string;
+  error?: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+  };
+  metadata?: {
+    timestamp: string;
+    requestId?: string;
+    version?: string;
+  };
+}
+
+export interface ValidationError {
+  field: string;
+  message: string;
+  code: string;
+}
+
+export interface ValidationResult {
+  valid: boolean;
+  errors: ValidationError[];
+}
+
+// Filter Types for APIs
+export interface VocabularyFilter {
+  category?: string;
+  difficulty?: VocabularyItem['difficulty_level'];
+  searchTerm?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+}
+
+export interface DescriptionFilter {
+  style?: DescriptionStyle;
+  language?: 'en' | 'es';
+  imageId?: string;
+  dateRange?: {
+    start: string;
+    end: string;
+  };
+}
+
+// Bulk Operations Types
+export interface BulkVocabularyRequest {
+  userId: string;
+  vocabularyItems: Omit<VocabularyItem, 'id' | 'created_at'>[];
+  collectionName: string;
+  metadata?: {
+    source: string;
+    importedAt: string;
+    totalItems: number;
+  };
+}
+
+export interface BulkOperationResult<TItem = unknown> {
+  success: boolean;
+  processed: number;
+  failed: number;
+  results: {
+    successful: TItem[];
+    failed: {
+      item: TItem;
+      error: string;
+    }[];
+  };
+}
+
+// Collection Management Types
+export interface VocabularyCollection {
+  id: string;
+  name: string;
+  description?: string;
+  userId: string;
+  itemCount: number;
+  categories: string[];
+  created_at: string;
+  updated_at: string;
+  metadata?: {
+    source?: string;
+    tags?: string[];
+    difficulty_distribution?: Record<string, number>;
+  };
+}
+
+export interface CollectionIndex {
+  collections: {
+    [collectionName: string]: {
+      itemCount: number;
+      lastModified: string;
+      categories: string[];
+    };
+  };
+  items: {
+    id: string;
+    collectionName: string;
+    lastModified: string;
+  }[];
+  totalItems: number;
+  lastUpdated: string;
 }

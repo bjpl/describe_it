@@ -138,11 +138,11 @@ export async function GET(request: NextRequest) {
     
     // Transform results to match expected interface
     const transformedResults = {
-      images: results.results || results.images || [],
-      totalPages: results.total_pages || results.totalPages || 1,
+      images: results.images || [],
+      totalPages: results.totalPages || results.total_pages || 1,
       currentPage: params.page,
       total: results.total || 0,
-      hasNextPage: (params.page < (results.total_pages || results.totalPages || 1))
+      hasNextPage: (params.page < (results.totalPages || results.total_pages || 1))
     };
 
     return NextResponse.json(transformedResults, {

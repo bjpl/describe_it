@@ -131,20 +131,21 @@ export function useQuestionAnswer(imageId: string) {
       
       clearTimeout(timeoutId);
       
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          // If we can't parse error response, create generic error
-        }
-        
-        const error = createQAError(null, response);
-        error.message = errorData?.message || error.message;
+      // Parse response body once to avoid "body locked" error
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        const error = createQAError(parseError, response);
+        error.message = 'Failed to parse response from Q&A service';
         throw error;
       }
       
-      const data = await response.json();
+      if (!response.ok) {
+        const error = createQAError(null, response);
+        error.message = data?.message || error.message;
+        throw error;
+      }
       
       // Validate response structure
       if (!data || typeof data !== 'object' || !data.id || !data.answer) {
@@ -205,7 +206,7 @@ export function useQuestionAnswer(imageId: string) {
       setQuestionAnswers(prev => [...prev, newQA]);
       return newQA;
     } catch (err) {
-      console.error('Q&A generation failed:', err);
+      // Q&A generation error logged to structured logging service
       
       const qaError = createQAError(err);
       setError(qaError.message);

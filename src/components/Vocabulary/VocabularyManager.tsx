@@ -3,7 +3,7 @@
  * Handles vocabulary CRUD operations and spaced repetition
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@radix-ui/react-card';
 import { Button } from '@radix-ui/react-button';
 import { Input } from '@radix-ui/react-input';
@@ -48,6 +48,7 @@ interface VocabularyManagerProps {
   showStats?: boolean;
   allowEdit?: boolean;
   compact?: boolean;
+  onVocabularyUpdate?: (vocabulary: any[]) => void;
 }
 
 export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
@@ -55,6 +56,7 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
   showStats = true,
   allowEdit = true,
   compact = false,
+  onVocabularyUpdate,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -82,6 +84,13 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
   const { data: phrases, isLoading: phrasesLoading } = useUserPhrases(filters);
   const { data: stats, isLoading: statsLoading } = useVocabularyStats();
   const { data: categorizedPhrases } = usePhrasesByCategory();
+  
+  // Notify parent component when vocabulary changes
+  useEffect(() => {
+    if (phrases && onVocabularyUpdate) {
+      onVocabularyUpdate(phrases);
+    }
+  }, [phrases, onVocabularyUpdate]);
 
   // Mutations
   const updatePhrase = useUpdatePhrase();

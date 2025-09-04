@@ -1,0 +1,110 @@
+'use client'
+
+import { useState, useCallback } from 'react'
+import { Search, Image as ImageIcon } from 'lucide-react'
+import { UnsplashImage } from '@/types'
+
+interface ImageSearchProps {
+  onImageSelect: (image: UnsplashImage) => void
+}
+
+export function ImageSearch({ onImageSelect }: ImageSearchProps) {
+  const [query, setQuery] = useState('')
+  const [images, setImages] = useState<UnsplashImage[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const searchImages = useCallback(async () => {
+    if (!query.trim()) return
+
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await fetch(`/api/images/search?query=${encodeURIComponent(query)}&limit=12`)
+      const data = await response.json()
+
+      if (data.success && data.data?.images) {
+        setImages(data.data.images)
+      } else {
+        setError(data.error || 'Failed to search images')
+      }
+    } catch (err) {
+      setError('Failed to search images')
+      console.error('Search error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [query])
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    searchImages()
+  }
+
+  return (
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6">
+      <h2 className="text-xl font-semibold mb-4 flex items-center">
+        <ImageIcon className="w-5 h-5 mr-2" />
+        Image Search
+      </h2>
+
+      <form onSubmit={handleSubmit} className="mb-6">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search for images..."
+            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button
+            type="submit"
+            disabled={loading || !query.trim()}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+          >
+            <Search className="w-4 h-4 mr-2" />
+            Search
+          </button>
+        </div>
+      </form>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700">
+          {error}
+        </div>
+      )}
+
+      {loading && (
+        <div className="flex justify-center py-8">
+          <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+        </div>
+      )}
+
+      {images.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+          {images.map((image) => (
+            <button
+              key={image.id}
+              onClick={() => onImageSelect(image)}
+              className="group relative aspect-square overflow-hidden rounded-lg hover:ring-2 hover:ring-blue-500 transition-all"
+            >
+              <img
+                src={image.urls.small}
+                alt={image.alt_description || 'Image'}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute bottom-2 left-2 right-2">
+                  <p className="text-white text-xs truncate">
+                    by {image.user?.name || 'Unknown'}
+                  </p>
+                </div>
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}

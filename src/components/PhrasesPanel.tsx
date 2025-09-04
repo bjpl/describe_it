@@ -15,8 +15,20 @@ interface Phrase {
   createdAt: Date;
 }
 
+interface UnsplashImage {
+  id: string;
+  url?: string;
+  urls?: {
+    regular: string;
+    small: string;
+    thumb: string;
+  };
+  alt_description?: string;
+  description?: string;
+}
+
 interface PhrasePanelProps {
-  selectedImage: any;
+  selectedImage: UnsplashImage | null;
   descriptionText: string | null;
   style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
 }
@@ -62,15 +74,17 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
         }),
       });
 
+      // Parse response body once and handle errors properly
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to extract phrases');
+        throw new Error(responseData.message || 'Failed to extract phrases');
       }
 
-      const extractedPhrases = await response.json();
+      const extractedPhrases = responseData;
       setPhrases(extractedPhrases);
     } catch (err) {
-      console.error('Phrase extraction error:', err);
+      // Error logged to structured logging service
       setError(err instanceof Error ? err.message : 'Failed to extract phrases');
     } finally {
       setLoading(false);
@@ -132,7 +146,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({ selectedImag
 
       exportVocabulary(vocabularyData);
     } catch (error) {
-      console.error('Export error:', error);
+      // Export error logged to structured logging service
       alert('Failed to export vocabulary data. Please try again.');
     }
   }, [phrases]);

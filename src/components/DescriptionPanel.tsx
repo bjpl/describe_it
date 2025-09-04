@@ -3,6 +3,7 @@
 import { memo, useCallback, useMemo } from 'react';
 import { Image as ImageIcon, Loader2, BookOpen, Feather, GraduationCap, MessageCircle, Baby } from 'lucide-react';
 import { DescriptionProgressIndicator, TextContentSkeleton } from './ProgressIndicator';
+import { ImageComponentProps, DescriptionStyle } from '@/types';
 
 interface GeneratedDescriptions {
   english: string | null;
@@ -10,12 +11,12 @@ interface GeneratedDescriptions {
 }
 
 interface DescriptionPanelProps {
-  selectedImage: any;
-  selectedStyle: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
+  selectedImage: ImageComponentProps;
+  selectedStyle: DescriptionStyle;
   generatedDescriptions: GeneratedDescriptions;
   isGenerating: boolean;
   descriptionError: string | null;
-  onStyleChange: (style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil') => void;
+  onStyleChange: (style: DescriptionStyle) => void;
   onGenerateDescriptions: () => void;
 }
 
@@ -123,7 +124,7 @@ export const DescriptionPanel = memo<DescriptionPanelProps>(function Description
               return (
                 <button
                   key={option.value}
-                  onClick={() => onStyleChange(option.value as any)}
+                  onClick={() => onStyleChange(option.value as DescriptionStyle)}
                   disabled={isGenerating}
                   className={`
                     relative p-4 rounded-lg border-2 transition-all duration-200 text-left

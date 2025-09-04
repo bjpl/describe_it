@@ -1,6 +1,48 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
-import { descriptionCache } from '@/lib/cache/tiered-cache';
+import { descriptionCache } from '@/lib/cache';
+
+// Type definitions from Zod schemas
+type VocabularyItem = z.infer<typeof vocabularySaveSchema>['vocabulary'] & {
+  id: string;
+  userId: string;
+  collectionName: string;
+  createdAt: string;
+  updatedAt: string;
+  metadata?: z.infer<typeof vocabularySaveSchema>['metadata'] & {
+    timestamp: string;
+    saved: boolean;
+    bulkImport?: boolean;
+  };
+};
+
+type VocabularyFilters = z.infer<typeof vocabularyQuerySchema>;
+
+type CollectionIndex = {
+  items: Array<{
+    id: string;
+    phrase: string;
+    category: string;
+    difficulty: string;
+    tags: string[];
+    collectionName: string;
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  collections: Record<string, {
+    name: string;
+    itemCount: number;
+    lastUpdated: string;
+  }>;
+  lastUpdated: string;
+};
+
+type UserStats = {
+  totalItems: number;
+  difficultyCounts: { beginner: number; intermediate: number; advanced: number };
+  categoryCounts: Record<string, number>;
+  lastUpdated: string;
+};
 
 // Input validation schema
 const vocabularySaveSchema = z.object({
@@ -81,7 +123,7 @@ class VocabularyStorage {
 
     // Save individual vocabulary item
     const itemKey = `${this.collectionPrefix(userId, collectionName)}:item:${vocabularyId}`;
-    await descriptionsCache.set(itemKey, vocabularyItem, {
+    await descriptionCache.set(itemKey, vocabularyItem, {
       kvTTL: 86400 * 30, // 30 days
       memoryTTL: 3600,   // 1 hour
       sessionTTL: 1800   // 30 minutes
@@ -117,7 +159,7 @@ class VocabularyStorage {
       };
 
       const itemKey = `${this.collectionPrefix(userId, collectionName)}:item:${vocabularyItem.id}`;
-      await descriptionsCache.set(itemKey, vocabularyItem, {
+      await descriptionCache.set(itemKey, vocabularyItem, {
         kvTTL: 86400 * 30, // 30 days
         memoryTTL: 3600,   // 1 hour
         sessionTTL: 1800   // 30 minutes
@@ -153,7 +195,7 @@ class VocabularyStorage {
         ? `${this.collectionPrefix(userId, collectionName)}:index`
         : `${this.userPrefix(userId)}:index`;
       
-      const index = await descriptionsCache.get(indexKey) || { items: [] };
+      const index = await descriptionCache.get(indexKey) || { items: [] };
       let items = index.items || [];
 
       // Apply filters
@@ -194,7 +236,7 @@ class VocabularyStorage {
       const fullItems = [];
       for (const item of paginatedItems) {
         const itemKey = `${this.collectionPrefix(userId, item.collectionName)}:item:${item.id}`;
-        const fullItem = await descriptionsCache.get(itemKey);
+        const fullItem = await descriptionCache.get(itemKey);
         if (fullItem) {
           fullItems.push(fullItem);
         }
@@ -224,7 +266,7 @@ class VocabularyStorage {
     const indexKey = `${this.collectionPrefix(userId, collectionName)}:index`;
     
     try {
-      const index = await descriptionsCache.get(indexKey) || { 
+      const index = await descriptionCache.get(indexKey) || { 
         items: [], 
         collections: {},
         lastUpdated: new Date().toISOString()
@@ -254,7 +296,7 @@ class VocabularyStorage {
       
       index.lastUpdated = new Date().toISOString();
       
-      await descriptionsCache.set(indexKey, index, {
+      await descriptionCache.set(indexKey, index, {
         kvTTL: 86400 * 30, // 30 days
         memoryTTL: 3600,   // 1 hour
         sessionTTL: 1800   // 30 minutes
@@ -269,7 +311,7 @@ class VocabularyStorage {
     const statsKey = `${this.userPrefix(userId)}:stats`;
     
     try {
-      const stats = await descriptionsCache.get(statsKey) || {
+      const stats = await descriptionCache.get(statsKey) || {
         totalItems: 0,
         difficultyCounts: { beginner: 0, intermediate: 0, advanced: 0 },
         categoryCounts: {},
@@ -281,7 +323,7 @@ class VocabularyStorage {
       stats.categoryCounts[category] = (stats.categoryCounts[category] || 0) + 1;
       stats.lastUpdated = new Date().toISOString();
       
-      await descriptionsCache.set(statsKey, stats, {
+      await descriptionCache.set(statsKey, stats, {
         kvTTL: 86400 * 30, // 30 days
         memoryTTL: 3600,   // 1 hour
         sessionTTL: 1800   // 30 minutes
@@ -294,7 +336,7 @@ class VocabularyStorage {
 
   async getUserStats(userId: string) {
     const statsKey = `${this.userPrefix(userId)}:stats`;
-    return await descriptionsCache.get(statsKey) || {
+    return await descriptionCache.get(statsKey) || {
       totalItems: 0,
       difficultyCounts: { beginner: 0, intermediate: 0, advanced: 0 },
       categoryCounts: {},

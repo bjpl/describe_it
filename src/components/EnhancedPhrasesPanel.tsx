@@ -6,7 +6,12 @@ import { CategorizedPhrase, VocabularySet } from '@/types/api';
 import { sortPhrasesByCategory, getDifficultyColor, getCategoryColor } from '@/lib/utils/phrase-helpers';
 
 interface EnhancedPhrasesPanelProps {
-  selectedImage: any;
+  selectedImage: {
+    id: string;
+    urls: { regular: string; small: string };
+    alt_description: string | null;
+    user: { name: string };
+  };
   descriptionText: string | null;
   style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
 }
@@ -73,12 +78,14 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(function EnhancedPh
         }),
       });
 
+      // Parse response body once and handle errors properly
+      const responseData = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to extract phrases');
+        throw new Error(responseData.message || 'Failed to extract phrases');
       }
 
-      const extractedPhrases: CategorizedPhrase[] = await response.json();
+      const extractedPhrases: CategorizedPhrase[] = responseData;
       setPhrases(extractedPhrases);
       
       // Categorize and sort phrases
@@ -226,7 +233,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(function EnhancedPh
       if (result.translations) {
         const newTranslations: Record<string, string> = {};
         
-        result.translations.forEach((translation: any, index: number) => {
+        result.translations.forEach((translation: { phrase: string; definition: string; category: string }, index: number) => {
           if (translation && phrasesToTranslate[index]) {
             newTranslations[phrasesToTranslate[index].id] = translation.translatedText;
           }
@@ -241,7 +248,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(function EnhancedPh
       // Handle failed translations
       if (result.failed && result.failed.length > 0) {
         const failedTranslations: Record<string, string> = {};
-        result.failed.forEach((failedItem: any) => {
+        result.failed.forEach((failedItem: { phrase: string; error: string }) => {
           if (phrasesToTranslate[failedItem.index]) {
             failedTranslations[phrasesToTranslate[failedItem.index].id] = 
               `Translation unavailable for "${failedItem.text}"`;

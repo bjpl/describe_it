@@ -1,21 +1,29 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X, Filter } from 'lucide-react';
 import { useDebounce, useImageSearch } from '@/hooks';
 import { ImageGrid } from './ImageGrid';
 import { PaginationControls } from './PaginationControls';
-import { LoadingSpinner } from '@/components/Shared/LoadingStates/LoadingSpinner';
+import { LoadingSpinner } from '@/components/Loading/LoadingSpinner';
 import { SearchFilters } from './SearchFilters';
 import { UnsplashImage } from '@/types';
+import { performanceProfiler, useRenderCount, optimizeAnimations } from '@/lib/utils/performance-helpers';
 
 interface ImageSearchProps {
   onImageSelect?: (image: UnsplashImage) => void;
   className?: string;
 }
 
-export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps) {
+const ImageSearchBase: React.FC<ImageSearchProps> = ({ onImageSelect, className = '' }) => {
+  // Performance monitoring
+  const renderCount = useRenderCount('ImageSearch');
+  
+  React.useEffect(() => {
+    performanceProfiler.startMark('ImageSearch-render');
+    return () => performanceProfiler.endMark('ImageSearch-render');
+  });
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
@@ -37,27 +45,41 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
     clearResults,
   } = useImageSearch();
 
-  // Trigger search when debounced query changes
+  // Trigger search when debounced query changes and apply filters
   React.useEffect(() => {
     if (debouncedQuery.trim()) {
-      searchImages(debouncedQuery);
+      searchImages(debouncedQuery, 1, filters);
     } else {
       clearResults();
     }
-  }, [debouncedQuery, searchImages, clearResults]);
+  }, [debouncedQuery, filters, searchImages, clearResults]);
 
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    clearResults();
-  };
-
-  const handleImageClick = (image: UnsplashImage) => {
+  // Memoize stable callbacks
+  const handleImageClick = useCallback((image: UnsplashImage) => {
     if (onImageSelect) {
       onImageSelect(image);
     }
-  };
+  }, [onImageSelect]);
+  
+  const handleClearSearch = useCallback(() => {
+    setSearchQuery('');
+    clearResults();
+  }, [clearResults]);
+  
+  const handleFiltersChange = useCallback((newFilters: typeof filters) => {
+    setFilters(newFilters);
+    // Re-search with new filters if we have a query
+    if (debouncedQuery.trim()) {
+      searchImages(debouncedQuery, 1, newFilters);
+    }
+  }, [debouncedQuery, searchImages]);
+  
+  const handleToggleFilters = useCallback(() => {
+    setShowFilters(prev => !prev);
+  }, []);
 
-  const containerVariants = {
+  // Memoize animation variants
+  const containerVariants = useMemo(() => optimizeAnimations.createOptimizedVariants({
     hidden: { opacity: 0, y: 20 },
     visible: { 
       opacity: 1, 
@@ -67,12 +89,18 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
         staggerChildren: 0.1
       }
     }
-  };
+  }), []);
 
-  const itemVariants = {
+  const itemVariants = useMemo(() => optimizeAnimations.createOptimizedVariants({
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
-  };
+  }), []);
+  
+  // Memoize expensive computations
+  const hasResults = useMemo(() => images.length > 0, [images.length]);
+  const hasQuery = useMemo(() => Boolean(searchParams.query), [searchParams.query]);
+  const shouldShowPagination = useMemo(() => totalPages > 1, [totalPages]);
+  const shouldShowLoadMore = useMemo(() => searchParams.page < totalPages, [searchParams.page, totalPages]);
 
   return (
     <motion.div
@@ -112,7 +140,7 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
         {/* Filter Toggle */}
         <div className="flex items-center justify-between">
           <motion.button
-            onClick={() => setShowFilters(!showFilters)}
+            onClick={handleToggleFilters}
             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -137,7 +165,7 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
           {showFilters && (
             <SearchFilters
               filters={filters}
-              onFiltersChange={setFilters}
+              onFiltersChange={handleFiltersChange}
             />
           )}
         </AnimatePresence>
@@ -182,7 +210,7 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
       </AnimatePresence>
 
       {/* Image Results */}
-      {!loading.isLoading && !error && images.length > 0 && (
+      {!loading.isLoading && !error && hasResults && (
         <motion.div variants={itemVariants} className="space-y-6">
           <ImageGrid
             images={images}
@@ -191,13 +219,13 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
           />
 
           {/* Pagination */}
-          {totalPages > 1 && (
+          {shouldShowPagination && (
             <PaginationControls
               currentPage={searchParams.page}
               totalPages={totalPages}
               onPageChange={setPage}
               onLoadMore={loadMoreImages}
-              hasNextPage={searchParams.page < totalPages}
+              hasNextPage={shouldShowLoadMore}
               loading={loading.isLoading}
             />
           )}
@@ -205,7 +233,7 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
       )}
 
       {/* Empty State */}
-      {!loading.isLoading && !error && searchParams.query && images.length === 0 && (
+      {!loading.isLoading && !error && hasQuery && !hasResults && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -220,7 +248,7 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
       )}
 
       {/* Initial State */}
-      {!searchParams.query && (
+      {!hasQuery && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -248,4 +276,12 @@ export function ImageSearch({ onImageSelect, className = '' }: ImageSearchProps)
       )}
     </motion.div>
   );
-}
+};
+
+// Export memoized component with optimized comparison
+export const ImageSearch = memo(ImageSearchBase, (prevProps, nextProps) => {
+  return (
+    prevProps.onImageSelect === nextProps.onImageSelect &&
+    prevProps.className === nextProps.className
+  );
+});

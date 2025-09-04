@@ -26,9 +26,10 @@ interface QAPanelProps {
   selectedImage: any;
   descriptionText: string | null;
   style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
+  onResponseUpdate?: (response: any) => void;
 }
 
-const QAPanel = memo<QAPanelProps>(function QAPanel({ selectedImage, descriptionText, style }) {
+const QAPanel = memo<QAPanelProps>(function QAPanel({ selectedImage, descriptionText, style, onResponseUpdate }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -199,6 +200,11 @@ const QAPanel = memo<QAPanelProps>(function QAPanel({ selectedImage, description
     };
 
     setUserResponses(prev => [...prev, responseItem]);
+    
+    // Notify parent component
+    if (onResponseUpdate) {
+      onResponseUpdate(responseItem);
+    }
 
     setShowResults(prev => ({
       ...prev,
