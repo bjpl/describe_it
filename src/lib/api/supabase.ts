@@ -258,7 +258,7 @@ class SupabaseService {
   /**
    * Save an image to the database
    */
-  async saveImage(imageData: ImageInsert) {
+  async saveImage(imageData: ImageInsert): Promise<ImageRecord> {
     try {
       if (this.isDemo) {
         const { data, error } = await this.localStorage.saveItem(
@@ -271,7 +271,7 @@ class SupabaseService {
             : 'Unknown error';
           throw new Error(`Failed to save image: ${errorMsg}`);
         }
-        return data;
+        return data as ImageRecord;
       }
 
       if (!this.client) {
@@ -298,7 +298,7 @@ class SupabaseService {
   /**
    * Get image by Unsplash ID
    */
-  async getImageByUnsplashId(unsplashId: string) {
+  async getImageByUnsplashId(unsplashId: string): Promise<ImageRecord | null> {
     try {
       if (!this.client) {
         throw new Error("Supabase client not available");
@@ -315,7 +315,7 @@ class SupabaseService {
         throw new Error(`Failed to get image: ${error.message}`);
       }
 
-      return data;
+      return data as ImageRecord | null;
     } catch (error) {
       console.error("Error getting image:", error);
       throw error;
@@ -325,7 +325,7 @@ class SupabaseService {
   /**
    * Save a description to the database
    */
-  async saveDescription(descriptionData: DescriptionInsert) {
+  async saveDescription(descriptionData: DescriptionInsert): Promise<DescriptionRecord> {
     try {
       if (!this.client) {
         throw new Error("Supabase client not available");
@@ -341,7 +341,7 @@ class SupabaseService {
         throw new Error(`Failed to save description: ${error.message}`);
       }
 
-      return data;
+      return data as DescriptionRecord;
     } catch (error) {
       console.error("Error saving description:", error);
       throw error;

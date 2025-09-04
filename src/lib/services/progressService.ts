@@ -3,7 +3,7 @@
  */
 
 import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
-import { supabase } from "@/lib/supabase";
+import { supabaseService } from "@/lib/api/supabase";
 import { getEnvironment } from "@/config/env";
 
 interface UserProgress {
@@ -220,13 +220,14 @@ export class ProgressService {
   ): Promise<void> {
     try {
       await withRetry(async () => {
-        if (supabase) {
+        const client = supabaseService.getClient();
+        if (client) {
           const accuracy =
             updates.questionsAnswered && updates.questionsAnswered > 0
               ? (updates.correctAnswers || 0) / updates.questionsAnswered
               : 0;
 
-          const { error } = await supabase
+          const { error } = await client
             .from("session_progress")
             .update({
               ...updates,
@@ -265,8 +266,9 @@ export class ProgressService {
       const experienceGained = this.calculateExperienceGained(session);
 
       const updatedSession = await withRetry(async () => {
-        if (supabase) {
-          const { data, error } = await supabase
+        const client = supabaseService.getClient();
+        if (client) {
+          const { data, error } = await client
             .from("session_progress")
             .update({
               endTime,
@@ -295,7 +297,7 @@ export class ProgressService {
       }
 
       this.clearCacheByPattern("progress_");
-      return updatedSession;
+      return updatedSession as unknown as SessionProgress | null;
     } catch (error) {
       console.warn("Failed to end session:", error);
       return null;
@@ -315,8 +317,9 @@ export class ProgressService {
 
     try {
       const result = await withRetry(async () => {
-        if (supabase) {
-          const { data, error } = await supabase
+        const client = supabaseService.getClient();
+        if (client) {
+          const { data, error } = await client
             .from("user_progress")
             .select("*")
             .eq("userId", userId)
@@ -336,7 +339,7 @@ export class ProgressService {
       }
 
       this.setCache(cacheKey, result);
-      return result;
+      return result as unknown as UserProgress | null;
     } catch (error) {
       console.warn("Failed to get user progress:", error);
       return null;
@@ -423,8 +426,9 @@ export class ProgressService {
 
     try {
       const result = await withRetry(async () => {
-        if (supabase) {
-          let query = supabase
+        const client = supabaseService.getClient();
+        if (client) {
+          let query = client
             .from("session_progress")
             .select("*")
             .eq("userId", userId);
@@ -462,7 +466,7 @@ export class ProgressService {
       }, this.retryConfig);
 
       this.setCache(cacheKey, result);
-      return result;
+      return result as unknown as SessionProgress[];
     } catch (error) {
       console.warn("Failed to get user sessions:", error);
       return [];
@@ -492,9 +496,9 @@ export class ProgressService {
       await this.updateUserProgress(userId, {
         badges: updatedBadges,
         experienceGained:
-          badge.category === "legendary"
+          badge.rarity === "legendary"
             ? 500
-            : badge.category === "epic"
+            : badge.rarity === "epic"
               ? 200
               : 50,
       });
@@ -567,8 +571,9 @@ export class ProgressService {
     };
 
     try {
-      if (supabase) {
-        await supabase.from("user_progress").insert([initialProgress]);
+      const client = supabaseService.getClient();
+      if (client) {
+        await client.from("user_progress").insert([initialProgress]);
       }
     } catch (error) {
       console.warn("Failed to save initial progress:", error);
@@ -620,8 +625,9 @@ export class ProgressService {
     };
 
     try {
-      if (supabase) {
-        await supabase
+      const client = supabaseService.getClient();
+      if (client) {
+        await client
           .from("user_progress")
           .update(updatedProgress)
           .eq("userId", userId);
@@ -635,8 +641,9 @@ export class ProgressService {
     sessionId: string,
   ): Promise<SessionProgress | null> {
     try {
-      if (supabase) {
-        const { data, error } = await supabase
+      const client = supabaseService.getClient();
+      if (client) {
+        const { data, error } = await client
           .from("session_progress")
           .select("*")
           .eq("id", sessionId)
@@ -652,8 +659,9 @@ export class ProgressService {
   }
 
   private async saveSessionToDatabase(session: SessionProgress): Promise<void> {
-    if (supabase) {
-      const { error } = await supabase
+    const client = supabaseService.getClient();
+    if (client) {
+      const { error } = await client
         .from("session_progress")
         .insert([session]);
 

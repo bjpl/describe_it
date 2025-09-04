@@ -171,8 +171,16 @@ export interface StudyStats {
 export interface Database {
   public: {
     Tables: TableTypeMap;
+    Views: Record<string, any>;
+    Functions: Record<string, any>;
     Enums: {
       description_style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
+      session_type: 'practice' | 'flashcards' | 'quiz' | 'matching' | 'writing';
+      session_status: 'active' | 'completed' | 'abandoned';
+      difficulty_level: 'beginner' | 'intermediate' | 'advanced';
+      user_level: 'beginner' | 'intermediate' | 'advanced';
+      subscription_status: 'free' | 'premium' | 'trial';
+      qa_difficulty: 'easy' | 'medium' | 'hard';
     };
   };
 }
@@ -276,8 +284,8 @@ export type DescriptionInsert = Omit<DescriptionRecord, 'id' | 'created_at' | 'u
 // Missing type exports required by database utils - using concrete type mappings
 export type DatabaseSchema = Database;
 
-// Define table type mappings
-type TableTypeMap = {
+// Define table type mappings - exported for use in other files
+export type TableTypeMap = {
   users: {
     Row: {
       id: string;
@@ -380,9 +388,10 @@ type TableTypeMap = {
   };
 };
 
-export type Tables<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"];
-export type TablesInsert<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Insert"];
-export type TablesUpdate<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Update"];
+// Type helpers for accessing table types
+export type Tables<T extends keyof TableTypeMap> = TableTypeMap[T]["Row"];
+export type TablesInsert<T extends keyof TableTypeMap> = TableTypeMap[T]["Insert"];
+export type TablesUpdate<T extends keyof TableTypeMap> = TableTypeMap[T]["Update"];
 
 // API Response type alias (matches existing DatabaseResponse but also supports just data/error)
 export type ApiResponse<T> = DatabaseResponse<T> | {
@@ -453,6 +462,19 @@ export interface DescriptionWithRelations extends DescriptionRecord {
   questions?: QAQuestion[];
   phrases?: Phrase[];
 }
+
+// Additional type exports needed by service files
+export type DatabaseUser = Tables<"users">;
+export type SessionType = Tables<"sessions">["session_type"];
+export type DescriptionStyle = Database["public"]["Enums"]["description_style"];
+export type DifficultyLevel = Database["public"]["Enums"]["difficulty_level"];
+export type QADifficulty = Database["public"]["Enums"]["qa_difficulty"];
+export type VocabularyCategory = string; // Could be enum if needed
+export type ThemePreference = "light" | "dark" | "auto";
+export type LanguagePreference = "en" | "es";
+export type ExportFormat = "csv" | "json" | "excel" | "anki" | "pdf";
+export type QuestionType = "factual" | "inferential" | "evaluative" | "creative";
+export type LearningPhase = "new" | "learning" | "review" | "mastered";
 
 // Export types for convenience
 export type DatabaseTables =

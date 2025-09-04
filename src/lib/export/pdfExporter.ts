@@ -18,7 +18,7 @@ export interface PDFExportOptions {
 }
 
 // Export data interface for compatibility with exportManager
-import { ExportData, PDFOptions } from "@/types/export";
+import { ExportData, PDFExportOptions as PDFOptions } from "@/types/export";
 
 export class PDFExporter {
   private pdf: jsPDF;
@@ -538,7 +538,7 @@ export async function exportToPDF(
     const pdf = new jsPDF({
       orientation: options?.orientation || "portrait",
       unit: "mm",
-      format: options?.pageSize || "a4",
+      format: (options?.pageSize || "A4").toLowerCase() as 'a4' | 'a3' | 'letter',
     });
 
     const margin = 20;
@@ -584,11 +584,11 @@ export async function exportToPDF(
         checkPageBreak(15);
         pdf.setFontSize(10);
         pdf.setFont("helvetica", "normal");
-        pdf.text(`• ${item.spanish} - ${item.english}`, margin + 5, currentY);
-        if (item.description) {
+        pdf.text(`• ${item.phrase} - ${item.translation}`, margin + 5, currentY);
+        if (item.definition) {
           currentY += 5;
           pdf.setFont("helvetica", "italic");
-          pdf.text(`  ${item.description.slice(0, 100)}${item.description.length > 100 ? "..." : ""}`, margin + 10, currentY);
+          pdf.text(`  ${item.definition.slice(0, 100)}${item.definition.length > 100 ? "..." : ""}`, margin + 10, currentY);
         }
         currentY += 8;
       });
@@ -612,7 +612,7 @@ export async function exportToPDF(
         checkPageBreak(20);
         pdf.setFontSize(10);
         pdf.setFont("helvetica", "normal");
-        const description = item.description.slice(0, 150) + (item.description.length > 150 ? "..." : "");
+        const description = item.content.slice(0, 150) + (item.content.length > 150 ? "..." : "");
         pdf.text(`• ${description}`, margin + 5, currentY);
         currentY += 8;
       });
@@ -717,8 +717,8 @@ export async function exportStudySheet(
         checkPageBreak(15);
         pdf.setFontSize(11);
         pdf.setFont("helvetica", "normal");
-        pdf.text(item.spanish, margin, currentY);
-        pdf.text(item.english, margin + 80, currentY);
+        pdf.text(item.phrase, margin, currentY);
+        pdf.text(item.translation, margin + 80, currentY);
         
         // Add dotted line for writing practice
         pdf.setDrawColor(200, 200, 200);

@@ -10,6 +10,7 @@
 
 export interface VocabularyItem {
   id: string;
+  vocabulary_list_id?: string; // For database compatibility
   spanish_text: string;
   english_translation: string;
   category: string;
@@ -19,9 +20,31 @@ export interface VocabularyItem {
   context_sentence_spanish?: string;
   context_sentence_english?: string;
   phonetic_pronunciation?: string;
+  pronunciation_ipa?: string; // Alternative field name
+  pronunciation_audio_url?: string; // Extended field name
   audio_url?: string;
   created_at: string;
   updated_at?: string;
+  // Additional database fields
+  gender?: string;
+  article?: string;
+  plural_form?: string;
+  conjugation_info?: Record<string, any>;
+  subcategory?: string;
+  syllable_count?: number;
+  stress_pattern?: string;
+  usage_notes?: string;
+  commonality_rank?: number;
+  register?: string;
+  synonyms?: string[];
+  antonyms?: string[];
+  related_words?: string[];
+  word_family?: string[];
+  memory_hints?: string[];
+  cultural_notes?: string;
+  false_friends?: string[];
+  associated_image_urls?: string[];
+  emoji_representation?: string;
   // Additional fields for user progress
   user_notes?: string;
   mastery_level?: number; // 0-100
