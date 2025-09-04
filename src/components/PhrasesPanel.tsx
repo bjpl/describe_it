@@ -346,7 +346,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
                   {/* Phrase Header */}
                   <div className="flex items-start justify-between">
                     <h3 className="text-lg font-semibold text-purple-900 dark:text-purple-300">
-                      "{phrase.phrase}"
+                      &ldquo;{phrase.phrase}&rdquo;
                     </h3>
                     <span className="text-xs text-gray-500 dark:text-gray-400 bg-white dark:bg-gray-700 px-2 py-1 rounded">
                       {phrase.partOfSpeech}
@@ -369,7 +369,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
                       Example:
                     </h4>
                     <p className="text-gray-700 dark:text-gray-300 text-sm italic">
-                      "{phrase.context}"
+                      &ldquo;{phrase.context}&rdquo;
                     </p>
                   </div>
                 </div>

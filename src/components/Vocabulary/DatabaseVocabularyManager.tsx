@@ -432,11 +432,11 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
                       {item.context_sentence_spanish && (
                         <div className="text-sm bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                           <p className="italic text-gray-700 dark:text-gray-300 mb-1">
-                            "{item.context_sentence_spanish}"
+                            &ldquo;{item.context_sentence_spanish}&rdquo;
                           </p>
                           {item.context_sentence_english && (
                             <p className="text-gray-500 dark:text-gray-400 text-xs">
-                              "{item.context_sentence_english}"
+                              &ldquo;{item.context_sentence_english}&rdquo;
                             </p>
                           )}
                         </div>

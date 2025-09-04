@@ -185,7 +185,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
     { key: "Ctrl/Cmd + K", action: "Focus search bar" },
     { key: "Ctrl/Cmd + Enter", action: "Search for images" },
     { key: "Ctrl/Cmd + D", action: "Generate description" },
-    { key: "Ctrl/Cmd + Q", action: "Generate Q&A" },
+    { key: "Ctrl/Cmd + Q", action: "Generate Q&amp;A" },
     { key: "Ctrl/Cmd + P", action: "Extract phrases" },
     { key: "Ctrl/Cmd + I", action: "Open help modal" },
     { key: "Escape", action: "Close modal/cancel action" },
@@ -235,7 +235,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     <div>
                       <strong>Search for Images:</strong> Use the search bar to
                       find images related to topics you want to learn about. Try
-                      searches like "kitchen", "family", or "vacation".
+                      searches like &quot;kitchen&quot;, &quot;family&quot;, or &quot;vacation&quot;.
                     </div>
                   </div>
                   <div className="flex items-start gap-3">
@@ -602,7 +602,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                       Active Engagement
                     </h4>
                     <p className="text-sm text-purple-800 dark:text-purple-200 mb-2">
-                      Don't just read passively. Use the Q&A feature to test
+                      Don&apos;t just read passively. Use the Q&amp;A feature to test
                       yourself and the phrase extraction to identify key terms.
                     </p>
                     <div className="text-xs text-purple-700 dark:text-purple-300">
@@ -843,7 +843,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     Still need help?
                   </h4>
                   <p className="text-sm text-blue-800 dark:text-blue-200">
-                    If you're experiencing issues not covered here, please use
+                    If you&apos;re experiencing issues not covered here, please use
                     the Feedback tab to report the problem. Include as much
                     detail as possible about what you were doing when the issue
                     occurred.
@@ -1022,7 +1022,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                   Thank you for your feedback!
                 </h4>
                 <p className="text-sm text-green-800 dark:text-green-200 mb-4">
-                  We've received your message and will review it carefully. Your
+                  We&apos;ve received your message and will review it carefully. Your
                   input helps us make the app better for everyone.
                 </p>
                 <button
@@ -1071,7 +1071,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                    Provide your email if you'd like us to follow up with you.
+                    Provide your email if you&apos;d like us to follow up with you.
                   </p>
                 </div>
 

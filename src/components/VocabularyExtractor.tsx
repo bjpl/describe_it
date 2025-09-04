@@ -523,7 +523,7 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                  "{phrase.phrase}"
+                                  &ldquo;{phrase.phrase}&rdquo;
                                 </h4>
                                 {phrase.gender && (
                                   <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
@@ -540,7 +540,7 @@ const VocabularyExtractor: React.FC<VocabularyExtractorProps> = ({
                                 {phrase.definition}
                               </p>
                               <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                                "{phrase.context}"
+                                &ldquo;{phrase.context}&rdquo;
                               </p>
                             </div>
 

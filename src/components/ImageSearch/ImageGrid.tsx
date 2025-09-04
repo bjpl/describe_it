@@ -161,6 +161,8 @@ const ImageGridBase: React.FC<ImageGridProps> = ({
     };
   });
 
+ImageItem.displayName = 'ImageItem';
+
   // Memoize animation variants with reduced motion support
   const containerVariants = useMemo(
     () =>

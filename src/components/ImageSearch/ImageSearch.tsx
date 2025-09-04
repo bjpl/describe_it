@@ -162,7 +162,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search for images (e.g., 'mountain sunset', 'city street', 'happy people')..."
+              placeholder="Search for images (e.g., &apos;mountain sunset&apos;, &apos;city street&apos;, &apos;happy people&apos;)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-12 pr-12 py-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md"
@@ -199,7 +199,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
             <div className="text-sm text-gray-500">
               {images.length > 0 && (
                 <span>
-                  Showing {images.length} images for "{searchParams.query}"
+                  Showing {images.length} images for &ldquo;{searchParams.query}&rdquo;
                 </span>
               )}
             </div>
