@@ -91,7 +91,6 @@ export class ExcelExporter {
         bookType: "xlsx",
         type: "array",
         cellStyles: true,
-        cellNF: true,
       });
 
       return new Blob([buffer], {

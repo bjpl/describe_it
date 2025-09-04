@@ -12,7 +12,7 @@ import {
   exportVocabulary,
   getCurrentDateString,
 } from "../lib/export/csvExporter";
-import type { VocabularyItem } from "../types/unified";
+import type { VocabularyExportItem } from "../types/export";
 import {
   PhrasesProgressIndicator,
   TextContentSkeleton,
@@ -158,20 +158,15 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
     }
 
     try {
-      const vocabularyData: VocabularyItem[] = phrases.map((phrase) => ({
-        id: phrase.id,
-        spanish_text: phrase.phrase,
-        english_translation: phrase.definition,
+      const vocabularyData: VocabularyExportItem[] = phrases.map((phrase) => ({
+        phrase: phrase.phrase,
+        translation: phrase.definition,
+        definition: phrase.definition,
+        partOfSpeech: phrase.partOfSpeech,
+        difficulty: phrase.difficulty as "beginner" | "intermediate" | "advanced",
         category: phrase.partOfSpeech,
-        difficulty_level:
-          phrase.difficulty === "beginner"
-            ? 3
-            : phrase.difficulty === "intermediate"
-              ? 6
-              : 9,
-        part_of_speech: phrase.partOfSpeech,
-        context_sentence_spanish: phrase.context,
-        created_at: getCurrentDateString(),
+        context: phrase.context,
+        dateAdded: getCurrentDateString(),
       }));
 
       exportVocabulary(vocabularyData);

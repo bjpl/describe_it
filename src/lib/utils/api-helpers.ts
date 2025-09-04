@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { descriptionsCache } from "@/lib/cache/tiered-cache";
+import { descriptionCache } from "@/lib/cache/tiered-cache";
 
 // Rate limiting configuration
 interface RateLimitConfig {
@@ -65,13 +65,13 @@ export class RateLimiter {
 
     try {
       // Get current count from cache
-      let requestCount = (await descriptionsCache.get(rateLimitKey)) || 0;
+      let requestCount = (await descriptionCache.get(rateLimitKey)) || 0;
 
       // Increment count
       requestCount++;
 
       // Store updated count with TTL
-      await descriptionsCache.set(rateLimitKey, requestCount, {
+      await descriptionCache.set(rateLimitKey, requestCount, {
         kvTTL: Math.ceil(this.config.windowMs / 1000),
         memoryTTL: Math.ceil(this.config.windowMs / 1000),
         sessionTTL: Math.ceil(this.config.windowMs / 1000),
@@ -309,7 +309,7 @@ export class PerformanceMonitor {
     try {
       // Store metrics for analysis
       const metricsKey = `metrics:${endpoint.replace(/\//g, "_")}:${Date.now()}`;
-      await descriptionsCache.set(metricsKey, metrics, {
+      await descriptionCache.set(metricsKey, metrics, {
         kvTTL: 86400 * 7, // 7 days
         memoryTTL: 0, // Don't cache in memory
         sessionTTL: 0, // Don't cache in session
@@ -337,7 +337,7 @@ export class PerformanceMonitor {
     const aggregateKey = `metrics:aggregate:${endpoint.replace(/\//g, "_")}:${date}`;
 
     try {
-      const existing = (await descriptionsCache.get(aggregateKey)) || {
+      const existing = (await descriptionCache.get(aggregateKey)) || {
         endpoint,
         method,
         date,
@@ -359,7 +359,7 @@ export class PerformanceMonitor {
         existing.errors++;
       }
 
-      await descriptionsCache.set(aggregateKey, existing, {
+      await descriptionCache.set(aggregateKey, existing, {
         kvTTL: 86400 * 30, // 30 days
         memoryTTL: 0, // Don't cache in memory
         sessionTTL: 0, // Don't cache in session
@@ -507,7 +507,7 @@ export async function retryApiCall<T>(
   maxRetries: number = 3,
   delayMs: number = 1000
 ): Promise<T> {
-  let lastError: Error;
+  let lastError: Error = new Error('No attempts made');
   
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {

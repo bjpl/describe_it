@@ -3,7 +3,7 @@ import {
   SessionReport,
   SessionInteraction,
   SessionSummary,
-} from "@/types/session";
+} from "../../types/session";
 
 export interface RawExportOptions {
   includePersonalData: boolean;
@@ -123,14 +123,15 @@ export class RawDataExporter {
     }
 
     if (!this.options.includeTimestamps) {
-      delete processed.startTime;
-      delete processed.endTime;
+      // Create a copy without timestamp fields instead of deleting
+      const { startTime, endTime, ...processedWithoutTime } = processed;
+      Object.assign(processed, processedWithoutTime);
     }
 
     if (!this.options.includePersonalData) {
-      // Remove any fields that might be considered personal
-      delete processed.uniqueQueries;
-      delete processed.exportFormats;
+      // Create a copy without personal data fields instead of deleting
+      const { uniqueQueries, exportFormats, ...processedWithoutPersonal } = processed;
+      Object.assign(processed, processedWithoutPersonal);
     }
 
     return processed;
@@ -164,11 +165,13 @@ export class RawDataExporter {
       }
 
       if (!this.options.includeTimestamps) {
-        delete processed.timestamp;
+        const { timestamp, ...processedWithoutTimestamp } = processed;
+        Object.assign(processed, processedWithoutTimestamp);
       }
 
       if (!this.options.includeMetadata) {
-        delete processed.metadata;
+        const { metadata, ...processedWithoutMetadata } = processed;
+        Object.assign(processed, processedWithoutMetadata);
       }
 
       if (!this.options.includePersonalData) {
@@ -373,7 +376,7 @@ export class RawDataExporter {
     Object.entries(data.performance || {}).forEach(([key, value]) => {
       if (typeof value === "object") {
         xml += `    <${key}>\n`;
-        Object.entries(value).forEach(([subKey, subValue]) => {
+        Object.entries(value || {}).forEach(([subKey, subValue]) => {
           xml += `      <${subKey}>${escape(String(subValue))}</${subKey}>\n`;
         });
         xml += `    </${key}>\n`;

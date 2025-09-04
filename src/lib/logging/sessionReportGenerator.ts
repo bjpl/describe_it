@@ -5,7 +5,7 @@ import {
   LearningMetrics,
   SessionInteraction,
   InteractionType,
-} from "@/types/session";
+} from "../../types/session";
 import { SessionLogger } from "./sessionLogger";
 
 export interface ChartData {

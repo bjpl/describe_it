@@ -88,6 +88,27 @@ export interface PDFExportOptions {
     qa?: boolean;
     summary?: boolean;
   };
+  // Additional properties used in PDFExporter
+  includeCharts?: boolean;
+  includeRecommendations?: boolean;
+  includeDetailedAnalytics?: boolean;
+  includeRawData?: boolean;
+  format?: "a4" | "a3" | "letter";
+  quality?: "high" | "medium" | "low";
+}
+
+// PDFOptions for export functions
+export interface PDFOptions {
+  orientation?: "portrait" | "landscape";
+  pageSize?: "A4" | "A3" | "Letter";
+  includeImages?: boolean;
+  fontSize?: number;
+  margins?: {
+    top: number;
+    right: number;
+    bottom: number;
+    left: number;
+  };
 }
 
 // Excel Export Configuration
@@ -213,6 +234,20 @@ export interface ExportData {
     totalItems: number;
     categories: ExportCategory[];
     version: string;
+    schemaVersion?: string;
+    exportVersion?: string;
+    generatedBy?: {
+      application: string;
+      version: string;
+      platform: string;
+      userAgent: string;
+    };
+    statistics?: any;
+    integrity?: {
+      checksum: string;
+      itemCount: number;
+      dataTypes: string[];
+    };
     user?: {
       id?: string;
       sessionId: string;
@@ -358,4 +393,25 @@ export interface ExportHistoryItem {
   error?: string;
   createdAt: string;
   options: ExportOptions;
+}
+
+// Enhanced VisualReportData interface for PDF exporter
+export interface VisualReportData {
+  charts?: any[];
+  summary?: {
+    totalSessions: number;
+    averageScore: number;
+  };
+  heatmaps?: {
+    activityByHour: Array<{ hour: number; count: number }>;
+    learningIntensity: Array<{ period: string; intensity: number }>;
+  };
+  progressCharts?: {
+    learningScore: any;
+    vocabularyGrowth: any;
+    activityBreakdown: any;
+    timeAnalysis: any;
+    accuracyTrend: any;
+  };
+  progressMetrics?: any;
 }

@@ -4,12 +4,33 @@
  */
 
 // Type exports
-export * from "../../types/export";
+export type {
+  ExportFormat,
+  ExportCategory,
+  ExportOptions,
+  ExcelExportOptions,
+  AnkiExportOptions,
+  CSVExportOptions,
+  VocabularyExportItem,
+  DescriptionExportItem,
+  QAExportItem,
+  SessionExportItem,
+  ImageExportItem,
+  ExportData,
+  ExportResult,
+  BatchExportRequest,
+  BatchExportResult,
+  ExportTemplate,
+  ScheduledExport,
+  IExportManager,
+  ExportEvent,
+  ExportHistoryItem,
+} from "../../types/export";
 
 // Core exporters
 export * from "./csvExporter";
 export * from "./jsonExporter";
-export * from "./pdfExporter";
+// export * from "./pdfExporter"; // Temporarily disabled due to type conflicts
 export * from "./excelExporter";
 export * from "./ankiExporter";
 export * from "./exportManager";
@@ -21,7 +42,7 @@ export {
   DEFAULT_EXPORT_OPTIONS,
 } from "./exportManager";
 
-export { exportToPDF, exportStudySheet } from "./pdfExporter";
+// export { exportToPDF, exportStudySheet } from "./pdfExporter"; // Temporarily disabled
 
 export {
   exportToExcel,

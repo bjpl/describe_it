@@ -12,10 +12,7 @@ import {
   QAExportItem,
   SessionExportItem,
 } from "../../types/export";
-
-// Types for export data
-// Use the unified VocabularyItem type from types/unified.ts
-export type { VocabularyItem } from "@/types/unified";
+import { VocabularyItem } from "../../types/unified";
 
 export interface ResponseItem {
   question: string;
@@ -81,7 +78,7 @@ function downloadCSV(content: string, filename: string): void {
  * Export vocabulary data to CSV
  * Saves as target_word_list.csv
  */
-export function exportVocabulary(vocabularyData: VocabularyItem[]): void {
+export function exportVocabulary(vocabularyData: VocabularyExportItem[]): void {
   try {
     const headers = [
       "spanish_text",
@@ -485,7 +482,7 @@ export async function exportToEnhancedCSV(
  * Creates multiple CSV files for complete data export
  */
 export async function exportAllData(
-  vocabularyData: VocabularyItem[],
+  vocabularyData: VocabularyExportItem[],
   responsesData: ResponseItem[],
   sessionData: SessionData[],
 ): Promise<void> {

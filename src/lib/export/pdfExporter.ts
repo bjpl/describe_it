@@ -1,24 +1,18 @@
 // PDF Export Functionality for Session Reports
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-import { SessionReport, SessionSummary } from "@/types/session";
+// Import the correct session types
+import {
+  SessionReport,
+  SessionSummary,
+} from "../../types/session";
 import {
   SessionReportGenerator,
   VisualReportData,
-} from "@/lib/logging/sessionReportGenerator";
-
-export interface PDFExportOptions {
-  includeCharts: boolean;
-  includeRecommendations: boolean;
-  includeDetailedAnalytics: boolean;
-  includeRawData: boolean;
-  format: "a4" | "letter";
-  orientation: "portrait" | "landscape";
-  quality: "high" | "medium" | "low";
-}
+} from "../logging/sessionReportGenerator";
 
 // Export data interface for compatibility with exportManager
-import { ExportData, PDFExportOptions as PDFOptions } from "@/types/export";
+import { ExportData, PDFExportOptions } from "../../types/export";
 
 export class PDFExporter {
   private pdf: jsPDF;
@@ -30,12 +24,19 @@ export class PDFExporter {
 
   constructor(options: Partial<PDFExportOptions> = {}) {
     this.options = {
+      pageSize: "A4",
+      orientation: "portrait",
+      includeImages: true,
+      studySheetFormat: false,
+      fontSize: 12,
+      margins: { top: 20, right: 20, bottom: 20, left: 20 },
+      branding: { includeHeader: true, includeFooter: true },
+      sections: { vocabulary: true, descriptions: true, qa: true, summary: true },
       includeCharts: true,
       includeRecommendations: true,
       includeDetailedAnalytics: true,
       includeRawData: false,
       format: "a4",
-      orientation: "portrait",
       quality: "high",
       ...options,
     };
@@ -43,7 +44,7 @@ export class PDFExporter {
     this.pdf = new jsPDF({
       orientation: this.options.orientation,
       unit: "mm",
-      format: this.options.format,
+      format: (this.options.format || this.options.pageSize?.toLowerCase() || "a4") as "a4" | "a3" | "letter",
     });
 
     this.pageHeight = this.pdf.internal.pageSize.height;
@@ -53,7 +54,7 @@ export class PDFExporter {
   public async generatePDF(
     report: SessionReport,
     visualData: VisualReportData,
-    reportGenerator: SessionReportGenerator,
+    reportGenerator: any,
   ): Promise<Blob> {
     try {
       // Add header
@@ -66,27 +67,29 @@ export class PDFExporter {
       this.addKeyMetrics(report.summary, reportGenerator);
 
       // Add charts if requested
-      if (this.options.includeCharts) {
+      if (this.options.sections?.summary) {
         await this.addCharts(visualData);
       }
 
       // Add detailed analytics
-      if (this.options.includeDetailedAnalytics) {
+      if (this.options.sections?.vocabulary) {
         this.addDetailedAnalytics(report, reportGenerator);
       }
 
       // Add recommendations
-      if (this.options.includeRecommendations) {
+      if (this.options.sections?.qa) {
         this.addRecommendations(report.recommendations);
       }
 
       // Add raw data if requested
-      if (this.options.includeRawData) {
+      if (this.options.sections?.descriptions) {
         this.addRawData(report);
       }
 
       // Add footer
-      this.addFooter();
+      if (this.options.branding?.includeFooter) {
+        this.addFooter();
+      }
 
       return new Blob([this.pdf.output("blob")], { type: "application/pdf" });
     } catch (error) {
@@ -142,8 +145,9 @@ export class PDFExporter {
     // Learning score with visual indicator
     this.pdf.setFontSize(12);
     this.pdf.setFont("helvetica", "normal");
+    const learningScore = summary.learningScore || 0;
     this.pdf.text(
-      `Learning Score: ${summary.learningScore}/100`,
+      `Learning Score: ${learningScore}/100`,
       this.margin,
       this.currentY,
     );
@@ -151,7 +155,7 @@ export class PDFExporter {
     // Add score bar
     const barWidth = 50;
     const barHeight = 3;
-    const scorePercent = summary.learningScore / 100;
+    const scorePercent = learningScore / 100;
 
     this.pdf.setFillColor(220, 220, 220);
     this.pdf.rect(
@@ -163,11 +167,11 @@ export class PDFExporter {
     );
 
     // Score fill color based on performance
-    if (summary.learningScore >= 80)
+    if (learningScore >= 80)
       this.pdf.setFillColor(34, 197, 94); // green
-    else if (summary.learningScore >= 60)
+    else if (learningScore >= 60)
       this.pdf.setFillColor(59, 130, 246); // blue
-    else if (summary.learningScore >= 40)
+    else if (learningScore >= 40)
       this.pdf.setFillColor(245, 158, 11); // yellow
     else this.pdf.setFillColor(239, 68, 68); // red
 
@@ -182,11 +186,11 @@ export class PDFExporter {
 
     // Key achievements
     const achievements = [
-      `Engagement Score: ${summary.engagementScore}/100`,
-      `Comprehension Level: ${summary.comprehensionLevel}`,
-      `Vocabulary Words: ${summary.vocabularySelected}`,
-      `Descriptions Created: ${summary.descriptionsGenerated}`,
-      `Questions Generated: ${summary.questionsGenerated}`,
+      `Engagement Score: ${summary.engagementScore || 0}/100`,
+      `Comprehension Level: ${summary.comprehensionLevel || 'Beginner'}`,
+      `Vocabulary Words: ${summary.vocabularySelected || 0}`,
+      `Descriptions Created: ${summary.descriptionsGenerated || 0}`,
+      `Questions Generated: ${summary.questionsGenerated || 0}`,
     ];
 
     achievements.forEach((achievement) => {
@@ -199,7 +203,7 @@ export class PDFExporter {
 
   private addKeyMetrics(
     summary: SessionSummary,
-    reportGenerator: SessionReportGenerator,
+    reportGenerator: any,
   ): void {
     this.checkPageBreak(80);
 
@@ -208,30 +212,27 @@ export class PDFExporter {
     this.pdf.text("Key Performance Metrics", this.margin, this.currentY);
     this.currentY += 15;
 
-    const vocabularyReport = reportGenerator.generateVocabularyReport();
-    const timeAnalysis = reportGenerator.generateTimeAnalysisReport();
-
-    // Create metrics grid
+    // Create metrics grid with available data
     const metrics = [
-      { label: "Total Searches", value: summary.totalSearches.toString() },
-      { label: "Images Viewed", value: summary.imagesViewed.toString() },
-      { label: "Unique Images", value: summary.uniqueImages.length.toString() },
+      { label: "Total Searches", value: (summary.totalSearches || 0).toString() },
+      { label: "Images Viewed", value: (summary.imagesViewed || 0).toString() },
+      { label: "Unique Images", value: (summary.uniqueImages?.length || 0).toString() },
       {
         label: "Words Generated",
-        value: summary.totalWordsGenerated.toString(),
+        value: (summary.totalWordsGenerated || 0).toString(),
       },
       {
-        label: "Vocabulary Categories",
-        value: vocabularyReport.categoriesExplored.length.toString(),
+        label: "Vocabulary Selected",
+        value: (summary.vocabularySelected || 0).toString(),
       },
-      { label: "Time Efficiency", value: `${timeAnalysis.efficiencyScore}%` },
+      { label: "Session Duration", value: `${Math.round((summary.totalDuration || 0) / 1000 / 60)} min` },
       {
-        label: "Error Rate",
-        value: `${((summary.errorCount / summary.totalInteractions) * 100).toFixed(1)}%`,
+        label: "Total Interactions",
+        value: (summary.totalInteractions || 0).toString(),
       },
       {
-        label: "Peak Activity Periods",
-        value: timeAnalysis.peakActivityPeriods.length.toString(),
+        label: "Learning Score",
+        value: (summary.learningScore || 0).toString(),
       },
     ];
 
@@ -310,10 +311,10 @@ export class PDFExporter {
     this.pdf.text("Activity Heatmap (By Hour)", this.margin, this.currentY);
     this.currentY += 10;
 
-    const heatmapData = visualData.heatmaps.activityByHour
-      .filter((item) => item.count > 0)
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 10);
+    const heatmapData = visualData.heatmaps?.activityByHour
+      ?.filter((item) => item.count > 0)
+      ?.sort((a, b) => b.count - a.count)
+      ?.slice(0, 10) || [];
 
     heatmapData.forEach((item) => {
       const hour = item.hour.toString().padStart(2, "0") + ":00";
@@ -321,8 +322,8 @@ export class PDFExporter {
       this.pdf.text(`${hour}`, this.margin, this.currentY);
 
       // Activity bar
-      const barWidth =
-        (item.count / Math.max(...heatmapData.map((d) => d.count))) * 60;
+      const maxCount = Math.max(...heatmapData.map((d) => d.count), 1);
+      const barWidth = (item.count / maxCount) * 60;
       this.pdf.setFillColor(139, 92, 246);
       this.pdf.rect(this.margin + 30, this.currentY - 2, barWidth, 3, "F");
 
@@ -339,7 +340,7 @@ export class PDFExporter {
 
   private addDetailedAnalytics(
     report: SessionReport,
-    reportGenerator: SessionReportGenerator,
+    reportGenerator: any,
   ): void {
     this.checkPageBreak(100);
 
@@ -382,7 +383,7 @@ export class PDFExporter {
       `Error rate: ${errorAnalysis.errorRate.toFixed(1)}%`,
       `System stability: ${errorAnalysis.stability}`,
       `Common error types: ${errorAnalysis.commonErrors
-        .map((e) => e.type)
+        .map((e: any) => e.type)
         .slice(0, 3)
         .join(", ")}`,
     ]);
@@ -518,7 +519,7 @@ export class PDFExporter {
   public static async exportReportToPDF(
     report: SessionReport,
     visualData: VisualReportData,
-    reportGenerator: SessionReportGenerator,
+    reportGenerator: any,
     options?: Partial<PDFExportOptions>,
   ): Promise<Blob> {
     const exporter = new PDFExporter(options);
@@ -531,7 +532,7 @@ export class PDFExporter {
  */
 export async function exportToPDF(
   data: ExportData,
-  options?: PDFOptions,
+  options?: PDFExportOptions,
 ): Promise<Blob> {
   try {
     // Create simplified PDF for general export data
@@ -660,7 +661,7 @@ export async function exportToPDF(
  */
 export async function exportStudySheet(
   data: ExportData,
-  options?: PDFOptions,
+  options?: PDFExportOptions,
 ): Promise<Blob> {
   try {
     const pdf = new jsPDF({

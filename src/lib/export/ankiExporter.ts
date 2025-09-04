@@ -154,7 +154,7 @@ export class AnkiExporter {
       item.difficulty,
     ]
       .filter(Boolean)
-      .map((tag) => tag.toLowerCase().replace(/\s+/g, "-"));
+      .map((tag) => tag ? tag.toLowerCase().replace(/\s+/g, "-") : "");
 
     return {
       front: this.formatQuestionFront(item.question, item.imageUrl),

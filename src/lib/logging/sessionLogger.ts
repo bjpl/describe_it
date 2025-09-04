@@ -9,7 +9,7 @@ import {
   SessionLoggerSettings,
   LearningMetrics,
   SessionReport,
-} from "@/types/session";
+} from "../../types/session";
 
 export class SessionLogger {
   private sessionId: string;

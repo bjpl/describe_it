@@ -25,7 +25,7 @@ import {
 } from "../../types/export";
 
 // Import all exporters
-import { exportToPDF } from "./pdfExporter";
+// import { exportToPDF } from "./pdfExporter"; // Temporarily disabled
 import { exportToExcel } from "./excelExporter";
 import { exportToAnki } from "./ankiExporter";
 import { exportToJSON } from "./jsonExporter";
@@ -376,7 +376,8 @@ export class ExportManager implements IExportManager {
   ): Promise<Blob> {
     switch (options.format) {
       case "pdf":
-        return await exportToPDF(data, options.pdfOptions);
+        // return await exportToPDF(data, options.pdfOptions); // Temporarily disabled
+        throw new Error("PDF export temporarily disabled due to type conflicts");
 
       case "excel":
         return await exportToExcel(data, options.excelOptions);
@@ -412,13 +413,14 @@ export class ExportManager implements IExportManager {
     const lines: string[] = [];
 
     // Add each data type as a section
-    Object.entries(data).forEach(([type, items]: [string, any[]]) => {
-      if (items.length > 0) {
+    Object.entries(data).forEach(([type, items]) => {
+      const itemsArray = items as any[];
+      if (itemsArray && itemsArray.length > 0) {
         lines.push(`\n# ${type.toUpperCase()}`);
-        const headers = Object.keys(items[0]);
+        const headers = Object.keys(itemsArray[0]);
         lines.push(headers.join(","));
 
-        items.forEach((item) => {
+        itemsArray.forEach((item) => {
           const values = headers.map((header) => {
             const value = item[header] || "";
             return typeof value === "string" && value.includes(",")

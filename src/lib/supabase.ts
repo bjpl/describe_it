@@ -1,6 +1,14 @@
 import { createClient } from "@supabase/supabase-js";
-import { DatabaseService, createDatabaseService } from "./services/database";
-import type { Database } from "../types/database";
+import { createDatabaseService } from "./services/database";
+import type { 
+  Database,
+  QAResponse,
+  UserSettings,
+  VocabularyList,
+  Session,
+  UserProgress as LearningProgress,
+  DescriptionRecord as SavedDescription
+} from "../types/database";
 import type { VocabularyItem } from "../types/unified";
 
 // Environment variables with fallbacks
@@ -46,46 +54,8 @@ export const databaseService = createDatabaseService(
   supabaseServiceRoleKey,
 );
 
-// Database table types
-export interface User {
-  id: string;
-  email: string;
-  username: string | null;
-  full_name: string | null;
-  avatar_url: string | null;
-  spanish_level: "beginner" | "intermediate" | "advanced";
-  created_at: string;
-  updated_at: string;
-}
-
-export interface Session {
-  id: string;
-  user_id: string;
-  session_type: "description" | "qa" | "vocabulary" | "mixed";
-  started_at: string;
-  ended_at: string | null;
-  duration_minutes: number | null;
-  images_processed: number;
-  descriptions_generated: number;
-  qa_attempts: number;
-  qa_correct: number;
-  vocabulary_learned: number;
-  session_data: any;
-  created_at: string;
-}
-
-export interface VocabularyList {
-  id: string;
-  name: string;
-  description: string | null;
-  category: "basic" | "intermediate" | "advanced" | "custom";
-  difficulty_level: number;
-  total_words: number;
-  is_active: boolean;
-  created_by: string | null;
-  created_at: string;
-  updated_at: string;
-}
+// Re-export database types for consistency - use unified types from database schema
+export type User = Database['public']['Tables']['users']['Row'];
 
 // Use unified VocabularyItem type for consistency
 // Legacy interface kept for backward compatibility
@@ -115,42 +85,40 @@ export interface LegacyVocabularyItem {
 // Re-export unified VocabularyItem as the primary type
 export type { VocabularyItem };
 
-export interface LearningProgress {
-  id: string;
-  user_id: string;
-  vocabulary_item_id: string;
-  session_id: string | null;
-  mastery_level: number; // 0-100
-  review_count: number;
-  correct_count: number;
-  last_reviewed: string | null;
-  next_review: string | null;
-  difficulty_adjustment: number;
-  learning_phase: "new" | "learning" | "review" | "mastered";
-  created_at: string;
-  updated_at: string;
+// Re-export additional database types using imported aliases
+export { type Session, type VocabularyList, type QAResponse, type UserSettings };
+export type { LearningProgress, SavedDescription };
+
+// Type conversion functions to handle service vs database type differences
+function convertServiceUserToDatabase(user: any): User | null {
+  if (!user) return null;
+  // Convert service User type to database User type - handle any field differences
+  return user as User;
 }
 
-export interface SavedDescription {
-  id: string;
-  user_id: string | null;
-  session_id: string | null;
-  image_id: string;
-  image_url: string;
-  english_description: string;
-  spanish_description: string;
-  description_style:
-    | "conversacional"
-    | "académico"
-    | "creativo"
-    | "técnico"
-    | "narrativo";
-  generated_vocabulary: any[];
-  qa_pairs: any[];
-  is_favorite: boolean;
-  tags: string[];
-  created_at: string;
-  updated_at: string;
+function convertServiceSessionToDatabase(session: any): Session | null {
+  if (!session) return null;
+  return session as Session;
+}
+
+function convertServiceQAResponseToDatabase(response: any): QAResponse | null {
+  if (!response) return null;
+  return response as QAResponse;
+}
+
+function convertServiceUserSettingsToDatabase(settings: any): UserSettings | null {
+  if (!settings) return null;
+  return settings as UserSettings;
+}
+
+function convertServiceSavedDescriptionToDatabase(description: any): SavedDescription | null {
+  if (!description) return null;
+  return description as SavedDescription;
+}
+
+function convertServiceLearningProgressToDatabase(progress: any): LearningProgress | null {
+  if (!progress) return null;
+  return progress as LearningProgress;
 }
 
 // Legacy DatabaseService class - now uses the enhanced service internally
@@ -168,12 +136,12 @@ export class DatabaseService {
   // User operations
   static async createUser(userData: Partial<User>): Promise<User | null> {
     const result = await databaseService.createUser(userData);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceUserToDatabase(result.data) : null;
   }
 
   static async getUser(userId: string): Promise<User | null> {
     const result = await databaseService.getUser(userId);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceUserToDatabase(result.data) : null;
   }
 
   static async updateUser(
@@ -181,7 +149,7 @@ export class DatabaseService {
     updates: Partial<User>,
   ): Promise<User | null> {
     const result = await databaseService.updateUser(userId, updates);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceUserToDatabase(result.data) : null;
   }
 
   // Session operations
@@ -189,7 +157,7 @@ export class DatabaseService {
     sessionData: Omit<Session, "id" | "created_at">,
   ): Promise<Session | null> {
     const result = await databaseService.createSession(sessionData);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceSessionToDatabase(result.data) : null;
   }
 
   static async endSession(
@@ -197,7 +165,7 @@ export class DatabaseService {
     endData: Partial<Session>,
   ): Promise<Session | null> {
     const result = await databaseService.endSession(sessionId, endData);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceSessionToDatabase(result.data) : null;
   }
 
   static async getUserSessions(
@@ -205,7 +173,7 @@ export class DatabaseService {
     limit: number = 10,
   ): Promise<Session[]> {
     const result = await databaseService.getUserSessions(userId, { limit });
-    return result.success ? result.data || [] : [];
+    return result.success ? (result.data || []).map(convertServiceSessionToDatabase).filter(Boolean) as Session[] : [];
   }
 
   // Vocabulary operations
@@ -244,7 +212,7 @@ export class DatabaseService {
       vocabularyItemId,
       progressData,
     );
-    return result.success ? result.data : null;
+    return result.success ? convertServiceLearningProgressToDatabase(result.data) : null;
   }
 
   static async getLearningProgress(
@@ -252,7 +220,7 @@ export class DatabaseService {
     limit: number = 50,
   ): Promise<LearningProgress[]> {
     const result = await databaseService.getLearningProgress(userId, { limit });
-    return result.success ? result.data || [] : [];
+    return result.success ? (result.data || []).map(convertServiceLearningProgressToDatabase).filter(Boolean) as LearningProgress[] : [];
   }
 
   // Saved descriptions operations
@@ -260,7 +228,7 @@ export class DatabaseService {
     descriptionData: Omit<SavedDescription, "id" | "created_at" | "updated_at">,
   ): Promise<SavedDescription | null> {
     const result = await databaseService.saveDescription(descriptionData);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceSavedDescriptionToDatabase(result.data) : null;
   }
 
   static async getSavedDescriptions(
@@ -270,7 +238,7 @@ export class DatabaseService {
     const result = await databaseService.getSavedDescriptions(userId, {
       limit,
     });
-    return result.success ? result.data || [] : [];
+    return result.success ? (result.data || []).map(convertServiceSavedDescriptionToDatabase).filter(Boolean) as SavedDescription[] : [];
   }
 
   static async toggleFavoriteDescription(
@@ -310,7 +278,7 @@ export class DatabaseService {
     responseData: Partial<QAResponse>,
   ): Promise<QAResponse | null> {
     const result = await databaseService.saveQAResponse(responseData);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceQAResponseToDatabase(result.data) : null;
   }
 
   static async getQAResponses(
@@ -318,12 +286,12 @@ export class DatabaseService {
     options: any = {},
   ): Promise<QAResponse[]> {
     const result = await databaseService.getQAResponses(userId, options);
-    return result.success ? result.data || [] : [];
+    return result.success ? (result.data || []).map(convertServiceQAResponseToDatabase).filter(Boolean) as QAResponse[] : [];
   }
 
   static async getUserSettings(userId: string): Promise<UserSettings | null> {
     const result = await databaseService.getUserSettings(userId);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceUserSettingsToDatabase(result.data) : null;
   }
 
   static async updateUserSettings(
@@ -331,7 +299,7 @@ export class DatabaseService {
     settings: Partial<UserSettings>,
   ): Promise<UserSettings | null> {
     const result = await databaseService.updateUserSettings(userId, settings);
-    return result.success ? result.data : null;
+    return result.success ? convertServiceUserSettingsToDatabase(result.data) : null;
   }
 
   // Get service metrics

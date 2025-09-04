@@ -269,7 +269,7 @@ export class UserService {
 
       return {
         data: {
-          ...(user || {}),
+          ...(user && typeof user === 'object' ? user : {}),
           achievements: Array.from(new Set(allAchievements)),
         } as UserWithProgress,
         error: null,
