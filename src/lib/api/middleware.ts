@@ -357,5 +357,5 @@ export const withCacheAndAuth = (
     withCors,
     withAuth,
     (handler: (req: AuthenticatedRequest) => Promise<NextResponse>) => 
-      withCache(cacheKey, generateKey, handler),
+      withCache(cacheKey, generateKey, handler as (req: NextRequest) => Promise<NextResponse>),
   );

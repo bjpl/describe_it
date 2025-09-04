@@ -2,7 +2,8 @@
 // Centralized exports for all API services
 
 // Services
-export { unsplashService, APIError } from "./unsplash";
+export { unsplashService } from "./unsplash";
+export { APIError } from "../../types/api";
 export { openAIService } from "./openai";
 export { supabaseService } from "./supabase";
 export { vercelKvCache } from "./vercel-kv";

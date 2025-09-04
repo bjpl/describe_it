@@ -38,7 +38,7 @@ class LocalStorageAdapter {
         updated_at: new Date().toISOString(),
       };
 
-      localStorage.setItem(this.getKey(table, id), JSON.stringify(itemWithId));
+      localStorage.setItem(this.getKey(table, id.toString()), JSON.stringify(itemWithId));
 
       // Update table index
       const indexKey = this.getKey(`${table}_index`);
@@ -88,14 +88,14 @@ class LocalStorageAdapter {
           const item = localStorage.getItem(this.getKey(table, id));
           return item ? JSON.parse(item) : null;
         })
-        .filter((item: unknown): item is NonNullable<typeof item> => Boolean(item));
+        .filter((item: unknown): item is Record<string, unknown> => Boolean(item));
 
       // Apply basic filtering (simplified)
       let filteredItems = items;
       Object.keys(filters).forEach((key) => {
         if (filters[key] !== undefined) {
           filteredItems = filteredItems.filter(
-            (item) => item[key] === filters[key],
+            (item: Record<string, unknown>) => item[key] === filters[key],
           );
         }
       });
@@ -1029,8 +1029,8 @@ class SupabaseService {
         updates.correct_count = (currentPhrase.correct_count || 0) + 1;
 
         // Check if phrase should be marked as mastered
-        const accuracy = updates.correct_count / updates.study_count;
-        if (updates.study_count >= 5 && accuracy >= 0.8) {
+        const accuracy = (updates.correct_count || 0) / (updates.study_count || 1);
+        if ((updates.study_count || 0) >= 5 && accuracy >= 0.8) {
           updates.is_mastered = true;
           updates.mastered_at = new Date().toISOString();
         }

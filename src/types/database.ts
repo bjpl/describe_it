@@ -106,15 +106,19 @@ export interface QAResponse {
 export interface DatabaseResponse<T> {
   data: T | null;
   error: string | null;
-  success: boolean;
+  message?: string;
 }
 
 export interface PaginatedResponse<T> {
   data: T[];
-  count: number;
-  page: number;
-  limit: number;
-  totalPages: number;
+  error?: string | null;
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    pages: number;
+    has_more: boolean;
+  };
 }
 
 // Filter and search types - use unified VocabularyFilters instead
@@ -163,14 +167,10 @@ export interface StudyStats {
   by_session_type: Record<string, number>;
 }
 
-// Simplified Database interface - use generic types for flexibility
+// Database interface using the TableTypeMap for type safety
 export interface Database {
   public: {
-    Tables: Record<string, {
-      Row: Record<string, unknown>;
-      Insert: Record<string, unknown>;
-      Update: Record<string, unknown>;
-    }>;
+    Tables: TableTypeMap;
     Enums: {
       description_style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
     };
@@ -210,12 +210,14 @@ export type PhraseInsert = Omit<Phrase, 'id' | 'created_at' | 'updated_at'> & {
 export interface Session {
   id: string;
   user_id: string;
-  session_type: 'flashcards' | 'quiz' | 'matching' | 'writing';
-  vocabulary_items: string[];
-  score: number;
-  accuracy: number;
-  time_spent: number;
-  session_data: any;
+  session_type: 'practice' | 'flashcards' | 'quiz' | 'matching' | 'writing';
+  status: 'active' | 'completed' | 'abandoned';
+  vocabulary_items?: string[];
+  score?: number;
+  accuracy?: number;
+  time_spent?: number;
+  session_data?: any;
+  device_info?: any;
   started_at: string;
   completed_at?: string;
   created_at: string;
@@ -257,6 +259,10 @@ export interface DescriptionRecord {
   style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
   description_english: string;
   description_spanish: string;
+  is_completed?: boolean;
+  completed_at?: string;
+  completion_time_seconds?: number;
+  user_rating?: number;
   created_at: string;
   updated_at: string;
 }
@@ -266,6 +272,187 @@ export type DescriptionInsert = Omit<DescriptionRecord, 'id' | 'created_at' | 'u
   created_at?: string;
   updated_at?: string;
 };
+
+// Missing type exports required by database utils - using concrete type mappings
+export type DatabaseSchema = Database;
+
+// Define table type mappings
+type TableTypeMap = {
+  users: {
+    Row: {
+      id: string;
+      email?: string;
+      full_name?: string;
+      learning_level: "beginner" | "intermediate" | "advanced";
+      subscription_status: "free" | "premium" | "trial";
+      total_points: number;
+      current_streak: number;
+      longest_streak: number;
+      last_active_at?: string;
+      created_at: string;
+      updated_at: string;
+    };
+    Insert: {
+      id?: string;
+      email?: string;
+      full_name?: string;
+      learning_level?: "beginner" | "intermediate" | "advanced";
+      subscription_status?: "free" | "premium" | "trial";
+      total_points?: number;
+      current_streak?: number;
+      longest_streak?: number;
+      last_active_at?: string;
+      created_at?: string;
+      updated_at?: string;
+    };
+    Update: {
+      id?: string;
+      email?: string;
+      full_name?: string;
+      learning_level?: "beginner" | "intermediate" | "advanced";
+      subscription_status?: "free" | "premium" | "trial";
+      total_points?: number;
+      current_streak?: number;
+      longest_streak?: number;
+      last_active_at?: string;
+      created_at?: string;
+      updated_at?: string;
+    };
+  };
+  sessions: {
+    Row: Session;
+    Insert: SessionInsert;
+    Update: Partial<SessionInsert>;
+  };
+  descriptions: {
+    Row: DescriptionRecord;
+    Insert: DescriptionInsert;
+    Update: Partial<DescriptionInsert>;
+  };
+  images: {
+    Row: ImageRecord;
+    Insert: ImageInsert;
+    Update: Partial<ImageInsert>;
+  };
+  questions: {
+    Row: QAQuestion & { id: string; created_at: string; updated_at: string };
+    Insert: QAQuestion & { id?: string; created_at?: string; updated_at?: string };
+    Update: Partial<QAQuestion & { id?: string; created_at?: string; updated_at?: string }>;
+  };
+  phrases: {
+    Row: Phrase;
+    Insert: PhraseInsert;
+    Update: Partial<PhraseInsert>;
+  };
+  user_progress: {
+    Row: UserProgress;
+    Insert: UserProgressInsert;
+    Update: Partial<UserProgressInsert>;
+  };
+  export_history: {
+    Row: {
+      id: string;
+      user_id: string;
+      export_type: string;
+      status: string;
+      data?: any;
+      created_at: string;
+      updated_at: string;
+    };
+    Insert: {
+      id?: string;
+      user_id: string;
+      export_type: string;
+      status?: string;
+      data?: any;
+      created_at?: string;
+      updated_at?: string;
+    };
+    Update: {
+      id?: string;
+      user_id?: string;
+      export_type?: string;
+      status?: string;
+      data?: any;
+      created_at?: string;
+      updated_at?: string;
+    };
+  };
+};
+
+export type Tables<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Row"];
+export type TablesInsert<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Insert"];
+export type TablesUpdate<T extends keyof Database["public"]["Tables"]> = Database["public"]["Tables"][T]["Update"];
+
+// API Response type alias (matches existing DatabaseResponse but also supports just data/error)
+export type ApiResponse<T> = DatabaseResponse<T> | {
+  data: T | null;
+  error: string | null;
+};
+
+// Learning Analytics interface
+export interface LearningAnalytics {
+  user_id: string;
+  overall_performance: {
+    total_points: number;
+    accuracy_rate: number;
+    consistency_score: number;
+    improvement_trend: "improving" | "stable" | "declining";
+  };
+  skill_breakdown: Record<string, number>;
+  recent_activity: {
+    sessions_last_week: number;
+    descriptions_completed: number;
+    new_phrases_learned: number;
+  };
+  recommendations: {
+    focus_areas: string[];
+    suggested_difficulty: string;
+    next_milestones: string[];
+  };
+}
+
+// Enhanced user type with progress data
+export interface UserWithProgress {
+  id: string;
+  email?: string;
+  full_name?: string;
+  learning_level: "beginner" | "intermediate" | "advanced";
+  subscription_status: "free" | "premium" | "trial";
+  total_points: number;
+  current_streak: number;
+  longest_streak: number;
+  last_active_at?: string;
+  created_at: string;
+  updated_at: string;
+  recent_progress?: UserProgress[];
+  achievements: string[];
+}
+
+// Enhanced session type with related data
+export interface SessionWithDetails extends Session {
+  user?: {
+    id: string;
+    full_name?: string;
+    email?: string;
+  };
+  descriptions?: DescriptionRecord[];
+  questions?: QAQuestion[];
+  phrases?: Phrase[];
+}
+
+// Enhanced description type with relations
+export interface DescriptionWithRelations extends DescriptionRecord {
+  session?: Session;
+  image?: ImageRecord;
+  user?: {
+    id: string;
+    full_name?: string;
+    email?: string;
+  };
+  questions?: QAQuestion[];
+  phrases?: Phrase[];
+}
 
 // Export types for convenience
 export type DatabaseTables =

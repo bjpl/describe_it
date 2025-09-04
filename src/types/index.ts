@@ -251,7 +251,7 @@ export type {
   VocabularyFilters,
   VocabularyStats,
   BulkVocabularyOperation,
-  BulkOperationResult,
+  BulkOperationResult as UnifiedBulkOperationResult,
   VocabularyExportOptions,
   VocabularyImportOptions,
   VocabularyImportResult,
@@ -274,7 +274,7 @@ export {
 export interface ExportableData {
   descriptions?: DescriptionExportItem[];
   qaResponses?: QAResponse[];
-  vocabulary?: VocabularyItem[];
+  vocabulary?: import('./unified').VocabularyItem[];
   sessionData?: SessionInteractionExport[];
 }
 
@@ -401,7 +401,7 @@ export interface ValidationResult {
 // @deprecated Use VocabularyFilters from unified types
 export interface VocabularyFilter {
   category?: string;
-  difficulty?: DifficultyLevel;
+  difficulty?: import('./unified').DifficultyLevel;
   searchTerm?: string;
   dateRange?: {
     start: string;
@@ -422,7 +422,7 @@ export interface DescriptionFilter {
 // Bulk Operations Types
 export interface BulkVocabularyRequest {
   userId: string;
-  vocabularyItems: Omit<VocabularyItem, "id" | "created_at">[];
+  vocabularyItems: Omit<import('./unified').VocabularyItem, "id" | "created_at">[];
   collectionName: string;
   metadata?: {
     source: string;

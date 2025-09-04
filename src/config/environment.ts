@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { devLog, devWarn, devError } from "@/lib/logger";
+import { devLog, devWarn, devError } from "../lib/logger";
 
 // Environment variable schema with optional values for demo mode
 const envSchema = z.object({

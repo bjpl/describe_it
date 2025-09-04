@@ -9,16 +9,16 @@ import {
   CacheEntry,
 } from "../../types/api";
 
-export { APIError } from "../../types/api";
 import { vercelKvCache } from "./vercel-kv";
 
 class UnsplashService {
-  private client: AxiosInstance;
+  private client: AxiosInstance | null = null;
   private accessKey: string;
   private rateLimitInfo: RateLimitInfo = {
     remaining: 50,
-    resetTime: Date.now() + 3600000,
-    total: 50
+    reset: Date.now() + 3600000,
+    limit: 50,
+    isBlocked: false
   };
   private imageCache = new Map<string, ProcessedImage>();
   private duplicateUrls = new Set<string>();
@@ -55,6 +55,8 @@ class UnsplashService {
   }
 
   private setupInterceptors(): void {
+    if (!this.client) return;
+    
     // Request interceptor for rate limiting
     this.client.interceptors.request.use((config) => {
       if (this.rateLimitInfo.isBlocked) {
@@ -383,6 +385,10 @@ class UnsplashService {
       }
 
       // Make API request
+      if (!this.client) {
+        return this.generateDemoImages(params);
+      }
+      
       const response = await this.client.get<UnsplashSearchResponse>(
         "/search/photos",
         {
@@ -434,6 +440,14 @@ class UnsplashService {
         return processedImage;
       }
 
+      if (!this.client) {
+        throw new APIError({
+          code: "CLIENT_NOT_INITIALIZED",
+          message: "Unsplash client not initialized",
+          status: 500,
+        });
+      }
+      
       const response = await this.client.get<UnsplashImage>(`/photos/${id}`);
       const image = response.data;
 
@@ -455,6 +469,14 @@ class UnsplashService {
    */
   async downloadImage(id: string): Promise<string> {
     try {
+      if (!this.client) {
+        throw new APIError({
+          code: "CLIENT_NOT_INITIALIZED",
+          message: "Unsplash client not initialized",
+          status: 500,
+        });
+      }
+      
       const response = await this.client.get(`/photos/${id}/download`);
       return response.data.url;
     } catch (error) {
@@ -505,6 +527,16 @@ class UnsplashService {
         };
       }
 
+      if (!this.client) {
+        // Return demo data for popular images when client not available
+        const demoResult = this.generateDemoImages({ query: "popular", page, per_page: perPage });
+        return {
+          images: demoResult.images,
+          currentPage: page,
+          hasNextPage: demoResult.hasNextPage,
+        };
+      }
+      
       const response = await this.client.get<UnsplashImage[]>("/photos", {
         params: {
           page,
@@ -565,4 +597,3 @@ class APIError extends Error {
 
 // Export singleton instance
 export const unsplashService = new UnsplashService();
-export { APIError };

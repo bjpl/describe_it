@@ -1,6 +1,6 @@
 import { openAIService } from "./openai";
 import { vercelKvCache } from "./vercel-kv";
-import { APIError } from "@/types/api";
+import { APIError } from "../../types/api";
 
 export interface TranslationRequest {
   text: string;
@@ -372,7 +372,7 @@ class TranslatorService {
             code: "TRANSLATION_ERROR",
             message: `Translation failed for "${text}"`,
             status: 500,
-            details: error,
+            details: error as Record<string, unknown>,
           });
     }
   }
