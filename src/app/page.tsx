@@ -13,7 +13,9 @@ const LazyImageSearch = React.lazy(() => import('@/components/ImageSearch/ImageS
   default: module.ImageSearch
 })));
 
-const LazyDescriptionPanel = React.lazy(() => import('@/components/DescriptionPanel'));
+const LazyDescriptionPanel = React.lazy(() => import('@/components/DescriptionPanel').then(module => ({
+  default: module.DescriptionPanel
+})));
 const LazyQAPanel = React.lazy(() => import('@/components/QAPanel'));
 const LazyPhrasesPanel = React.lazy(() => import('@/components/PhrasesPanel'));
 

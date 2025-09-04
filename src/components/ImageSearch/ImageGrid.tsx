@@ -146,6 +146,8 @@ const ImageItem = memo(
   },
 );
 
+ImageItem.displayName = 'ImageItem';
+
 const ImageGridBase: React.FC<ImageGridProps> = ({
   images,
   onImageClick,
@@ -160,8 +162,6 @@ const ImageGridBase: React.FC<ImageGridProps> = ({
       performanceProfiler.endMark("ImageGrid-render");
     };
   });
-
-ImageItem.displayName = 'ImageItem';
 
   // Memoize animation variants with reduced motion support
   const containerVariants = useMemo(

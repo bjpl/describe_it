@@ -14,7 +14,9 @@ export const LazyImageSearch = dynamic(
 );
 
 export const LazyDescriptionPanel = dynamic(
-  () => import('@/components/DescriptionPanel'),
+  () => import('@/components/DescriptionPanel').then(module => ({
+    default: module.DescriptionPanel
+  })),
   {
     loading: () => <LoadingSpinner size="md" />,
     ssr: false
@@ -46,40 +48,70 @@ export const LazyVocabularyBuilder = dynamic(
 );
 
 export const LazySettingsModal = dynamic(
-  () => import('@/components/SettingsModal'),
+  () => import('@/components/SettingsModal').then(module => ({
+    default: module.SettingsModal
+  })),
   {
     loading: () => <LoadingSpinner size="sm" />,
     ssr: false
   }
 );
 
-export const LazyExportModal = dynamicImport.loadComponent(
-  () => import('@/components/ExportModal')
+export const LazyExportModal = dynamic(
+  () => import('@/components/ExportModal'),
+  {
+    loading: () => <LoadingSpinner size="sm" />,
+    ssr: false
+  }
 );
 
-export const LazySessionReportModal = dynamicImport.loadComponent(
-  () => import('@/components/SessionReportModal')
+export const LazySessionReportModal = dynamic(
+  () => import('@/components/SessionReportModal'),
+  {
+    loading: () => <LoadingSpinner size="sm" />,
+    ssr: false
+  }
 );
 
-export const LazyFlashcardComponent = dynamicImport.loadComponent(
-  () => import('@/components/FlashcardComponent')
+export const LazyFlashcardComponent = dynamic(
+  () => import('@/components/FlashcardComponent'),
+  {
+    loading: () => <LoadingSpinner size="md" />,
+    ssr: false
+  }
 );
 
-export const LazyQuizComponent = dynamicImport.loadComponent(
-  () => import('@/components/QuizComponent')
+export const LazyQuizComponent = dynamic(
+  () => import('@/components/QuizComponent'),
+  {
+    loading: () => <LoadingSpinner size="md" />,
+    ssr: false
+  }
 );
 
 // Chart components (heavy dependencies)
-export const LazyProgressStatistics = dynamicImport.loadComponent(
-  () => import('@/components/ProgressStatistics')
+export const LazyProgressStatistics = dynamic(
+  () => import('@/components/ProgressStatistics'),
+  {
+    loading: () => <LoadingSpinner size="md" />,
+    ssr: false
+  }
 );
 
-export const LazyProgressDashboard = dynamicImport.loadComponent(
-  () => import('@/components/ProgressTracking/ProgressDashboard')
+export const LazyProgressDashboard = dynamic(
+  () => import('@/components/ProgressTracking/ProgressDashboard'),
+  {
+    loading: () => <LoadingSpinner size="md" />,
+    ssr: false
+  }
 );
 
-export const LazyEnhancedProgressDashboard = dynamicImport.loadComponent(
-  () => import('@/components/ProgressTracking/EnhancedProgressDashboard')
+export const LazyEnhancedProgressDashboard = dynamic(
+  () => import('@/components/ProgressTracking/EnhancedProgressDashboard'),
+  {
+    loading: () => <LoadingSpinner size="md" />,
+    ssr: false
+  }
 );
 
 // Loading wrapper component
@@ -143,7 +175,7 @@ export type ComponentName = keyof typeof componentRegistry;
 // Dynamic component loader
 interface DynamicComponentProps {
   name: ComponentName;
-  props?: Record<string, any>;
+  props?: any;
   fallback?: React.ReactNode;
 }
 
@@ -152,7 +184,7 @@ export const DynamicComponent: React.FC<DynamicComponentProps> = ({
   props = {},
   fallback
 }) => {
-  const Component = componentRegistry[name];
+  const Component = componentRegistry[name] as any;
   
   return (
     <LazyWrapper fallback={fallback}>

@@ -44,10 +44,13 @@ const OptimizedImageLoaderBase: React.FC<OptimizedImageLoaderProps> = ({
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const imageRef = useRef<HTMLElement>(null);
-  const { isIntersecting, hasIntersected } = useIntersectionObserver(imageRef, {
+  const intersectionData = useIntersectionObserver(imageRef, {
     threshold: 0.1,
     rootMargin: '50px'
   });
+
+  const isIntersecting = Boolean((intersectionData as any)?.isIntersecting);
+  const hasIntersected = Boolean((intersectionData as any)?.hasIntersected);
 
   const handleLoad = useCallback(() => {
     setImageLoaded(true);
@@ -60,13 +63,13 @@ const OptimizedImageLoaderBase: React.FC<OptimizedImageLoaderProps> = ({
   }, [onError]);
 
   // Generate blur placeholder
-  const blurDataURL = imageOptimization.createBlurDataURL();
+  const blurDataURL = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8A0s8t1tcTXMMvOVFKoVJDdZHr1Z9VzHsGQl9zYXqtzIj6Hq8fSfQCHzXGhfXQFT7LJFXG+VVjr36sJvM/8AADUqfVH//9k=';
 
   // Determine image source
   const imageSrc = imageError && fallbackSrc ? fallbackSrc : src;
 
   // Calculate optimal sizes based on container
-  const optimalSize = imageOptimization.calculateOptimalSize(width);
+  const optimalSize = width || 800;
 
   // If using Next.js Image component
   if (useNextImage) {
