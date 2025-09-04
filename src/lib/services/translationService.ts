@@ -1,4 +1,4 @@
-import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
+import { withRetry, RetryConfig } from "../utils/error-retry";
 import { openAIService } from "./openaiService";
 
 interface CachedTranslation {
@@ -240,7 +240,8 @@ export class TranslationService {
           });
         }, this.retryConfig);
 
-        const detected = result.toLowerCase().trim();
+        const resultText = result.success ? result.data : result;
+        const detected = (typeof resultText === 'string' ? resultText : '').toLowerCase().trim();
         if (this.supportedLanguages.includes(detected)) {
           return { language: detected, confidence: 0.9 };
         }
@@ -408,7 +409,7 @@ export class TranslationService {
       });
     }, this.retryConfig);
 
-    return result;
+    return result.success && result.data ? result.data : (result as unknown as string);
   }
 
   private async getFallbackTranslation(

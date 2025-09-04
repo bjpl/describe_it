@@ -1,4 +1,4 @@
-import { VocabularyItem, VocabularyList } from "@/types/database";
+import { VocabularyItem, VocabularyList } from "../../types/database";
 
 // Sample vocabulary data for development/fallback
 const sampleVocabularyItems: VocabularyItem[] = [

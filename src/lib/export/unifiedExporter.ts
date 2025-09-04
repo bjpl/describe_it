@@ -88,10 +88,9 @@ export class UnifiedExporter {
       }
 
       // Log the export action
-      this.getSessionLogger().logInteraction("data_exported", {
-        format: options.format,
-        components: this.getIncludedComponents(options),
-        filename: baseFilename,
+      this.getSessionLogger().logInteraction("export_initiated", {
+        exportFormat: options.format,
+        componentName: baseFilename,
       });
     } catch (error) {
       console.error("Export failed:", error);

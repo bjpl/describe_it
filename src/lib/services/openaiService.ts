@@ -1,7 +1,7 @@
 import OpenAI from "openai";
-import { APIError, RetryConfig } from "@/types/api";
-import { withRetry, RetryResult } from "@/lib/utils/error-retry";
-import { getEnvironment } from "@/config/env";
+import { APIError } from "../../types/api";
+import { withRetry, RetryResult, RetryConfig } from "../utils/error-retry";
+import { getEnvironment } from "../../config/env";
 
 interface StreamingOptions {
   onChunk?: (chunk: string) => void;
@@ -33,7 +33,7 @@ export class OpenAIService {
       baseDelay: 1000,
       maxDelay: 10000,
       backoffFactor: 2,
-      shouldRetry: (error: Error) => {
+      shouldRetry: (error: Error, attempt: number) => {
         const message = error.message.toLowerCase();
         return (
           message.includes("503") ||
@@ -324,9 +324,9 @@ export class OpenAIService {
           conceptos: [],
         };
 
-        const result = { ...defaultPhrases, ...phrases };
-        this.setCache(cacheKey, result);
-        return result;
+        const processedResult = { ...defaultPhrases, ...phrases };
+        this.setCache(cacheKey, processedResult);
+        return processedResult;
       }
     } catch (error) {
       console.warn("OpenAI phrase extraction failed:", error);

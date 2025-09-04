@@ -4,9 +4,21 @@
  */
 
 // Import all services
-export { openaiService, OpenAIService } from "./openaiService";
+import { openAIService, OpenAIService } from "./openaiService";
+import { translationService, TranslationService } from "./translationService";
+import { vocabularyService, VocabularyService } from "./vocabularyService"; // Original service
+import {
+  enhancedVocabularyService,
+  EnhancedVocabularyService,
+} from "./enhancedVocabularyService";
+import { qaService, QAService } from "./qaService";
+import { progressService, ProgressService } from "./progressService";
+import { exportService, ExportService } from "./exportService";
+
+// Re-export all services for external use
+export { openAIService, OpenAIService } from "./openaiService";
 export { translationService, TranslationService } from "./translationService";
-export { vocabularyService, VocabularyService } from "./vocabularyService"; // Original service
+export { vocabularyService, VocabularyService } from "./vocabularyService";
 export {
   enhancedVocabularyService,
   EnhancedVocabularyService,
@@ -35,7 +47,7 @@ export class ServiceRegistry {
 
   private registerServices(): void {
     // Register all services
-    this.services.set("openai", openaiService);
+    this.services.set("openai", openAIService);
     this.services.set("translation", translationService);
     this.services.set("vocabulary", vocabularyService);
     this.services.set("enhancedVocabulary", enhancedVocabularyService);
@@ -72,7 +84,7 @@ export class ServiceRegistry {
     const healthChecks = [];
     const timestamp = new Date().toISOString();
 
-    for (const [name, service] of this.services.entries()) {
+    for (const [name, service] of Array.from(this.services.entries())) {
       const startTime = Date.now();
       const health: ServiceHealth = {
         name,
@@ -141,7 +153,7 @@ export class ServiceRegistry {
   public async initializeServices(): Promise<void> {
     const initPromises = [];
 
-    for (const [name, service] of this.services.entries()) {
+    for (const [name, service] of Array.from(this.services.entries())) {
       if (typeof service.initialize === "function") {
         console.log(`Initializing service: ${name}`);
         initPromises.push(
@@ -164,7 +176,7 @@ export class ServiceRegistry {
   public async cleanup(): Promise<void> {
     const cleanupPromises = [];
 
-    for (const [name, service] of this.services.entries()) {
+    for (const [name, service] of Array.from(this.services.entries())) {
       if (typeof service.cleanup === "function") {
         console.log(`Cleaning up service: ${name}`);
         cleanupPromises.push(
@@ -193,7 +205,7 @@ export class ServiceRegistry {
   public async getServiceStatistics(): Promise<Record<string, any>> {
     const stats: Record<string, any> = {};
 
-    for (const [name, service] of this.services.entries()) {
+    for (const [name, service] of Array.from(this.services.entries())) {
       try {
         if (typeof service.getStats === "function") {
           stats[name] = await service.getStats();
@@ -219,7 +231,7 @@ export const serviceRegistry = new ServiceRegistry();
 
 // Convenience exports for commonly used services
 export {
-  openaiService as openai,
+  openAIService as openai,
   translationService as translation,
   vocabularyService as vocabulary,
   enhancedVocabularyService as enhancedVocabulary,

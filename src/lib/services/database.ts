@@ -523,7 +523,7 @@ export class DatabaseService {
         .select()
         .single();
 
-      return this.formatResult(data, error, count);
+      return this.formatResult(data, error);
     }, "createUser");
   }
 

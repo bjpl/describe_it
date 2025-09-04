@@ -265,7 +265,7 @@ export class SessionLogger {
       (i) => i.type === "search_query",
     );
     const uniqueQueries = [
-      ...new Set(searchInteractions.map((i) => i.data.searchQuery)),
+      ...new Set(searchInteractions.map((i) => i.data.searchQuery).filter((query): query is string => query != null)),
     ];
     const averageSearchTime =
       searchInteractions.length > 0
@@ -280,7 +280,7 @@ export class SessionLogger {
       (i) => i.type === "image_selected",
     );
     const uniqueImages = [
-      ...new Set(imageInteractions.map((i) => i.data.imageId)),
+      ...new Set(imageInteractions.map((i) => i.data.imageId).filter((id): id is string => id != null)),
     ];
     const averageSelectionTime =
       imageInteractions.length > 0
@@ -608,7 +608,7 @@ export class SessionLogger {
 
   // Export functionality
   public exportSession(format: "json" | "text" | "csv" = "json"): string {
-    this.logInteraction("export_initiated", { exportFormat: format });
+    this.logInteraction("data_exported", { exportFormat: format });
 
     const summary = this.generateSummary();
     const learningMetrics = this.getLearningMetrics();
@@ -719,7 +719,7 @@ export function getSessionLogger(): SessionLogger {
       getSettings: () => ({}) as any,
       clearSession: () => {},
       exportSession: () => "{}",
-    } as SessionLogger;
+    } as unknown as SessionLogger;
   }
 
   if (!globalSessionLogger) {

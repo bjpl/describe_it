@@ -551,6 +551,7 @@ export class SessionReportGenerator {
       page_view: 1000, // 1 second
       error_occurred: 5000, // 5 seconds
       export_initiated: 3000, // 3 seconds
+      data_exported: 3000, // 3 seconds
       session_started: 0,
       session_ended: 0,
     };
@@ -756,7 +757,7 @@ export class SessionReportGenerator {
           label: "Current Session",
           data: [summary.learningScore, summary.engagementScore],
           backgroundColor: ["#3B82F6", "#10B981"],
-          borderColor: ["#2563EB", "#059669"],
+          borderColor: "#2563EB",
           borderWidth: 2,
         },
       ],

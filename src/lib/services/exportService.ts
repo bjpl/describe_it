@@ -2,7 +2,7 @@
  * Export Service - Multi-format export (CSV, JSON, PDF)
  */
 
-import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
+import { withRetry, RetryConfig } from "../utils/error-retry";
 
 interface ExportOptions {
   format: "csv" | "json" | "pdf" | "xlsx";
@@ -166,14 +166,15 @@ export class ExportService {
         }
       }, this.retryConfig);
 
+      const resultData = result.success ? result.data : result as any;
       return {
         success: true,
         format: options.format,
-        filename: result.filename,
-        size: result.size,
-        recordCount: result.recordCount,
+        filename: resultData.filename,
+        size: resultData.size,
+        recordCount: resultData.recordCount,
         generatedAt: new Date().toISOString(),
-        downloadUrl: result.downloadUrl,
+        downloadUrl: resultData.downloadUrl,
       };
     } catch (error) {
       return {

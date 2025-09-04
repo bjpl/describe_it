@@ -23,6 +23,7 @@ export type InteractionType =
   | "page_view"
   | "error_occurred"
   | "export_initiated"
+  | "data_exported"
   | "session_started"
   | "session_ended";
 
@@ -69,6 +70,9 @@ export interface InteractionData {
   errorMessage?: string;
   errorStack?: string;
   errorCode?: string;
+
+  // Export data
+  exportFormat?: string;
 
   // General metadata
   componentName?: string;

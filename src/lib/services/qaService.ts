@@ -2,10 +2,10 @@
  * Q&A Service - Question generation and answer validation
  */
 
-import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
+import { withRetry, RetryConfig } from "../utils/error-retry";
 import { openAIService } from "./openaiService";
 import { translationService } from "./translationService";
-import { supabase } from "@/lib/supabase";
+import { supabase } from "../supabase";
 
 interface QAItem {
   id: string;
@@ -147,7 +147,10 @@ export class QAService {
           );
         }, this.retryConfig);
 
-        questions = this.processGeneratedQuestions(result, request);
+        const resultData = result.success ? result.data : result;
+        if (Array.isArray(resultData)) {
+          questions = this.processGeneratedQuestions(resultData, request);
+        }
         source = "openai";
       } catch (error) {
         console.warn("OpenAI Q&A generation failed:", error);
@@ -246,24 +249,26 @@ export class QAService {
     try {
       const result = await withRetry(async () => {
         if (supabase) {
-          const { data, error } = await supabase
+          const updateData = {
+            ...updates,
+            updatedAt: new Date().toISOString(),
+          };
+          
+          const { data, error } = await (supabase as any)
             .from("qa_items")
-            .update({
-              ...updates,
-              updatedAt: new Date().toISOString(),
-            })
+            .update(updateData as never)
             .eq("id", id)
             .select()
             .single();
 
           if (error) throw error;
-          return data;
+          return data as QAItem;
         }
         throw new Error("Database not available");
       }, this.retryConfig);
 
       this.clearCacheByPattern("qa_");
-      return result;
+      return result.success && result.data ? result.data : null;
     } catch (error) {
       console.warn("Failed to update Q&A item:", error);
       return null;
@@ -611,7 +616,7 @@ export class QAService {
 
   private extractKeywords(text: string, language: string): string[] {
     // Remove common stop words
-    const stopWords = {
+    const stopWords: Record<string, string[]> = {
       es: [
         "el",
         "la",
@@ -654,12 +659,12 @@ export class QAService {
 
     const words = text
       .toLowerCase()
-      .split(/\\s+/)
+      .split(/\s+/)
       .filter((word) => {
         return word.length > 2 && !stopWords[language]?.includes(word);
       });
 
-    return [...new Set(words)]; // Remove duplicates
+    return Array.from(new Set(words)); // Remove duplicates
   }
 
   private calculateKeywordMatch(expected: string[], user: string[]): number {
@@ -782,7 +787,7 @@ export class QAService {
   private async saveQuestionsToDatabase(questions: QAItem[]): Promise<void> {
     if (!supabase || questions.length === 0) return;
 
-    const { error } = await supabase.from("qa_items").insert(questions);
+    const { error } = await supabase.from("qa_items").upsert(questions as any);
 
     if (error) {
       console.warn("Failed to save questions to database:", error);
@@ -796,7 +801,7 @@ export class QAService {
     if (!supabase) return;
 
     try {
-      await supabase.from("answer_validations").insert([
+      await (supabase as any).from("answer_validations").upsert([
         {
           questionId: request.questionId,
           userAnswer: request.userAnswer,
@@ -807,7 +812,7 @@ export class QAService {
           language: request.language,
           createdAt: new Date().toISOString(),
           details: validation.details,
-        },
+        } as never,
       ]);
     } catch (error) {
       console.warn("Failed to record answer validation:", error);
@@ -849,7 +854,7 @@ export class QAService {
   }
 
   private clearCacheByPattern(pattern: string): void {
-    for (const key of this.cache.keys()) {
+    for (const key of Array.from(this.cache.keys())) {
       if (key.includes(pattern)) {
         this.cache.delete(key);
       }

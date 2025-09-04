@@ -120,13 +120,21 @@ class Logger {
     context?: LogContext,
   ) {
     const level = status >= 400 ? "error" : status >= 300 ? "warn" : "info";
-    this[level](`API ${method.toUpperCase()} ${status}: ${url}`, {
+    const responseContext = {
       ...context,
       type: "api-response",
       method,
       url,
       status,
-    });
+    };
+    
+    if (level === "error") {
+      this.error(`API ${method.toUpperCase()} ${status}: ${url}`, undefined, responseContext);
+    } else if (level === "warn") {
+      this.warn(`API ${method.toUpperCase()} ${status}: ${url}`, responseContext);
+    } else {
+      this.info(`API ${method.toUpperCase()} ${status}: ${url}`, responseContext);
+    }
   }
 
   componentMount(componentName: string, context?: LogContext) {

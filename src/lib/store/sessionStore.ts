@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
-import { UserSession, SearchHistoryItem, UserPreferences } from "../../types";
+import { UserSession, SearchHistoryItem, UserPreferences, DescriptionStyle } from "../../types";
 
 interface SessionStore {
   session: UserSession | null;
@@ -36,7 +36,7 @@ const createInitialSession = (userId?: string): UserSession => ({
   preferences: {
     theme: "auto",
     language: "en",
-    defaultDescriptionStyle: "detailed",
+    defaultDescriptionStyle: "conversacional" as DescriptionStyle,
     autoSaveDescriptions: true,
     maxHistoryItems: 50,
     exportFormat: "json",

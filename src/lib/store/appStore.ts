@@ -5,6 +5,7 @@ import {
   Image,
   UserPreferences,
   SearchHistoryItem,
+  DescriptionStyle,
 } from "../../types";
 
 interface AppStore extends AppState {
@@ -39,7 +40,7 @@ interface AppStore extends AppState {
 const defaultPreferences: UserPreferences = {
   theme: "auto",
   language: "en",
-  defaultDescriptionStyle: "detailed",
+  defaultDescriptionStyle: "conversacional" as DescriptionStyle,
   autoSaveDescriptions: true,
   maxHistoryItems: 50,
   exportFormat: "json",

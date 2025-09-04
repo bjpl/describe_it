@@ -3,9 +3,9 @@
  * Built on top of the existing VocabularyService with added features
  */
 
-import { supabase } from "@/lib/supabase";
-import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
-import { getEnvironment } from "@/config/env";
+import { supabase } from "../supabase";
+import { withRetry, RetryConfig } from "../utils/error-retry";
+import { getEnvironment } from "../../config/env";
 import { translationService } from "./translationService";
 import { openAIService } from "./openaiService";
 import { vocabularyService as baseVocabularyService } from "./vocabularyService";
@@ -147,25 +147,25 @@ export class EnhancedVocabularyService {
 
     const result = await withRetry(async () => {
       if (supabase) {
+        const insertData = {
+          ...item,
+          created_at: new Date().toISOString(),
+          mastery_level: 0,
+          review_count: 0,
+          success_rate: 0,
+        };
+        
         const { data, error } = await supabase
           .from("vocabulary_items")
-          .insert([
-            {
-              ...item,
-              created_at: new Date().toISOString(),
-              mastery_level: 0,
-              review_count: 0,
-              success_rate: 0,
-            },
-          ])
+          .insert(insertData as any)
           .select()
           .single();
 
         if (error) throw error;
-        return data;
+        return data as EnhancedVocabularyItem;
       } else {
         // Fallback to memory storage
-        const newItem = {
+        const newItem: EnhancedVocabularyItem = {
           ...item,
           id: this.generateId(),
           created_at: new Date().toISOString(),
@@ -180,7 +180,10 @@ export class EnhancedVocabularyService {
     // Clear relevant cache
     this.clearCacheByPattern("vocabulary_");
 
-    return result;
+    if (result.success && result.data) {
+      return result.data;
+    }
+    throw new Error('Failed to add vocabulary item');
   }
 
   /**
@@ -192,25 +195,30 @@ export class EnhancedVocabularyService {
   ): Promise<EnhancedVocabularyItem> {
     const result = await withRetry(async () => {
       if (supabase) {
+        const updateData = {
+          ...updates,
+          updated_at: new Date().toISOString(),
+        };
+        
         const { data, error } = await supabase
           .from("vocabulary_items")
-          .update({
-            ...updates,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData as never)
           .eq("id", id)
           .select()
           .single();
 
         if (error) throw error;
-        return data;
+        return data as EnhancedVocabularyItem;
       } else {
         throw new Error("Database not available");
       }
     }, this.retryConfig);
 
     this.clearCacheByPattern("vocabulary_");
-    return result;
+    if (result.success && result.data) {
+      return result.data;
+    }
+    throw new Error('Failed to update vocabulary item');
   }
 
   /**
@@ -232,7 +240,7 @@ export class EnhancedVocabularyService {
     }, this.retryConfig);
 
     this.clearCacheByPattern("vocabulary_");
-    return result;
+    return result.success && result.data !== undefined ? result.data : false;
   }
 
   /**
@@ -335,9 +343,8 @@ export class EnhancedVocabularyService {
 
       // Fallback to base service
       if (items.length === 0) {
-        items = (await baseVocabularyService.searchVocabulary(
-          query,
-        )) as EnhancedVocabularyItem[];
+        const baseResults = await baseVocabularyService.searchVocabulary(query);
+        items = baseResults as unknown as EnhancedVocabularyItem[];
       }
 
       // Apply fuzzy matching if requested
@@ -598,7 +605,7 @@ export class EnhancedVocabularyService {
     hasMore: boolean;
   }> {
     const allItems = await baseVocabularyService.getAllVocabularyItems();
-    let filteredItems = allItems as EnhancedVocabularyItem[];
+    let filteredItems = allItems as unknown as EnhancedVocabularyItem[];
 
     // Apply filters
     if (filter.category?.length) {
@@ -752,7 +759,7 @@ export class EnhancedVocabularyService {
   }
 
   private clearCacheByPattern(pattern: string): void {
-    for (const key of this.cache.keys()) {
+    for (const key of Array.from(this.cache.keys())) {
       if (key.includes(pattern)) {
         this.cache.delete(key);
       }

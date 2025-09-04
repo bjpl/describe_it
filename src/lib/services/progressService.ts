@@ -2,9 +2,9 @@
  * Progress Service - User progress tracking and analytics
  */
 
-import { withRetry, RetryConfig } from "@/lib/utils/error-retry";
-import { supabaseService } from "@/lib/api/supabase";
-import { getEnvironment } from "@/config/env";
+import { withRetry, RetryConfig } from "../utils/error-retry";
+import { supabaseService } from "../api/supabase";
+import { getEnvironment } from "../../config/env";
 
 interface UserProgress {
   userId: string;
@@ -869,7 +869,7 @@ export class ProgressService {
   }
 
   private clearCacheByPattern(pattern: string): void {
-    for (const key of this.cache.keys()) {
+    for (const key of Array.from(this.cache.keys())) {
       if (key.includes(pattern)) {
         this.cache.delete(key);
       }
