@@ -261,8 +261,8 @@ export function usePhraseExtraction(imageId: string) {
           err instanceof Error ? err : new Error(String(err)),
           {
             component: "usePhraseExtraction",
-            imageId: request.imageId,
-            level: request.level,
+            imageUrl: request.imageUrl,
+            targetLevel: request.targetLevel,
             function: "extractPhrases",
           },
         );

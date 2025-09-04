@@ -142,18 +142,7 @@ export function useImageSearch() {
       url.searchParams.set("query", query);
       url.searchParams.set("page", page.toString());
 
-      // Add filter parameters if provided
-      if (filters) {
-        if (filters.orientation && filters.orientation !== "all") {
-          url.searchParams.set("orientation", filters.orientation);
-        }
-        if (filters.category && filters.category !== "all") {
-          url.searchParams.set("category", filters.category);
-        }
-        if (filters.color && filters.color !== "all") {
-          url.searchParams.set("color", filters.color);
-        }
-      }
+      // Note: Basic search without filters for now
 
       const response = await fetch(url.toString(), {
         signal: abortControllerRef.current.signal,

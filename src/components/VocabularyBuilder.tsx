@@ -600,7 +600,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
                 onPrevious={navigateToPrevious}
                 currentIndex={studySession.currentIndex}
                 totalCount={
-                  studySession.mode === "review"
+                  (studySession.mode as any) === "review"
                     ? studySession.reviewItems?.length || 0
                     : currentSet.phrases.length
                 }

@@ -71,7 +71,8 @@ export class SpacedRepetitionAlgorithm extends BaseAlgorithm {
 export const SpacedRepetitionUtils = {
   createCard: (id: string, content: string): ReviewCard => ({
     id,
-    content,
+    imageId: id,
+    difficulty: 1,
     interval: 1,
     easeFactor: 2.5,
     nextReviewDate: new Date(),

@@ -354,7 +354,7 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
 
             <select
               value={filters.difficulty || "all"}
-              onChange={(e) => setFilter("difficulty", e.target.value)}
+              onChange={(e) => setFilter("difficulty", e.target.value as any)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Difficulty Levels</option>
@@ -372,7 +372,7 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
 
             <select
               value={filters.partOfSpeech || "all"}
-              onChange={(e) => setFilter("partOfSpeech", e.target.value)}
+              onChange={(e) => setFilter("partOfSpeech", e.target.value as any)}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Parts of Speech</option>

@@ -1,6 +1,25 @@
 import { z } from "zod";
 // Structured logging import removed for production build optimization
 
+// Simple development logging functions
+const devError = (message: string) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.error(message);
+  }
+};
+
+const devWarn = (message: string) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.warn(message);
+  }
+};
+
+const devLog = (message: string) => {
+  if (process.env.NODE_ENV === 'development') {
+    console.log(message);
+  }
+};
+
 // =============================================================================
 // Environment Variable Schema & Validation
 // =============================================================================

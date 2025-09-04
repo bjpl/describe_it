@@ -165,7 +165,7 @@ export function useProgressStats() {
       streak_current: getStorageItem(STORAGE_KEYS.STREAK_INFO, { current: 0 })
         .current,
       accuracy_rate: completionRate,
-      vocabulary_mastered: sessionData.vocabulary_mastered || 0,
+      vocabulary_mastered: (sessionData as any).vocabulary_mastered || 0,
     });
 
     // Calculate next milestones
@@ -351,7 +351,7 @@ export function useProgressSummary() {
       total_sessions: sessionData.total_sessions || 0,
       total_descriptions: sessionData.total_descriptions || 0,
       accuracy_rate: accuracyRate,
-      vocabulary_mastered: sessionData.vocabulary_mastered || 0,
+      vocabulary_mastered: (sessionData as any).vocabulary_mastered || 0,
     };
 
     setData(summary);
@@ -417,7 +417,7 @@ export function updateProgress(
         streakInfo.longest = Math.max(streakInfo.longest, streakInfo.current);
         streakInfo.today_completed = true;
       }
-      streakInfo.last_activity = today;
+      (streakInfo as any).last_activity = today;
       setStorageItem(STORAGE_KEYS.STREAK_INFO, streakInfo);
       break;
 
@@ -443,7 +443,7 @@ export function updateProgress(
         recent_sessions: [],
         phrases_learned: [],
       });
-      analytics.phrases_learned.push({ date: new Date(), phrase: result });
+      (analytics as any).phrases_learned.push({ date: new Date(), phrase: result });
       setStorageItem(STORAGE_KEYS.ANALYTICS, analytics);
       break;
 
@@ -460,9 +460,9 @@ export function updateProgress(
 
         // Update accuracy history
         const accuracy = result.correct ? 100 : 0;
-        sessionData.accuracy_history.push(accuracy);
-        if (sessionData.accuracy_history.length > 100) {
-          sessionData.accuracy_history.shift(); // Keep only last 100
+        (sessionData as any).accuracy_history.push(accuracy);
+        if ((sessionData as any).accuracy_history.length > 100) {
+          (sessionData as any).accuracy_history.shift(); // Keep only last 100
         }
       }
       break;

@@ -41,7 +41,7 @@ import {
 } from "../../hooks/useVocabulary";
 import { useDebounce } from "../../hooks/useDebounce";
 import { LoadingSpinner } from "../Shared/LoadingStates";
-import { Phrase } from "../../types/database";
+import { VocabularyItem } from "../../types/unified";
 
 interface VocabularyManagerProps {
   className?: string;
@@ -135,11 +135,11 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
     }
   };
 
-  const handleToggleSelection = async (phrase: Phrase) => {
+  const handleToggleSelection = async (phrase: VocabularyItem) => {
     try {
       await toggleSelection.mutateAsync({
         phraseId: phrase.id,
-        isSelected: !phrase.is_user_selected,
+        isSelected: !(phrase as any).is_user_selected,
       });
     } catch (error) {
       console.error("Failed to toggle phrase selection:", error);
@@ -394,7 +394,7 @@ export const VocabularyManager: React.FC<VocabularyManagerProps> = ({
                         <div className="flex flex-wrap gap-2 mt-2">
                           <Badge
                             className={getDifficultyColor(
-                              phrase.difficulty_level,
+                              phrase.difficulty_level.toString(),
                             )}
                           >
                             {phrase.difficulty_level}

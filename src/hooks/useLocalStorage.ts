@@ -14,13 +14,7 @@ export function useLocalStorage<T>(
       return initialValue;
     } catch (error) {
       logger.warn(
-        `Error reading localStorage key "${key}"`,
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          component: "useLocalStorage",
-          key,
-          operation: "read",
-        },
+        `Error reading localStorage key "${key}": ${error instanceof Error ? error.message : String(error)}`
       );
       return initialValue;
     }
@@ -34,13 +28,7 @@ export function useLocalStorage<T>(
       }
     } catch (error) {
       logger.warn(
-        `Error setting localStorage key "${key}"`,
-        error instanceof Error ? error : new Error(String(error)),
-        {
-          component: "useLocalStorage",
-          key,
-          operation: "write",
-        },
+        `Error setting localStorage key "${key}": ${error instanceof Error ? error.message : String(error)}`
       );
     }
   };

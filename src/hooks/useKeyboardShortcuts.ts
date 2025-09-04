@@ -76,10 +76,11 @@ export function useKeyboardShortcuts(
     if (!enabled || !target) return;
 
     const targetElement = target as EventTarget;
-    targetElement.addEventListener("keydown", handleKeyDown);
+    const keydownHandler = handleKeyDown as EventListener;
+    targetElement.addEventListener("keydown", keydownHandler);
 
     return () => {
-      targetElement.removeEventListener("keydown", handleKeyDown);
+      targetElement.removeEventListener("keydown", keydownHandler);
     };
   }, [handleKeyDown, enabled, target]);
 

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 
 interface PerformanceMetrics {
   renderTime: number;
-  memoryUsage?: MemoryInfo;
+  memoryUsage?: any;
   firstContentfulPaint?: number;
   largestContentfulPaint?: number;
   cumulativeLayoutShift?: number;
@@ -104,7 +104,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
     // First Input Delay
     const fidObserver = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
-        const fid = entry.processingStart - entry.startTime;
+        const fid = (entry as any).processingStart - entry.startTime;
         setPerformanceState(prev => ({
           ...prev,
           metrics: { ...prev.metrics, firstInputDelay: fid }
@@ -143,7 +143,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
   // Monitor memory usage
   const trackMemoryUsage = useCallback(() => {
     if ('memory' in performance) {
-      const memoryInfo = (performance as any).memory as MemoryInfo;
+      const memoryInfo = (performance as any).memory;
       setPerformanceState(prev => ({
         ...prev,
         metrics: { ...prev.metrics, memoryUsage: memoryInfo }

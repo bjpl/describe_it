@@ -19,9 +19,11 @@ export {
 export { useVocabulary } from "./useVocabulary";
 export {
   useQASystem,
-  type QASystemState,
+  type QAQuestion,
+  type QAResponse,
+  type QASessionData,
   type QASystemConfig,
-  type UseQASystemProps,
+  type LearningInsights,
 } from "./useQASystem";
 
 // Session logging hooks

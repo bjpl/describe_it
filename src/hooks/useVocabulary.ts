@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { normalizeLegacyVocabularyItem } from "../types/unified";
 import type {
   VocabularyItem,
   VocabularyItemUI,
@@ -7,7 +8,6 @@ import type {
   DifficultyLevel,
   vocabularyItemsToUI,
   vocabularyItemsFromUI,
-  normalizeLegacyVocabularyItem,
 } from "../types/unified";
 
 // Use unified types for consistency
@@ -41,15 +41,143 @@ export const useProcessReviewResponse = () => {
       return {};
     },
     isProcessing: false,
+    isLoading: false,
     error: null
   };
 };
 
 export const usePhrase = (phraseId?: string) => {
   return {
-    data: null,
+    data: {
+      spanish_text: "Hola",
+      english_translation: "Hello", 
+      phonetic_pronunciation: "/ˈoʊlə/",
+      context_sentence_spanish: "Hola, ¿cómo estás?",
+      context_sentence_english: "Hello, how are you?",
+      usage_notes: "Common greeting used in informal situations",
+      user_notes: "Practice with different intonations"
+    },
     phrase: null,
     updatePhrase: () => {},
+    isLoading: false,
+    error: null
+  };
+};
+
+// Additional stubs for vocabulary management hooks
+export const useUserPhrases = (filters?: any) => {
+  return {
+    data: [
+      {
+        id: "p1",
+        spanish_text: "hola",
+        english_translation: "hello",
+        category: "greetings",
+        difficulty_level: 1,
+        part_of_speech: "interjection",
+        is_user_selected: false,
+        is_mastered: false,
+        is_starred: false,
+        context_sentence_spanish: "Hola, ¿cómo estás?",
+        context_sentence_english: "Hello, how are you?",
+        updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        word_type: "common",
+        formality_level: "neutral",
+        study_count: 3,
+        correct_count: 2,
+        phonetic_pronunciation: "/ˈoʊlə/",
+        user_notes: "This is a common greeting",
+        last_studied_at: new Date().toISOString()
+      },
+      {
+        id: "p2", 
+        spanish_text: "gracias",
+        english_translation: "thank you",
+        category: "politeness",
+        difficulty_level: 1,
+        part_of_speech: "interjection",
+        is_user_selected: false,
+        is_mastered: true,
+        is_starred: true,
+        context_sentence_spanish: "Muchas gracias por tu ayuda",
+        context_sentence_english: "Thank you very much for your help",
+        updated_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+        word_type: "common",
+        formality_level: "neutral",
+        study_count: 3,
+        correct_count: 2,
+        phonetic_pronunciation: "/ˈoʊlə/",
+        user_notes: "This is a common greeting",
+        last_studied_at: new Date().toISOString()
+      }
+    ],
+    isLoading: false,
+    error: null,
+    refetch: () => {}
+  };
+};
+
+export const useVocabularyStats = () => {
+  return {
+    data: {
+      total: 0,
+      learned: 0,
+      reviewing: 0,
+      selected: 0,
+      mastered: 0,
+      mastery_rate: 0.75
+    },
+    isLoading: false,
+    error: null
+  };
+};
+
+export const useUpdatePhrase = () => {
+  return {
+    mutate: () => {},
+    mutateAsync: async (params: any) => {},
+    isLoading: false,
+    error: null
+  };
+};
+
+export const useDeletePhrase = () => {
+  return {
+    mutate: () => {},
+    mutateAsync: async (params: any) => {},
+    isLoading: false,
+    error: null
+  };
+};
+
+export const useTogglePhraseSelection = () => {
+  return {
+    mutate: () => {},
+    mutateAsync: async (params: any) => {},
+    isLoading: false,
+    error: null
+  };
+};
+
+export const useBulkUpdatePhraseSelection = () => {
+  return {
+    mutate: () => {},
+    mutateAsync: async (params: any) => {},
+    isLoading: false,
+    error: null
+  };
+};
+
+export const usePhrasesByCategory = () => {
+  return {
+    data: [
+      { category: "home", count: 5 },
+      { category: "adjectives", count: 3 },
+      { category: "actions", count: 4 },
+      { category: "nature", count: 2 }
+    ],
     isLoading: false,
     error: null
   };
@@ -275,7 +403,7 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
           });
         } else {
           filtered = filtered.filter(
-            (item) => item.difficulty_level === currentFilters.difficulty,
+            (item) => item.difficulty_level === Number(currentFilters.difficulty),
           );
         }
       }

@@ -227,7 +227,7 @@ export function useDescriptions(imageId: string) {
           err instanceof Error ? err : new Error(String(err)),
           {
             component: "useDescriptions",
-            imageId: request.imageId,
+            imageUrl: request.imageUrl,
             style: request.style,
             function: "generateDescription",
           },

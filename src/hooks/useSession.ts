@@ -4,7 +4,7 @@ import { UserSession, UserPreferences, SearchHistoryItem } from "@/types";
 const defaultPreferences: UserPreferences = {
   theme: "light",
   language: "en",
-  defaultDescriptionStyle: "detailed",
+  defaultDescriptionStyle: "narrativo",
   autoSaveDescriptions: true,
   maxHistoryItems: 50,
   exportFormat: "json",
