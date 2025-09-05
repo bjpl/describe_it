@@ -250,8 +250,8 @@ const QAPanel = memo<QAPanelProps>(function QAPanel({
       return;
     }
 
-    exportResponses(userResponses, selectedImage?.id || "unknown");
-  }, [userResponses, selectedImage]);
+    exportResponses(userResponses);
+  }, [userResponses]);
 
   // Calculate progress
   const progress = useMemo(() => {
