@@ -57,92 +57,135 @@ class OpenAIService {
     language: string = "es",
     count: number = 5,
   ): QAGeneration[] {
-    const demoQA = {
+    // Extract key information from the description to generate relevant Q&A
+    const sentences = description.split(/[.!?]+/).filter(s => s.trim().length > 10);
+    const words = description.toLowerCase().split(/\s+/);
+    
+    // Find objects, colors, actions, and locations mentioned in the description
+    const objects = words.filter(w => w.length > 4 && !w.includes("que") && !w.includes("para"));
+    const hasNumbers = /\d+/.test(description);
+    const hasColors = /rojo|azul|verde|amarillo|negro|blanco|gris|marrón|naranja|rosa|púrpura|red|blue|green|yellow|black|white|gray|brown|orange|pink|purple/i.test(description);
+    
+    // Generate content-based questions
+    const contentQA = {
       es: [
         {
-          question:
-            "¿Qué elementos principales puedes identificar en esta imagen?",
-          answer:
-            "En esta imagen se pueden identificar varios elementos visuales clave que incluyen colores, formas, texturas y composición general.",
+          question: `¿Qué objetos o elementos específicos se mencionan en la descripción?`,
+          answer: sentences[0] || "La descripción menciona varios elementos visuales importantes que forman parte de la escena.",
+          difficulty: "facil" as const,
+          category: "Identificación",
+        },
+        {
+          question: hasColors 
+            ? "¿Qué colores se observan en la imagen según la descripción?"
+            : "¿Cuáles son las características visuales principales descritas?",
+          answer: sentences[1] || "Las características visuales incluyen elementos diversos que componen la escena.",
           difficulty: "facil" as const,
           category: "Observación",
         },
         {
-          question:
-            "¿Cómo describirías la atmósfera o el ambiente de esta escena?",
-          answer:
-            "La atmósfera de la imagen transmite una sensación específica a través de la iluminación, los colores y la composición visual.",
+          question: hasNumbers
+            ? "¿Cuántos elementos o cantidades se mencionan en la descripción?"
+            : "¿Cómo están organizados los elementos en la escena?",
+          answer: sentences[2] || "Los elementos están dispuestos de manera que crean una composición visual interesante.",
           difficulty: "medio" as const,
-          category: "Interpretación",
+          category: "Detalles",
         },
         {
-          question:
-            "¿Qué técnicas fotográficas o artísticas observas en esta imagen?",
-          answer:
-            "Se pueden apreciar diversas técnicas como el uso de la luz, la profundidad de campo, la composición y el balance visual.",
+          question: "¿Qué actividad o acción principal ocurre en la escena descrita?",
+          answer: this.extractActionFromDescription(description, "es"),
+          difficulty: "medio" as const,
+          category: "Acciones",
+        },
+        {
+          question: "¿En qué lugar o ambiente se desarrolla la escena?",
+          answer: this.extractLocationFromDescription(description, "es"),
           difficulty: "dificil" as const,
-          category: "Técnica",
+          category: "Contexto",
         },
         {
-          question: "¿Qué emociones o sensaciones te transmite esta imagen?",
-          answer:
-            "La imagen puede evocar diferentes emociones dependiendo de los elementos visuales, colores y la narrativa visual presente.",
-          difficulty: "medio" as const,
-          category: "Emocional",
-        },
-        {
-          question: "¿Cuál crees que es el mensaje o propósito de esta imagen?",
-          answer:
-            "El propósito puede ser artístico, narrativo, documental o expresivo, dependiendo del contexto y la intención del autor.",
+          question: "¿Qué detalles específicos hacen única esta imagen?",
+          answer: sentences[Math.min(3, sentences.length - 1)] || "La imagen presenta características distintivas en su composición y elementos.",
           difficulty: "dificil" as const,
           category: "Análisis",
         },
       ],
       en: [
         {
-          question: "What main elements can you identify in this image?",
-          answer:
-            "In this image, several key visual elements can be identified including colors, shapes, textures, and overall composition.",
+          question: "What specific objects or elements are mentioned in the description?",
+          answer: sentences[0] || "The description mentions several important visual elements that are part of the scene.",
+          difficulty: "facil" as const,
+          category: "Identification",
+        },
+        {
+          question: hasColors
+            ? "What colors are observed in the image according to the description?"
+            : "What are the main visual characteristics described?",
+          answer: sentences[1] || "The visual characteristics include various elements that compose the scene.",
           difficulty: "facil" as const,
           category: "Observation",
         },
         {
-          question:
-            "How would you describe the atmosphere or mood of this scene?",
-          answer:
-            "The atmosphere of the image conveys a specific feeling through lighting, colors, and visual composition.",
+          question: hasNumbers
+            ? "How many elements or quantities are mentioned in the description?"
+            : "How are the elements organized in the scene?",
+          answer: sentences[2] || "The elements are arranged in a way that creates an interesting visual composition.",
           difficulty: "medio" as const,
-          category: "Interpretation",
+          category: "Details",
         },
         {
-          question:
-            "What photographic or artistic techniques do you observe in this image?",
-          answer:
-            "Various techniques can be appreciated such as use of light, depth of field, composition, and visual balance.",
+          question: "What main activity or action occurs in the described scene?",
+          answer: this.extractActionFromDescription(description, "en"),
+          difficulty: "medio" as const,
+          category: "Actions",
+        },
+        {
+          question: "Where does the scene take place or what is the setting?",
+          answer: this.extractLocationFromDescription(description, "en"),
           difficulty: "dificil" as const,
-          category: "Technique",
+          category: "Context",
         },
         {
-          question:
-            "What emotions or sensations does this image convey to you?",
-          answer:
-            "The image can evoke different emotions depending on the visual elements, colors, and visual narrative present.",
-          difficulty: "medio" as const,
-          category: "Emotional",
-        },
-        {
-          question:
-            "What do you think is the message or purpose of this image?",
-          answer:
-            "The purpose could be artistic, narrative, documentary, or expressive, depending on context and author's intention.",
+          question: "What specific details make this image unique?",
+          answer: sentences[Math.min(3, sentences.length - 1)] || "The image presents distinctive features in its composition and elements.",
           difficulty: "dificil" as const,
           category: "Analysis",
         },
       ],
     };
 
-    const langQA = demoQA[language as keyof typeof demoQA] || demoQA.es;
+    const langQA = contentQA[language as keyof typeof contentQA] || contentQA.es;
     return langQA.slice(0, count);
+  }
+
+  /**
+   * Extract action information from description
+   */
+  private extractActionFromDescription(description: string, language: string): string {
+    const verbs = description.match(/\b\w+(ando|iendo|ing|ed|s)\b/gi) || [];
+    if (verbs.length > 0) {
+      return language === "es" 
+        ? `Se observan acciones como ${verbs.slice(0, 2).join(", ")} en la escena.`
+        : `Actions such as ${verbs.slice(0, 2).join(", ")} can be observed in the scene.`;
+    }
+    return language === "es"
+      ? "La escena muestra una situación o momento específico capturado en la imagen."
+      : "The scene shows a specific situation or moment captured in the image.";
+  }
+
+  /**
+   * Extract location information from description
+   */
+  private extractLocationFromDescription(description: string, language: string): string {
+    const locationWords = description.match(/\b(en|at|in|dentro|fuera|sobre|bajo|cerca|lejos|interior|exterior|inside|outside|near|far)\s+\w+/gi) || [];
+    if (locationWords.length > 0 && locationWords[0]) {
+      return language === "es"
+        ? `La escena se desarrolla ${locationWords[0].toLowerCase()}.`
+        : `The scene takes place ${locationWords[0].toLowerCase()}.`;
+    }
+    return language === "es"
+      ? "El entorno muestra un espacio con características particulares descritas en la imagen."
+      : "The setting shows a space with particular characteristics described in the image.";
   }
 
   /**

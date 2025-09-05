@@ -180,7 +180,75 @@ export class PhraseExtractor {
     // Simulate AI processing delay
     await new Promise((resolve) => setTimeout(resolve, 1500));
 
+    // Extract actual words from the description
+    const extractedWords = this.extractWordsFromDescription(description);
     const phrases: any[] = [];
+    
+    // Process the extracted words into categorized phrases
+    if (categories.includes("sustantivos") && extractedWords.nouns.length > 0) {
+      extractedWords.nouns.slice(0, 8).forEach((noun) => {
+        phrases.push({
+          phrase: noun,
+          definition: this.generateDefinition(noun, "noun"),
+          partOfSpeech: "sustantivo",
+          category: "sustantivos",
+          gender: this.inferSpanishGender(noun),
+          article: this.inferSpanishArticle(noun),
+          context: this.generateContextFromDescription(noun, description),
+        });
+      });
+    }
+    
+    if (categories.includes("verbos") && extractedWords.verbs.length > 0) {
+      extractedWords.verbs.slice(0, 6).forEach((verb) => {
+        phrases.push({
+          phrase: verb,
+          definition: this.generateDefinition(verb, "verb"),
+          partOfSpeech: "verbo",
+          category: "verbos",
+          conjugation: verb,
+          context: this.generateContextFromDescription(verb, description),
+        });
+      });
+    }
+    
+    if (categories.includes("adjetivos") && extractedWords.adjectives.length > 0) {
+      extractedWords.adjectives.slice(0, 6).forEach((adjective) => {
+        phrases.push({
+          phrase: adjective,
+          definition: this.generateDefinition(adjective, "adjective"),
+          partOfSpeech: "adjetivo",
+          category: "adjetivos",
+          context: this.generateContextFromDescription(adjective, description),
+        });
+      });
+    }
+    
+    if (categories.includes("adverbios") && extractedWords.adverbs.length > 0) {
+      extractedWords.adverbs.slice(0, 4).forEach((adverb) => {
+        phrases.push({
+          phrase: adverb,
+          definition: this.generateDefinition(adverb, "adverb"),
+          partOfSpeech: "adverbio",
+          category: "adverbios",
+          context: this.generateContextFromDescription(adverb, description),
+        });
+      });
+    }
+    
+    if (categories.includes("frasesClaves") && extractedWords.keyPhrases.length > 0) {
+      extractedWords.keyPhrases.slice(0, 6).forEach((keyPhrase) => {
+        phrases.push({
+          phrase: keyPhrase,
+          definition: this.generateDefinition(keyPhrase, "phrase"),
+          partOfSpeech: "frase clave",
+          category: "frasesClaves",
+          context: `Esta frase aparece en la descripción: "${keyPhrase}"`,
+        });
+      });
+    }
+    
+    // If we still need more phrases to meet the requested count, fallback to common vocabulary
     const wordsInDescription = description.toLowerCase().split(/\s+/);
 
     // Category-specific phrase generation based on level
@@ -579,6 +647,67 @@ export class PhraseExtractor {
 
     const levelContexts = contexts[level as keyof typeof contexts];
     return levelContexts[Math.floor(Math.random() * levelContexts.length)];
+  }
+
+  /**
+   * Generate context from actual description
+   */
+  private static generateContextFromDescription(
+    word: string,
+    description: string,
+  ): string {
+    // Find sentences containing the word
+    const sentences = description.split(/[.!?]+/);
+    for (const sentence of sentences) {
+      if (sentence.toLowerCase().includes(word.toLowerCase())) {
+        return sentence.trim();
+      }
+    }
+    // Fallback to generic context
+    return `La palabra "${word}" aparece en la descripción de la imagen.`;
+  }
+
+  /**
+   * Generate basic definition for extracted words
+   */
+  private static generateDefinition(word: string, type: string): string {
+    // In production, this would use a dictionary API or translation service
+    // For now, provide a basic template
+    const definitions: Record<string, string> = {
+      noun: `[sustantivo] - objeto, persona o concepto`,
+      verb: `[verbo] - acción o estado`,
+      adjective: `[adjetivo] - cualidad o característica`,
+      adverb: `[adverbio] - modifica verbos, adjetivos u otros adverbios`,
+      phrase: `[frase] - expresión completa con significado`,
+    };
+    return definitions[type] || `[${type}] - palabra importante en el contexto`;
+  }
+
+  /**
+   * Infer Spanish gender for nouns
+   */
+  private static inferSpanishGender(noun: string): "masculino" | "femenino" {
+    // Basic Spanish gender rules
+    if (noun.endsWith("a") || noun.endsWith("ción") || noun.endsWith("dad") || noun.endsWith("tad")) {
+      return "femenino";
+    }
+    if (noun.endsWith("o") || noun.endsWith("miento")) {
+      return "masculino";
+    }
+    // Default to masculine for uncertain cases
+    return "masculino";
+  }
+
+  /**
+   * Infer Spanish article based on gender
+   */
+  private static inferSpanishArticle(noun: string): "el" | "la" {
+    const gender = this.inferSpanishGender(noun);
+    // Special case for feminine nouns starting with stressed 'a' or 'ha'
+    if (gender === "femenino" && (noun.startsWith("a") || noun.startsWith("ha"))) {
+      return "el";
+    }
+    return gender === "masculino" ? "el" : "la";
   }
 
   /**
