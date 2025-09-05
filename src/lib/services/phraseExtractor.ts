@@ -736,44 +736,111 @@ export class PhraseExtractor {
     adverbs: string[];
     keyPhrases: string[];
   } {
-    // Simple word extraction - in production would use NLP library
-    const words = description.toLowerCase().match(/\b\w+\b/g) || [];
-
-    // Basic categorization heuristics
-    const nouns = words.filter(
-      (word) => word.match(/o$|a$|ción$|dad$|tad$|miento$/) && word.length > 3,
-    );
-
-    const verbs = words.filter(
-      (word) => word.match(/ar$|er$|ir$|ando$|iendo$/) && word.length > 3,
-    );
-
-    const adjectives = words.filter(
-      (word) =>
-        word.match(/oso$|osa$|ivo$|iva$|ante$|ente$/) && word.length > 4,
-    );
-
-    const adverbs = words.filter(
-      (word) => word.match(/mente$/) && word.length > 6,
-    );
-
-    // Key phrases are longer sequences
-    const keyPhrases: string[] = [];
-    const sentences = description.split(/[.!?]+/);
-    sentences.forEach((sentence) => {
-      const trimmed = sentence.trim();
-      if (trimmed.length > 10 && trimmed.length < 50) {
-        keyPhrases.push(trimmed);
+    // Clean and prepare text
+    const cleanText = description
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "") // Remove accents temporarily for pattern matching
+      .toLowerCase();
+    
+    const words = cleanText.match(/\b[a-záéíóúñ]+\b/gi) || [];
+    const originalWords = description.match(/\b[a-záéíóúñ]+\b/gi) || [];
+    
+    // Create word frequency map to identify important words
+    const wordFreq = new Map<string, number>();
+    words.forEach(word => {
+      if (word.length > 3 && !this.isCommonWord(word)) {
+        wordFreq.set(word, (wordFreq.get(word) || 0) + 1);
       }
     });
 
+    // Enhanced Spanish pattern matching
+    const nouns: string[] = [];
+    const verbs: string[] = [];
+    const adjectives: string[] = [];
+    const adverbs: string[] = [];
+    
+    originalWords.forEach((word, index) => {
+      const cleanWord = words[index];
+      
+      // Skip common articles, prepositions, etc.
+      if (this.isCommonWord(cleanWord)) return;
+      
+      // Nouns - enhanced patterns
+      if (cleanWord.match(/[oae]s?$|cion$|sion$|dad$|tad$|eza$|ura$|miento$|ancia$|encia$|aje$|ismo$|ista$/)) {
+        if (word.length > 3) nouns.push(word);
+      }
+      // Verbs - enhanced patterns (including conjugations)
+      else if (cleanWord.match(/ar$|er$|ir$|ando$|iendo$|ado$|ido$|ara$|iera$|ase$|iese$|are$|iere$/)) {
+        if (word.length > 3) verbs.push(word);
+      }
+      // Adjectives - enhanced patterns
+      else if (cleanWord.match(/oso$|osa$|osos$|osas$|ivo$|iva$|ivos$|ivas$|ante$|ente$|iente$|able$|ible$|al$|il$|ico$|ica$/)) {
+        if (word.length > 4) adjectives.push(word);
+      }
+      // Adverbs
+      else if (cleanWord.match(/mente$/)) {
+        if (word.length > 6) adverbs.push(word);
+      }
+      // High-frequency words that don't match patterns
+      else if (wordFreq.get(cleanWord)! > 2 && word.length > 4) {
+        // Likely important nouns or adjectives
+        if (index > 0 && this.isArticle(originalWords[index - 1])) {
+          nouns.push(word);
+        } else {
+          adjectives.push(word);
+        }
+      }
+    });
+
+    // Extract meaningful phrases (not just any sentence fragment)
+    const keyPhrases: string[] = [];
+    
+    // Look for noun phrases (article + adjective? + noun)
+    const nounPhrasePattern = /\b(el|la|los|las|un|una|unos|unas)\s+([a-záéíóúñ]+\s+)?[a-záéíóúñ]+\b/gi;
+    const nounPhrases = description.match(nounPhrasePattern) || [];
+    keyPhrases.push(...nounPhrases.slice(0, 3));
+    
+    // Look for verb phrases
+    const verbPhrasePattern = /\b(está|están|es|son|hay|tiene|tienen)\s+[a-záéíóúñ]+(\s+[a-záéíóúñ]+)?\b/gi;
+    const verbPhrases = description.match(verbPhrasePattern) || [];
+    keyPhrases.push(...verbPhrases.slice(0, 3));
+    
+    // Look for prepositional phrases
+    const prepPhrasePattern = /\b(en|con|de|para|por|sobre|bajo|entre)\s+(el|la|los|las)?\s*[a-záéíóúñ]+\b/gi;
+    const prepPhrases = description.match(prepPhrasePattern) || [];
+    keyPhrases.push(...prepPhrases.slice(0, 2));
+
     return {
-      nouns: [...new Set(nouns)].slice(0, 10),
-      verbs: [...new Set(verbs)].slice(0, 8),
-      adjectives: [...new Set(adjectives)].slice(0, 8),
-      adverbs: [...new Set(adverbs)].slice(0, 5),
-      keyPhrases: keyPhrases.slice(0, 6),
+      nouns: [...new Set(nouns)].slice(0, 12),
+      verbs: [...new Set(verbs)].slice(0, 10),
+      adjectives: [...new Set(adjectives)].slice(0, 10),
+      adverbs: [...new Set(adverbs)].slice(0, 6),
+      keyPhrases: [...new Set(keyPhrases)].slice(0, 8),
     };
+  }
+  
+  /**
+   * Check if word is a common Spanish word to filter out
+   */
+  private static isCommonWord(word: string): boolean {
+    const commonWords = new Set([
+      'el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas',
+      'de', 'en', 'a', 'con', 'para', 'por', 'sin', 'sobre',
+      'y', 'o', 'pero', 'que', 'como', 'si', 'cuando', 'donde',
+      'es', 'son', 'esta', 'estan', 'hay', 'ser', 'estar',
+      'su', 'sus', 'mi', 'mis', 'tu', 'tus', 'este', 'esta',
+      'ese', 'esa', 'aquel', 'aquella', 'lo', 'le', 'se',
+      'muy', 'mas', 'menos', 'tan', 'tanto', 'mucho', 'poco'
+    ]);
+    return commonWords.has(word.toLowerCase());
+  }
+  
+  /**
+   * Check if word is an article
+   */
+  private static isArticle(word: string): boolean {
+    const articles = new Set(['el', 'la', 'los', 'las', 'un', 'una', 'unos', 'unas']);
+    return articles.has(word.toLowerCase());
   }
 }
 

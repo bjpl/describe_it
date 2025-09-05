@@ -356,25 +356,68 @@ class OpenAIService {
   ): string {
     const prompts = {
       es: {
-        narrativo: `Crea una descripción narrativa rica y detallada que cuente la historia de lo que ocurre en la imagen. 
-        Usa un lenguaje descriptivo y envolvente que permita al lector visualizar claramente la escena. 
-        Incluye detalles sobre el ambiente, las emociones y la atmósfera.`,
+        narrativo: `OBJETIVO EDUCATIVO: Enseñar español a través de una descripción narrativa rica en vocabulario y estructuras gramaticales variadas.
+        
+        Crea una descripción narrativa detallada que cuente la historia de lo que ocurre en la imagen.
+        IMPORTANTE PARA EL APRENDIZAJE:
+        • Usa una mezcla equilibrada de tiempos verbales (presente, pasado, futuro condicional)
+        • Incluye al menos 10-15 vocabulario clave útil para estudiantes de español
+        • Incorpora expresiones idiomáticas comunes pero comprensibles
+        • Usa conectores narrativos (mientras, sin embargo, además, por lo tanto)
+        • Describe colores, formas, emociones y acciones con adjetivos variados
+        • Incluye al menos 3-4 frases con subjuntivo de manera natural
+        • Mantén las oraciones claras pero con estructuras variadas`,
 
-        poetico: `Crea una descripción poética y artística de la imagen usando lenguaje figurativo, metáforas y un tono lírico. 
-        Enfócate en despertar emociones y crear una experiencia sensorial a través de las palabras. 
-        Usa recursos literarios como aliteración, ritmo y simbolismo.`,
+        poetico: `OBJETIVO EDUCATIVO: Enseñar español avanzado a través de lenguaje figurativo y expresiones artísticas.
+        
+        Crea una descripción poética de la imagen que sea educativa y artística.
+        IMPORTANTE PARA EL APRENDIZAJE:
+        • Usa metáforas y símiles accesibles para estudiantes intermedios
+        • Incluye vocabulario poético pero explica su significado a través del contexto
+        • Usa gerundios y participios de manera expresiva
+        • Incorpora al menos 5 adjetivos descriptivos poco comunes pero útiles
+        • Emplea estructuras como "como si + subjuntivo" y "tal vez + subjuntivo"
+        • Incluye sonoridad y ritmo sin sacrificar claridad
+        • Usa vocabulario sensorial (vista, oído, tacto, olfato, gusto)`,
 
-        academico: `Proporciona una descripción técnica y objetiva de la imagen usando terminología precisa y formal. 
-        Analiza la composición, elementos visuales, técnicas utilizadas y contexto histórico o cultural si es relevante. 
-        Mantén un tono impersonal y científico.`,
+        academico: `OBJETIVO EDUCATIVO: Enseñar español formal y técnico con vocabulario académico y estructuras complejas.
+        
+        Proporciona una descripción analítica y objetiva de la imagen.
+        IMPORTANTE PARA EL APRENDIZAJE:
+        • Usa vocabulario académico y técnico con definiciones contextuales
+        • Emplea la voz pasiva y pasiva refleja apropiadamente
+        • Incluye estructuras subordinadas complejas
+        • Usa conectores académicos (no obstante, asimismo, por consiguiente)
+        • Incorpora términos de análisis visual (composición, perspectiva, contraste)
+        • Usa el presente atemporal para descripciones generales
+        • Incluye al menos 5 términos especializados con contexto claro
+        • Mantén precisión terminológica sin ser inaccesible`,
 
-        conversacional: `Describe la imagen como si estuvieras hablando con un amigo de manera casual y relajada. 
-        Usa un lenguaje cotidiano, expresiones coloquiales y un tono cercano y amigable. 
-        Incluye observaciones personales y comentarios espontáneos.`,
+        conversacional: `OBJETIVO EDUCATIVO: Enseñar español coloquial y expresiones cotidianas útiles para conversación diaria.
+        
+        Describe la imagen como en una conversación amistosa y natural.
+        IMPORTANTE PARA EL APRENDIZAJE:
+        • Usa expresiones coloquiales comunes con su significado claro por contexto
+        • Incluye muletillas naturales (bueno, pues, mira, oye, ¿sabes?)
+        • Usa contracciones comunes (pa' = para, ta' = está) con moderación
+        • Incorpora al menos 10 expresiones idiomáticas de uso diario
+        • Usa el presente continuo y perífrasis verbales frecuentes
+        • Incluye preguntas retóricas y exclamaciones naturales
+        • Mezcla registro informal con vocabulario descriptivo útil
+        • Emplea modismos regionales comunes con contexto claro`,
 
-        infantil: `Crea una descripción simple y divertida perfecta para niños pequeños. 
-        Usa palabras sencillas, frases cortas y un tono alegre y juguetón. 
-        Incluye elementos que capturen la atención de los niños y fomenten su curiosidad.`,
+        infantil: `OBJETIVO EDUCATIVO: Enseñar español básico con vocabulario fundamental y estructuras simples pero correctas.
+        
+        Crea una descripción alegre y sencilla perfecta para principiantes.
+        IMPORTANTE PARA EL APRENDIZAJE:
+        • Usa vocabulario básico de alta frecuencia (colores, números, familia, animales)
+        • Repite palabras clave para reforzar el aprendizaje
+        • Usa principalmente presente simple y presente continuo
+        • Incluye onomatopeyas y sonidos descriptivos con su significado
+        • Emplea diminutivos y aumentativos de manera educativa
+        • Usa frases cortas pero gramaticalmente correctas
+        • Include comparaciones simples (más que, menos que, tan... como)
+        • Incorpora preguntas simples para fomentar participación`,
       },
       en: {
         narrativo: `Create a rich and detailed narrative description that tells the story of what happens in the image. 
@@ -537,11 +580,26 @@ class OpenAIService {
 
       const prompt =
         language === "es"
-          ? `Basándote en la siguiente descripción, genera ${count} pares de pregunta-respuesta educativos con diferentes niveles de dificultad. 
-           Cada pregunta debe ser clara y la respuesta debe ser precisa y educativa.
+          ? `OBJETIVO: Crear preguntas de comprensión lectora que evalúen el entendimiento del español y el contenido de la imagen.
+
+           Basándote en la siguiente descripción en español, genera ${count} pares de pregunta-respuesta que:
            
-           Clasifica cada pregunta como 'facil', 'medio', o 'dificil' según su complejidad.
-           También asigna una categoría temática a cada pregunta.
+           REQUISITOS EDUCATIVOS:
+           • Las preguntas FÁCILES deben evaluar comprensión literal (¿Qué? ¿Cuántos? ¿De qué color?)
+           • Las preguntas MEDIAS deben evaluar inferencia y vocabulario (¿Por qué? ¿Cómo? ¿Para qué?)
+           • Las preguntas DIFÍCILES deben evaluar análisis y uso del subjuntivo (¿Qué pasaría si...? ¿Es posible que...?)
+           
+           CATEGORÍAS TEMÁTICAS A USAR:
+           • "Vocabulario" - preguntas sobre el significado de palabras específicas
+           • "Comprensión" - preguntas sobre información explícita en el texto
+           • "Inferencia" - preguntas que requieren deducir información
+           • "Gramática" - preguntas sobre estructuras gramaticales usadas
+           • "Cultura" - preguntas sobre aspectos culturales mencionados
+           
+           IMPORTANTE:
+           • Las respuestas deben incluir la palabra o frase clave del texto original
+           • Usa el vocabulario exacto de la descripción para reforzar el aprendizaje
+           • Las respuestas deben ser completas y educativas, no solo "sí" o "no"
            
            Descripción: ${description}
            
@@ -549,16 +607,31 @@ class OpenAIService {
            [
              {
                "question": "pregunta aquí",
-               "answer": "respuesta aquí", 
+               "answer": "respuesta completa aquí", 
                "difficulty": "facil|medio|dificil",
-               "category": "categoría temática"
+               "category": "Vocabulario|Comprensión|Inferencia|Gramática|Cultura"
              }
            ]`
-          : `Based on the following description, generate ${count} educational question-answer pairs with different difficulty levels.
-           Each question should be clear and the answer should be precise and educational.
+          : `OBJECTIVE: Create reading comprehension questions that assess understanding of Spanish and image content.
+
+           Based on the following Spanish description, generate ${count} question-answer pairs that:
            
-           Classify each question as 'facil', 'medio', or 'dificil' according to its complexity.
-           Also assign a thematic category to each question.
+           EDUCATIONAL REQUIREMENTS:
+           • EASY questions should test literal comprehension (What? How many? What color?)
+           • MEDIUM questions should test inference and vocabulary (Why? How? What for?)
+           • DIFFICULT questions should test analysis and subjunctive use (What would happen if...? Is it possible that...?)
+           
+           THEMATIC CATEGORIES TO USE:
+           • "Vocabulary" - questions about the meaning of specific words
+           • "Comprehension" - questions about explicit information in the text
+           • "Inference" - questions requiring information deduction
+           • "Grammar" - questions about grammatical structures used
+           • "Culture" - questions about cultural aspects mentioned
+           
+           IMPORTANT:
+           • Answers should include the key word or phrase from the original text
+           • Use exact vocabulary from the description to reinforce learning
+           • Answers should be complete and educational, not just "yes" or "no"
            
            Description: ${description}
            
@@ -566,9 +639,9 @@ class OpenAIService {
            [
              {
                "question": "question here",
-               "answer": "answer here",
+               "answer": "complete answer here",
                "difficulty": "facil|medio|dificil", 
-               "category": "thematic category"
+               "category": "Vocabulary|Comprehension|Inference|Grammar|Culture"
              }
            ]`;
 
@@ -587,7 +660,7 @@ class OpenAIService {
             {
               role: "system",
               content:
-                "You are an educational content creator. Always respond with valid JSON format.",
+                "You are a Spanish language education specialist creating comprehension questions for language learners. Focus on teaching vocabulary, grammar structures, and reading comprehension. Always respond with valid JSON format.",
             },
             {
               role: "user",
