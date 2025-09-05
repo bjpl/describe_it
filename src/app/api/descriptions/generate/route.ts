@@ -41,47 +41,59 @@ export async function POST(request: NextRequest) {
     const params = generateDescriptionSchema.parse(body);
 
     // Generate descriptions for both languages
-    let englishDescription, spanishDescription;
+    const descriptions = [];
     
+    // Generate English description
     try {
-      englishDescription = await openAIService.generateDescription({
+      const englishDescription = await openAIService.generateDescription({
         ...params,
         language: "en" as const
       });
-    } catch (error) {
-      console.error("Failed to generate English description:", error);
-      englishDescription = { text: "A captivating image that tells a unique story through its visual elements." };
-    }
-    
-    try {
-      spanishDescription = await openAIService.generateDescription({
-        ...params,
-        language: "es" as const
-      });
-    } catch (error) {
-      console.error("Failed to generate Spanish description:", error);
-      spanishDescription = { text: "Una imagen cautivadora que cuenta una historia única a través de sus elementos visuales." };
-    }
-
-    // Format as array of descriptions
-    const descriptions = [
-      {
+      descriptions.push({
         id: `${Date.now()}_en`,
         imageId: params.imageUrl,
         style: params.style,
-        content: englishDescription.text || "A captivating visual composition.",
+        content: englishDescription.text || "A captivating image that tells a unique story through its visual elements.",
         language: "english" as const,
         createdAt: new Date().toISOString(),
-      },
-      {
+      });
+    } catch (error) {
+      console.error("Failed to generate English description:", error);
+      descriptions.push({
+        id: `${Date.now()}_en_fallback`,
+        imageId: params.imageUrl,
+        style: params.style,
+        content: "A captivating image that tells a unique story through its visual elements.",
+        language: "english" as const,
+        createdAt: new Date().toISOString(),
+      });
+    }
+    
+    // Generate Spanish description
+    try {
+      const spanishDescription = await openAIService.generateDescription({
+        ...params,
+        language: "es" as const
+      });
+      descriptions.push({
         id: `${Date.now() + 1}_es`,
         imageId: params.imageUrl,
         style: params.style,
-        content: spanishDescription.text || "Una composición visual cautivadora.",
+        content: spanishDescription.text || "Una imagen cautivadora que cuenta una historia única a través de sus elementos visuales.",
         language: "spanish" as const,
         createdAt: new Date().toISOString(),
-      }
-    ];
+      });
+    } catch (error) {
+      console.error("Failed to generate Spanish description:", error);
+      descriptions.push({
+        id: `${Date.now() + 1}_es_fallback`,
+        imageId: params.imageUrl,
+        style: params.style,
+        content: "Una imagen cautivadora que cuenta una historia única a través de sus elementos visuales.",
+        language: "spanish" as const,
+        createdAt: new Date().toISOString(),
+      });
+    }
 
     const responseTime = performance.now() - startTime;
 
