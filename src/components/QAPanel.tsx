@@ -475,7 +475,7 @@ const QAPanel = memo<QAPanelProps>(function QAPanel({
             ¡Excellent Work!
           </h3>
           <p className="text-green-700 dark:text-green-300">
-            You've completed all questions. Your final score is {score.correct}{" "}
+            You have completed all questions. Your final score is {score.correct}{" "}
             out of {score.total}.
           </p>
           <button
