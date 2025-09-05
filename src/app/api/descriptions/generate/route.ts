@@ -40,15 +40,55 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const params = generateDescriptionSchema.parse(body);
 
-    // Generate description using OpenAI service (with demo fallback)
-    const description = await openAIService.generateDescription(params);
+    // Generate descriptions for both languages
+    let englishDescription, spanishDescription;
+    
+    try {
+      englishDescription = await openAIService.generateDescription({
+        ...params,
+        language: "en" as const
+      });
+    } catch (error) {
+      console.error("Failed to generate English description:", error);
+      englishDescription = { text: "A captivating image that tells a unique story through its visual elements." };
+    }
+    
+    try {
+      spanishDescription = await openAIService.generateDescription({
+        ...params,
+        language: "es" as const
+      });
+    } catch (error) {
+      console.error("Failed to generate Spanish description:", error);
+      spanishDescription = { text: "Una imagen cautivadora que cuenta una historia única a través de sus elementos visuales." };
+    }
+
+    // Format as array of descriptions
+    const descriptions = [
+      {
+        id: `${Date.now()}_en`,
+        imageId: params.imageUrl,
+        style: params.style,
+        content: englishDescription.text || "A captivating visual composition.",
+        language: "english" as const,
+        createdAt: new Date().toISOString(),
+      },
+      {
+        id: `${Date.now() + 1}_es`,
+        imageId: params.imageUrl,
+        style: params.style,
+        content: spanishDescription.text || "Una composición visual cautivadora.",
+        language: "spanish" as const,
+        createdAt: new Date().toISOString(),
+      }
+    ];
 
     const responseTime = performance.now() - startTime;
 
     return NextResponse.json(
       {
         success: true,
-        data: description,
+        data: descriptions,
         metadata: {
           responseTime: `${responseTime.toFixed(2)}ms`,
           timestamp: new Date().toISOString(),
