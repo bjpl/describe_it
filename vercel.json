@@ -1,4 +1,5 @@
 {
+  "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
   "functions": {
     "src/app/api/descriptions/generate/route.ts": {
