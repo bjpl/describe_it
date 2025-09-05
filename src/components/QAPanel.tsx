@@ -354,7 +354,7 @@ const QAPanel = memo<QAPanelProps>(function QAPanel({
       )}
 
       {/* Loading State */}
-      <QAProgressIndicator isLoading={loading} />
+      <QAProgressIndicator isGenerating={loading} />
 
       {/* Question Display */}
       {currentQuestion && (
