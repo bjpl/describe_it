@@ -102,6 +102,7 @@ export interface DescriptionRequest {
   style: DescriptionStyle;
   language?: "es" | "en";
   maxLength?: number;
+  customPrompt?: string;
 }
 
 export interface GeneratedDescription {

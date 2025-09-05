@@ -19,7 +19,7 @@ export function InlineImageViewer({
   className = "",
 }: InlineImageViewerProps) {
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className={`space-y-4 ${className}`}
@@ -52,7 +52,7 @@ export function InlineImageViewer({
 
       {/* Generate Button */}
       {onGenerateDescriptions && (
-        <motion.button
+        <MotionButton
           onClick={onGenerateDescriptions}
           disabled={isGenerating}
           className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors"
@@ -65,8 +65,8 @@ export function InlineImageViewer({
             <ImageIcon className="h-4 w-4" />
           )}
           {isGenerating ? "Generating..." : "Generate Descriptions"}
-        </motion.button>
+        </MotionButton>
       )}
-    </motion.div>
+    </MotionDiv>
   );
 }

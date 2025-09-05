@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Wifi, WifiOff, Download, Check, X } from "lucide-react";
 
 interface PWAOptimizationsProps {
@@ -168,7 +169,7 @@ export const PWAOptimizations: React.FC<PWAOptimizationsProps> = ({
       <div className="fixed top-4 right-20 z-40">
         <AnimatePresence>
           {!isOnline && (
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: -20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
@@ -176,7 +177,7 @@ export const PWAOptimizations: React.FC<PWAOptimizationsProps> = ({
             >
               <WifiOff className="w-4 h-4" />
               <span className="text-sm font-medium">Offline</span>
-            </motion.div>
+            </MotionDiv>
           )}
         </AnimatePresence>
       </div>
@@ -184,7 +185,7 @@ export const PWAOptimizations: React.FC<PWAOptimizationsProps> = ({
       {/* Service Worker Update Notification */}
       <AnimatePresence>
         {swStatus.updateAvailable && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
@@ -218,14 +219,14 @@ export const PWAOptimizations: React.FC<PWAOptimizationsProps> = ({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 
       {/* PWA Install Banner */}
       <AnimatePresence>
         {showInstallBanner && installPrompt && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 50 }}
@@ -261,7 +262,7 @@ export const PWAOptimizations: React.FC<PWAOptimizationsProps> = ({
                 <X className="w-4 h-4" />
               </button>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 

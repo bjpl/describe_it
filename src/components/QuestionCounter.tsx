@@ -75,14 +75,14 @@ export function QuestionCounter({
           </h3>
 
           {sessionScore && (
-            <motion.div
+            <MotionDiv
               className={`px-3 py-1 rounded-full text-sm font-medium border ${getGradeColor(sessionScore.grade)}`}
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", stiffness: 500, damping: 30 }}
             >
               {sessionScore.grade} • {sessionScore.percentage}%
-            </motion.div>
+            </MotionDiv>
           )}
         </div>
       </div>
@@ -99,7 +99,7 @@ export function QuestionCounter({
           </div>
 
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
-            <motion.div
+            <MotionDiv
               className="bg-blue-600 h-2.5 rounded-full"
               style={{ width: `${progress}%` }}
               initial={{ width: 0 }}
@@ -226,14 +226,14 @@ export function QuestionCounter({
                 )}
 
                 {streak >= 3 && (
-                  <motion.div
+                  <MotionDiv
                     className="flex items-center gap-1 px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs"
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 30 }}
                   >
                     🔥 {streak} streak!
-                  </motion.div>
+                  </MotionDiv>
                 )}
               </div>
             </div>

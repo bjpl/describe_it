@@ -13,7 +13,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton } from "@/components/ui/MotionComponents";
 import {
   BookOpen,
   Plus,
@@ -623,7 +624,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
           </div>
 
           {/* Extract Button */}
-          <motion.button
+          <MotionButton
             onClick={extractPhrases}
             disabled={state.isExtracting}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm transition-colors"
@@ -636,10 +637,10 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
               <BookOpen className="h-4 w-4" />
             )}
             Extract
-          </motion.button>
+          </MotionButton>
 
           {/* Settings Button */}
-          <motion.button
+          <MotionButton
             onClick={() =>
               setState((prev) => ({
                 ...prev,
@@ -651,14 +652,14 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
             whileTap={{ scale: 0.95 }}
           >
             <Settings className="h-4 w-4" />
-          </motion.button>
+          </MotionButton>
         </div>
       </div>
 
       {/* Settings Panel */}
       <AnimatePresence>
         {state.showSettings && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -734,7 +735,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 
@@ -761,7 +762,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
               Categories:
             </span>
             {categoryConfigs.map((config) => (
-              <motion.button
+              <MotionButton
                 key={config.name}
                 onClick={() => toggleCategory(config.name)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
@@ -773,7 +774,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                 whileTap={{ scale: 0.95 }}
               >
                 {config.displayName}
-              </motion.button>
+              </MotionButton>
             ))}
           </div>
 
@@ -784,7 +785,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                 {state.selectedPhrases.size} of {totalPhrases} phrases selected
               </span>
               {state.selectedPhrases.size > 0 && (
-                <motion.button
+                <MotionButton
                   onClick={() => addMultiplePhrases()}
                   className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center gap-1"
                   whileHover={{ scale: 1.02 }}
@@ -792,11 +793,11 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                 >
                   <Plus className="h-3 w-3" />
                   Add Selected
-                </motion.button>
+                </MotionButton>
               )}
             </div>
 
-            <motion.button
+            <MotionButton
               onClick={exportVocabularyCSV}
               className="px-3 py-1.5 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors text-sm flex items-center gap-1"
               title="Export target_word_list.csv"
@@ -805,14 +806,14 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
             >
               <Download className="h-3 w-3" />
               Export CSV
-            </motion.button>
+            </MotionButton>
           </div>
         </div>
       )}
 
       {/* Error Display */}
       {state.error && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4"
@@ -828,12 +829,12 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
               </p>
             </div>
           </div>
-        </motion.div>
+        </MotionDiv>
       )}
 
       {/* Loading State */}
       {state.isExtracting && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="space-y-4"
@@ -865,12 +866,12 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
               </div>
             </div>
           ))}
-        </motion.div>
+        </MotionDiv>
       )}
 
       {/* Categorized Phrases Display */}
       {!state.isExtracting && totalPhrases > 0 && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="space-y-6"
@@ -884,7 +885,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
               return null;
 
             return (
-              <motion.div
+              <MotionDiv
                 key={config.name}
                 className="space-y-3"
                 initial={{ opacity: 0, y: 20 }}
@@ -909,7 +910,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                       const isAdded = state.addedPhrases.has(phrase.id);
 
                       return (
-                        <motion.div
+                        <MotionDiv
                           key={phrase.id}
                           layout
                           initial={{ opacity: 0, scale: 0.9 }}
@@ -973,7 +974,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                                 />
 
                                 {/* Quick add button */}
-                                <motion.button
+                                <MotionButton
                                   data-phrase-id={phrase.id}
                                   onClick={() => addPhraseToVocabulary(phrase)}
                                   disabled={isAdded}
@@ -995,7 +996,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                                   ) : (
                                     <Plus className="h-4 w-4" />
                                   )}
-                                </motion.button>
+                                </MotionButton>
                               </div>
                             </div>
 
@@ -1008,20 +1009,20 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                               <span>Sort Key: {phrase.sortKey}</span>
                             </div>
                           </div>
-                        </motion.div>
+                        </MotionDiv>
                       );
                     })}
                   </AnimatePresence>
                 </div>
-              </motion.div>
+              </MotionDiv>
             );
           })}
-        </motion.div>
+        </MotionDiv>
       )}
 
       {/* Empty State */}
       {!state.isExtracting && totalPhrases === 0 && !state.error && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="text-center py-12"
@@ -1035,7 +1036,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
             Spanish vocabulary into 5 categories with click-to-add
             functionality.
           </p>
-          <motion.button
+          <MotionButton
             onClick={extractPhrases}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 mx-auto"
             whileHover={{ scale: 1.05 }}
@@ -1043,13 +1044,13 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
           >
             <BookOpen className="h-5 w-5" />
             Extract Vocabulary
-          </motion.button>
-        </motion.div>
+          </MotionButton>
+        </MotionDiv>
       )}
 
       {/* Recent Extractions Footer */}
       {extractionStats.recentExtractions.length > 0 && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="border-t border-gray-200 dark:border-gray-600 pt-4"
@@ -1074,7 +1075,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
               </span>
             )}
           </div>
-        </motion.div>
+        </MotionDiv>
       )}
     </div>
   );

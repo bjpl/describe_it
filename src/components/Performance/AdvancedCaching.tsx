@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Database, Trash2, RefreshCw, HardDrive, Zap } from "lucide-react";
 
 interface CacheEntry {
@@ -311,7 +312,7 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
 
   return (
     <div className="fixed top-4 left-4 z-40">
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
@@ -350,7 +351,7 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
         {/* Detailed View */}
         <AnimatePresence>
           {showDetails && (
-            <motion.div
+            <MotionDiv
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -495,10 +496,10 @@ export const AdvancedCaching: React.FC<AdvancedCachingProps> = ({
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
           )}
         </AnimatePresence>
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 };

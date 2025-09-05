@@ -51,7 +51,7 @@ export const ImageSkeleton = memo<{
     >
       <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700" />
       {showShimmer && (
-        <motion.div
+        <MotionDiv
           className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full"
           animate={{
             translateX: ["100%", "400%"],

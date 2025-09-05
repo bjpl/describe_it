@@ -331,7 +331,7 @@ export class APIMiddleware {
         maxRequests: Math.floor((ENDPOINT_CONFIGS[endpoint as keyof typeof ENDPOINT_CONFIGS]?.rateLimit?.maxRequests || 10) * 1.5)
       });
       
-      return await userLimiter.checkLimit(request, clientId);
+      return await userLimiter.checkLimit(request);
     }
     
     return ipLimit;
@@ -341,7 +341,7 @@ export class APIMiddleware {
    * Generate unique client identifier for enhanced rate limiting
    */
   private getClientIdentifier(request: NextRequest): string {
-    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
     const userAgent = request.headers.get('user-agent') || '';
     const fingerprint = request.headers.get('x-fingerprint') || '';
     

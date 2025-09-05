@@ -1,7 +1,8 @@
 "use client";
 
 import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionImg } from "@/components/ui/MotionComponents";
 import { X, ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 import { UnsplashImage } from "@/types";
 
@@ -23,7 +24,7 @@ export function ImageViewer({ image, isOpen, onClose }: ImageViewerProps) {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -66,21 +67,21 @@ export function ImageViewer({ image, isOpen, onClose }: ImageViewerProps) {
             </button>
           </div>
 
-          <motion.div
+          <MotionDiv
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0.8 }}
             className="max-w-[90vw] max-h-[90vh] flex items-center justify-center"
             onClick={(e) => e.stopPropagation()}
           >
-            <motion.img
+            <MotionImg
               src={image.urls.regular}
               alt={image.alt_description || "Image viewer"}
               className="max-w-full max-h-full object-contain"
               style={{ scale }}
               transition={{ type: "spring", stiffness: 300, damping: 30 }}
             />
-          </motion.div>
+          </MotionDiv>
 
           <div className="absolute bottom-4 left-4 text-white text-sm bg-black bg-opacity-50 rounded-lg p-3">
             <p className="font-medium">{image.user.name}</p>
@@ -88,7 +89,7 @@ export function ImageViewer({ image, isOpen, onClose }: ImageViewerProps) {
               <p className="text-gray-300">{image.description}</p>
             )}
           </div>
-        </motion.div>
+        </MotionDiv>
       )}
     </AnimatePresence>
   );

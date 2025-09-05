@@ -16,6 +16,7 @@ export default defineConfig({
       '../**/*.stories.*'
     ],
     coverage: {
+      provider: 'v8',
       reporter: ['text', 'json', 'html', 'lcov'],
       include: ['../src/**/*'],
       exclude: [

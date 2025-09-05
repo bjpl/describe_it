@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import {
   Package,
   Zap,
@@ -160,7 +161,7 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
 
   return (
     <div className="fixed bottom-20 right-4 z-40">
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, x: 100 }}
         animate={{ opacity: 1, x: 0 }}
         className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
@@ -193,7 +194,7 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
         {/* Loading State */}
         {isAnalyzing && (
           <div className="p-4 text-center">
-            <motion.div
+            <MotionDiv
               animate={{ rotate: 360 }}
               transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
               className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-2"
@@ -207,7 +208,7 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
         {/* Detailed View */}
         <AnimatePresence>
           {showDetails && stats && !isAnalyzing && (
-            <motion.div
+            <MotionDiv
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
@@ -363,10 +364,10 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
                   </button>
                 </div>
               </div>
-            </motion.div>
+            </MotionDiv>
           )}
         </AnimatePresence>
-      </motion.div>
+      </MotionDiv>
     </div>
   );
 };

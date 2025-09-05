@@ -2,7 +2,8 @@
 
 import React, { useState, memo, forwardRef } from "react";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { ImageOff, Loader2 } from "lucide-react";
 
 interface OptimizedImageProps {
@@ -105,14 +106,14 @@ export const OptimizedImage = memo(
       if (hasError) {
         return (
           <div ref={ref} className={containerClasses}>
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 dark:text-gray-500"
             >
               <ImageOff className="w-8 h-8 mb-2" />
               <span className="text-sm">Failed to load image</span>
-            </motion.div>
+            </MotionDiv>
           </div>
         );
       }
@@ -138,18 +139,18 @@ export const OptimizedImage = memo(
           {/* Loading overlay */}
           <AnimatePresence>
             {isLoading && (
-              <motion.div
+              <MotionDiv
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 className="absolute inset-0 z-10 flex items-center justify-center bg-gray-100 dark:bg-gray-800"
               >
-                <motion.div
+                <MotionDiv
                   animate={{ rotate: 360 }}
                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                 >
                   <Loader2 className="w-6 h-6 text-gray-400" />
-                </motion.div>
-              </motion.div>
+                </MotionDiv>
+              </MotionDiv>
             )}
           </AnimatePresence>
 

@@ -74,7 +74,7 @@ export function StyleSelector({
           const isSelected = selectedStyle === option.value;
 
           return (
-            <motion.button
+            <MotionButton
               key={option.value}
               onClick={() => onStyleSelect(option.value)}
               disabled={disabled}
@@ -90,7 +90,7 @@ export function StyleSelector({
             >
               {/* Selection indicator */}
               {isSelected && (
-                <motion.div
+                <MotionDiv
                   className="absolute -top-1 -right-1 w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
@@ -107,7 +107,7 @@ export function StyleSelector({
                       clipRule="evenodd"
                     />
                   </svg>
-                </motion.div>
+                </MotionDiv>
               )}
 
               <div className="flex items-center gap-3 mb-2">
@@ -134,14 +134,14 @@ export function StyleSelector({
               >
                 {option.description}
               </p>
-            </motion.button>
+            </MotionButton>
           );
         })}
       </div>
 
       {/* Style description */}
       {selectedStyle && (
-        <motion.div
+        <MotionDiv
           key={selectedStyle}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -154,7 +154,7 @@ export function StyleSelector({
                 ?.description
             }
           </p>
-        </motion.div>
+        </MotionDiv>
       )}
     </div>
   );

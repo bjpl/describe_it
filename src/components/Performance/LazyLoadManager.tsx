@@ -73,7 +73,7 @@ export const LazyLoadManager: React.FC<LazyComponentWrapperProps> = ({
             onLoad();
           }
           
-          if (isDevelopment) {
+          if (isDevelopment()) {
             console.log('LazyLoadManager: Component became visible', {
               priority,
               threshold,
@@ -100,7 +100,7 @@ export const LazyLoadManager: React.FC<LazyComponentWrapperProps> = ({
     if (onError) {
       onError(error);
     }
-    if (isDevelopment) {
+    if (isDevelopment()) {
       console.error('LazyLoadManager: Component failed to load', error);
     }
   }, [onError]);
@@ -122,7 +122,7 @@ export const LazyLoadManager: React.FC<LazyComponentWrapperProps> = ({
     <div ref={elementRef} className={className} style={{ minHeight }}>
       {isVisible ? (
         <Suspense fallback={<DefaultFallback />}>
-          <div onLoad={handleLoad} onError={handleError}>
+          <div onLoad={handleLoad} onError={() => handleError(new Error('Failed to load'))}>
             {children}
           </div>
         </Suspense>
@@ -209,12 +209,12 @@ export class ComponentPreloader {
       await component;
       loadingStates.set(id, 'loaded');
       
-      if (isDevelopment) {
+      if (isDevelopment()) {
         console.log(`ComponentPreloader: Successfully preloaded ${id}`);
       }
     } catch (error) {
       loadingStates.set(id, 'error');
-      if (isDevelopment) {
+      if (isDevelopment()) {
         console.error(`ComponentPreloader: Failed to preload ${id}`, error);
       }
     }

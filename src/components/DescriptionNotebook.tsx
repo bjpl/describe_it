@@ -2,7 +2,8 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Loader2, RefreshCw, Copy, Check } from "lucide-react";
 import {
   DescriptionStyle,
@@ -221,7 +222,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
       {/* Generate Button */}
       {hasImage && (
         <div className="flex justify-center">
-          <motion.button
+          <MotionButton
             onClick={() => handleGenerateDescription(activeStyle)}
             disabled={activeDescription.isLoading}
             className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors shadow-lg"
@@ -238,7 +239,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                 ? "Generando..."
                 : "Generar Descripción"}
             </span>
-          </motion.button>
+          </MotionButton>
         </div>
       )}
 
@@ -264,7 +265,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
           <div className="p-6 space-y-6">
             <AnimatePresence mode="wait">
               {activeDescription.isLoading ? (
-                <motion.div
+                <MotionDiv
                   key="loading"
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -275,9 +276,9 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                   <span className="ml-3 text-gray-600 dark:text-gray-400">
                     Generando descripción en estilo {activeStyle}...
                   </span>
-                </motion.div>
+                </MotionDiv>
               ) : (
-                <motion.div
+                <MotionDiv
                   key="content"
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -292,7 +293,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                           <h4 className="font-semibold text-blue-900 dark:text-blue-300">
                             English Description
                           </h4>
-                          <motion.button
+                          <MotionButton
                             onClick={() =>
                               handleCopyText(
                                 activeDescription.english,
@@ -308,7 +309,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                             ) : (
                               <Copy className="h-4 w-4 text-blue-600" />
                             )}
-                          </motion.button>
+                          </MotionButton>
                         </div>
                         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                           {activeDescription.english}
@@ -324,7 +325,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                           <h4 className="font-semibold text-green-900 dark:text-green-300">
                             Descripción en Español
                           </h4>
-                          <motion.button
+                          <MotionButton
                             onClick={() =>
                               handleCopyText(
                                 activeDescription.spanish,
@@ -340,7 +341,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                             ) : (
                               <Copy className="h-4 w-4 text-green-600" />
                             )}
-                          </motion.button>
+                          </MotionButton>
                         </div>
                         <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
                           {activeDescription.spanish}
@@ -357,7 +358,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                       </p>
                     </div>
                   )}
-                </motion.div>
+                </MotionDiv>
               )}
             </AnimatePresence>
           </div>

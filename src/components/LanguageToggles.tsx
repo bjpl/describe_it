@@ -37,7 +37,7 @@ export function LanguageToggles({
       </span>
 
       {/* English Toggle */}
-      <motion.button
+      <MotionButton
         onClick={toggleEnglish}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${
           visibility.showEnglish
@@ -54,10 +54,10 @@ export function LanguageToggles({
         )}
         <span className="text-xs font-medium">EN</span>
         <span className="text-xs">🇺🇸</span>
-      </motion.button>
+      </MotionButton>
 
       {/* Spanish Toggle */}
-      <motion.button
+      <MotionButton
         onClick={toggleSpanish}
         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-all duration-200 ${
           visibility.showSpanish
@@ -74,7 +74,7 @@ export function LanguageToggles({
         )}
         <span className="text-xs font-medium">ES</span>
         <span className="text-xs">🇪🇸</span>
-      </motion.button>
+      </MotionButton>
 
       {/* Quick Actions */}
       <div className="border-l border-gray-300 dark:border-gray-600 pl-2 ml-2">

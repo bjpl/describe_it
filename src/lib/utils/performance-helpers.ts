@@ -190,7 +190,7 @@ export const imageOptimization = {
 
 // Viewport detection hook
 export function useIntersectionObserver(
-  ref: React.RefObject<Element>,
+  ref: React.RefObject<Element | null>,
   options: IntersectionObserverInit = {},
 ) {
   const [isIntersecting, setIsIntersecting] = useState(false);
@@ -225,7 +225,7 @@ export const bundleAnalyzer = {
 
 // Performance monitoring hook
 export function usePerformanceMonitor(componentName: string) {
-  const mountTime = useRef<number>();
+  const mountTime = useRef<number>(performance.now());
   const renderCount = useRef(0);
 
   useEffect(() => {

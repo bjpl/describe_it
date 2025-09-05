@@ -74,7 +74,7 @@ class ConsolidatedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
     }
 
     // In development, log detailed error info
-    if (isDevelopment) {
+    if (isDevelopment()) {
       console.group('🚨 Error Boundary Caught Error');
       console.error('Error:', error);
       console.error('Error Info:', errorInfo);
@@ -128,7 +128,7 @@ class ConsolidatedErrorBoundary extends Component<ErrorBoundaryProps, ErrorBound
 
   reportError = (error: Error, errorInfo: ErrorInfo): void => {
     // This would integrate with Sentry or other error reporting service
-    if (isDevelopment) {
+    if (isDevelopment()) {
       console.info('Error reported to tracking service:', {
         error: error.message,
         stack: error.stack,
@@ -178,7 +178,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError,
             We encountered an unexpected error. Please try again.
           </p>
           
-          {isDevelopment && (
+          {isDevelopment() && (
             <details className="mt-4 text-left">
               <summary className="cursor-pointer text-sm text-gray-500 hover:text-gray-700">
                 Error Details (Development)
@@ -261,7 +261,7 @@ export function useErrorHandler() {
   return React.useCallback((error: Error, errorInfo?: any) => {
     logSecureError(error, 'useErrorHandler');
     
-    if (isDevelopment) {
+    if (isDevelopment()) {
       console.error('Manual error report:', error, errorInfo);
     }
   }, []);

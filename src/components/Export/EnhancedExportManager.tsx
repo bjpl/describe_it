@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton } from "@/components/ui/MotionComponents";
 import {
   Download,
   FileText,
@@ -372,7 +373,7 @@ const EnhancedExportManager: React.FC<{
   ]);
 
   const ExportFormatCard: React.FC<{ format: ExportFormat }> = ({ format }) => (
-    <motion.button
+    <MotionButton
       onClick={() => setSelectedFormat(format.id)}
       className={`w-full p-4 border-2 rounded-xl text-left transition-all ${
         selectedFormat === format.id
@@ -425,7 +426,7 @@ const EnhancedExportManager: React.FC<{
           </span>
         ))}
       </div>
-    </motion.button>
+    </MotionButton>
   );
 
   return (
@@ -617,7 +618,7 @@ const EnhancedExportManager: React.FC<{
 
                   <AnimatePresence>
                     {showAdvancedOptions && (
-                      <motion.div
+                      <MotionDiv
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
@@ -658,7 +659,7 @@ const EnhancedExportManager: React.FC<{
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
                           />
                         </div>
-                      </motion.div>
+                      </MotionDiv>
                     )}
                   </AnimatePresence>
                 </div>
@@ -723,13 +724,13 @@ const EnhancedExportManager: React.FC<{
                 </div>
 
                 {previewData && (
-                  <motion.div
+                  <MotionDiv
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs font-mono overflow-x-auto"
                   >
                     <pre>{JSON.stringify(previewData, null, 2)}</pre>
-                  </motion.div>
+                  </MotionDiv>
                 )}
               </div>
 
@@ -753,7 +754,7 @@ const EnhancedExportManager: React.FC<{
                   )}
                 </div>
 
-                <motion.button
+                <MotionButton
                   onClick={simulateExport}
                   disabled={
                     exportStatus === "exporting" || exportStatus === "preparing"
@@ -769,7 +770,7 @@ const EnhancedExportManager: React.FC<{
                     exportStatus === "complete" ||
                     exportStatus === "error") &&
                     "Export Data"}
-                </motion.button>
+                </MotionButton>
               </div>
 
               {/* Export Progress */}
@@ -777,7 +778,7 @@ const EnhancedExportManager: React.FC<{
                 exportStatus === "preparing") && (
                 <div className="mt-4">
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <motion.div
+                    <MotionDiv
                       className="bg-blue-600 h-2 rounded-full"
                       initial={{ width: 0 }}
                       animate={{ width: `${exportProgress}%` }}

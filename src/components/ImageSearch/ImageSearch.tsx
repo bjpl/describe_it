@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionInput } from "@/components/ui/MotionComponents";
 import { Search, X, Filter } from "lucide-react";
 import { useDebounce, useImageSearch } from "@/hooks";
 import { ImageGrid } from "./ImageGrid";
@@ -149,14 +150,14 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
   );
 
   return (
-    <motion.div
+    <MotionDiv
       className={`w-full max-w-6xl mx-auto space-y-6 ${className}`}
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Search Header */}
-      <motion.div className="space-y-4" variants={itemVariants}>
+      <MotionDiv className="space-y-4" variants={itemVariants}>
         <div className="relative">
           <div className="relative flex items-center">
             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -169,7 +170,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
             />
             <AnimatePresence>
               {searchQuery && (
-                <motion.button
+                <MotionButton
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.8 }}
@@ -177,7 +178,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
                   className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition-colors"
                 >
                   <X className="h-5 w-5 text-gray-400" />
-                </motion.button>
+                </MotionButton>
               )}
             </AnimatePresence>
           </div>
@@ -185,7 +186,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
 
         {/* Filter Toggle */}
         <div className="flex items-center justify-between">
-          <motion.button
+          <MotionButton
             onClick={handleToggleFilters}
             className="flex items-center gap-2 px-4 py-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
             whileHover={{ scale: 1.05 }}
@@ -193,7 +194,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
           >
             <Filter className="h-4 w-4" />
             <span>Filters</span>
-          </motion.button>
+          </MotionButton>
 
           {searchParams.query && (
             <div className="text-sm text-gray-500">
@@ -215,12 +216,12 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
             />
           )}
         </AnimatePresence>
-      </motion.div>
+      </MotionDiv>
 
       {/* Loading State */}
       <AnimatePresence>
         {loading.isLoading && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -230,14 +231,14 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
             <p className="text-gray-600">
               {loading.message || "Searching images..."}
             </p>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 
       {/* Error State */}
       <AnimatePresence>
         {error && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
@@ -245,21 +246,21 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
           >
             <p className="text-red-600 font-medium mb-2">Search Error</p>
             <p className="text-red-500">{error}</p>
-            <motion.button
+            <MotionButton
               onClick={() => searchImages(searchParams.query)}
               className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               Try Again
-            </motion.button>
-          </motion.div>
+            </MotionButton>
+          </MotionDiv>
         )}
       </AnimatePresence>
 
       {/* Image Results */}
       {!loading.isLoading && !error && hasResults && (
-        <motion.div variants={itemVariants} className="space-y-6">
+        <MotionDiv variants={itemVariants} className="space-y-6">
           <ImageGrid
             images={images}
             onImageClick={handleImageClick}
@@ -275,12 +276,12 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
               isLoading={loading.isLoading}
             />
           )}
-        </motion.div>
+        </MotionDiv>
       )}
 
       {/* Empty State */}
       {!loading.isLoading && !error && hasQuery && !hasResults && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-12 space-y-4"
@@ -291,12 +292,12 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
             Try different keywords or check your spelling. Popular searches
             include nature, people, technology, and architecture.
           </p>
-        </motion.div>
+        </MotionDiv>
       )}
 
       {/* Initial State */}
       {!hasQuery && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="text-center py-16 space-y-4"
@@ -312,7 +313,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
           <div className="flex flex-wrap justify-center gap-2 mt-6">
             {["nature", "people", "city", "food", "animals", "travel"].map(
               (suggestion) => (
-                <motion.button
+                <MotionButton
                   key={suggestion}
                   onClick={() => setSearchQuery(suggestion)}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full text-sm transition-colors"
@@ -320,13 +321,13 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
                   whileTap={{ scale: 0.95 }}
                 >
                   {suggestion}
-                </motion.button>
+                </MotionButton>
               ),
             )}
           </div>
-        </motion.div>
+        </MotionDiv>
       )}
-    </motion.div>
+    </MotionDiv>
   );
 };
 

@@ -43,14 +43,13 @@ const OptimizedImageLoaderBase: React.FC<OptimizedImageLoaderProps> = ({
 }) => {
   const [imageError, setImageError] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
-  const imageRef = useRef<HTMLElement>(null);
-  const intersectionData = useIntersectionObserver(imageRef, {
+  const imageRef = useRef<HTMLDivElement>(null);
+  const isIntersecting = useIntersectionObserver(imageRef, {
     threshold: 0.1,
     rootMargin: '50px'
   });
 
-  const isIntersecting = Boolean((intersectionData as any)?.isIntersecting);
-  const hasIntersected = Boolean((intersectionData as any)?.hasIntersected);
+  const hasIntersected = isIntersecting;
 
   const handleLoad = useCallback(() => {
     setImageLoaded(true);

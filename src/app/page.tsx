@@ -3,6 +3,7 @@
 
 import React, { useState, useCallback, memo, Suspense } from 'react';
 import { motion } from 'framer-motion';
+import { MotionHeader, MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
 import { Search, Settings, Download, BarChart3, BookOpen, MessageCircle, Brain } from 'lucide-react';
 import { LazyWrapper, preloadCriticalComponents } from '@/components/LazyComponents';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
@@ -116,7 +117,7 @@ const HomePageBase: React.FC = () => {
     <ErrorBoundary>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         {/* Header */}
-        <motion.header 
+        <MotionHeader 
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -125,13 +126,13 @@ const HomePageBase: React.FC = () => {
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center py-4">
               <div className="flex items-center space-x-3">
-                <motion.div
+                <MotionDiv
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center"
                 >
                   <BookOpen className="w-6 h-6 text-white" />
-                </motion.div>
+                </MotionDiv>
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                     Describe It
@@ -156,18 +157,18 @@ const HomePageBase: React.FC = () => {
                   </div>
                 )}
                 
-                <motion.button
+                <MotionButton
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   onClick={toggleSettings}
                   className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
                 >
                   <Settings className="w-5 h-5" />
-                </motion.button>
+                </MotionButton>
               </div>
             </div>
           </div>
-        </motion.header>
+        </MotionHeader>
 
         {/* Navigation Tabs */}
         <nav className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
@@ -178,7 +179,7 @@ const HomePageBase: React.FC = () => {
                 const isActive = state.activeTab === tab.id;
                 
                 return (
-                  <motion.button
+                  <MotionButton
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id as HomePageState['activeTab'])}
                     className={`
@@ -194,7 +195,7 @@ const HomePageBase: React.FC = () => {
                   >
                     <Icon className="w-4 h-4" />
                     <span>{tab.label}</span>
-                  </motion.button>
+                  </MotionButton>
                 );
               })}
             </div>
@@ -214,7 +215,7 @@ const HomePageBase: React.FC = () => {
             }
             minHeight="400px"
           >
-            <motion.div
+            <MotionDiv
               key={state.activeTab}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -287,7 +288,7 @@ const HomePageBase: React.FC = () => {
               
               {/* Empty state for tabs that require an image */}
               {(state.activeTab !== 'search' && !state.selectedImage) && (
-                <motion.div
+                <MotionDiv
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="text-center py-20 space-y-4"
@@ -299,17 +300,17 @@ const HomePageBase: React.FC = () => {
                   <p className="text-gray-500 dark:text-gray-400 max-w-md mx-auto">
                     Search and select an image from the Search tab to get started with {tabConfig.find(t => t.id === state.activeTab)?.label.toLowerCase()}.
                   </p>
-                  <motion.button
+                  <MotionButton
                     onClick={() => handleTabChange('search')}
                     className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                   >
                     Go to Search
-                  </motion.button>
-                </motion.div>
+                  </MotionButton>
+                </MotionDiv>
               )}
-            </motion.div>
+            </MotionDiv>
           </LazyWrapper>
         </main>
 

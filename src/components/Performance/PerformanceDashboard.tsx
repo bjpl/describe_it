@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import {
   Activity,
   Database,
@@ -281,7 +282,7 @@ export const PerformanceDashboard: React.FC = () => {
   }
 
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.9 }}
@@ -375,7 +376,7 @@ export const PerformanceDashboard: React.FC = () => {
         <div className="flex-1 overflow-y-auto p-6">
           <AnimatePresence mode="wait">
             {selectedCategory === "overview" && (
-              <motion.div
+              <MotionDiv
                 key="overview"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -480,12 +481,12 @@ export const PerformanceDashboard: React.FC = () => {
                     </div>
                   </div>
                 </div>
-              </motion.div>
+              </MotionDiv>
             )}
 
             {/* Other category views would go here */}
             {selectedCategory === "webvitals" && (
-              <motion.div
+              <MotionDiv
                 key="webvitals"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -506,11 +507,11 @@ export const PerformanceDashboard: React.FC = () => {
                     </div>
                   </div>
                 ))}
-              </motion.div>
+              </MotionDiv>
             )}
 
             {selectedCategory === "alerts" && (
-              <motion.div
+              <MotionDiv
                 key="alerts"
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
@@ -553,7 +554,7 @@ export const PerformanceDashboard: React.FC = () => {
                     </div>
                   ))
                 )}
-              </motion.div>
+              </MotionDiv>
             )}
           </AnimatePresence>
         </div>
@@ -573,6 +574,6 @@ export const PerformanceDashboard: React.FC = () => {
           </div>
         </div>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 };

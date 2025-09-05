@@ -13,7 +13,8 @@
  */
 
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton } from "@/components/ui/MotionComponents";
 import {
   BookOpen,
   Download,
@@ -470,7 +471,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
           </div>
 
           {/* Quick Actions */}
-          <motion.button
+          <MotionButton
             onClick={() => exportVocabularyCSV()}
             disabled={
               state.vocabularyStats.totalPhrases === 0 || state.isExporting
@@ -485,9 +486,9 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
             ) : (
               <Download className="h-5 w-5" />
             )}
-          </motion.button>
+          </MotionButton>
 
-          <motion.button
+          <MotionButton
             onClick={() =>
               setState((prev) => ({
                 ...prev,
@@ -500,13 +501,13 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
             whileTap={{ scale: 0.95 }}
           >
             <Settings className="h-5 w-5" />
-          </motion.button>
+          </MotionButton>
         </div>
       </div>
 
       {/* Alpha-1 Coordination Status */}
       {settings.coordinateWithAlpha1 && (
-        <motion.div
+        <MotionDiv
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3"
@@ -528,13 +529,13 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
               </button>
             )}
           </div>
-        </motion.div>
+        </MotionDiv>
       )}
 
       {/* Settings Panel */}
       <AnimatePresence>
         {state.showSettings && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -686,7 +687,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                 </div>
               </div>
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 
@@ -700,7 +701,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
               : 0;
 
           return (
-            <motion.div
+            <MotionDiv
               key={config.name}
               className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 text-center cursor-pointer hover:shadow-md transition-shadow"
               onClick={() =>
@@ -725,7 +726,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {percentage}%
               </p>
-            </motion.div>
+            </MotionDiv>
           );
         })}
       </div>
@@ -812,7 +813,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                 </span>
                 {selectedPhrases.size > 0 && (
                   <div className="flex gap-2">
-                    <motion.button
+                    <MotionButton
                       onClick={() => {
                         const setName = prompt("Enter vocabulary set name:");
                         if (setName) createVocabularySet(setName);
@@ -824,16 +825,16 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                     >
                       <Plus className="h-3 w-3" />
                       Create Set
-                    </motion.button>
+                    </MotionButton>
 
-                    <motion.button
+                    <MotionButton
                       onClick={() => setSelectedPhrases(new Set())}
                       className="px-3 py-1.5 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
                     >
                       Clear
-                    </motion.button>
+                    </MotionButton>
                   </div>
                 )}
               </div>
@@ -850,7 +851,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                   const isSelected = selectedPhrases.has(phrase.id);
 
                   return (
-                    <motion.div
+                    <MotionDiv
                       key={phrase.id}
                       layout
                       initial={{ opacity: 0, scale: 0.95 }}
@@ -908,7 +909,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                           </span>
                         </div>
                       </div>
-                    </motion.div>
+                    </MotionDiv>
                   );
                 })}
               </AnimatePresence>
@@ -1060,7 +1061,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-semibold">Vocabulary Sets</h3>
-              <motion.button
+              <MotionButton
                 onClick={() => {
                   const setName = prompt("Enter new vocabulary set name:");
                   if (setName)
@@ -1072,13 +1073,13 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
               >
                 <Plus className="h-4 w-4" />
                 New Set
-              </motion.button>
+              </MotionButton>
             </div>
 
             <div className="grid gap-4">
               <AnimatePresence mode="popLayout">
                 {vocabularySets.map((set) => (
-                  <motion.div
+                  <MotionDiv
                     key={set.id}
                     layout
                     initial={{ opacity: 0, y: 20 }}
@@ -1106,7 +1107,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                       </div>
 
                       <div className="flex items-center gap-2 ml-4">
-                        <motion.button
+                        <MotionButton
                           onClick={() => exportVocabularyCSV(set.id)}
                           disabled={state.isExporting}
                           className="p-2 text-green-600 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition-colors"
@@ -1115,9 +1116,9 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                           whileTap={{ scale: 0.95 }}
                         >
                           <Download className="h-4 w-4" />
-                        </motion.button>
+                        </MotionButton>
 
-                        <motion.button
+                        <MotionButton
                           onClick={() =>
                             setState((prev) => ({
                               ...prev,
@@ -1131,9 +1132,9 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                           whileTap={{ scale: 0.95 }}
                         >
                           <Edit3 className="h-4 w-4" />
-                        </motion.button>
+                        </MotionButton>
 
-                        <motion.button
+                        <MotionButton
                           onClick={() => deleteVocabularySet(set.id)}
                           className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                           title="Delete set"
@@ -1141,7 +1142,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                           whileTap={{ scale: 0.95 }}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </motion.button>
+                        </MotionButton>
                       </div>
                     </div>
 
@@ -1172,7 +1173,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                         <div className="text-xs text-gray-500">Progress</div>
                       </div>
                     </div>
-                  </motion.div>
+                  </MotionDiv>
                 ))}
               </AnimatePresence>
 
@@ -1186,7 +1187,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                     Create vocabulary sets to organize your Spanish phrases and
                     track your learning progress.
                   </p>
-                  <motion.button
+                  <MotionButton
                     onClick={() => {
                       const setName = prompt("Enter vocabulary set name:");
                       if (setName)
@@ -1198,7 +1199,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                   >
                     <Plus className="h-5 w-5" />
                     Create First Set
-                  </motion.button>
+                  </MotionButton>
                 </div>
               )}
             </div>

@@ -7,6 +7,7 @@ import {
   validateSecurityHeaders,
   apiResponseSchema 
 } from "@/lib/schemas/api-validation";
+import type { DescriptionStyle } from "@/types/api";
 import { z } from "zod";
 
 export const runtime = "nodejs";
@@ -78,7 +79,7 @@ async function handleDescriptionGenerate(request: NextRequest): Promise<NextResp
     try {
       const englishDescription = await openAIService.generateDescription({
         imageUrl: params.imageUrl as string,
-        style: params.style as string,
+        style: params.style as DescriptionStyle,
         maxLength: params.maxLength as number,
         customPrompt: params.customPrompt as string | undefined,
         language: "en" as const

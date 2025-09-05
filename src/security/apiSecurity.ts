@@ -9,7 +9,7 @@ import { env, isDevelopment } from '@/config/env';
 // Rate limiting configuration
 const RATE_LIMITS = {
   openai: {
-    requests: env.OPENAI_RATE_LIMIT_PER_MINUTE,
+    requests: env?.OPENAI_RATE_LIMIT_PER_MINUTE ?? 60,
     window: 60 * 1000, // 1 minute
   },
   unsplash: {
@@ -60,7 +60,7 @@ export function rateLimit(
  */
 export function getClientId(request: NextRequest): string {
   // In development, use a fixed identifier
-  if (isDevelopment) {
+  if (isDevelopment()) {
     return 'dev-client';
   }
 
@@ -184,7 +184,7 @@ export class ApiKeyManager {
    * Get OpenAI API key securely
    */
   getOpenAIKey(): string | null {
-    if (!env.OPENAI_API_KEY) {
+    if (!env?.OPENAI_API_KEY) {
       console.warn('OpenAI API key not configured - demo mode active');
       return null;
     }
@@ -196,7 +196,7 @@ export class ApiKeyManager {
    * Get Unsplash API key securely
    */
   getUnsplashKey(): string | null {
-    if (!env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY) {
+    if (!env?.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY) {
       console.warn('Unsplash API key not configured - demo mode active');
       return null;
     }
@@ -236,7 +236,7 @@ export const apiKeyManager = ApiKeyManager.getInstance();
  * CORS configuration for API routes
  */
 export const corsHeaders = {
-  'Access-Control-Allow-Origin': isDevelopment ? '*' : 'same-origin',
+  'Access-Control-Allow-Origin': isDevelopment() ? '*' : 'same-origin',
   'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400',
@@ -291,7 +291,7 @@ export function logSecureError(error: any, context: string): void {
   };
 
   // Don't log full error details in production
-  if (isDevelopment) {
+  if (isDevelopment()) {
     console.error('Secure Error Log:', sanitizedError, error.stack);
   } else {
     console.error('Secure Error Log:', sanitizedError);

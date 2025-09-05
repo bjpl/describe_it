@@ -54,7 +54,7 @@ const ImageItem = memo(
     );
 
     return (
-      <motion.div
+      <MotionDiv
         variants={itemVariants}
         className="group relative aspect-square overflow-hidden rounded-xl cursor-pointer bg-gray-100"
         whileHover={{
@@ -115,14 +115,14 @@ const ImageItem = memo(
 
         {/* Quick Preview Button */}
         <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
-          <motion.button
+          <MotionButton
             onClick={handleViewClick}
             className="bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 px-4 py-2 rounded-full font-medium transition-all duration-200 shadow-lg"
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             View Image
-          </motion.button>
+          </MotionButton>
         </div>
 
         {/* Image Dimensions Indicator */}
@@ -135,7 +135,7 @@ const ImageItem = memo(
           <Calendar className="h-3 w-3" />
           <span>{new Date(image.created_at).toLocaleDateString()}</span>
         </div>
-      </motion.div>
+      </MotionDiv>
     );
   },
   (prevProps, nextProps) => {
@@ -223,7 +223,7 @@ const ImageGridBase: React.FC<ImageGridProps> = ({
   }
 
   return (
-    <motion.div
+    <MotionDiv
       className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4"
       variants={containerVariants}
       initial="hidden"
@@ -237,7 +237,7 @@ const ImageGridBase: React.FC<ImageGridProps> = ({
           itemVariants={itemVariants}
         />
       ))}
-    </motion.div>
+    </MotionDiv>
   );
 };
 

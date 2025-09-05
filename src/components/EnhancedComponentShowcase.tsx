@@ -2,7 +2,8 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import {
   Search,
   Brain,
@@ -275,7 +276,7 @@ import {
 />`;
 
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className={`h-full ${className} ${isFullscreen ? "fixed inset-0 z-50 bg-white dark:bg-gray-900" : ""}`}
@@ -329,7 +330,7 @@ import {
 
             <div className="space-y-2">
               {componentDemos.map((demo) => (
-                <motion.button
+                <MotionButton
                   key={demo.id}
                   onClick={() => handleDemoChange(demo.id)}
                   className={`w-full text-left p-4 rounded-lg transition-all ${
@@ -382,7 +383,7 @@ import {
                       </div>
                     </div>
                   </div>
-                </motion.button>
+                </MotionButton>
               ))}
             </div>
 
@@ -489,7 +490,7 @@ import {
               {/* Component Demo */}
               <div className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-gray-900">
                 <AnimatePresence mode="wait">
-                  <motion.div
+                  <MotionDiv
                     key={activeDemo}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -502,14 +503,14 @@ import {
                         <Component {...activeComponent.props} />
                       </div>
                     )}
-                  </motion.div>
+                  </MotionDiv>
                 </AnimatePresence>
               </div>
             </div>
           )}
         </div>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 };
 

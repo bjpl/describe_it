@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useCallback, useMemo, memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton } from "@/components/ui/MotionWrappers";
 import {
   Play,
   Pause,
@@ -345,7 +346,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
   // Setup screen
   if (sessionState === "setup") {
     return (
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-8 text-center"
@@ -385,7 +386,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
           </div>
         </div>
 
-        <motion.button
+        <MotionButton
           onClick={startSession}
           className="flex items-center gap-2 px-8 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium mx-auto"
           whileHover={{ scale: 1.05 }}
@@ -393,15 +394,15 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
         >
           <Play className="h-5 w-5" />
           {language === "es" ? "Comenzar Quiz" : "Start Quiz"}
-        </motion.button>
-      </motion.div>
+        </MotionButton>
+      </MotionDiv>
     );
   }
 
   // Completed screen
   if (sessionState === "completed") {
     return (
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         className="space-y-6"
@@ -463,7 +464,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 
         {/* Actions */}
         <div className="flex justify-center gap-4">
-          <motion.button
+          <MotionButton
             onClick={resetSession}
             className="flex items-center gap-2 px-6 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             whileHover={{ scale: 1.05 }}
@@ -471,9 +472,9 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
           >
             <RotateCcw className="h-4 w-4" />
             {language === "es" ? "Nuevo Quiz" : "New Quiz"}
-          </motion.button>
+          </MotionButton>
 
-          <motion.button
+          <MotionButton
             onClick={() => {
               /* Export functionality */
             }}
@@ -483,9 +484,9 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
           >
             <Download className="h-4 w-4" />
             {language === "es" ? "Exportar" : "Export"}
-          </motion.button>
+          </MotionButton>
         </div>
-      </motion.div>
+      </MotionDiv>
     );
   }
 
@@ -538,12 +539,12 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 
         {/* Progress Bar */}
         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-          <motion.div
+          <MotionDiv
             className="bg-blue-600 h-2 rounded-full"
             initial={{ width: 0 }}
             animate={{ width: `${progress}%` }}
             transition={{ duration: 0.5 }}
-          />
+          ></MotionDiv>
         </div>
 
         {/* Stats */}
@@ -560,7 +561,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 
       {/* Question Content */}
       <AnimatePresence mode="wait">
-        <motion.div
+        <MotionDiv
           key={currentQuestionIndex}
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -591,7 +592,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 
                   <AnimatePresence>
                     {showHint && (
-                      <motion.div
+                      <MotionDiv
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
@@ -602,7 +603,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                             ? "Piensa en el contexto de la imagen y las palabras clave en la descripción."
                             : "Think about the image context and key words in the description."}
                         </p>
-                      </motion.div>
+                      </MotionDiv>
                     )}
                   </AnimatePresence>
                 </div>
@@ -641,7 +642,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                 }
 
                 return (
-                  <motion.button
+                  <MotionButton
                     key={index}
                     onClick={() => handleAnswerSelect(index)}
                     disabled={questionAnswered || sessionState !== "active"}
@@ -662,7 +663,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                         </div>
                       )}
                     </div>
-                  </motion.button>
+                  </MotionButton>
                 );
               })}
             </div>
@@ -682,7 +683,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
 
               <div className="flex gap-2">
                 {!questionAnswered ? (
-                  <motion.button
+                  <MotionButton
                     onClick={() => handleAnswerSubmit()}
                     disabled={
                       selectedAnswer === null || sessionState !== "active"
@@ -692,9 +693,9 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                     whileTap={{ scale: 0.95 }}
                   >
                     {language === "es" ? "Confirmar" : "Submit"}
-                  </motion.button>
+                  </MotionButton>
                 ) : (
-                  <motion.button
+                  <MotionButton
                     onClick={handleNextQuestion}
                     className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     whileHover={{ scale: 1.05 }}
@@ -707,7 +708,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                       : language === "es"
                         ? "Siguiente"
                         : "Next"}
-                  </motion.button>
+                  </MotionButton>
                 )}
               </div>
             </div>
@@ -715,7 +716,7 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
             {/* Explanation */}
             <AnimatePresence>
               {showExplanation && (
-                <motion.div
+                <MotionDiv
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
@@ -734,11 +735,11 @@ const EnhancedQASystemBase: React.FC<EnhancedQASystemProps> = ({
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </MotionDiv>
               )}
             </AnimatePresence>
           </div>
-        </motion.div>
+        </MotionDiv>
       </AnimatePresence>
     </div>
   );

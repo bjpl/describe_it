@@ -75,7 +75,7 @@ export function SearchFilters({
   ];
 
   return (
-    <motion.div
+    <MotionDiv
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: "auto" }}
       exit={{ opacity: 0, height: 0 }}
@@ -181,7 +181,7 @@ export function SearchFilters({
 
       {/* Clear Filters */}
       <div className="flex justify-end pt-4 border-t border-gray-200">
-        <motion.button
+        <MotionButton
           onClick={() =>
             onFiltersChange({
               orientation: "all",
@@ -194,8 +194,8 @@ export function SearchFilters({
           whileTap={{ scale: 0.95 }}
         >
           Clear All Filters
-        </motion.button>
+        </MotionButton>
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 }

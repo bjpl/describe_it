@@ -1,5 +1,6 @@
 import React, { useEffect, useState, memo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Activity, Zap, Clock, Database } from "lucide-react";
 
 interface PerformanceMetrics {
@@ -166,7 +167,7 @@ export const PerformanceMonitor = memo(() => {
   return (
     <>
       {/* Main Performance Panel */}
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, x: 300 }}
         animate={{ opacity: 1, x: 0 }}
         exit={{ opacity: 0, x: 300 }}
@@ -270,13 +271,13 @@ export const PerformanceMonitor = memo(() => {
         <div className="mt-3 pt-3 border-t border-gray-700 text-xs text-gray-400">
           Press Ctrl+Shift+P to toggle
         </div>
-      </motion.div>
+      </MotionDiv>
 
       {/* Performance Alerts */}
       <div className="fixed top-4 left-4 z-50 space-y-2">
         <AnimatePresence>
           {alerts.map((alert) => (
-            <motion.div
+            <MotionDiv
               key={alert.timestamp}
               initial={{ opacity: 0, x: -300, scale: 0.3 }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
@@ -296,7 +297,7 @@ export const PerformanceMonitor = memo(() => {
               {alert.type === "warning" && <Clock className="w-4 h-4" />}
               {alert.type === "info" && <Database className="w-4 h-4" />}
               <span>{alert.message}</span>
-            </motion.div>
+            </MotionDiv>
           ))}
         </AnimatePresence>
       </div>

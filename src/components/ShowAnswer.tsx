@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton } from "@/components/ui/MotionComponents";
 import {
   Eye,
   EyeOff,
@@ -126,7 +127,7 @@ export function ShowAnswer({
           </div>
 
           {/* Toggle Button */}
-          <motion.button
+          <MotionButton
             onClick={isRevealed ? onHide : onReveal}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
               isRevealed
@@ -147,14 +148,14 @@ export function ShowAnswer({
                 Show Answer
               </>
             )}
-          </motion.button>
+          </MotionButton>
         </div>
       </div>
 
       {/* Content */}
       <AnimatePresence>
         {isRevealed && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -186,7 +187,7 @@ export function ShowAnswer({
 
                   {/* Action Buttons */}
                   <div className="flex items-center gap-2">
-                    <motion.button
+                    <MotionButton
                       onClick={handleSpeak}
                       className="p-2 hover:bg-green-100 dark:hover:bg-green-800 rounded-lg transition-colors"
                       whileHover={{ scale: 1.1 }}
@@ -194,9 +195,9 @@ export function ShowAnswer({
                       title="Listen to pronunciation"
                     >
                       <Volume2 className="w-4 h-4 text-green-600" />
-                    </motion.button>
+                    </MotionButton>
 
-                    <motion.button
+                    <MotionButton
                       onClick={handleCopyAnswer}
                       className="p-2 hover:bg-green-100 dark:hover:bg-green-800 rounded-lg transition-colors"
                       whileHover={{ scale: 1.1 }}
@@ -208,7 +209,7 @@ export function ShowAnswer({
                       ) : (
                         <Copy className="w-4 h-4 text-green-600" />
                       )}
-                    </motion.button>
+                    </MotionButton>
                   </div>
                 </div>
               </div>
@@ -243,7 +244,7 @@ export function ShowAnswer({
 
                   <AnimatePresence>
                     {showHints && (
-                      <motion.div
+                      <MotionDiv
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: "auto" }}
                         exit={{ opacity: 0, height: 0 }}
@@ -262,13 +263,13 @@ export function ShowAnswer({
                             </div>
                           ))}
                         </div>
-                      </motion.div>
+                      </MotionDiv>
                     )}
                   </AnimatePresence>
                 </div>
               )}
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 

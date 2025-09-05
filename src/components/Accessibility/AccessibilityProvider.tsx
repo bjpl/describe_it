@@ -2,7 +2,8 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 
 interface AccessibilityContextType {
   isHighContrast: boolean;
@@ -179,14 +180,14 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({
       >
         <AnimatePresence>
           {announcements.map((announcement) => (
-            <motion.div
+            <MotionDiv
               key={announcement.id}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
               {announcement.message}
-            </motion.div>
+            </MotionDiv>
           ))}
         </AnimatePresence>
       </div>
@@ -255,7 +256,7 @@ export const AccessibilityPanel: React.FC = () => {
         {isOpen && (
           <>
             {/* Backdrop */}
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -264,7 +265,7 @@ export const AccessibilityPanel: React.FC = () => {
             />
 
             {/* Panel */}
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, scale: 0.9, y: 50 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 50 }}
@@ -403,7 +404,7 @@ export const AccessibilityPanel: React.FC = () => {
                   Press Alt + A to toggle this panel
                 </p>
               </div>
-            </motion.div>
+            </MotionDiv>
           </>
         )}
       </AnimatePresence>

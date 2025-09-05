@@ -58,7 +58,7 @@ export function useOptimizedState<T>(
   // Track render count in development
   useEffect(() => {
     renderCount.current++;
-    if (debug && isDevelopment) {
+    if (debug && isDevelopment()) {
       console.log(`useOptimizedState render #${renderCount.current}:`, {
         currentValue: value,
         previousValue: previousValue.current,
@@ -80,14 +80,14 @@ export function useOptimizedState<T>(
         lastUpdate.current = Date.now();
         setValueInternal(nextValue);
         
-        if (debug && isDevelopment) {
+        if (debug && isDevelopment()) {
           console.log('useOptimizedState: Value updated', {
             from: value,
             to: nextValue,
             timestamp: new Date().toISOString(),
           });
         }
-      } else if (debug && isDevelopment) {
+      } else if (debug && isDevelopment()) {
         console.log('useOptimizedState: Update skipped (no change)', {
           attempted: nextValue,
           current: value,

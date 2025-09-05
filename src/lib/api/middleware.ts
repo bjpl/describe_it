@@ -94,7 +94,7 @@ export function withRateLimit(
   
   return async (req: NextRequest) => {
     try {
-      const ip = req.ip || req.headers.get("x-forwarded-for") || "anonymous";
+      const ip = req.headers.get("x-forwarded-for") || req.headers.get("x-real-ip") || req.headers.get('cf-connecting-ip') || "anonymous";
       const limit = RATE_LIMITS[type];
       const key = `rate_limit:${type}:${ip}`;
 

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Globe, BookOpen, Copy, Check, Volume2 } from "lucide-react";
 import { DescriptionStyle } from "@/types";
 
@@ -98,8 +99,8 @@ export const DescriptionTabs: React.FC<DescriptionTabsProps> = ({
 
       {/* Tab Content */}
       <div className="p-4">
-        <AnimatePresence mode="wait">
-          <motion.div
+        <AnimatePresence>
+          <MotionDiv
             key={activeTab}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,7 +164,7 @@ export const DescriptionTabs: React.FC<DescriptionTabsProps> = ({
                 </div>
               </div>
             )}
-          </motion.div>
+          </MotionDiv>
         </AnimatePresence>
       </div>
     </div>

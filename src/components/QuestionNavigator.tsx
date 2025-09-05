@@ -65,7 +65,7 @@ export function QuestionNavigator({
           Question Navigation
         </h3>
 
-        <motion.button
+        <MotionButton
           onClick={onReset}
           className="flex items-center gap-2 px-3 py-1.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
           whileHover={{ scale: 1.05 }}
@@ -73,7 +73,7 @@ export function QuestionNavigator({
         >
           <RefreshCw className="w-4 h-4" />
           Reset
-        </motion.button>
+        </MotionButton>
       </div>
 
       {/* Question Grid */}
@@ -83,7 +83,7 @@ export function QuestionNavigator({
           const isCurrent = index === currentIndex;
 
           return (
-            <motion.button
+            <MotionButton
               key={index}
               onClick={() => onGoToQuestion(index)}
               className={`relative w-10 h-10 rounded-lg border-2 text-sm font-medium transition-all duration-200 ${getStatusColor(status, isCurrent)}`}
@@ -102,14 +102,14 @@ export function QuestionNavigator({
                   )}
                 </div>
               )}
-            </motion.button>
+            </MotionButton>
           );
         })}
       </div>
 
       {/* Navigation Controls */}
       <div className="flex items-center justify-between">
-        <motion.button
+        <MotionButton
           onClick={onPrevious}
           disabled={!canGoPrevious}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -122,13 +122,13 @@ export function QuestionNavigator({
         >
           <ChevronLeft className="w-4 h-4" />
           Previous
-        </motion.button>
+        </MotionButton>
 
         <div className="text-sm text-gray-600 dark:text-gray-400">
           Question {currentIndex + 1} of {totalQuestions}
         </div>
 
-        <motion.button
+        <MotionButton
           onClick={onNext}
           disabled={!canGoNext}
           className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
@@ -141,7 +141,7 @@ export function QuestionNavigator({
         >
           Next
           <ChevronRight className="w-4 h-4" />
-        </motion.button>
+        </MotionButton>
       </div>
 
       {/* Progress Summary */}

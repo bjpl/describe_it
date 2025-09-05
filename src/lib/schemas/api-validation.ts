@@ -116,7 +116,22 @@ export const descriptionGenerateSchema = baseRequestSchema.extend({
     .min(50, "Minimum length is 50 characters")
     .max(2000, "Maximum length is 2000 characters")
     .default(300),
-  customPrompt: safeTextSchema.max(500, "Custom prompt too long").optional(),
+  customPrompt: z.string().max(500, "Custom prompt too long").refine((text) => {
+    // Basic XSS protection - reject common script patterns
+    const dangerousPatterns = [
+      /<script/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /<iframe/i,
+      /<object/i,
+      /<embed/i,
+      /expression\s*\(/i,
+      /vbscript:/i,
+      /data:text\/html/i,
+    ];
+    
+    return !dangerousPatterns.some(pattern => pattern.test(text));
+  }, "Text contains potentially dangerous content").optional(),
 });
 
 /**
@@ -140,7 +155,22 @@ export const translationRequestSchema = baseRequestSchema.extend({
   text: safeTextSchema,
   fromLanguage: languageCodeSchema,
   toLanguage: languageCodeSchema,
-  context: safeTextSchema.max(200, "Context too long").optional(),
+  context: z.string().max(200, "Context too long").refine((text) => {
+    // Basic XSS protection - reject common script patterns
+    const dangerousPatterns = [
+      /<script/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /<iframe/i,
+      /<object/i,
+      /<embed/i,
+      /expression\s*\(/i,
+      /vbscript:/i,
+      /data:text\/html/i,
+    ];
+    
+    return !dangerousPatterns.some(pattern => pattern.test(text));
+  }, "Text contains potentially dangerous content").optional(),
 });
 
 /**
@@ -158,7 +188,22 @@ export const phraseExtractionSchema = baseRequestSchema.extend({
  * Image search request schema
  */
 export const imageSearchSchema = baseRequestSchema.extend({
-  query: safeTextSchema.max(100, "Search query too long"),
+  query: z.string().max(100, "Search query too long").refine((text) => {
+    // Basic XSS protection - reject common script patterns
+    const dangerousPatterns = [
+      /<script/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /<iframe/i,
+      /<object/i,
+      /<embed/i,
+      /expression\s*\(/i,
+      /vbscript:/i,
+      /data:text\/html/i,
+    ];
+    
+    return !dangerousPatterns.some(pattern => pattern.test(text));
+  }, "Text contains potentially dangerous content"),
   page: z.coerce.number()
     .int("Page must be an integer")
     .min(1, "Page must be at least 1")
@@ -193,13 +238,58 @@ export const vocabularySaveSchema = baseRequestSchema.extend({
   userId: z.string()
     .min(1, "User ID required")
     .max(128, "User ID too long"),
-  phrase: safeTextSchema.max(200, "Phrase too long"),
-  translation: safeTextSchema.max(200, "Translation too long"),
+  phrase: z.string().max(200, "Phrase too long").refine((text) => {
+    // Basic XSS protection - reject common script patterns
+    const dangerousPatterns = [
+      /<script/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /<iframe/i,
+      /<object/i,
+      /<embed/i,
+      /expression\s*\(/i,
+      /vbscript:/i,
+      /data:text\/html/i,
+    ];
+    
+    return !dangerousPatterns.some(pattern => pattern.test(text));
+  }, "Text contains potentially dangerous content"),
+  translation: z.string().max(200, "Translation too long").refine((text) => {
+    // Basic XSS protection - reject common script patterns
+    const dangerousPatterns = [
+      /<script/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /<iframe/i,
+      /<object/i,
+      /<embed/i,
+      /expression\s*\(/i,
+      /vbscript:/i,
+      /data:text\/html/i,
+    ];
+    
+    return !dangerousPatterns.some(pattern => pattern.test(text));
+  }, "Text contains potentially dangerous content"),
   category: z.string()
     .min(1, "Category required")
     .max(50, "Category too long"),
   difficulty: z.enum(["facil", "medio", "dificil"]),
-  context: safeTextSchema.max(500, "Context too long").optional(),
+  context: z.string().max(500, "Context too long").refine((text) => {
+    // Basic XSS protection - reject common script patterns
+    const dangerousPatterns = [
+      /<script/i,
+      /javascript:/i,
+      /on\w+\s*=/i,
+      /<iframe/i,
+      /<object/i,
+      /<embed/i,
+      /expression\s*\(/i,
+      /vbscript:/i,
+      /data:text\/html/i,
+    ];
+    
+    return !dangerousPatterns.some(pattern => pattern.test(text));
+  }, "Text contains potentially dangerous content").optional(),
 });
 
 /**

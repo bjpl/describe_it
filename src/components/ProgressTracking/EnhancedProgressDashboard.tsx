@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState, useMemo, useCallback } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
+import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import {
   TrendingUp,
   TrendingDown,
@@ -204,7 +205,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
     trendValue,
     color = "blue",
   }) => (
-    <motion.div
+    <MotionDiv
       whileHover={{ scale: 1.02, y: -2 }}
       className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
     >
@@ -241,7 +242,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
           </p>
         )}
       </div>
-    </motion.div>
+    </MotionDiv>
   );
 
   const GoalProgress: React.FC<{ goal: ProgressGoal }> = ({ goal }) => {
@@ -252,7 +253,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
     );
 
     return (
-      <motion.div
+      <MotionDiv
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700"
@@ -273,7 +274,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
           </div>
 
           <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-            <motion.div
+            <MotionDiv
               className={`h-2 rounded-full ${
                 isCompleted
                   ? "bg-green-500"
@@ -292,7 +293,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
             <span>{daysLeft > 0 ? `${daysLeft} days left` : "Expired"}</span>
           </div>
         </div>
-      </motion.div>
+      </MotionDiv>
     );
   };
 
@@ -307,7 +308,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
         const height = maxValue > 0 ? (value / maxValue) * 100 : 0;
 
         return (
-          <motion.div
+          <MotionDiv
             key={index}
             className="flex-1 bg-blue-500 rounded-t min-h-[4px]"
             style={{ height: `${Math.max(height, 8)}%` }}
@@ -399,7 +400,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
       {showDetailedCharts && (
         <div className="grid md:grid-cols-2 gap-6">
           {/* Trend Chart */}
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
@@ -435,10 +436,10 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                 </span>
               ))}
             </div>
-          </motion.div>
+          </MotionDiv>
 
           {/* Achievement Highlights */}
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700"
@@ -448,7 +449,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
             </h3>
 
             <div className="space-y-3">
-              <motion.div
+              <MotionDiv
                 className="flex items-center gap-3 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg"
                 whileHover={{ scale: 1.02 }}
               >
@@ -461,9 +462,9 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                     7 days streak achieved!
                   </p>
                 </div>
-              </motion.div>
+              </MotionDiv>
 
-              <motion.div
+              <MotionDiv
                 className="flex items-center gap-3 p-3 bg-green-50 dark:bg-green-900/20 rounded-lg"
                 whileHover={{ scale: 1.02 }}
               >
@@ -476,9 +477,9 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                     90%+ accuracy this week
                   </p>
                 </div>
-              </motion.div>
+              </MotionDiv>
 
-              <motion.div
+              <MotionDiv
                 className="flex items-center gap-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg"
                 whileHover={{ scale: 1.02 }}
               >
@@ -491,16 +492,16 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                     156 new words learned
                   </p>
                 </div>
-              </motion.div>
+              </MotionDiv>
             </div>
-          </motion.div>
+          </MotionDiv>
         </div>
       )}
 
       {/* Goals Section */}
       <AnimatePresence>
         {showGoals && (
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
@@ -523,7 +524,7 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
                 <GoalProgress key={goal.id} goal={goal} />
               ))}
             </div>
-          </motion.div>
+          </MotionDiv>
         )}
       </AnimatePresence>
 
@@ -534,41 +535,41 @@ const EnhancedProgressDashboard: React.FC<EnhancedProgressDashboardProps> = ({
         </h3>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <motion.button
+          <MotionButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
           >
             <Activity className="h-5 w-5 text-blue-600" />
             <span className="text-sm font-medium">Start Quiz</span>
-          </motion.button>
+          </MotionButton>
 
-          <motion.button
+          <MotionButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
           >
             <BookOpen className="h-5 w-5 text-green-600" />
             <span className="text-sm font-medium">Review Words</span>
-          </motion.button>
+          </MotionButton>
 
-          <motion.button
+          <MotionButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
           >
             <Target className="h-5 w-5 text-purple-600" />
             <span className="text-sm font-medium">Set Goal</span>
-          </motion.button>
+          </MotionButton>
 
-          <motion.button
+          <MotionButton
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="flex items-center gap-2 p-3 bg-white dark:bg-gray-800 rounded-lg shadow-sm hover:shadow-md transition-shadow"
           >
             <BarChart3 className="h-5 w-5 text-orange-600" />
             <span className="text-sm font-medium">View Report</span>
-          </motion.button>
+          </MotionButton>
         </div>
       </div>
     </div>

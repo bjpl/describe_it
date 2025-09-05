@@ -1,2 +1,2 @@
-export * from "./LoadingSpinner";
-export { LoadingSpinner, LoadingOverlay, PageLoader } from "./LoadingSpinner";
+export * from "../../Loading/LoadingSpinner";
+export { LoadingSpinner, LoadingOverlay, PageLoader } from "../../Loading/LoadingSpinner";

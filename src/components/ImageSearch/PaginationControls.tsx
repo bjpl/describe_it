@@ -64,7 +64,7 @@ export function PaginationControls({
   return (
     <div className={`flex items-center justify-center space-x-2 ${className}`}>
       {/* Previous Button */}
-      <motion.button
+      <MotionButton
         onClick={() => handlePageChange(currentPage - 1)}
         disabled={currentPage <= 1 || isLoading}
         className={`
@@ -80,7 +80,7 @@ export function PaginationControls({
       >
         <ChevronLeft className="h-4 w-4" />
         <span className="hidden sm:inline">Previous</span>
-      </motion.button>
+      </MotionButton>
 
       {/* Page Numbers */}
       <div className="flex items-center space-x-1">
@@ -91,7 +91,7 @@ export function PaginationControls({
                 <MoreHorizontal className="h-4 w-4" />
               </span>
             ) : (
-              <motion.button
+              <MotionButton
                 onClick={() => handlePageChange(page as number)}
                 disabled={isLoading}
                 className={`
@@ -111,14 +111,14 @@ export function PaginationControls({
                 }
               >
                 {page}
-              </motion.button>
+              </MotionButton>
             )}
           </React.Fragment>
         ))}
       </div>
 
       {/* Next Button */}
-      <motion.button
+      <MotionButton
         onClick={() => handlePageChange(currentPage + 1)}
         disabled={currentPage >= totalPages || isLoading}
         className={`
@@ -136,7 +136,7 @@ export function PaginationControls({
       >
         <span className="hidden sm:inline">Next</span>
         <ChevronRight className="h-4 w-4" />
-      </motion.button>
+      </MotionButton>
 
       {/* Page Info */}
       <div className="hidden md:flex items-center ml-4 text-sm text-gray-500">

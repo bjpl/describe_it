@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { motion } from "framer-motion";
+import { MotionDiv } from "@/components/ui/MotionWrappers";
 import {
   AlertTriangle,
   RefreshCw,
@@ -221,13 +221,13 @@ ${errorInfo?.componentStack}
           ${isolate ? "border-2 border-red-200 rounded-lg bg-red-50" : "min-h-screen bg-gray-50"}
         `}
         >
-          <motion.div
+          <MotionDiv
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             className="max-w-md w-full text-center space-y-6"
           >
             {/* Error Icon */}
-            <motion.div
+            <MotionDiv
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
@@ -236,7 +236,7 @@ ${errorInfo?.componentStack}
               <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
                 <AlertTriangle className="w-8 h-8 text-red-600" />
               </div>
-            </motion.div>
+            </MotionDiv>
 
             {/* Error Message */}
             <div className="space-y-2">
@@ -257,7 +257,7 @@ ${errorInfo?.componentStack}
 
             {/* Error Details (Development) */}
             {process.env.NODE_ENV === "development" && error && (
-              <motion.div
+              <MotionDiv
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: "auto" }}
                 transition={{ delay: 0.4 }}
@@ -276,7 +276,7 @@ ${errorInfo?.componentStack}
                     </pre>
                   </details>
                 )}
-              </motion.div>
+              </MotionDiv>
             )}
 
             {/* Error ID */}
@@ -287,7 +287,7 @@ ${errorInfo?.componentStack}
             )}
 
             {/* Action Buttons */}
-            <motion.div
+            <MotionDiv
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6 }}
@@ -320,11 +320,11 @@ ${errorInfo?.componentStack}
                 <ExternalLink className="w-4 h-4" />
                 Reload Page
               </button>
-            </motion.div>
+            </MotionDiv>
 
             {/* Development Tools */}
             {process.env.NODE_ENV === "development" && (
-              <motion.div
+              <MotionDiv
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.8 }}
@@ -359,9 +359,9 @@ ${errorInfo?.componentStack}
                   <Bug className="w-4 h-4" />
                   View Error Logs
                 </button>
-              </motion.div>
+              </MotionDiv>
             )}
-          </motion.div>
+          </MotionDiv>
         </div>
       );
     }

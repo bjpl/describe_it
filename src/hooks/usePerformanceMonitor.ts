@@ -24,8 +24,8 @@ export const usePerformanceMonitor = (componentName?: string) => {
     alerts: []
   });
 
-  const renderStartTime = useRef<number>();
-  const observer = useRef<PerformanceObserver>();
+  const renderStartTime = useRef<number>(performance.now());
+  const observer = useRef<PerformanceObserver | null>(null);
 
   // Track component render performance
   const trackRenderStart = useCallback(() => {
