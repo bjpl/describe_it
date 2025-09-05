@@ -83,7 +83,6 @@ const HomePageBase: React.FC = () => {
 
   const handleGenerateDescriptions = useCallback(() => {
     if (state.selectedImage && state.selectedStyle) {
-      console.log('Generating descriptions for:', state.selectedStyle);
       generateDescription({
         imageUrl: state.selectedImage.urls?.regular || state.selectedImage.url,
         style: state.selectedStyle
@@ -229,10 +228,7 @@ const HomePageBase: React.FC = () => {
               )}
               
               {state.activeTab === 'description' && state.selectedImage && (
-                <>
-                  {console.log('Available descriptions:', descriptions)}
-                  {console.log('Looking for style:', state.selectedStyle)}
-                  <LazyDescriptionPanel
+                <LazyDescriptionPanel
                     selectedImage={state.selectedImage}
                     selectedStyle={state.selectedStyle}
                     generatedDescriptions={{
@@ -250,22 +246,41 @@ const HomePageBase: React.FC = () => {
                     onStyleChange={handleStyleChange}
                     onGenerateDescriptions={handleGenerateDescriptions}
                   />
-                </>
               )}
               
               {state.activeTab === 'qa' && state.selectedImage && (
                 <LazyQAPanel
                   selectedImage={state.selectedImage}
-                  descriptionText={null}
-                  style="narrativo"
+                  descriptionText={
+                    descriptions.find((d: any) => 
+                      d.language === 'spanish' && 
+                      d.style === state.selectedStyle
+                    )?.content || 
+                    descriptions.find((d: any) => 
+                      d.language === 'english' && 
+                      d.style === state.selectedStyle
+                    )?.content || 
+                    null
+                  }
+                  style={state.selectedStyle}
                 />
               )}
               
               {state.activeTab === 'phrases' && state.selectedImage && (
                 <LazyPhrasesPanel
                   selectedImage={state.selectedImage}
-                  descriptionText={null}
-                  style="narrativo"
+                  descriptionText={
+                    descriptions.find((d: any) => 
+                      d.language === 'spanish' && 
+                      d.style === state.selectedStyle
+                    )?.content || 
+                    descriptions.find((d: any) => 
+                      d.language === 'english' && 
+                      d.style === state.selectedStyle
+                    )?.content || 
+                    null
+                  }
+                  style={state.selectedStyle}
                 />
               )}
               
