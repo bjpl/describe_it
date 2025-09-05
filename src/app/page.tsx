@@ -22,6 +22,9 @@ const LazyDescriptionPanel = React.lazy(() => import('@/components/DescriptionPa
 })));
 const LazyQAPanel = React.lazy(() => import('@/components/QAPanel'));
 const LazyPhrasesPanel = React.lazy(() => import('@/components/EnhancedPhrasesPanel'));
+const LazySettingsModal = React.lazy(() => import('@/components/SettingsModal').then(module => ({
+  default: module.SettingsModal
+})));
 
 interface HomePageState {
   activeTab: 'search' | 'description' | 'qa' | 'phrases';
@@ -29,6 +32,7 @@ interface HomePageState {
   searchQuery: string;
   showSettings: boolean;
   selectedStyle: DescriptionStyle;
+  darkMode: boolean;
 }
 
 const HomePageBase: React.FC = () => {
@@ -47,7 +51,8 @@ const HomePageBase: React.FC = () => {
     selectedImage: null,
     searchQuery: '',
     showSettings: false,
-    selectedStyle: 'narrativo' as DescriptionStyle
+    selectedStyle: 'narrativo' as DescriptionStyle,
+    darkMode: false
   });
 
   // Use the descriptions hook for generating descriptions
@@ -77,6 +82,14 @@ const HomePageBase: React.FC = () => {
 
   const toggleSettings = useCallback(() => {
     setState(prev => ({ ...prev, showSettings: !prev.showSettings }));
+  }, []);
+
+  const toggleDarkMode = useCallback(() => {
+    setState(prev => ({ ...prev, darkMode: !prev.darkMode }));
+  }, []);
+
+  const closeSettings = useCallback(() => {
+    setState(prev => ({ ...prev, showSettings: false }));
   }, []);
 
   const handleStyleChange = useCallback((style: DescriptionStyle) => {
@@ -324,6 +337,18 @@ const HomePageBase: React.FC = () => {
               ))}
             </ul>
           </div>
+        )}
+
+        {/* Settings Modal */}
+        {state.showSettings && (
+          <Suspense fallback={<LoadingSpinner />}>
+            <LazySettingsModal
+              isOpen={state.showSettings}
+              onClose={closeSettings}
+              darkMode={state.darkMode}
+              onToggleDarkMode={toggleDarkMode}
+            />
+          </Suspense>
         )}
       </div>
     </ErrorBoundary>
