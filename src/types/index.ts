@@ -37,6 +37,7 @@ export interface Description {
   imageId: string;
   style: DescriptionStyle;
   content: string;
+  language: 'en' | 'es' | 'english' | 'spanish';
   createdAt: Date;
   isLoading?: boolean;
   error?: string;
@@ -328,8 +329,8 @@ export interface UseDescriptionsReturn {
   descriptions: Description[];
   isLoading: boolean;
   error: string | null;
-  generateDescription: (request: DescriptionRequest) => Promise<Description>;
-  regenerateDescription: (descriptionId: string) => Promise<Description>;
+  generateDescription: (request: DescriptionRequest) => Promise<Description[]>;
+  regenerateDescription: (descriptionId: string) => Promise<Description[]>;
   deleteDescription: (descriptionId: string) => void;
   clearDescriptions: () => void;
 }

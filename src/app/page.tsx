@@ -5,8 +5,10 @@ import { motion } from 'framer-motion';
 import { Search, Settings, Download, BarChart3, BookOpen, MessageCircle, Brain } from 'lucide-react';
 import { LazyWrapper, preloadCriticalComponents } from '@/components/LazyComponents';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+import { useDescriptions } from '@/hooks/useDescriptions';
 import { LoadingSpinner } from '@/components/Loading/LoadingSpinner';
 import { ErrorBoundary } from '@/providers/ErrorBoundary';
+import { DescriptionStyle } from '@/types';
 
 // Lazy load main application components
 const LazyImageSearch = React.lazy(() => import('@/components/ImageSearch/ImageSearch').then(module => ({
@@ -24,6 +26,7 @@ interface HomePageState {
   selectedImage: any;
   searchQuery: string;
   showSettings: boolean;
+  selectedStyle: DescriptionStyle;
 }
 
 const HomePageBase: React.FC = () => {
@@ -41,8 +44,17 @@ const HomePageBase: React.FC = () => {
     activeTab: 'search',
     selectedImage: null,
     searchQuery: '',
-    showSettings: false
+    showSettings: false,
+    selectedStyle: 'narrativo' as DescriptionStyle
   });
+
+  // Use the descriptions hook for generating descriptions
+  const {
+    descriptions,
+    isLoading: isGenerating,
+    error: descriptionError,
+    generateDescription
+  } = useDescriptions(state.selectedImage?.urls?.regular || state.selectedImage?.url || '');
 
   // Memoized callbacks to prevent unnecessary re-renders
   const handleTabChange = useCallback((tab: HomePageState['activeTab']) => {
@@ -64,6 +76,19 @@ const HomePageBase: React.FC = () => {
   const toggleSettings = useCallback(() => {
     setState(prev => ({ ...prev, showSettings: !prev.showSettings }));
   }, []);
+
+  const handleStyleChange = useCallback((style: DescriptionStyle) => {
+    setState(prev => ({ ...prev, selectedStyle: style }));
+  }, []);
+
+  const handleGenerateDescriptions = useCallback(() => {
+    if (state.selectedImage && state.selectedStyle) {
+      generateDescription({
+        imageUrl: state.selectedImage.urls?.regular || state.selectedImage.url,
+        style: state.selectedStyle
+      });
+    }
+  }, [state.selectedImage, state.selectedStyle, generateDescription]);
 
   // Pre-load components when user starts interacting
   React.useEffect(() => {
@@ -205,12 +230,21 @@ const HomePageBase: React.FC = () => {
               {state.activeTab === 'description' && state.selectedImage && (
                 <LazyDescriptionPanel
                   selectedImage={state.selectedImage}
-                  selectedStyle="narrativo"
-                  generatedDescriptions={{ english: null, spanish: null }}
-                  isGenerating={false}
-                  descriptionError={null}
-                  onStyleChange={() => {}}
-                  onGenerateDescriptions={() => {}}
+                  selectedStyle={state.selectedStyle}
+                  generatedDescriptions={{
+                    english: descriptions.find((d: any) => 
+                      d.language === 'english' && 
+                      d.style === state.selectedStyle
+                    )?.content || null,
+                    spanish: descriptions.find((d: any) => 
+                      d.language === 'spanish' && 
+                      d.style === state.selectedStyle
+                    )?.content || null
+                  }}
+                  isGenerating={isGenerating}
+                  descriptionError={descriptionError}
+                  onStyleChange={handleStyleChange}
+                  onGenerateDescriptions={handleGenerateDescriptions}
                 />
               )}
               

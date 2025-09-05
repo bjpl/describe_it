@@ -15,6 +15,8 @@ const REQUEST_TIMEOUT = 30000; // 30 seconds for AI operations
 const MAX_RETRIES = 2;
 const RETRY_DELAYS = [2000, 4000]; // Shorter retries for user experience
 
+// The Description interface already includes language property with 'en' | 'es'
+
 export function useDescriptions(imageId: string) {
   const [descriptions, setDescriptions] = useState<Description[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -117,7 +119,7 @@ export function useDescriptions(imageId: string) {
   // Helper function to make API request with timeout and error handling
   const makeDescriptionRequest = async (
     request: DescriptionRequest,
-  ): Promise<Description> => {
+  ): Promise<Description[]> => {
     // Cancel any existing request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -162,12 +164,22 @@ export function useDescriptions(imageId: string) {
         throw error;
       }
 
-      // Validate response structure
-      if (!data || typeof data !== "object" || !data.id || !data.content) {
+      // Validate response structure - now expects an array of descriptions
+      if (!data || typeof data !== "object" || !data.success || !Array.isArray(data.data)) {
         throw new Error("Invalid response format from description service");
       }
 
-      return data;
+      // Transform API response to match frontend expectations
+      const transformedDescriptions: Description[] = data.data.map((desc: any) => ({
+        id: desc.id,
+        imageId: desc.imageId || request.imageUrl,
+        style: desc.style || request.style,
+        content: desc.content,
+        language: desc.language === 'english' ? 'en' : desc.language === 'spanish' ? 'es' : desc.language as 'en' | 'es',
+        createdAt: new Date(desc.createdAt || Date.now()),
+      }));
+
+      return transformedDescriptions;
     } catch (error) {
       clearTimeout(timeoutId);
       throw error;
@@ -177,7 +189,7 @@ export function useDescriptions(imageId: string) {
   // Helper function to retry failed requests
   const retryDescriptionRequest = async (
     request: DescriptionRequest,
-  ): Promise<Description> => {
+  ): Promise<Description[]> => {
     let lastError: unknown;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -218,9 +230,16 @@ export function useDescriptions(imageId: string) {
           throw new Error("Image URL and style are required");
         }
 
-        const newDescription = await retryDescriptionRequest(request);
-        setDescriptions((prev) => [...prev, newDescription]);
-        return newDescription;
+        const newDescriptions = await retryDescriptionRequest(request);
+        
+        // Clear existing descriptions for this image/style and add new ones
+        setDescriptions((prev) => {
+          const filtered = prev.filter(d => d.style !== request.style);
+          return [...filtered, ...newDescriptions];
+        });
+
+        // Return the first description for compatibility
+        return newDescriptions[0] as Description;
       } catch (err) {
         logger.error(
           "Description generation failed",
@@ -255,16 +274,17 @@ export function useDescriptions(imageId: string) {
       }
 
       try {
-        // Remove the old description first
-        setDescriptions((prev) => prev.filter((d) => d.id !== descriptionId));
+        // Remove the old descriptions for this style first
+        setDescriptions((prev) => prev.filter((d) => d.style !== existingDescription.style));
 
-        // Generate new description
-        const newDescription = await generateDescription({
+        // Generate new descriptions
+        const newDescriptions = await generateDescription({
           imageUrl: existingDescription.imageId,
           style: existingDescription.style,
         });
 
-        return newDescription;
+        // Return all new descriptions
+        return newDescriptions;
       } catch (err) {
         // If regeneration fails, restore the old description
         setDescriptions((prev) => {

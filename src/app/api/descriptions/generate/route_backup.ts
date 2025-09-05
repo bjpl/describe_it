@@ -14,7 +14,7 @@ const generateDescriptionSchema = z.object({
     "conversacional",
     "infantil",
   ]),
-  customPrompt: z.string().optional(),
+  language: z.enum(["es", "en"]).default("es"),
   maxLength: z.coerce.number().int().min(50).max(1000).default(300),
 });
 
@@ -93,30 +93,19 @@ export async function POST(request: NextRequest) {
     // Handle other errors
     console.error("Description generation error:", error);
 
-    // Provide fallback demo descriptions even on complete failure
-    const fallbackDescriptions = [
-      {
-        id: `${Date.now()}_en_fallback`,
-        imageId: "fallback",
-        style: "narrativo" as const,
-        content: "This is an interesting image that shows unique visual elements. The colors and composition create an engaging visual experience that invites contemplation.",
-        language: "english" as const,
-        createdAt: new Date().toISOString(),
-      },
-      {
-        id: `${Date.now()}_es_fallback`,
-        imageId: "fallback",
-        style: "narrativo" as const,
-        content: "Esta es una imagen interesante que muestra elementos visuales únicos. Los colores y la composición crean una experiencia visual atractiva que invita a la contemplación.",
-        language: "spanish" as const,
-        createdAt: new Date().toISOString(),
-      }
-    ];
+    // Provide a fallback demo description even on complete failure
+    const fallbackDescription = {
+      style: "narrativo" as const,
+      text: "Esta es una imagen interesante que muestra elementos visuales únicos. Los colores y la composición crean una experiencia visual atractiva que invita a la contemplación.",
+      language: "es",
+      wordCount: 25,
+      generatedAt: new Date().toISOString(),
+    };
 
     return NextResponse.json(
       {
         success: true,
-        data: fallbackDescriptions,
+        data: fallbackDescription,
         metadata: {
           responseTime: `${responseTime.toFixed(2)}ms`,
           timestamp: new Date().toISOString(),
