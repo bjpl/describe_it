@@ -83,6 +83,7 @@ const HomePageBase: React.FC = () => {
 
   const handleGenerateDescriptions = useCallback(() => {
     if (state.selectedImage && state.selectedStyle) {
+      console.log('Generating descriptions for:', state.selectedStyle);
       generateDescription({
         imageUrl: state.selectedImage.urls?.regular || state.selectedImage.url,
         style: state.selectedStyle
@@ -228,24 +229,28 @@ const HomePageBase: React.FC = () => {
               )}
               
               {state.activeTab === 'description' && state.selectedImage && (
-                <LazyDescriptionPanel
-                  selectedImage={state.selectedImage}
-                  selectedStyle={state.selectedStyle}
-                  generatedDescriptions={{
-                    english: descriptions.find((d: any) => 
-                      d.language === 'english' && 
-                      d.style === state.selectedStyle
-                    )?.content || null,
-                    spanish: descriptions.find((d: any) => 
-                      d.language === 'spanish' && 
-                      d.style === state.selectedStyle
-                    )?.content || null
-                  }}
-                  isGenerating={isGenerating}
-                  descriptionError={descriptionError}
-                  onStyleChange={handleStyleChange}
-                  onGenerateDescriptions={handleGenerateDescriptions}
-                />
+                <>
+                  {console.log('Available descriptions:', descriptions)}
+                  {console.log('Looking for style:', state.selectedStyle)}
+                  <LazyDescriptionPanel
+                    selectedImage={state.selectedImage}
+                    selectedStyle={state.selectedStyle}
+                    generatedDescriptions={{
+                      english: descriptions.find((d: any) => 
+                        d.language === 'english' && 
+                        d.style === state.selectedStyle
+                      )?.content || null,
+                      spanish: descriptions.find((d: any) => 
+                        d.language === 'spanish' && 
+                        d.style === state.selectedStyle
+                      )?.content || null
+                    }}
+                    isGenerating={isGenerating}
+                    descriptionError={descriptionError}
+                    onStyleChange={handleStyleChange}
+                    onGenerateDescriptions={handleGenerateDescriptions}
+                  />
+                </>
               )}
               
               {state.activeTab === 'qa' && state.selectedImage && (

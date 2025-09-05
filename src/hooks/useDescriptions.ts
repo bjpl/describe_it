@@ -170,14 +170,19 @@ export function useDescriptions(imageId: string) {
       }
 
       // Transform API response to match frontend expectations
-      const transformedDescriptions: Description[] = data.data.map((desc: any) => ({
-        id: desc.id,
-        imageId: desc.imageId || request.imageUrl,
-        style: desc.style || request.style,
-        content: desc.content,
-        language: desc.language === 'english' ? 'en' : desc.language === 'spanish' ? 'es' : desc.language as 'en' | 'es',
-        createdAt: new Date(desc.createdAt || Date.now()),
-      }));
+      console.log('Raw API response data.data:', data.data);
+      const transformedDescriptions: Description[] = data.data.map((desc: any) => {
+        const transformed = {
+          id: desc.id,
+          imageId: desc.imageId || request.imageUrl,
+          style: desc.style || request.style,
+          content: desc.content,
+          language: desc.language, // Keep the original language format
+          createdAt: new Date(desc.createdAt || Date.now()),
+        };
+        console.log('Transformed description:', transformed);
+        return transformed;
+      });
 
       return transformedDescriptions;
     } catch (error) {
@@ -231,11 +236,14 @@ export function useDescriptions(imageId: string) {
         }
 
         const newDescriptions = await retryDescriptionRequest(request);
+        console.log('Generated descriptions:', newDescriptions);
         
         // Clear existing descriptions for this image/style and add new ones
         setDescriptions((prev) => {
           const filtered = prev.filter(d => d.style !== request.style);
-          return [...filtered, ...newDescriptions];
+          const updated = [...filtered, ...newDescriptions];
+          console.log('Updated descriptions state:', updated);
+          return updated;
         });
 
         // Return the first description for compatibility
