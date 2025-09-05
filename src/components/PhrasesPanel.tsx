@@ -100,7 +100,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
         throw new Error(responseData.message || "Failed to extract phrases");
       }
 
-      const extractedPhrases = responseData;
+      const extractedPhrases = responseData.phrases || responseData;
       setPhrases(extractedPhrases);
     } catch (err) {
       // Error logged to structured logging service
@@ -135,7 +135,7 @@ const PhrasesPanel = memo<PhrasePanelProps>(function PhrasesPanel({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [imageId, descriptionText, difficulty, style, extractPhrases]);
+  }, [imageId, descriptionText, difficulty, style, selectedImage]);
 
   const getDifficultyColor = useCallback((level: string) => {
     switch (level) {
