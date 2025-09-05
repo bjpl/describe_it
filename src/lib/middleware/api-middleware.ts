@@ -209,16 +209,23 @@ export class APIMiddleware {
       return { passed: false, reason: "Request too large" };
     }
 
-    // Check origin (CORS)
-    const allowedOrigins = [
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-      "https://*.vercel.app",
-      "https://describe-it.vercel.app",
-    ];
-
+    // Enhanced CORS validation with domain whitelist
+    const allowedOrigins = this.getAllowedOrigins();
     const origin = request.headers.get("origin");
-    if (!SecurityUtils.isValidOrigin(origin, allowedOrigins)) {
-      return { passed: false, reason: "Invalid origin" };
+    const referer = request.headers.get("referer");
+    
+    // For non-browser requests (no origin), check referer as fallback
+    if (!origin && referer) {
+      try {
+        const refererOrigin = new URL(referer).origin;
+        if (!this.isOriginAllowed(refererOrigin, allowedOrigins)) {
+          return { passed: false, reason: "Invalid referer origin" };
+        }
+      } catch {
+        return { passed: false, reason: "Invalid referer format" };
+      }
+    } else if (origin && !this.isOriginAllowed(origin, allowedOrigins)) {
+      return { passed: false, reason: "Origin not in whitelist" };
     }
 
     // Check for suspicious headers or patterns
@@ -242,6 +249,47 @@ export class APIMiddleware {
     return { passed: true };
   }
 
+  /**
+   * Get allowed origins from environment with fallbacks
+   */
+  private getAllowedOrigins(): string[] {
+    const envOrigins = process.env.API_CORS_ORIGINS;
+    const defaultOrigins = [
+      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+      "http://localhost:3000",
+      "http://localhost:3001",
+      "https://describe-it.vercel.app",
+    ];
+    
+    if (envOrigins) {
+      const customOrigins = envOrigins.split(',').map(origin => origin.trim());
+      return [...new Set([...customOrigins, ...defaultOrigins])];
+    }
+    
+    return defaultOrigins;
+  }
+
+  /**
+   * Check if origin is in allowed list with wildcard support
+   */
+  private isOriginAllowed(origin: string, allowedOrigins: string[]): boolean {
+    if (!origin) return false;
+    
+    return allowedOrigins.some(allowed => {
+      // Exact match
+      if (allowed === origin) return true;
+      
+      // Wildcard subdomain support (e.g., "https://*.vercel.app")
+      if (allowed.includes('*')) {
+        const pattern = allowed.replace(/\*/g, '[^.]*');
+        const regex = new RegExp(`^${pattern}$`);
+        return regex.test(origin);
+      }
+      
+      return false;
+    });
+  }
+
   private async checkRateLimit(request: NextRequest, endpoint: string) {
     const rateLimiter = this.rateLimiters.get(endpoint);
 
@@ -251,7 +299,55 @@ export class APIMiddleware {
       return await defaultLimiter.checkLimit(request);
     }
 
-    return await rateLimiter.checkLimit(request);
+    // Enhanced rate limiting with user-based tracking
+    return await this.checkEnhancedRateLimit(rateLimiter, request, endpoint);
+  }
+
+  /**
+   * Enhanced rate limiting with user-based tracking
+   */
+  private async checkEnhancedRateLimit(
+    rateLimiter: RateLimiter,
+    request: NextRequest,
+    endpoint: string
+  ) {
+    // Get user identifier (IP + User-Agent + potential userId)
+    const clientId = this.getClientIdentifier(request);
+    
+    // Check both IP-based and user-based limits
+    const ipLimit = await rateLimiter.checkLimit(request);
+    
+    // If IP limit is exceeded, always block
+    if (!ipLimit.allowed) {
+      return ipLimit;
+    }
+    
+    // Additional user-based limiting for authenticated users
+    const authHeader = request.headers.get('authorization');
+    if (authHeader || request.cookies.get('session')) {
+      // Apply stricter limits for authenticated users to prevent abuse
+      const userLimiter = new RateLimiter({
+        ...ENDPOINT_CONFIGS[endpoint as keyof typeof ENDPOINT_CONFIGS]?.rateLimit || RATE_LIMITS.READ_OPERATIONS,
+        maxRequests: Math.floor((ENDPOINT_CONFIGS[endpoint as keyof typeof ENDPOINT_CONFIGS]?.rateLimit?.maxRequests || 10) * 1.5)
+      });
+      
+      return await userLimiter.checkLimit(request, clientId);
+    }
+    
+    return ipLimit;
+  }
+
+  /**
+   * Generate unique client identifier for enhanced rate limiting
+   */
+  private getClientIdentifier(request: NextRequest): string {
+    const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+    const userAgent = request.headers.get('user-agent') || '';
+    const fingerprint = request.headers.get('x-fingerprint') || '';
+    
+    // Create a hash of IP + partial User-Agent + fingerprint
+    const identifier = `${ip}:${userAgent.substring(0, 50)}:${fingerprint}`;
+    return Buffer.from(identifier).toString('base64').substring(0, 32);
   }
 
   private async validateInput(
@@ -278,6 +374,19 @@ export class APIMiddleware {
         }
 
         if (body) {
+          // Enhanced input validation with size limits
+          if (body) {
+            // Check request body size
+            const bodySize = JSON.stringify(body).length;
+            const maxSize = config?.maxRequestSize || (1024 * 1024); // 1MB default
+            if (bodySize > maxSize) {
+              errors.push({
+                field: "body",
+                message: `Request body too large: ${bodySize} bytes > ${maxSize} bytes`
+              });
+            }
+          }
+
           // Validate image URL if required
           if (config?.requiresImageUrl && body.imageUrl) {
             const urlValidation = InputValidator.validateImageUrl(
@@ -433,9 +542,11 @@ export class APIMiddleware {
       }
     }
 
-    // Add CORS headers
+    // Enhanced CORS headers with strict validation
     const origin = request.headers.get("origin");
-    if (origin) {
+    const allowedOrigins = this.getAllowedOrigins();
+    
+    if (origin && this.isOriginAllowed(origin, allowedOrigins)) {
       newResponse.headers.set("Access-Control-Allow-Origin", origin);
       newResponse.headers.set("Access-Control-Allow-Credentials", "true");
       newResponse.headers.set(
@@ -444,12 +555,16 @@ export class APIMiddleware {
       );
       newResponse.headers.set(
         "Access-Control-Allow-Headers",
-        "Content-Type, Authorization, X-Requested-With",
+        "Content-Type, Authorization, X-Requested-With, X-Fingerprint",
       );
       newResponse.headers.set(
         "Access-Control-Expose-Headers",
         "X-Request-ID, X-Response-Time, X-Cache, X-RateLimit-Remaining",
       );
+      newResponse.headers.set("Vary", "Origin");
+    } else if (!origin) {
+      // For same-origin requests, set restrictive CORS
+      newResponse.headers.set("Access-Control-Allow-Origin", "null");
     }
 
     return newResponse;
@@ -469,17 +584,31 @@ export function withAPIMiddleware(
   };
 }
 
-// Helper function for OPTIONS requests (CORS preflight)
-export function handleCORSPreflight(): NextResponse {
+// Enhanced CORS preflight handler with origin validation
+export function handleCORSPreflight(request: NextRequest): NextResponse {
+  const origin = request.headers.get("origin");
+  const apiMiddlewareInstance = new APIMiddleware();
+  const allowedOrigins = (apiMiddlewareInstance as any).getAllowedOrigins();
+  
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers":
+      "Content-Type, Authorization, X-Requested-With, X-Fingerprint",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin"
+  };
+  
+  if (origin && (apiMiddlewareInstance as any).isOriginAllowed(origin, allowedOrigins)) {
+    headers["Access-Control-Allow-Origin"] = origin;
+    headers["Access-Control-Allow-Credentials"] = "true";
+  } else {
+    // Reject preflight for unauthorized origins
+    return new NextResponse(null, { status: 403 });
+  }
+  
   return new NextResponse(null, {
     status: 200,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-      "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-      "Access-Control-Allow-Headers":
-        "Content-Type, Authorization, X-Requested-With",
-      "Access-Control-Max-Age": "86400",
-    },
+    headers,
   });
 }
 

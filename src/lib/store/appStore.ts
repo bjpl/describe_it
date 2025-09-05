@@ -7,6 +7,7 @@ import {
   SearchHistoryItem,
   DescriptionStyle,
 } from "../../types";
+import { createShallowSelector, OptimizedMap } from "../utils/storeUtils";
 
 interface AppStore extends AppState {
   // App state actions
@@ -96,7 +97,7 @@ export const useAppStore = create<AppStore>()(
             "updatePreferences",
           ),
 
-        // Search history
+        // Search history with optimized operations
         addToHistory: (item) =>
           set(
             (state) => {
@@ -105,17 +106,20 @@ export const useAppStore = create<AppStore>()(
                 id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
               };
 
-              // Remove duplicates and limit history size
-              const filtered = state.searchHistory.filter(
-                (historyItem) => historyItem.query !== item.query,
-              );
+              // Use Map for O(1) duplicate detection and removal
+              const historyMap = new OptimizedMap<string, SearchHistoryItem>();
+              
+              // Add new item first
+              historyMap.set(newItem.query, newItem);
+              
+              // Add existing items, skipping duplicates
+              for (const existingItem of state.searchHistory) {
+                if (!historyMap.has(existingItem.query) && historyMap.size < state.preferences.maxHistoryItems) {
+                  historyMap.set(existingItem.query, existingItem);
+                }
+              }
 
-              const newHistory = [newItem, ...filtered].slice(
-                0,
-                state.preferences.maxHistoryItems,
-              );
-
-              return { searchHistory: newHistory };
+              return { searchHistory: historyMap.getValues() };
             },
             false,
             "addToHistory",
@@ -157,34 +161,40 @@ export const useAppStore = create<AppStore>()(
   ),
 );
 
+// Optimized selectors with shallow comparison to prevent unnecessary re-renders
+const sidebarStateSelector = createShallowSelector((state: AppStore) => ({
+  isOpen: state.sidebarOpen,
+  toggle: state.toggleSidebar,
+  setOpen: state.setSidebarOpen,
+}));
+
+const activeTabSelector = createShallowSelector((state: AppStore) => ({
+  activeTab: state.activeTab,
+  setActiveTab: state.setActiveTab,
+}));
+
+const preferencesSelector = createShallowSelector((state: AppStore) => ({
+  preferences: state.preferences,
+  updatePreferences: state.updatePreferences,
+}));
+
+const searchHistorySelector = createShallowSelector((state: AppStore) => ({
+  history: state.searchHistory,
+  addToHistory: state.addToHistory,
+  clearHistory: state.clearHistory,
+  removeFromHistory: state.removeFromHistory,
+}));
+
+const appErrorSelector = createShallowSelector((state: AppStore) => ({
+  error: state.error,
+  setError: state.setError,
+  clearError: state.clearError,
+}));
+
 // Selectors for optimized component updates
 export const useCurrentImage = () => useAppStore((state) => state.currentImage);
-export const useSidebarState = () =>
-  useAppStore((state) => ({
-    isOpen: state.sidebarOpen,
-    toggle: state.toggleSidebar,
-    setOpen: state.setSidebarOpen,
-  }));
-export const useActiveTab = () =>
-  useAppStore((state) => ({
-    activeTab: state.activeTab,
-    setActiveTab: state.setActiveTab,
-  }));
-export const usePreferences = () =>
-  useAppStore((state) => ({
-    preferences: state.preferences,
-    updatePreferences: state.updatePreferences,
-  }));
-export const useSearchHistory = () =>
-  useAppStore((state) => ({
-    history: state.searchHistory,
-    addToHistory: state.addToHistory,
-    clearHistory: state.clearHistory,
-    removeFromHistory: state.removeFromHistory,
-  }));
-export const useAppError = () =>
-  useAppStore((state) => ({
-    error: state.error,
-    setError: state.setError,
-    clearError: state.clearError,
-  }));
+export const useSidebarState = () => sidebarStateSelector(useAppStore);
+export const useActiveTab = () => activeTabSelector(useAppStore);
+export const usePreferences = () => preferencesSelector(useAppStore);
+export const useSearchHistory = () => searchHistorySelector(useAppStore);
+export const useAppError = () => appErrorSelector(useAppStore);

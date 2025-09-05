@@ -15,6 +15,7 @@ import {
   DifficultyLevel,
 } from "../../types/database";
 import { UserPreferences } from "../../types";
+import { useStableCallback, useCleanupManager, createShallowSelector } from "../utils/storeUtils";
 
 // Add missing types for this store
 export type LearningLevel = DifficultyLevel;
@@ -628,72 +629,90 @@ export const useDailyProgress = () =>
   useLearningSessionStore((state) => state.dailyProgress);
 export const useUIState = () => useLearningSessionStore((state) => state.ui);
 
+// Optimized selectors using shallow comparison
+const sessionActionsSelector = createShallowSelector((state: LearningSessionStore) => ({
+  startSession: state.startSession,
+  endSession: state.endSession,
+  pauseSession: state.pauseSession,
+  resumeSession: state.resumeSession,
+  updateSessionStats: state.updateSessionStats,
+  recordActivity: state.recordActivity,
+  addPoints: state.addPoints,
+  saveSession: state.saveSession,
+  resetCurrentSession: state.resetCurrentSession,
+}));
+
+const preferencesActionsSelector = createShallowSelector((state: LearningSessionStore) => ({
+  updatePreferences: state.updatePreferences,
+  updateLearningSettings: state.updateLearningSettings,
+}));
+
+const uiActionsSelector = createShallowSelector((state: LearningSessionStore) => ({
+  setCurrentImage: state.setCurrentImage,
+  toggleSidebar: state.toggleSidebar,
+  setActiveTab: state.setActiveTab,
+  togglePhraseSelection: state.togglePhraseSelection,
+  clearSelectedPhrases: state.clearSelectedPhrases,
+  setFullscreenMode: state.setFullscreenMode,
+}));
+
 // Session actions
-export const useSessionActions = () =>
-  useLearningSessionStore((state) => ({
-    startSession: state.startSession,
-    endSession: state.endSession,
-    pauseSession: state.pauseSession,
-    resumeSession: state.resumeSession,
-    updateSessionStats: state.updateSessionStats,
-    recordActivity: state.recordActivity,
-    addPoints: state.addPoints,
-    saveSession: state.saveSession,
-    resetCurrentSession: state.resetCurrentSession,
-  }));
+export const useSessionActions = () => sessionActionsSelector(useLearningSessionStore);
 
 // Preferences actions
-export const usePreferencesActions = () =>
-  useLearningSessionStore((state) => ({
-    updatePreferences: state.updatePreferences,
-    updateLearningSettings: state.updateLearningSettings,
-  }));
+export const usePreferencesActions = () => preferencesActionsSelector(useLearningSessionStore);
 
 // UI actions
-export const useUIActions = () =>
-  useLearningSessionStore((state) => ({
-    setCurrentImage: state.setCurrentImage,
-    toggleSidebar: state.toggleSidebar,
-    setActiveTab: state.setActiveTab,
-    togglePhraseSelection: state.togglePhraseSelection,
-    clearSelectedPhrases: state.clearSelectedPhrases,
-    setFullscreenMode: state.setFullscreenMode,
-  }));
+export const useUIActions = () => uiActionsSelector(useLearningSessionStore);
 
 // =============================================================================
 // PERSISTENCE HOOKS
 // =============================================================================
 
 /**
- * Auto-save session data periodically
+ * Auto-save session data periodically with proper cleanup and memoization
  */
 export const useAutoSaveSession = (intervalMs = 30000) => {
-  const saveSession = useLearningSessionStore((state) => state.saveSession);
+  const cleanupManager = useCleanupManager();
   const isActive = useSessionActive();
+  
+  // Memoize the saveSession function to prevent unnecessary re-renders
+  const saveSession = React.useMemo(
+    () => useLearningSessionStore.getState().saveSession,
+    []
+  );
+
+  // Stable callback that doesn't change on every render
+  const stableSaveSession = useStableCallback(saveSession, []);
 
   React.useEffect(() => {
     if (!isActive) return;
 
-    const interval = setInterval(() => {
-      saveSession();
+    const intervalId = cleanupManager.addInterval(() => {
+      stableSaveSession();
     }, intervalMs);
 
-    return () => clearInterval(interval);
-  }, [isActive, saveSession, intervalMs]);
+    return () => cleanupManager.clearInterval(intervalId);
+  }, [isActive, intervalMs, stableSaveSession, cleanupManager]);
 };
 
 /**
- * Load user data on authentication
+ * Load user data on authentication with stable dependencies
  */
 export const useLoadUserData = (userId: string | null) => {
-  const loadRecentSessions = useLearningSessionStore(
-    (state) => state.loadRecentSessions,
+  // Memoize the loadRecentSessions function to prevent dependency changes
+  const loadRecentSessions = React.useMemo(
+    () => useLearningSessionStore.getState().loadRecentSessions,
+    []
   );
+
+  // Stable callback that doesn't change on every render
+  const stableLoadRecentSessions = useStableCallback(loadRecentSessions, []);
 
   React.useEffect(() => {
     if (userId && userId !== "anonymous") {
-      loadRecentSessions(userId);
+      stableLoadRecentSessions(userId);
     }
-  }, [userId, loadRecentSessions]);
+  }, [userId, stableLoadRecentSessions]);
 };
 

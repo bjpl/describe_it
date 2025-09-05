@@ -197,20 +197,119 @@ vercel --prod
 
 ## 🔐 Security
 
-- Row-level security on all database tables
-- API rate limiting and caching
-- Input validation with Zod
-- XSS protection
-- CORS configuration
-- Environment variable validation
+Describe It implements comprehensive security measures to protect user data and ensure safe operation:
+
+### Authentication & Authorization
+- **JWT-based Authentication** via Supabase Auth
+- **OAuth Integration** with Google and GitHub
+- **Row-Level Security (RLS)** on all database tables
+- **Role-based Access Control** for different user types
+
+### API Security
+- **Rate Limiting** to prevent abuse (configurable per endpoint)
+- **Input Validation** with Zod schemas for type-safe API requests
+- **CORS Configuration** with environment-specific origins
+- **Request Sanitization** to prevent XSS attacks
+
+### Data Protection
+- **Encryption at Rest** (Supabase managed)
+- **TLS 1.3** for all data in transit
+- **Environment Variable Validation** to prevent misconfiguration
+- **Audit Logging** for security events and user actions
+
+### Security Headers
+- **Content Security Policy (CSP)** to prevent XSS
+- **Subresource Integrity (SRI)** for external scripts
+- **Security Headers** (X-Frame-Options, X-Content-Type-Options, etc.)
+
+For detailed security information, see [Security Documentation](docs/SECURITY.md).
+
+## 📊 Performance & Monitoring
+
+### Web Vitals Monitoring
+- **Core Web Vitals** tracking (LCP, FID, CLS, TTFB)
+- **Real-time Performance Metrics** with automatic alerting
+- **Custom Metrics** for API response times and user interactions
+- **Bundle Size Analysis** with automated optimization suggestions
+
+### Caching Strategy
+- **Multi-layer Caching**: Browser → CDN → Application → Database
+- **React Query** for intelligent server state management
+- **Vercel KV (Redis)** for session and API response caching
+- **Optimistic Updates** for better user experience
+
+### Performance Features
+- **Image Optimization** with Next.js Image component
+- **Code Splitting** for faster initial loads
+- **Lazy Loading** for components and routes
+- **Service Worker** for offline functionality
+
+## 🏗️ Architecture
+
+The application follows a modern, scalable architecture:
+
+### System Design
+- **Layered Architecture** with clear separation of concerns
+- **Microservices Pattern** for external integrations
+- **Event-Driven Architecture** for real-time updates
+- **Repository Pattern** for data access abstraction
+
+### State Management
+- **Zustand** for client-side application state
+- **React Query** for server state and caching
+- **React Context** for component-level state sharing
+- **Local/Session Storage** for persistence
+
+### Key Architectural Decisions
+- [ADR-001: Architecture Overview](docs/adr/001-architecture-overview.md)
+- [ADR-002: AI Integration Strategy](docs/adr/002-ai-integration-strategy.md)
+- [ADR-003: Database Design](docs/adr/003-database-design.md)
+
+For comprehensive architecture information, see [Architecture Documentation](docs/ARCHITECTURE.md).
+
+## 📚 Documentation
+
+### Developer Resources
+- **[Contributing Guide](CONTRIBUTING.md)** - Code standards, workflow, and best practices
+- **[API Documentation](docs/api/openapi.yaml)** - Complete OpenAPI 3.0 specification
+- **[Security Guide](docs/SECURITY.md)** - Security measures and compliance
+- **[Architecture Docs](docs/ARCHITECTURE.md)** - System design and patterns
+- **[State Management](docs/STATE_MANAGEMENT.md)** - State architecture and patterns
+
+### Architecture Decision Records (ADRs)
+- [ADR-001: Architecture Overview](docs/adr/001-architecture-overview.md)
+- [ADR-002: AI Integration Strategy](docs/adr/002-ai-integration-strategy.md)
+- [ADR-003: Database Design](docs/adr/003-database-design.md)
+
+### API Reference
+The application provides a comprehensive REST API. View the complete specification:
+- **[OpenAPI Specification](docs/api/openapi.yaml)** - Machine-readable API docs
+- **Interactive API Explorer** - Available at `/api/docs` in development
 
 ## 🤝 Contributing
 
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit changes (`git commit -m 'Add AmazingFeature'`)
-4. Push to branch (`git push origin feature/AmazingFeature`)
-5. Open Pull Request
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed information on:
+
+### Getting Started
+- **Development Setup** - Environment configuration and dependencies
+- **Code Standards** - TypeScript, React, and API guidelines
+- **Testing Requirements** - Unit, integration, and E2E test expectations
+- **Commit Conventions** - Standardized commit message format
+
+### Development Workflow
+1. **Fork the repository** and create a feature branch
+2. **Follow code standards** as outlined in the contributing guide
+3. **Write comprehensive tests** for new functionality
+4. **Submit a pull request** with clear description and tests
+5. **Code review process** with maintainer feedback
+
+### Areas for Contribution
+- **🐛 Bug fixes** - Help improve stability and reliability
+- **✨ New features** - Expand learning capabilities and tools
+- **📖 Documentation** - Improve guides and API documentation
+- **🎨 UI/UX** - Enhance user experience and accessibility
+- **⚡ Performance** - Optimize loading times and responsiveness
+- **🌐 Internationalization** - Add support for more languages
 
 ## 📝 License
 

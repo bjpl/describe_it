@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 import { UserSession, SearchHistoryItem, UserPreferences, DescriptionStyle } from "../../types";
+import { createShallowSelector } from "../utils/storeUtils";
 
 interface SessionStore {
   session: UserSession | null;
@@ -160,21 +161,24 @@ export const useSessionStore = create<SessionStore>()(
   ),
 );
 
+// Optimized selectors with shallow comparison
+const sessionStatusSelector = createShallowSelector((state: SessionStore) => ({
+  session: state.session,
+  isInitialized: state.isInitialized,
+  isAuthenticated: state.session?.isAuthenticated ?? false,
+}));
+
+const sessionActionsSelector = createShallowSelector((state: SessionStore) => ({
+  initializeSession: state.initializeSession,
+  updateLastActivity: state.updateLastActivity,
+  endSession: state.endSession,
+  setAuthenticated: state.setAuthenticated,
+  trackSearch: state.trackSearch,
+}));
+
 // Selectors
 export const useSession = () => useSessionStore((state) => state.session);
-export const useSessionStatus = () =>
-  useSessionStore((state) => ({
-    session: state.session,
-    isInitialized: state.isInitialized,
-    isAuthenticated: state.session?.isAuthenticated ?? false,
-  }));
-export const useSessionActions = () =>
-  useSessionStore((state) => ({
-    initializeSession: state.initializeSession,
-    updateLastActivity: state.updateLastActivity,
-    endSession: state.endSession,
-    setAuthenticated: state.setAuthenticated,
-    trackSearch: state.trackSearch,
-  }));
+export const useSessionStatus = () => sessionStatusSelector(useSessionStore);
+export const useSessionActions = () => sessionActionsSelector(useSessionStore);
 export const useActivitySummary = () =>
   useSessionStore((state) => state.getActivitySummary());

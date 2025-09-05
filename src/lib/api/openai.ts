@@ -14,6 +14,7 @@ import { vercelKvCache } from "./vercel-kv";
 class OpenAIService {
   private client: OpenAI | null;
   private retryConfig: RetryConfig;
+  private isValidApiKey: boolean = false;
 
   constructor() {
     const apiKey = process.env.OPENAI_API_KEY;
@@ -29,8 +30,9 @@ class OpenAIService {
       },
     };
 
-    if (!apiKey) {
-      // OPENAI_API_KEY not configured - demo mode enabled (structured logging)
+    // Validate API key securely
+    if (!this.validateApiKey(apiKey)) {
+      // OPENAI_API_KEY not configured or invalid - demo mode enabled
       this.client = null; // Will use demo mode
       this.initializeDemoMode();
       return;
@@ -39,14 +41,70 @@ class OpenAIService {
     this.client = new OpenAI({
       apiKey,
       timeout: 60000, // 60 seconds
+      maxRetries: 0, // We handle retries manually
     });
+
+    this.isValidApiKey = true;
   }
 
   /**
-   * Initialize demo mode
+   * Validate OpenAI API key format and security
+   */
+  private validateApiKey(apiKey: string | undefined): boolean {
+    if (!apiKey || typeof apiKey !== 'string') {
+      console.warn('OpenAI API key is missing or invalid type');
+      return false;
+    }
+
+    // Check API key format (OpenAI keys start with 'sk-' and have specific length)
+    if (!apiKey.startsWith('sk-')) {
+      console.error('Invalid OpenAI API key format: must start with "sk-"');
+      return false;
+    }
+
+    // Check minimum length (OpenAI keys are typically 51+ characters)
+    if (apiKey.length < 20) {
+      console.error('Invalid OpenAI API key: too short');
+      return false;
+    }
+
+    // Check for placeholder or example keys
+    const invalidPlaceholders = [
+      'sk-your-openai-api-key-here',
+      'sk-example',
+      'sk-placeholder',
+      'sk-demo',
+      'sk-test'
+    ];
+
+    if (invalidPlaceholders.some(placeholder => apiKey.toLowerCase().includes(placeholder.toLowerCase()))) {
+      console.error('Invalid OpenAI API key: appears to be a placeholder');
+      return false;
+    }
+
+    // Additional security: check for obvious patterns that shouldn't be in API keys
+    const suspiciousPatterns = /[<>"'`\\]/;
+    if (suspiciousPatterns.test(apiKey)) {
+      console.error('Invalid OpenAI API key: contains suspicious characters');
+      return false;
+    }
+
+    return true;
+  }
+
+  /**
+   * Initialize demo mode with security logging
    */
   private initializeDemoMode(): void {
+    console.info('OpenAI Service initialized in demo mode - using fallback responses');
     // Demo mode initialized - will use demo responses
+  }
+
+  /**
+   * Check if API key is valid and service is properly configured
+   */
+  public isConfiguredSecurely(): boolean {
+    return this.isValidApiKey && this.client !== null;
   }
 
   /**
@@ -241,7 +299,7 @@ class OpenAIService {
    * Check if running in demo mode
    */
   private isDemoMode(): boolean {
-    return this.client === null;
+    return this.client === null || !this.isValidApiKey;
   }
 
   /**

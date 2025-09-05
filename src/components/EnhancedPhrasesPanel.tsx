@@ -28,7 +28,7 @@ interface EnhancedPhrasesPanelProps {
     urls: { regular: string; small: string };
     alt_description: string | null;
     user: { name: string };
-  };
+  } | null;
   descriptionText: string | null;
   style: "narrativo" | "poetico" | "academico" | "conversacional" | "infantil";
 }

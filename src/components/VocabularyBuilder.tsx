@@ -3,26 +3,9 @@
 import { useState, useCallback, useMemo, useEffect } from "react";
 import {
   BookOpen,
-  Trash2,
-  Download,
-  Upload,
-  Play,
-  Pause,
-  RotateCcw,
-  Star,
-  Award,
-  Clock,
   BarChart3,
-  Settings,
-  FileDown,
-  FileUp,
-  TrendingUp,
 } from "lucide-react";
 import { CategorizedPhrase, VocabularySet, SavedPhrase } from "@/types/api";
-import {
-  getDifficultyColor,
-  getCategoryColor,
-} from "@/lib/utils/phrase-helpers";
 import FlashcardComponent from "./FlashcardComponent";
 import QuizComponent, { QuizResults } from "./QuizComponent";
 import ProgressStatistics from "./ProgressStatistics";
@@ -33,26 +16,16 @@ import SpacedRepetitionSystem, {
 import VocabularyStorage, {
   StudySession,
 } from "@/lib/storage/vocabularyStorage";
-
-interface VocabularyBuilderProps {
-  savedPhrases: CategorizedPhrase[];
-  onUpdatePhrases: (phrases: CategorizedPhrase[]) => void;
-}
-
-interface ActiveStudySession {
-  currentIndex: number;
-  correctAnswers: number;
-  totalAnswers: number;
-  isActive: boolean;
-  mode: "flashcards" | "quiz" | "review";
-  reviewItems?: ReviewItem[];
-  startTime: Date;
-}
-
-interface ViewMode {
-  current: "sets" | "study" | "statistics" | "settings";
-  studyMode?: "flashcards" | "quiz" | "review";
-}
+import {
+  VocabularyList,
+  VocabularyForm,
+  VocabularyActions,
+  VocabularyFilters,
+  VocabularyEmptyState,
+  type VocabularyBuilderProps,
+  type ActiveStudySession,
+  type ViewMode,
+} from "./VocabularyBuilder/index";
 
 const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   savedPhrases,
@@ -71,6 +44,9 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   const [showAnswer, setShowAnswer] = useState(false);
   const [newSetName, setNewSetName] = useState("");
   const [showCreateSet, setShowCreateSet] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [sortBy, setSortBy] = useState<"name" | "created" | "progress" | "size">("created");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
   const [viewMode, setViewMode] = useState<ViewMode>({ current: "sets" });
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [studyHistory, setStudyHistory] = useState<StudySession[]>([]);
@@ -437,17 +413,58 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
     return Math.round((totalProgress / set.phrases.length) * 100);
   }, []);
 
-  // Get current phrase in study session
-  const currentPhrase = useMemo(() => {
-    if (!currentSet || !studySession.isActive) return null;
+  // Filter and sort vocabulary sets
+  const filteredAndSortedSets = useMemo(() => {
+    let filtered = vocabularySets;
 
-    if (studySession.mode === "review" && studySession.reviewItems) {
-      const reviewItem = studySession.reviewItems[studySession.currentIndex];
-      return currentSet.phrases.find((phrase) => phrase.id === reviewItem?.id);
+    // Apply search filter
+    if (searchTerm.trim()) {
+      filtered = filtered.filter((set) =>
+        set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        set.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
     }
 
-    return currentSet.phrases[studySession.currentIndex];
-  }, [currentSet, studySession]);
+    // Apply sorting
+    return filtered.sort((a, b) => {
+      let comparison = 0;
+      
+      switch (sortBy) {
+        case "name":
+          comparison = a.name.localeCompare(b.name);
+          break;
+        case "created":
+          comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+          break;
+        case "progress":
+          comparison = calculateProgress(a) - calculateProgress(b);
+          break;
+        case "size":
+          comparison = a.phrases.length - b.phrases.length;
+          break;
+        default:
+          return 0;
+      }
+      
+      return sortOrder === "asc" ? comparison : -comparison;
+    });
+  }, [vocabularySets, searchTerm, sortBy, sortOrder, calculateProgress]);
+
+  // Handle sort change
+  const handleSortChange = useCallback((newSortBy: string, newSortOrder: string) => {
+    setSortBy(newSortBy as "name" | "created" | "progress" | "size");
+    setSortOrder(newSortOrder as "asc" | "desc");
+  }, []);
+
+  // Handle form actions
+  const handleCancelCreateSet = useCallback(() => {
+    setShowCreateSet(false);
+    setNewSetName("");
+  }, []);
+
+  const handleShowCreateSet = useCallback(() => {
+    setShowCreateSet(true);
+  }, []);
 
   // Delete vocabulary set
   const deleteVocabularySet = useCallback(
@@ -463,6 +480,18 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
     },
     [vocabularySets, currentSet],
   );
+
+  // Get current phrase in study session
+  const currentPhrase = useMemo(() => {
+    if (!currentSet || !studySession.isActive) return null;
+
+    if (studySession.mode === "review" && studySession.reviewItems) {
+      const reviewItem = studySession.reviewItems[studySession.currentIndex];
+      return currentSet.phrases.find((phrase) => phrase.id === reviewItem?.id);
+    }
+
+    return currentSet.phrases[studySession.currentIndex];
+  }, [currentSet, studySession]);
 
   return (
     <div className="space-y-6">
@@ -498,66 +527,25 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
             Statistics
           </button>
 
-          {/* Import/Export buttons */}
-          <button
-            onClick={importSet}
-            className="p-2 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors"
-            title="Import vocabulary set"
-          >
-            <FileUp className="h-5 w-5" />
-          </button>
-
-          {savedPhrases.length > 0 &&
-            !showCreateSet &&
-            viewMode.current === "sets" && (
-              <button
-                onClick={() => setShowCreateSet(true)}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Create Study Set
-              </button>
-            )}
+          <VocabularyActions
+            savedPhrases={savedPhrases}
+            showCreateSet={showCreateSet}
+            viewMode={viewMode}
+            onImportSet={importSet}
+            onShowCreateSet={handleShowCreateSet}
+          />
         </div>
       </div>
 
-      {/* Create New Set */}
-      {showCreateSet && (
-        <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6">
-          <h3 className="text-lg font-semibold mb-4">Create New Study Set</h3>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Set Name
-              </label>
-              <input
-                type="text"
-                value={newSetName}
-                onChange={(e) => setNewSetName(e.target.value)}
-                placeholder="Enter study set name..."
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 bg-white dark:bg-gray-700"
-              />
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={createVocabularySet}
-                disabled={!newSetName.trim()}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Create Set ({savedPhrases.length} phrases)
-              </button>
-              <button
-                onClick={() => {
-                  setShowCreateSet(false);
-                  setNewSetName("");
-                }}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Create New Set Form */}
+      <VocabularyForm
+        show={showCreateSet}
+        newSetName={newSetName}
+        savedPhrasesCount={savedPhrases.length}
+        onSetNameChange={setNewSetName}
+        onCreateSet={createVocabularySet}
+        onCancel={handleCancelCreateSet}
+      />
 
       {/* Study Session */}
       {viewMode.current === "study" &&
@@ -644,143 +632,37 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       {/* Vocabulary Sets View */}
       {viewMode.current === "sets" && (
         <>
+          {/* Filters - only show if there are sets */}
           {vocabularySets.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold">My Study Sets</h3>
-                <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                  <Clock className="h-4 w-4" />
-                  <span>{statistics.itemsToReview} items due for review</span>
-                </div>
-              </div>
+            <VocabularyFilters
+              vocabularySets={vocabularySets}
+              searchTerm={searchTerm}
+              sortBy={sortBy}
+              sortOrder={sortOrder}
+              onSearchChange={setSearchTerm}
+              onSortChange={handleSortChange}
+            />
+          )}
 
-              <div className="grid gap-4">
-                {vocabularySets.map((set) => {
-                  const dueForReview = reviewItems.filter(
-                    (item) =>
-                      set.phrases.some((phrase) => phrase.id === item.id) &&
-                      (!item.nextReview || item.nextReview <= new Date()),
-                  ).length;
+          {/* Vocabulary List */}
+          {filteredAndSortedSets.length > 0 && (
+            <VocabularyList
+              vocabularySets={filteredAndSortedSets}
+              reviewItems={reviewItems}
+              statistics={statistics}
+              onStartStudySession={startStudySession}
+              onExportSet={exportSet}
+              onDeleteSet={deleteVocabularySet}
+              calculateProgress={calculateProgress}
+            />
+          )}
 
-                  return (
-                    <div
-                      key={set.id}
-                      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-6"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div>
-                          <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                            {set.name}
-                          </h4>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            {set.description}
-                          </p>
-                          <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
-                            <span>{set.phrases.length} phrases</span>
-                            <span>Progress: {calculateProgress(set)}%</span>
-                            <span>
-                              Created: {set.createdAt.toLocaleDateString()}
-                            </span>
-                            {dueForReview > 0 && (
-                              <span className="text-orange-600 font-medium">
-                                {dueForReview} due for review
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => exportSet(set, "csv")}
-                            className="p-2 text-gray-400 hover:text-green-500 transition-colors"
-                            title="Export as CSV"
-                          >
-                            <FileDown className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => exportSet(set, "json")}
-                            className="p-2 text-gray-400 hover:text-blue-500 transition-colors"
-                            title="Export as JSON"
-                          >
-                            <Download className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => {
-                              if (
-                                confirm(
-                                  "Are you sure you want to delete this set?",
-                                )
-                              ) {
-                                deleteVocabularySet(set.id);
-                              }
-                            }}
-                            className="p-2 text-gray-400 hover:text-red-500 transition-colors"
-                            title="Delete set"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-wrap gap-2">
-                        <button
-                          onClick={() =>
-                            startStudySession("flashcards", set.id)
-                          }
-                          className="px-3 py-1.5 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300 text-sm rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors flex items-center gap-1"
-                        >
-                          <Play className="h-3 w-3" />
-                          Flashcards
-                        </button>
-                        <button
-                          onClick={() => startStudySession("quiz", set.id)}
-                          className="px-3 py-1.5 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-sm rounded-lg hover:bg-green-200 dark:hover:bg-green-900/50 transition-colors flex items-center gap-1"
-                        >
-                          <Star className="h-3 w-3" />
-                          Quiz
-                        </button>
-                        <button
-                          onClick={() => startStudySession("review", set.id)}
-                          className={`px-3 py-1.5 text-sm rounded-lg transition-colors flex items-center gap-1 ${
-                            dueForReview > 0
-                              ? "bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 hover:bg-orange-200 dark:hover:bg-orange-900/50"
-                              : "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 hover:bg-purple-200 dark:hover:bg-purple-900/50"
-                          }`}
-                        >
-                          <RotateCcw className="h-3 w-3" />
-                          Review {dueForReview > 0 && `(${dueForReview})`}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+          {/* Empty State */}
+          {savedPhrases.length === 0 && vocabularySets.length === 0 && (
+            <VocabularyEmptyState onImportSet={importSet} />
           )}
         </>
       )}
-
-      {/* Empty State */}
-      {viewMode.current === "sets" &&
-        savedPhrases.length === 0 &&
-        vocabularySets.length === 0 && (
-          <div className="text-center py-12">
-            <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 mb-2">
-              No saved phrases yet.
-            </p>
-            <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
-              Save phrases from the extraction panel to start building your
-              vocabulary.
-            </p>
-            <button
-              onClick={importSet}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Import Vocabulary Set
-            </button>
-          </div>
-        )}
     </div>
   );
 };

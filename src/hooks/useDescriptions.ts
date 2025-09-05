@@ -1,6 +1,7 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { Description, DescriptionRequest } from "@/types";
 import { logger } from "@/lib/logger";
+import { useStableCallback, useCleanupManager } from "@/lib/utils/storeUtils";
 
 // Enhanced error types for better error handling
 interface DescriptionError {
@@ -22,7 +23,8 @@ export function useDescriptions(imageId: string) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Track abort controllers for cleanup
+  // Use cleanup manager for better resource management
+  const cleanupManager = useCleanupManager();
   const abortControllerRef = useRef<AbortController | null>(null);
   const retryCountRef = useRef(0);
 
@@ -218,7 +220,10 @@ export function useDescriptions(imageId: string) {
     throw lastError;
   };
 
-  const generateDescription = useCallback(
+  // Memoize helper functions to prevent recreation on every render
+  const stableRetryDescriptionRequest = useMemo(() => retryDescriptionRequest, []);
+
+  const generateDescription = useStableCallback(
     async (request: DescriptionRequest): Promise<Description> => {
       setIsLoading(true);
       setError(null);
@@ -230,7 +235,7 @@ export function useDescriptions(imageId: string) {
           throw new Error("Image URL and style are required");
         }
 
-        const newDescriptions = await retryDescriptionRequest(request);
+        const newDescriptions = await stableRetryDescriptionRequest(request);
         
         // Clear existing descriptions for this image/style and add new ones
         setDescriptions((prev) => {
@@ -259,10 +264,10 @@ export function useDescriptions(imageId: string) {
         setIsLoading(false);
       }
     },
-    [],
+    [stableRetryDescriptionRequest]
   );
 
-  const regenerateDescription = useCallback(
+  const regenerateDescription = useStableCallback(
     async (descriptionId: string): Promise<Description> => {
       const existingDescription = descriptions.find(
         (d) => d.id === descriptionId,
@@ -300,11 +305,11 @@ export function useDescriptions(imageId: string) {
     [descriptions, generateDescription],
   );
 
-  const deleteDescription = useCallback((descriptionId: string) => {
+  const deleteDescription = useStableCallback((descriptionId: string) => {
     setDescriptions((prev) => prev.filter((d) => d.id !== descriptionId));
   }, []);
 
-  const clearDescriptions = useCallback(() => {
+  const clearDescriptions = useStableCallback(() => {
     // Cancel any ongoing requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -316,13 +321,14 @@ export function useDescriptions(imageId: string) {
     retryCountRef.current = 0;
   }, []);
 
-  // Cleanup function to cancel requests on unmount
-  const cleanup = useCallback(() => {
+  // Cleanup function using cleanup manager
+  const cleanup = useStableCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
       abortControllerRef.current = null;
     }
-  }, []);
+    cleanupManager.cleanup();
+  }, [cleanupManager]);
 
   return {
     descriptions,

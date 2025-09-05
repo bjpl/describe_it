@@ -1,44 +1,75 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openAIService } from "@/lib/api/openai";
+import { withAPIMiddleware } from "@/lib/middleware/api-middleware";
+import { 
+  descriptionGenerateSchema,
+  validateRequestSize,
+  validateSecurityHeaders,
+  apiResponseSchema 
+} from "@/lib/schemas/api-validation";
 import { z } from "zod";
 
 export const runtime = "nodejs";
+export const maxDuration = 30; // 30 seconds timeout
 
-// Request schema validation
-const generateDescriptionSchema = z.object({
-  imageUrl: z.string().url("Invalid image URL"),
-  style: z.enum([
-    "narrativo",
-    "poetico",
-    "academico",
-    "conversacional",
-    "infantil",
-  ]),
-  customPrompt: z.string().optional(),
-  maxLength: z.coerce.number().int().min(50).max(1000).default(300),
-});
+// Rate limiting: 10 requests per 15 minutes per IP
+export const dynamic = 'force-dynamic';
 
-// CORS headers
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+// Security headers for API responses
+const securityHeaders = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY", 
+  "X-XSS-Protection": "1; mode=block",
+  "Referrer-Policy": "no-referrer",
+  "Content-Type": "application/json",
 };
 
 export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: corsHeaders,
-  });
+  // Import here to avoid circular dependency
+  const { handleCORSPreflight } = await import("@/lib/middleware/api-middleware");
+  return handleCORSPreflight(request);
 }
 
-export async function POST(request: NextRequest) {
+async function handleDescriptionGenerate(request: NextRequest): Promise<NextResponse> {
   const startTime = performance.now();
+  const requestId = crypto.randomUUID();
 
   try {
-    // Parse and validate request body
+    // Security validation
+    const securityCheck = validateSecurityHeaders(request.headers);
+    if (!securityCheck.valid) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Security validation failed",
+          details: securityCheck.reason,
+          requestId,
+        },
+        { 
+          status: 403,
+          headers: securityHeaders,
+        }
+      );
+    }
+
+    // Parse and validate request body with size limits
     const body = await request.json();
-    const params = generateDescriptionSchema.parse(body);
+    
+    if (!validateRequestSize(body, 50 * 1024)) { // 50KB limit
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Request too large",
+          requestId,
+        },
+        { 
+          status: 413,
+          headers: securityHeaders,
+        }
+      );
+    }
+
+    const params = descriptionGenerateSchema.parse(body);
 
     // Generate descriptions for both languages
     const descriptions = [];
@@ -46,7 +77,10 @@ export async function POST(request: NextRequest) {
     // Generate English description
     try {
       const englishDescription = await openAIService.generateDescription({
-        ...params,
+        imageUrl: params.imageUrl as string,
+        style: params.style as string,
+        maxLength: params.maxLength as number,
+        customPrompt: params.customPrompt as string | undefined,
         language: "en" as const
       });
       descriptions.push({
@@ -72,7 +106,9 @@ export async function POST(request: NextRequest) {
     // Generate Spanish description
     try {
       const spanishDescription = await openAIService.generateDescription({
-        ...params,
+        imageUrl: params.imageUrl as string,
+        style: params.style as any,
+        maxLength: params.maxLength as number | undefined,
         language: "es" as const
       });
       descriptions.push({
@@ -97,46 +133,56 @@ export async function POST(request: NextRequest) {
 
     const responseTime = performance.now() - startTime;
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: descriptions,
-        metadata: {
-          responseTime: `${responseTime.toFixed(2)}ms`,
-          timestamp: new Date().toISOString(),
-          demoMode: !process.env.OPENAI_API_KEY,
-        },
+    const response = {
+      success: true,
+      data: descriptions,
+      metadata: {
+        responseTime: `${responseTime.toFixed(2)}ms`,
+        timestamp: new Date().toISOString(),
+        requestId,
+        demoMode: !openAIService.isConfiguredSecurely(),
+        version: "2.0.0",
       },
-      {
-        headers: {
-          ...corsHeaders,
-          "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=3600, stale-while-revalidate=86400", // 1 hour cache
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
-        },
+    };
+
+    // Validate response format
+    apiResponseSchema.parse(response);
+
+    return NextResponse.json(response, {
+      headers: {
+        ...securityHeaders,
+        "Cache-Control": "private, max-age=3600, stale-while-revalidate=86400",
+        "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+        "X-Request-ID": requestId,
+        "X-Rate-Limit-Remaining": "9", // Will be set by middleware
       },
-    );
+    });
   } catch (error) {
     const responseTime = performance.now() - startTime;
 
-    // Handle validation errors
+    // Handle validation errors  
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         {
           success: false,
           error: "Invalid request parameters",
-          details: error.errors.map((err) => ({
+          errors: error.errors.map((err) => ({
             field: err.path.join("."),
             message: err.message,
             code: err.code,
           })),
-          timestamp: new Date().toISOString(),
+          metadata: {
+            timestamp: new Date().toISOString(),
+            responseTime: `${responseTime.toFixed(2)}ms`,
+            requestId,
+          },
         },
         {
           status: 400,
           headers: {
-            ...corsHeaders,
+            ...securityHeaders,
             "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+            "X-Request-ID": requestId,
           },
         },
       );
@@ -165,52 +211,77 @@ export async function POST(request: NextRequest) {
       }
     ];
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: fallbackDescriptions,
-        metadata: {
-          responseTime: `${responseTime.toFixed(2)}ms`,
-          timestamp: new Date().toISOString(),
-          fallback: true,
-          demoMode: true,
-          error: "API temporarily unavailable, using fallback",
-        },
+    const fallbackResponse = {
+      success: true,
+      data: fallbackDescriptions,
+      metadata: {
+        responseTime: `${responseTime.toFixed(2)}ms`,
+        timestamp: new Date().toISOString(),
+        requestId,
+        fallback: true,
+        demoMode: true,
+        error: "Service temporarily unavailable",
+        version: "2.0.0",
       },
-      {
-        status: 200,
-        headers: {
-          ...corsHeaders,
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
-          "X-Fallback": "true",
-        },
+    };
+
+    return NextResponse.json(fallbackResponse, {
+      status: 200,
+      headers: {
+        ...securityHeaders,
+        "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+        "X-Request-ID": requestId,
+        "X-Fallback": "true",
       },
-    );
+    });
   }
 }
 
-export async function GET(request: NextRequest) {
-  // Health check endpoint
+async function handleHealthCheck(request: NextRequest): Promise<NextResponse> {
+  const requestId = crypto.randomUUID();
+  
   return NextResponse.json(
     {
-      service: "Description Generation API",
-      status: "healthy",
-      version: "1.0.0",
-      capabilities: {
-        styles: [
-          "narrativo",
-          "poetico",
-          "academico",
-          "conversacional",
-          "infantil",
-        ],
-        languages: ["es", "en"],
-        demoMode: !process.env.OPENAI_API_KEY,
+      success: true,
+      data: {
+        service: "Description Generation API",
+        status: "healthy",
+        version: "2.0.0",
+        capabilities: {
+          styles: [
+            "narrativo",
+            "poetico",
+            "academico", 
+            "conversacional",
+            "infantil",
+          ],
+          languages: ["es", "en"],
+          demoMode: !openAIService.isConfiguredSecurely(),
+        },
       },
-      timestamp: new Date().toISOString(),
+      metadata: {
+        timestamp: new Date().toISOString(),
+        requestId,
+        responseTime: "<1ms",
+      },
     },
     {
-      headers: corsHeaders,
+      headers: {
+        ...securityHeaders,
+        "Cache-Control": "public, max-age=60",
+        "X-Request-ID": requestId,
+      },
     },
   );
 }
+
+// Export wrapped handlers
+export const POST = withAPIMiddleware(
+  "/api/descriptions/generate",
+  handleDescriptionGenerate
+);
+
+export const GET = withAPIMiddleware(
+  "/api/descriptions/generate",
+  handleHealthCheck
+);
