@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 
 export interface QAQuestion {
   id: string;
@@ -193,7 +193,7 @@ export default function useQASystem({
     if (imageUrl && description) {
       generateQuestions();
     }
-  }, [generateQuestions, imageUrl, description]);
+  }, [generateQuestions]);
 
   // Computed values
   const currentQuestion = questions[currentIndex] || null;
@@ -530,6 +530,3 @@ export default function useQASystem({
 
 // Re-export the hook with a named export as well
 export { useQASystem };
-
-// Import React for the useMemo hook
-import { useMemo } from "react";

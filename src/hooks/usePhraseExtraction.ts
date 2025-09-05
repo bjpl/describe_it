@@ -194,7 +194,7 @@ export function usePhraseExtraction(imageId: string) {
   };
 
   // Helper function to retry failed requests
-  const retryPhraseRequest = async (
+  const retryPhraseRequest = useCallback(async (
     request: PhraseExtractionRequest,
   ): Promise<ExtractedPhrase[]> => {
     let lastError: unknown;
@@ -223,7 +223,7 @@ export function usePhraseExtraction(imageId: string) {
     }
 
     throw lastError;
-  };
+  }, []);
 
   const extractPhrases = useCallback(
     async (request: PhraseExtractionRequest): Promise<ExtractedPhrase[]> => {
@@ -274,7 +274,7 @@ export function usePhraseExtraction(imageId: string) {
         setIsLoading(false);
       }
     },
-    [],
+    [retryPhraseRequest],
   );
 
   const deletePhrase = useCallback((phraseId: string) => {

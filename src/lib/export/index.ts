@@ -8,7 +8,6 @@ export type {
   ExportFormat,
   ExportCategory,
   ExportOptions,
-  ExcelExportOptions,
   AnkiExportOptions,
   CSVExportOptions,
   VocabularyExportItem,
@@ -31,7 +30,6 @@ export type {
 export * from "./csvExporter";
 export * from "./jsonExporter";
 // export * from "./pdfExporter"; // Temporarily disabled due to type conflicts
-export * from "./excelExporter";
 export * from "./ankiExporter";
 export * from "./exportManager";
 
@@ -44,11 +42,6 @@ export {
 
 // export { exportToPDF, exportStudySheet } from "./pdfExporter"; // Temporarily disabled
 
-export {
-  exportToExcel,
-  exportVocabularyToExcel,
-  downloadExcel,
-} from "./excelExporter";
 
 export {
   exportToAnki,
@@ -224,16 +217,11 @@ export const EXPORT_PRESETS = {
    * Progress report with charts
    */
   PROGRESS_REPORT: {
-    format: "excel" as ExportFormat,
+    format: "csv" as ExportFormat,
     categories: ["vocabulary", "session"] as const,
-    excelOptions: {
-      charts: {
-        progressChart: true,
-        categoryBreakdown: true,
-      },
-      conditional: {
-        difficultyColors: true,
-      },
+    csvOptions: {
+      includeHeaders: true,
+      quoteStrings: true,
     },
   },
 
@@ -275,7 +263,7 @@ export function getRecommendedFormat(itemCount: number): ExportFormat {
   if (itemCount < 50) {
     return "pdf"; // Good for small datasets, readable format
   } else if (itemCount < 500) {
-    return "excel"; // Good for medium datasets with analysis features
+    return "csv"; // Good for medium datasets
   } else if (itemCount < 2000) {
     return "csv"; // Good for large datasets, lightweight
   } else {
@@ -295,7 +283,6 @@ export function estimateExportSize(
   const multipliers = {
     csv: 0.5,
     json: 1.0,
-    excel: 1.5,
     pdf: 2.0,
     anki: 0.8,
   };

@@ -253,8 +253,6 @@ export default function ExportModal({
       setSelectedCategories([...preset.categories]);
       setCustomOptions({
         pdfOptions: "pdfOptions" in preset ? preset.pdfOptions : undefined,
-        excelOptions:
-          "excelOptions" in preset ? preset.excelOptions : undefined,
         ankiOptions: "ankiOptions" in preset ? preset.ankiOptions : undefined,
         csvOptions: "csvOptions" in preset ? preset.csvOptions : undefined,
       });
@@ -467,7 +465,7 @@ export default function ExportModal({
           <div>
             <h3 className="text-lg font-semibold mb-3">Export Format</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-              {(["csv", "json", "pdf", "excel", "anki"] as ExportFormat[]).map(
+              {(["csv", "json", "pdf", "anki"] as ExportFormat[]).map(
                 (format) => (
                   <button
                     key={format}
@@ -483,7 +481,6 @@ export default function ExportModal({
                       {format === "csv" && "Spreadsheet data"}
                       {format === "json" && "Structured data"}
                       {format === "pdf" && "Printable format"}
-                      {format === "excel" && "Advanced spreadsheet"}
                       {format === "anki" && "Flashcard deck"}
                     </div>
                   </button>
@@ -661,63 +658,6 @@ export default function ExportModal({
                   </div>
                 )}
 
-                {selectedFormat === "excel" && (
-                  <div>
-                    <label className="block text-sm font-medium mb-2">
-                      Excel Options
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={
-                            customOptions.excelOptions?.charts?.progressChart ||
-                            false
-                          }
-                          onChange={(e) =>
-                            setCustomOptions((prev) => ({
-                              ...prev,
-                              excelOptions: {
-                                ...prev.excelOptions,
-                                charts: {
-                                  ...prev.excelOptions?.charts,
-                                  progressChart: e.target.checked,
-                                },
-                              },
-                            }))
-                          }
-                          className="rounded"
-                        />
-                        <span className="text-sm">Include progress charts</span>
-                      </label>
-                      <label className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          checked={
-                            customOptions.excelOptions?.conditional
-                              ?.difficultyColors || false
-                          }
-                          onChange={(e) =>
-                            setCustomOptions((prev) => ({
-                              ...prev,
-                              excelOptions: {
-                                ...prev.excelOptions,
-                                conditional: {
-                                  ...prev.excelOptions?.conditional,
-                                  difficultyColors: e.target.checked,
-                                },
-                              },
-                            }))
-                          }
-                          className="rounded"
-                        />
-                        <span className="text-sm">
-                          Color-code difficulty levels
-                        </span>
-                      </label>
-                    </div>
-                  </div>
-                )}
               </div>
             )}
           </div>

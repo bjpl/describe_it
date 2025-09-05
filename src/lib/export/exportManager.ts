@@ -26,10 +26,9 @@ import {
 
 // Import all exporters
 // import { exportToPDF } from "./pdfExporter"; // Temporarily disabled
-import { exportToExcel } from "./excelExporter";
 import { exportToAnki } from "./ankiExporter";
 import { exportToJSON } from "./jsonExporter";
-import { exportAllData as exportToCSV } from "./csvExporter";
+import { exportToEnhancedCSV } from "./csvExporter";
 
 interface DataSources {
   getVocabulary: (filters?: any) => Promise<VocabularyExportItem[]>;
@@ -379,8 +378,6 @@ export class ExportManager implements IExportManager {
         // return await exportToPDF(data, options.pdfOptions); // Temporarily disabled
         throw new Error("PDF export temporarily disabled due to type conflicts");
 
-      case "excel":
-        return await exportToExcel(data, options.excelOptions);
 
       case "anki":
         return await exportToAnki(data, options.ankiOptions);
@@ -389,17 +386,8 @@ export class ExportManager implements IExportManager {
         return await exportToJSON(data);
 
       case "csv":
-        // Convert to CSV format (reuse existing function)
-        const csvData = {
-          vocabulary: data.vocabulary || [],
-          descriptions: data.descriptions || [],
-          qa: data.qa || [],
-          sessions: data.sessions || [],
-        };
-
-        // For now, create a simple CSV blob - this could be enhanced
-        const csvContent = this.convertToCSV(csvData);
-        return new Blob([csvContent], { type: "text/csv;charset=utf-8" });
+        // Use the enhanced CSV exporter for consistency
+        return await exportToEnhancedCSV(data, options.csvOptions);
 
       default:
         throw new Error(`Unsupported export format: ${options.format}`);
@@ -519,7 +507,6 @@ export class ExportManager implements IExportManager {
       json: "json",
       pdf: "pdf",
       anki: "txt",
-      excel: "xlsx",
     };
 
     return extensions[format] || "txt";
@@ -597,7 +584,6 @@ export class ExportManager implements IExportManager {
       json: 1,
       csv: 0.5,
       pdf: 2,
-      excel: 1.5,
       anki: 0.8,
     };
 
@@ -798,17 +784,12 @@ export const DEFAULT_EXPORT_OPTIONS: Record<string, ExportOptions> = {
     },
   },
 
-  progressReportExcel: {
-    format: "excel",
+  progressReportCSV: {
+    format: "csv",
     categories: ["vocabulary", "session"],
-    excelOptions: {
-      charts: {
-        progressChart: true,
-        categoryBreakdown: true,
-      },
-      conditional: {
-        difficultyColors: true,
-      },
+    csvOptions: {
+      includeHeaders: true,
+      quoteStrings: true,
     },
   },
 };

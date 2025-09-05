@@ -472,7 +472,7 @@ export type QADifficulty = Database["public"]["Enums"]["qa_difficulty"];
 export type VocabularyCategory = string; // Could be enum if needed
 export type ThemePreference = "light" | "dark" | "auto";
 export type LanguagePreference = "en" | "es";
-export type ExportFormat = "csv" | "json" | "excel" | "anki" | "pdf";
+export type ExportFormat = "csv" | "json" | "anki" | "pdf";
 export type QuestionType = "factual" | "inferential" | "evaluative" | "creative";
 export type LearningPhase = "new" | "learning" | "review" | "mastered";
 

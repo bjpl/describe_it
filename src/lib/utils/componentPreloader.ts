@@ -75,7 +75,7 @@ export class ComponentPreloader {
   private createPreloadPromise(componentName: string): Promise<any> {
     switch (componentName) {
       case "PhrasesPanel":
-        return import("../../components/PhrasesPanel");
+        return import("../../components/EnhancedPhrasesPanel");
       case "QAPanel":
         return import("../../components/QAPanel");
       default:

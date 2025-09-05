@@ -263,7 +263,7 @@ export interface BulkOperationResult<T = VocabularyItem> {
 // ==============================================
 
 export interface VocabularyExportOptions {
-  format: "csv" | "json" | "xlsx";
+  format: "csv" | "json";
   includeProgress?: boolean;
   includeAudio?: boolean;
   filters?: VocabularyFilters;
@@ -271,7 +271,7 @@ export interface VocabularyExportOptions {
 }
 
 export interface VocabularyImportOptions {
-  format: "csv" | "json" | "xlsx";
+  format: "csv" | "json";
   validateData?: boolean;
   skipDuplicates?: boolean;
   overwriteExisting?: boolean;

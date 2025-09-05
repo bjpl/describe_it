@@ -250,7 +250,7 @@ export function useImageSearch() {
         setError(searchError.message);
       }
     },
-    [],
+    [retryRequest],
   );
 
   const loadMoreImages = useCallback(async () => {

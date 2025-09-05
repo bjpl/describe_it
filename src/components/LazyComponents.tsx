@@ -32,7 +32,7 @@ export const LazyQAPanel = dynamic(
 );
 
 export const LazyPhrasesPanel = dynamic(
-  () => import('@/components/PhrasesPanel'),
+  () => import('@/components/EnhancedPhrasesPanel'),
   {
     loading: () => <LoadingSpinner size="md" />,
     ssr: false

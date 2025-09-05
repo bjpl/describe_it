@@ -4,7 +4,7 @@
  */
 
 // Core Export Formats
-export type ExportFormat = "csv" | "json" | "pdf" | "anki" | "excel";
+export type ExportFormat = "csv" | "json" | "pdf" | "anki";
 
 // Export Data Categories
 export type ExportCategory =
@@ -59,7 +59,6 @@ export interface ExportOptions {
 
   // Format-specific options
   pdfOptions?: PDFExportOptions;
-  excelOptions?: ExcelExportOptions;
   ankiOptions?: AnkiExportOptions;
   csvOptions?: CSVExportOptions;
 }
@@ -111,24 +110,6 @@ export interface PDFOptions {
   };
 }
 
-// Excel Export Configuration
-export interface ExcelExportOptions {
-  worksheets?: string[]; // Separate sheets for different data types
-  formatting?: {
-    headers?: boolean;
-    autoWidth?: boolean;
-    freezePanes?: boolean;
-  };
-  charts?: {
-    progressChart?: boolean;
-    categoryBreakdown?: boolean;
-    timelineChart?: boolean;
-  };
-  conditional?: {
-    difficultyColors?: boolean;
-    progressBars?: boolean;
-  };
-}
 
 // Anki Deck Configuration
 export interface AnkiExportOptions {

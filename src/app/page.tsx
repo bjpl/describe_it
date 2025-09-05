@@ -19,7 +19,7 @@ const LazyDescriptionPanel = React.lazy(() => import('@/components/DescriptionPa
   default: module.DescriptionPanel
 })));
 const LazyQAPanel = React.lazy(() => import('@/components/QAPanel'));
-const LazyPhrasesPanel = React.lazy(() => import('@/components/PhrasesPanel'));
+const LazyPhrasesPanel = React.lazy(() => import('@/components/EnhancedPhrasesPanel'));
 
 interface HomePageState {
   activeTab: 'search' | 'description' | 'qa' | 'phrases';

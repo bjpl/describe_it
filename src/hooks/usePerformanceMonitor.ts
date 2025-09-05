@@ -208,7 +208,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
     }
     
     return Math.max(0, score);
-  }, [performanceState.metrics]);
+  }, [performanceState]);
 
   const formatMetrics = useCallback(() => {
     const { metrics } = performanceState;
@@ -221,7 +221,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
       'Memory': metrics.memoryUsage ? 
         `${(metrics.memoryUsage.usedJSHeapSize / 1024 / 1024).toFixed(2)}MB` : 'N/A'
     };
-  }, [performanceState.metrics]);
+  }, [performanceState]);
 
   return {
     performanceState,

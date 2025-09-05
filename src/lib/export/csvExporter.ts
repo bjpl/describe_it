@@ -76,9 +76,9 @@ function downloadCSV(content: string, filename: string): void {
 
 /**
  * Export vocabulary data to CSV
- * Saves as target_word_list.csv
+ * Returns CSV blob for vocabulary data
  */
-export function exportVocabulary(vocabularyData: VocabularyExportItem[]): void {
+export function exportVocabulary(vocabularyData: VocabularyExportItem[]): Blob {
   try {
     const headers = [
       "spanish_text",
@@ -89,8 +89,8 @@ export function exportVocabulary(vocabularyData: VocabularyExportItem[]): void {
       "created_at",
     ];
     const csvContent = arrayToCSV(vocabularyData, headers);
-    downloadCSV(csvContent, "target_word_list.csv");
-    console.log("Vocabulary exported successfully");
+    console.log("Vocabulary CSV generated successfully");
+    return new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   } catch (error) {
     console.error("Error exporting vocabulary:", error);
     throw new Error("Failed to export vocabulary data");
@@ -99,14 +99,14 @@ export function exportVocabulary(vocabularyData: VocabularyExportItem[]): void {
 
 /**
  * Export Q&A responses to CSV
- * Saves as responses_export.csv
+ * Returns CSV blob for response data
  */
-export function exportResponses(responsesData: ResponseItem[]): void {
+export function exportResponses(responsesData: ResponseItem[]): Blob {
   try {
     const headers = ["question", "user_answer", "correct_answer", "timestamp"];
     const csvContent = arrayToCSV(responsesData, headers);
-    downloadCSV(csvContent, "responses_export.csv");
-    console.log("Responses exported successfully");
+    console.log("Responses CSV generated successfully");
+    return new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   } catch (error) {
     console.error("Error exporting responses:", error);
     throw new Error("Failed to export responses data");
@@ -115,15 +115,14 @@ export function exportResponses(responsesData: ResponseItem[]): void {
 
 /**
  * Export comprehensive session data to CSV
- * Includes all activity with timestamps
+ * Returns CSV blob for session data
  */
-export function exportSession(sessionData: SessionData[]): void {
+export function exportSession(sessionData: SessionData[]): Blob {
   try {
     const headers = ["timestamp", "activity_type", "content", "details"];
     const csvContent = arrayToCSV(sessionData, headers);
-    const timestamp = new Date().toISOString().split("T")[0];
-    downloadCSV(csvContent, `session_export_${timestamp}.csv`);
-    console.log("Session exported successfully");
+    console.log("Session CSV generated successfully");
+    return new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   } catch (error) {
     console.error("Error exporting session:", error);
     throw new Error("Failed to export session data");
@@ -479,24 +478,33 @@ export async function exportToEnhancedCSV(
 
 /**
  * Export all data types in a single comprehensive CSV operation
- * Creates multiple CSV files for complete data export
+ * Returns a combined CSV blob for all data types
  */
 export async function exportAllData(
   vocabularyData: VocabularyExportItem[],
   responsesData: ResponseItem[],
   sessionData: SessionData[],
-): Promise<void> {
+): Promise<Blob> {
   try {
     const timestamp = getCurrentDateString();
+    const csvSections: string[] = [];
 
-    // Export each data type with timestamped filenames
+    // Add metadata header
+    csvSections.push("# COMPREHENSIVE DATA EXPORT");
+    csvSections.push(`# Generated: ${new Date().toISOString()}`);
+    csvSections.push("");
+
+    // Export each data type as a section
     if (vocabularyData.length > 0) {
+      csvSections.push("# VOCABULARY DATA");
       const vocabHeaders = ["phrase", "translation", "category", "date_added"];
       const vocabCSV = arrayToCSV(vocabularyData, vocabHeaders);
-      downloadCSV(vocabCSV, `vocabulary_export_${timestamp}.csv`);
+      csvSections.push(vocabCSV);
+      csvSections.push("");
     }
 
     if (responsesData.length > 0) {
+      csvSections.push("# RESPONSE DATA");
       const responseHeaders = [
         "question",
         "user_answer",
@@ -504,10 +512,12 @@ export async function exportAllData(
         "timestamp",
       ];
       const responseCSV = arrayToCSV(responsesData, responseHeaders);
-      downloadCSV(responseCSV, `responses_export_${timestamp}.csv`);
+      csvSections.push(responseCSV);
+      csvSections.push("");
     }
 
     if (sessionData.length > 0) {
+      csvSections.push("# SESSION DATA");
       const sessionHeaders = [
         "timestamp",
         "activity_type",
@@ -515,10 +525,14 @@ export async function exportAllData(
         "details",
       ];
       const sessionCSV = arrayToCSV(sessionData, sessionHeaders);
-      downloadCSV(sessionCSV, `session_export_${timestamp}.csv`);
+      csvSections.push(sessionCSV);
+      csvSections.push("");
     }
 
+    const combinedCSV = csvSections.join("\n");
+    
     console.log("All data exported successfully");
+    return new Blob([combinedCSV], { type: "text/csv;charset=utf-8;" });
   } catch (error) {
     console.error("Error exporting all data:", error);
     throw new Error("Failed to export all data");

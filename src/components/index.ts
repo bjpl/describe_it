@@ -57,6 +57,6 @@ export { LoadingSpinner, LoadingOverlay, PageLoader } from "./Shared";
 // Default exports as named exports
 export { default as QAPanel } from "./QAPanel";
 export { default as QuestionAnswerPanel } from "./QAPanel";
-export { default as PhrasesPanel } from "./PhrasesPanel";
-export { default as PhraseExtractor } from "./PhrasesPanel";
+export { default as PhrasesPanel } from "./EnhancedPhrasesPanel";
+export { default as PhraseExtractor } from "./EnhancedPhrasesPanel";
 export { LoadingState } from "./LoadingState";

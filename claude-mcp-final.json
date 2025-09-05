@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "claude-flow": {
+      "command": "node",
+      "args": ["C:\\Users\\brand\\AppData\\Roaming\\npm\\node_modules\\claude-flow\\dist\\cli.js", "mcp", "start"],
+      "type": "stdio"
+    }
+  }
+}

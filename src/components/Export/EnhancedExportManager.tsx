@@ -128,7 +128,7 @@ const EnhancedExportManager: React.FC<{
       name: "CSV (Spreadsheet)",
       icon: <FileSpreadsheet className="h-5 w-5" />,
       description:
-        "Comma-separated values, perfect for Excel and data analysis",
+        "Comma-separated values, perfect for spreadsheets and data analysis",
       extension: ".csv",
       supports: {
         vocabulary: true,
@@ -177,20 +177,6 @@ const EnhancedExportManager: React.FC<{
         progress: true,
         sessions: true,
         images: true,
-        settings: false,
-      },
-    },
-    {
-      id: "xlsx",
-      name: "Excel Workbook",
-      icon: <FileSpreadsheet className="h-5 w-5" />,
-      description: "Multiple sheets with vocabulary, progress, and analytics",
-      extension: ".xlsx",
-      supports: {
-        vocabulary: true,
-        progress: true,
-        sessions: true,
-        images: false,
         settings: false,
       },
     },

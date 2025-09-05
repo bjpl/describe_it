@@ -171,7 +171,7 @@ export function useQuestionAnswer(imageId: string) {
   };
 
   // Helper function to retry failed requests
-  const retryQARequest = async (
+  const retryQARequest = useCallback(async (
     request: QARequest,
   ): Promise<QuestionAnswerPair> => {
     let lastError: unknown;
@@ -200,7 +200,7 @@ export function useQuestionAnswer(imageId: string) {
     }
 
     throw lastError;
-  };
+  }, []);
 
   const askQuestion = useCallback(
     async (request: QARequest): Promise<QuestionAnswerPair> => {
@@ -233,7 +233,7 @@ export function useQuestionAnswer(imageId: string) {
         setIsLoading(false);
       }
     },
-    [],
+    [retryQARequest],
   );
 
   const deleteQA = useCallback((qaId: string) => {

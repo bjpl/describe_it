@@ -42,7 +42,7 @@ export interface ExportData {
 }
 
 export interface ExportOptions {
-  format: "csv" | "json" | "xlsx";
+  format: "csv" | "json";
   includeDescriptions: boolean;
   includeQA: boolean;
   includeVocabulary: boolean;
@@ -80,8 +80,6 @@ export class UnifiedExporter {
     try {
       if (options.format === "json") {
         await this.exportAsJson(data, options, baseFilename);
-      } else if (options.format === "xlsx") {
-        await this.exportAsExcel(data, options, baseFilename);
       } else {
         // Default CSV export - create separate files for each data type
         await this.exportAsCSV(data, options, baseFilename);
@@ -214,16 +212,6 @@ export class UnifiedExporter {
     this.downloadFile(`${baseFilename}.json`, jsonString, "application/json");
   }
 
-  private async exportAsExcel(
-    data: ExportData,
-    options: ExportOptions,
-    baseFilename: string,
-  ): Promise<void> {
-    // For now, fallback to CSV since we don't have xlsx library
-    // In a full implementation, we'd use something like 'xlsx' library
-    console.warn("Excel export not fully implemented, falling back to CSV");
-    await this.exportAsCSV(data, options, baseFilename);
-  }
 
   private downloadCSV(filename: string, data: any[], headers: string[]): void {
     if (!data.length) return;

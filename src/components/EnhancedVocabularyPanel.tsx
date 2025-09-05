@@ -27,7 +27,7 @@ import {
   PhraseCategory,
 } from "@/lib/services/phraseExtractor";
 import { VocabularyManager } from "@/lib/services/vocabularyManager";
-import VocabularyExtractor from "./VocabularyExtractor";
+import GammaVocabularyExtractor from "./GammaVocabularyExtractor";
 
 interface EnhancedVocabularyPanelProps {
   selectedImage: any;
@@ -558,7 +558,7 @@ const EnhancedVocabularyPanel: React.FC<EnhancedVocabularyPanelProps> = ({
       {/* Main Content Area */}
       <div className="min-h-96">
         {panelState.activeView === "extractor" && (
-          <VocabularyExtractor
+          <GammaVocabularyExtractor
             selectedImage={selectedImage}
             descriptionText={getCurrentDescription}
             style={style}

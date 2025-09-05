@@ -5,7 +5,7 @@
 import { withRetry, RetryConfig } from "../utils/error-retry";
 
 interface ExportOptions {
-  format: "csv" | "json" | "pdf" | "xlsx";
+  format: "csv" | "json" | "pdf";
   includeMetadata?: boolean;
   dateRange?: {
     start: string;
@@ -159,8 +159,6 @@ export class ExportService {
             return await this.exportToJSON(data, options);
           case "pdf":
             return await this.exportToPDF(data, options);
-          case "xlsx":
-            return await this.exportToExcel(data, options);
           default:
             throw new Error(`Unsupported export format: ${options.format}`);
         }
@@ -251,16 +249,6 @@ export class ExportService {
         mimeType: "application/pdf",
         fileExtension: ".pdf",
         supportsImages: true,
-        supportsFormatting: true,
-      },
-      {
-        format: "xlsx",
-        name: "Excel",
-        description: "Microsoft Excel format with advanced features",
-        mimeType:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        fileExtension: ".xlsx",
-        supportsImages: false,
         supportsFormatting: true,
       },
     ];
@@ -433,20 +421,6 @@ export class ExportService {
     };
   }
 
-  private async exportToExcel(
-    data: ExportData,
-    options: ExportOptions,
-  ): Promise<{
-    filename: string;
-    size: number;
-    recordCount: number;
-    downloadUrl: string;
-  }> {
-    // This would require a library like xlsx or exceljs
-    // For now, fallback to CSV format
-    console.warn("Excel export not fully implemented, falling back to CSV");
-    return await this.exportToCSV(data, options);
-  }
 
   // Helper methods
   private processDataForExport(

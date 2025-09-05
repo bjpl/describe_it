@@ -1,1 +1,1 @@
-export { default as VocabularyManager } from "./VocabularyManager";
+export { default as VocabularyManager } from "./DatabaseVocabularyManager";

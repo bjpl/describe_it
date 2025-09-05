@@ -732,7 +732,7 @@ export function handleDatabaseError(error: any): DatabaseError {
   );
 }
 
-export default {
+const databaseUtils = {
   initializeDatabase,
   getSupabaseClient,
   userService,
@@ -745,3 +745,5 @@ export default {
   DescriptionService,
   AnalyticsService,
 };
+
+export default databaseUtils;
