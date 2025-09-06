@@ -10,6 +10,7 @@ import {
 } from "../../types/api";
 
 import { vercelKvCache } from "./vercel-kv";
+import { API_KEYS } from "../config/api-keys";
 
 class UnsplashService {
   private client: AxiosInstance | null = null;
@@ -24,17 +25,14 @@ class UnsplashService {
   private duplicateUrls = new Set<string>();
 
   constructor() {
-    // Check both NEXT_PUBLIC_ (for client) and regular (for server) env vars
-    this.accessKey = 
-      process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 
-      process.env.UNSPLASH_ACCESS_KEY || 
-      "";
+    // Use centralized API key configuration
+    this.accessKey = API_KEYS.unsplash.accessKey;
 
     console.log("[UnsplashService] Initializing with access key check:", {
-      hasNextPublicKey: !!process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
-      hasServerKey: !!process.env.UNSPLASH_ACCESS_KEY,
+      hasKey: !!this.accessKey,
       accessKeyLength: this.accessKey.length,
-      isDemo: this.accessKey === "demo" || !this.accessKey
+      isDemo: this.accessKey === "demo" || !this.accessKey,
+      source: this.accessKey === 'DPM5yTFbvoZW0imPQWe5pAXAxbEMhhBZE1GllByUPzY' ? 'fallback' : 'env'
     });
 
     if (!this.accessKey) {
