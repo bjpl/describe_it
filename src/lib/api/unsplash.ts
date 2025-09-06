@@ -28,14 +28,13 @@ class UnsplashService {
     this.accessKey = 
       process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 
       process.env.UNSPLASH_ACCESS_KEY || 
-      "DPM5yTFbvoZW0imPQWe5pAXAxbEMhhBZE1GllByUPzY"; // Fallback to hardcoded key
+      "";
 
     console.log("[UnsplashService] Initializing with access key check:", {
       hasNextPublicKey: !!process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
       hasServerKey: !!process.env.UNSPLASH_ACCESS_KEY,
       accessKeyLength: this.accessKey.length,
-      isDemo: this.accessKey === "demo" || !this.accessKey,
-      usingFallback: !process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY && !process.env.UNSPLASH_ACCESS_KEY
+      isDemo: this.accessKey === "demo" || !this.accessKey
     });
 
     if (!this.accessKey) {
