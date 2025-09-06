@@ -1,6 +1,9 @@
 {
   "permissions": {
-    "allow": ["mcp__ruv-swarm", "mcp__claude-flow"],
+    "allow": [
+      "mcp__ruv-swarm",
+      "mcp__claude-flow"
+    ],
     "deny": []
   },
   "outputStyle": "Explanatory"
