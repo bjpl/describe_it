@@ -11,10 +11,20 @@
 ## Environment Variables to Add
 
 ### Unsplash API
+
+#### Server-side Access Key
 ```
 Key: UNSPLASH_ACCESS_KEY
 Value: DPM5yTFbvoZW0imPQWe5pAXAxbEMhhBZE1GllByUPzY
 Type: Secret (Encrypted)
+Environments: All
+```
+
+#### Client-side Access Key (Required for current implementation)
+```
+Key: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
+Value: DPM5yTFbvoZW0imPQWe5pAXAxbEMhhBZE1GllByUPzY
+Type: Plain Text
 Environments: All
 ```
 
@@ -31,7 +41,7 @@ Environments: All
 #### Supabase URL
 ```
 Key: NEXT_PUBLIC_SUPABASE_URL
-Value: https://arjrpdccaczbybbqhvc.supabase.co
+Value: https://arjrpdccaczbybbrchvc.supabase.co
 Type: Plain Text
 Environments: All
 ```
