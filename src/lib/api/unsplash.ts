@@ -24,11 +24,22 @@ class UnsplashService {
   private duplicateUrls = new Set<string>();
 
   constructor() {
-    this.accessKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || "";
+    // Check both NEXT_PUBLIC_ (for client) and regular (for server) env vars
+    this.accessKey = 
+      process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || 
+      process.env.UNSPLASH_ACCESS_KEY || 
+      "";
+
+    console.log("[UnsplashService] Initializing with access key check:", {
+      hasNextPublicKey: !!process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
+      hasServerKey: !!process.env.UNSPLASH_ACCESS_KEY,
+      accessKeyLength: this.accessKey.length,
+      isDemo: this.accessKey === "demo" || !this.accessKey
+    });
 
     if (!this.accessKey) {
       console.warn(
-        "NEXT_PUBLIC_UNSPLASH_ACCESS_KEY not configured. Using demo mode.",
+        "Unsplash API key not configured. Using demo mode.",
       );
       this.accessKey = "demo";
       this.initializeDemoMode();
@@ -363,8 +374,16 @@ class UnsplashService {
     currentPage: number;
     hasNextPage: boolean;
   }> {
+    console.log("[UnsplashService] searchImages called with:", {
+      query: params.query,
+      page: params.page,
+      isDemo: this.accessKey === "demo",
+      hasClient: !!this.client
+    });
+
     // Return demo data if no API key
     if (this.accessKey === "demo") {
+      console.log("[UnsplashService] Using demo mode - generating demo images");
       return this.generateDemoImages(params);
     }
 

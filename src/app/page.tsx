@@ -22,9 +22,7 @@ const LazyDescriptionPanel = React.lazy(() => import('@/components/DescriptionPa
 })));
 const LazyQAPanel = React.lazy(() => import('@/components/QAPanel'));
 const LazyPhrasesPanel = React.lazy(() => import('@/components/EnhancedPhrasesPanel'));
-const LazySettingsModal = React.lazy(() => import('@/components/SettingsModal').then(module => ({
-  default: module.SettingsModal
-})));
+import { SettingsModal } from '@/components/SettingsModal';
 
 interface HomePageState {
   activeTab: 'search' | 'description' | 'qa' | 'phrases';
@@ -170,14 +168,19 @@ const HomePageBase: React.FC = () => {
                   </div>
                 )}
                 
-                <MotionButton
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={toggleSettings}
+                <button
+                  onClick={() => {
+                    console.log('Settings button clicked! Current state:', state.showSettings);
+                    setState(prev => {
+                      console.log('Toggling settings from', prev.showSettings, 'to', !prev.showSettings);
+                      return { ...prev, showSettings: !prev.showSettings };
+                    });
+                  }}
                   className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors"
+                  type="button"
                 >
                   <Settings className="w-5 h-5" />
-                </MotionButton>
+                </button>
               </div>
             </div>
           </div>
@@ -340,16 +343,20 @@ const HomePageBase: React.FC = () => {
         )}
 
         {/* Settings Modal */}
-        {state.showSettings && (
-          <Suspense fallback={<LoadingSpinner />}>
-            <LazySettingsModal
-              isOpen={state.showSettings}
-              onClose={closeSettings}
-              darkMode={state.darkMode}
-              onToggleDarkMode={toggleDarkMode}
-            />
-          </Suspense>
-        )}
+        {console.log('Rendering settings modal check:', state.showSettings)}
+        {state.showSettings ? (
+          <SettingsModal
+            isOpen={true}
+            onClose={() => {
+              console.log('Closing settings modal');
+              setState(prev => ({ ...prev, showSettings: false }));
+            }}
+            darkMode={state.darkMode}
+            onToggleDarkMode={() => {
+              setState(prev => ({ ...prev, darkMode: !prev.darkMode }));
+            }}
+          />
+        ) : null}
       </div>
     </ErrorBoundary>
   );

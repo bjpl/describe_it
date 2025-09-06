@@ -78,8 +78,16 @@ export async function HEAD(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const startTime = performance.now();
 
+  console.log("[API] Image search endpoint called");
+  console.log("[API] Environment check:", {
+    hasNextPublicKey: !!process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
+    hasServerKey: !!process.env.UNSPLASH_ACCESS_KEY,
+    isDemoMode: !process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY && !process.env.UNSPLASH_ACCESS_KEY
+  });
+
   try {
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
+    console.log("[API] Search params:", searchParams);
     const params = searchSchema.parse(searchParams);
 
     const cacheKey = getCacheKey(params);
@@ -123,7 +131,14 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch data (unsplashService handles demo mode internally)
+    console.log("[API] Calling unsplashService.searchImages with params:", params);
     const results = await unsplashService.searchImages(params as any);
+    console.log("[API] Results from unsplashService:", {
+      hasImages: !!(results.images && results.images.length > 0),
+      imageCount: results.images?.length || 0,
+      totalPages: results.totalPages,
+      isDemo: results.images?.[0]?.id?.startsWith('demo')
+    });
     const etag = generateETag(results);
 
     // Cache the results

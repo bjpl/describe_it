@@ -142,7 +142,7 @@ export function useImageSearch() {
       url.searchParams.set("query", query);
       url.searchParams.set("page", page.toString());
 
-      // Note: Basic search without filters for now
+      console.log("[useImageSearch] Making API request to:", url.toString());
 
       const response = await fetch(url.toString(), {
         signal: abortControllerRef.current.signal,
@@ -159,6 +159,12 @@ export function useImageSearch() {
       }
 
       const data = await response.json();
+
+      console.log("[useImageSearch] API response:", {
+        hasImages: !!(data.images || data.results),
+        imageCount: (data.images || data.results || []).length,
+        totalPages: data.totalPages || data.total_pages
+      });
 
       // Validate response structure
       if (!data || typeof data !== "object") {
