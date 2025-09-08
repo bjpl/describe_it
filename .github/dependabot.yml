@@ -7,11 +7,12 @@ updates:
       interval: "weekly"
       day: "monday"
       time: "02:00"
-    open-pull-requests-limit: 10
+    open-pull-requests-limit: 5
     reviewers:
-      - "your-username" # Replace with actual GitHub username
+      - "brand" # Replace with actual GitHub username
     assignees:
-      - "your-username" # Replace with actual GitHub username
+      - "brand" # Replace with actual GitHub username
+    target-branch: "develop"
     commit-message:
       prefix: "chore"
       prefix-development: "chore"
@@ -25,6 +26,19 @@ updates:
     ignore:
       - dependency-name: "*"
         update-types: ["version-update:semver-major"]
+    # Security updates override ignore rules
+    enable-beta-ecosystems: true
+    vulnerabilities-only: false
+    # Auto-merge minor and patch updates for trusted dependencies
+    automerged-updates:
+      - match:
+          update-type: "security"
+      - match:
+          dependency-type: "development"
+          update-type: "semver:patch"
+      - match:
+          dependency-type: "development"
+          update-type: "semver:minor"
     groups:
       testing:
         patterns:

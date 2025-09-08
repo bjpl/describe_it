@@ -7,10 +7,27 @@ on:
     branches: [main]
   schedule:
     - cron: "0 2 * * 1" # Weekly on Mondays at 2 AM
+  workflow_dispatch:
+    inputs:
+      scan_type:
+        description: 'Type of security scan to run'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - dependencies-only
+          - secrets-only
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+  pull-requests: write
 
 jobs:
   codeql-analysis:

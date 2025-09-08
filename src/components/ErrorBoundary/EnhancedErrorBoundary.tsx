@@ -9,6 +9,8 @@ import {
   Copy,
   ExternalLink,
 } from "lucide-react";
+import { errorHandler, ErrorCategory, ErrorSeverity, RecoveryStrategy } from "@/lib/errorHandler";
+import { logger } from "@/lib/logger";
 
 interface Props {
   children: ReactNode;
@@ -51,7 +53,7 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  async componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // Log error to console in development
     if (process.env.NODE_ENV === "development") {
       console.group("🔥 React Error Boundary");
@@ -61,21 +63,102 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       console.groupEnd();
     }
 
-    // Generate error ID for tracking
-    const eventId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    try {
+      // Create enhanced error with context using our centralized error handler
+      const appError = errorHandler.createError(
+        error.message,
+        this.categorizeComponentError(error, errorInfo),
+        this.assessErrorSeverity(error),
+        this.determineRecoveryStrategy(error),
+        {
+          component: 'ErrorBoundary',
+          componentStack: errorInfo.componentStack,
+          errorBoundary: true,
+          isolate: this.props.isolate,
+          errorCount: this.state.errorCount + 1,
+        },
+        error
+      );
 
-    this.setState({
-      error,
-      errorInfo,
-      eventId,
-      errorCount: this.state.errorCount + 1,
-    });
+      // Handle the error through our centralized system
+      await errorHandler.handleError(appError);
 
-    // Call custom error handler
-    this.props.onError?.(error, errorInfo);
+      // Update state with error details
+      this.setState({
+        error,
+        errorInfo,
+        eventId: appError.id,
+        errorCount: this.state.errorCount + 1,
+      });
 
-    // Send to error reporting service (implement based on your service)
-    this.reportError(error, errorInfo, eventId);
+      // Call custom error handler
+      this.props.onError?.(error, errorInfo);
+
+      // Send to error reporting service (maintain compatibility)
+      this.reportError(error, errorInfo, appError.id);
+
+    } catch (handlerError) {
+      // Fallback if our error handler fails
+      logger.systemError('Error boundary failed to handle error', handlerError as Error, {
+        originalError: error.message,
+      });
+      
+      // Fallback to original behavior
+      const eventId = `error_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      this.setState({
+        error,
+        errorInfo,
+        eventId,
+        errorCount: this.state.errorCount + 1,
+      });
+      this.props.onError?.(error, errorInfo);
+      this.reportError(error, errorInfo, eventId);
+    }
+  }
+
+  private categorizeComponentError(error: Error, errorInfo: ErrorInfo): ErrorCategory {
+    const message = error.message.toLowerCase();
+    const stack = error.stack?.toLowerCase() || '';
+    const componentStack = errorInfo.componentStack?.toLowerCase() || '';
+
+    // Check for specific React errors
+    if (message.includes('hydration') || message.includes('hydrate')) {
+      return ErrorCategory.UI_COMPONENT;
+    }
+    if (message.includes('hook') || stack.includes('usehook') || componentStack.includes('hook')) {
+      return ErrorCategory.UI_COMPONENT;
+    }
+    if (message.includes('render') || message.includes('cannot read properties')) {
+      return ErrorCategory.UI_COMPONENT;
+    }
+    if (message.includes('network') || message.includes('fetch')) {
+      return ErrorCategory.NETWORK;
+    }
+    if (message.includes('unauthorized') || message.includes('forbidden')) {
+      return ErrorCategory.AUTHENTICATION;
+    }
+
+    return ErrorCategory.UI_COMPONENT;
+  }
+
+  private assessErrorSeverity(error: Error): ErrorSeverity {
+    if (error.message.includes('ChunkLoadError') || error.message.includes('Loading chunk')) {
+      return ErrorSeverity.MEDIUM;
+    }
+    if (this.props.isolate) {
+      return ErrorSeverity.LOW;
+    }
+    return ErrorSeverity.MEDIUM;
+  }
+
+  private determineRecoveryStrategy(error: Error): RecoveryStrategy {
+    if (error.message.includes('ChunkLoadError') || error.message.includes('Loading chunk')) {
+      return RecoveryStrategy.REFRESH;
+    }
+    if (error.message.includes('network') || error.message.includes('fetch')) {
+      return RecoveryStrategy.RETRY;
+    }
+    return RecoveryStrategy.FALLBACK;
   }
 
   componentDidUpdate(prevProps: Props) {

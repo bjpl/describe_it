@@ -269,22 +269,32 @@ For comprehensive architecture information, see [Architecture Documentation](doc
 
 ## 📚 Documentation
 
-### Developer Resources
+**📖 [Complete Documentation Hub](docs/README.md)** - Organized documentation portal with navigation and search
+
+### Quick Start Guides
+- **[Setup Guide](docs/setup/SETUP.md)** - Get started in minutes (works without API keys!)
 - **[Contributing Guide](CONTRIBUTING.md)** - Code standards, workflow, and best practices
-- **[API Documentation](docs/api/openapi.yaml)** - Complete OpenAPI 3.0 specification
-- **[Security Guide](docs/SECURITY.md)** - Security measures and compliance
-- **[Architecture Docs](docs/ARCHITECTURE.md)** - System design and patterns
-- **[State Management](docs/STATE_MANAGEMENT.md)** - State architecture and patterns
+- **[Troubleshooting](docs/guides/troubleshooting.md)** - Common issues and solutions
+
+### Developer Resources
+- **[API Documentation](docs/api/api-documentation.md)** - Complete REST API reference
+- **[Architecture Overview](docs/architecture/ARCHITECTURE.md)** - System design and patterns
+- **[Security Guide](docs/setup/SECURITY.md)** - Security measures and compliance
+- **[State Management](docs/architecture/STATE_MANAGEMENT.md)** - State architecture and patterns
+
+### Operations & Deployment
+- **[Deployment Guide](docs/deployment/deployment-guide.md)** - Production deployment instructions
+- **[Environment Configuration](docs/setup/environment-configuration.md)** - Configuration and environment setup
 
 ### Architecture Decision Records (ADRs)
-- [ADR-001: Architecture Overview](docs/adr/001-architecture-overview.md)
-- [ADR-002: AI Integration Strategy](docs/adr/002-ai-integration-strategy.md)
-- [ADR-003: Database Design](docs/adr/003-database-design.md)
+- [ADR-001: Architecture Overview](docs/architecture/adr/001-architecture-overview.md)
+- [ADR-002: AI Integration Strategy](docs/architecture/adr/002-ai-integration-strategy.md)
+- [ADR-003: Database Design](docs/architecture/adr/003-database-design.md)
 
-### API Reference
-The application provides a comprehensive REST API. View the complete specification:
-- **[OpenAPI Specification](docs/api/openapi.yaml)** - Machine-readable API docs
-- **Interactive API Explorer** - Available at `/api/docs` in development
+### Development & Testing
+- **[Development Roadmap](docs/development/DEVELOPMENT_ROADMAP.md)** - Feature roadmap and planning
+- **[Component Examples](docs/development/component-examples.md)** - React component patterns
+- **[Testing Summary](docs/testing/testing-summary.md)** - Testing approach and coverage
 
 ## 🤝 Contributing
 

@@ -1,6 +1,7 @@
 /**
  * Centralized logging utility for production-safe logging
  * Replaces console statements with structured logging
+ * Enhanced with error categorization and performance monitoring
  */
 
 export type LogLevel = "debug" | "info" | "warn" | "error";
@@ -12,6 +13,14 @@ export interface LogContext {
   component?: string;
   function?: string;
   timestamp?: string;
+  errorId?: string;
+  category?: string;
+  severity?: string;
+  recovery?: string;
+  operation?: string;
+  duration?: number;
+  traceId?: string;
+  correlationId?: string;
 }
 
 class Logger {
@@ -53,23 +62,83 @@ class Logger {
     // In production, send to logging service (Sentry, LogRocket, etc.)
     if (this.isDevelopment) return;
 
-    // For now, we'll just store critical errors
+    // Enhanced error storage with categorization
     if (level === "error" && this.isClient) {
-      // Could integrate with Sentry here
       try {
+        const errorData = {
+          level,
+          message,
+          context,
+          timestamp: new Date().toISOString(),
+          category: context?.category || 'unknown',
+          severity: context?.severity || 'medium',
+          errorId: context?.errorId || `log_${Date.now()}`,
+          userAgent: navigator.userAgent,
+          url: window.location.href,
+          sessionId: this.getSessionId(),
+        };
+        
         localStorage.setItem(
-          `app-error-${Date.now()}`,
-          JSON.stringify({
-            level,
-            message,
-            context,
-            timestamp: new Date().toISOString(),
-          }),
+          `app-error-${errorData.errorId}`,
+          JSON.stringify(errorData)
         );
-      } catch {
+
+        // Also send to external service if available
+        this.sendToExternalService(errorData);
+      } catch (storageError) {
         // Silent fail if localStorage is not available
+        console.error('Failed to store error:', storageError);
       }
     }
+
+    // Store performance logs
+    if (context?.duration && this.isClient) {
+      this.storePerformanceMetric(message, context);
+    }
+  }
+
+  private sendToExternalService(errorData: any) {
+    // Placeholder for external service integration (Sentry, LogRocket, etc.)
+    // This could be implemented to send to actual monitoring services
+    if (typeof window !== 'undefined' && window.fetch) {
+      // Example: Send to monitoring service
+      // fetch('/api/errors', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify(errorData)
+      // }).catch(() => {});
+    }
+  }
+
+  private storePerformanceMetric(message: string, context: LogContext) {
+    try {
+      const performanceData = {
+        message,
+        duration: context.duration,
+        operation: context.operation,
+        timestamp: new Date().toISOString(),
+        component: context.component,
+        url: window.location.href,
+      };
+      
+      localStorage.setItem(
+        `perf-${Date.now()}`,
+        JSON.stringify(performanceData)
+      );
+    } catch (error) {
+      // Silent fail
+    }
+  }
+
+  private getSessionId(): string {
+    if (!this.isClient) return 'server-session';
+    
+    let sessionId = sessionStorage.getItem('app-session-id');
+    if (!sessionId) {
+      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      sessionStorage.setItem('app-session-id', sessionId);
+    }
+    return sessionId;
   }
 
   debug(message: string, context?: LogContext) {
@@ -171,6 +240,154 @@ class Logger {
       operation,
       duration,
     });
+  }
+
+  // Enhanced error logging with categorization
+  errorWithCategory(
+    message: string,
+    error: Error,
+    category: string,
+    severity: string,
+    context?: LogContext
+  ) {
+    this.error(message, error, {
+      ...context,
+      category,
+      severity,
+    });
+  }
+
+  // Security-related logging
+  security(message: string, context?: LogContext) {
+    this.error(`SECURITY: ${message}`, undefined, {
+      ...context,
+      category: 'security',
+      severity: 'critical',
+      type: 'security-event',
+    });
+  }
+
+  // Network error logging
+  networkError(message: string, error?: Error, context?: LogContext) {
+    this.error(`NETWORK: ${message}`, error, {
+      ...context,
+      category: 'network',
+      severity: 'medium',
+      type: 'network-error',
+    });
+  }
+
+  // Database error logging
+  databaseError(message: string, error?: Error, context?: LogContext) {
+    this.error(`DATABASE: ${message}`, error, {
+      ...context,
+      category: 'database',
+      severity: 'high',
+      type: 'database-error',
+    });
+  }
+
+  // Authentication error logging
+  authError(message: string, context?: LogContext) {
+    this.error(`AUTH: ${message}`, undefined, {
+      ...context,
+      category: 'authentication',
+      severity: 'high',
+      type: 'auth-error',
+    });
+  }
+
+  // Validation error logging
+  validationError(message: string, context?: LogContext) {
+    this.warn(`VALIDATION: ${message}`, {
+      ...context,
+      category: 'validation',
+      severity: 'low',
+      type: 'validation-error',
+    });
+  }
+
+  // Business logic error logging
+  businessError(message: string, context?: LogContext) {
+    this.error(`BUSINESS: ${message}`, undefined, {
+      ...context,
+      category: 'business_logic',
+      severity: 'medium',
+      type: 'business-error',
+    });
+  }
+
+  // System error logging
+  systemError(message: string, error?: Error, context?: LogContext) {
+    this.error(`SYSTEM: ${message}`, error, {
+      ...context,
+      category: 'system',
+      severity: 'critical',
+      type: 'system-error',
+    });
+  }
+
+  // Get stored errors for analysis
+  getStoredErrors(): any[] {
+    if (!this.isClient) return [];
+    
+    const errors: any[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('app-error-')) {
+        try {
+          const errorData = JSON.parse(localStorage.getItem(key) || '{}');
+          errors.push(errorData);
+        } catch {
+          // Skip invalid JSON
+        }
+      }
+    }
+    return errors.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }
+
+  // Get stored performance metrics
+  getStoredPerformanceMetrics(): any[] {
+    if (!this.isClient) return [];
+    
+    const metrics: any[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('perf-')) {
+        try {
+          const perfData = JSON.parse(localStorage.getItem(key) || '{}');
+          metrics.push(perfData);
+        } catch {
+          // Skip invalid JSON
+        }
+      }
+    }
+    return metrics.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  }
+
+  // Clear old stored data
+  clearOldLogs(daysToKeep: number = 7) {
+    if (!this.isClient) return;
+    
+    const cutoffTime = Date.now() - (daysToKeep * 24 * 60 * 60 * 1000);
+    const keysToRemove: string[] = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key?.startsWith('app-error-') || key?.startsWith('perf-')) {
+        try {
+          const data = JSON.parse(localStorage.getItem(key) || '{}');
+          if (new Date(data.timestamp).getTime() < cutoffTime) {
+            keysToRemove.push(key);
+          }
+        } catch {
+          // Remove invalid entries
+          keysToRemove.push(key);
+        }
+      }
+    }
+    
+    keysToRemove.forEach(key => localStorage.removeItem(key));
   }
 }
 

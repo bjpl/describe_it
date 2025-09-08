@@ -29,9 +29,10 @@ const nextConfig = {
 
   // Bundle analyzer
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Bundle analyzer
+    // Bundle analyzer (conditionally require for ESM compatibility)
     if (process.env.ANALYZE === "true") {
-      const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
+      // Use dynamic require in webpack context (still CommonJS)
+      const BundleAnalyzerPlugin = eval('require')("webpack-bundle-analyzer").BundleAnalyzerPlugin;
       config.plugins.push(
         new BundleAnalyzerPlugin({
           analyzerMode: "server",
@@ -192,4 +193,4 @@ const nextConfig = {
   serverExternalPackages: [],
 };
 
-module.exports = nextConfig;
+export default nextConfig;

@@ -5,10 +5,21 @@ on:
     branches: [main, develop]
   pull_request:
     branches: [main]
+  merge_group:
+  schedule:
+    # Run CI daily at 2 AM UTC to catch dependency issues
+    - cron: '0 2 * * *'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: read
+  checks: write
+  pull-requests: write
+  security-events: write
 
 jobs:
   lint:
