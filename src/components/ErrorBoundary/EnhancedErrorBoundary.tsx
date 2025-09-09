@@ -53,12 +53,29 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
   }
 
   async componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log error to console in development
+    // PRODUCTION DEBUGGING: Always log errors for debugging
+    console.group("🔥 React Error Boundary - PRODUCTION DEBUG");
+    console.error("[PRODUCTION ERROR] Error:", error);
+    console.error("[PRODUCTION ERROR] Error Message:", error.message);
+    console.error("[PRODUCTION ERROR] Error Stack:", error.stack);
+    console.error("[PRODUCTION ERROR] Error Info:", errorInfo);
+    console.error("[PRODUCTION ERROR] Component Stack:", errorInfo.componentStack);
+    console.error("[PRODUCTION ERROR] Environment:", {
+      NODE_ENV: process.env.NODE_ENV,
+      NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+      isClient: typeof window !== 'undefined',
+      userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+      url: typeof window !== 'undefined' ? window.location.href : 'N/A',
+      timestamp: new Date().toISOString(),
+      errorCount: this.state.errorCount + 1
+    });
+    console.groupEnd();
+
+    // Development specific logging
     if (process.env.NODE_ENV === "development") {
-      console.group("🔥 React Error Boundary");
-      console.error("Error:", error);
-      console.error("Error Info:", errorInfo);
-      console.error("Component Stack:", errorInfo.componentStack);
+      console.group("🔧 Development Details");
+      console.error("Props:", this.props);
+      console.error("State:", this.state);
       console.groupEnd();
     }
 
@@ -183,55 +200,78 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
 
   reportError = async (error: Error, errorInfo: ErrorInfo, eventId: string) => {
     try {
-      // In production, send to your error reporting service
-      if (process.env.NODE_ENV === "production") {
-        // Example: Sentry, LogRocket, Bugsnag, etc.
-        /*
-        Sentry.captureException(error, {
-          contexts: {
-            react: {
-              componentStack: errorInfo.componentStack,
-            },
-          },
-          tags: {
-            boundary: 'React Error Boundary',
-          },
-          extra: {
-            eventId,
-            errorInfo,
-          },
-        });
-        */
-      }
-
-      // Store error in local storage for debugging
+      // Enhanced error data for production debugging
       const errorData = {
         message: error.message,
         stack: error.stack,
         componentStack: errorInfo.componentStack,
         timestamp: new Date().toISOString(),
         eventId,
-        userAgent: navigator.userAgent,
-        url: window.location.href,
+        userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A',
+        url: typeof window !== 'undefined' ? window.location.href : 'N/A',
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+          isClient: typeof window !== 'undefined',
+          hasDocument: typeof document !== 'undefined',
+          hasLocalStorage: typeof localStorage !== 'undefined',
+          hasSessionStorage: typeof sessionStorage !== 'undefined'
+        },
+        errorDetails: {
+          name: error.name,
+          cause: error.cause,
+          toString: error.toString()
+        },
+        isolatedComponent: this.props.isolate,
+        errorCount: this.state.errorCount + 1
       };
 
-      const existingErrors = JSON.parse(
-        localStorage.getItem("react-error-boundary-logs") || "[]",
-      );
+      // PRODUCTION: Log to console for Vercel logs
+      console.error("[ERROR BOUNDARY REPORT]", JSON.stringify(errorData, null, 2));
 
-      existingErrors.push(errorData);
-
-      // Keep only last 10 errors
-      if (existingErrors.length > 10) {
-        existingErrors.splice(0, existingErrors.length - 10);
+      // In production, send to your error reporting service
+      if (process.env.NODE_ENV === "production") {
+        // Log to Vercel function logs
+        try {
+          await fetch('/api/error-report', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(errorData)
+          }).catch(() => {
+            // Silent fail - error reporting service might not be available
+            console.warn('[ERROR BOUNDARY] Failed to send error to reporting service');
+          });
+        } catch (fetchError) {
+          console.warn('[ERROR BOUNDARY] Error reporting service unavailable:', fetchError);
+        }
       }
 
-      localStorage.setItem(
-        "react-error-boundary-logs",
-        JSON.stringify(existingErrors),
-      );
+      // Store error in local storage for debugging (with SSR safety)
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        try {
+          const existingErrors = JSON.parse(
+            localStorage.getItem("react-error-boundary-logs") || "[]",
+          );
+
+          existingErrors.push(errorData);
+
+          // Keep only last 10 errors
+          if (existingErrors.length > 10) {
+            existingErrors.splice(0, existingErrors.length - 10);
+          }
+
+          localStorage.setItem(
+            "react-error-boundary-logs",
+            JSON.stringify(existingErrors),
+          );
+        } catch (storageError) {
+          console.warn('[ERROR BOUNDARY] Failed to store error in localStorage:', storageError);
+        }
+      }
     } catch (reportingError) {
-      console.error("Failed to report error:", reportingError);
+      console.error("[ERROR BOUNDARY] Failed to report error:", reportingError);
+      // Fallback: at least log the original error
+      console.error("[ERROR BOUNDARY] Original error:", error);
     }
   };
 
@@ -250,12 +290,14 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
   };
 
   handleRetry = () => {
+    console.log('[ERROR BOUNDARY] Retry attempt initiated');
     this.setState({ isRetrying: true });
 
-    // Add delay to prevent rapid retries
-    this.resetTimeoutId = window.setTimeout(() => {
+    // Add delay to prevent rapid retries (SSR safe)
+    this.resetTimeoutId = (typeof window !== 'undefined' ? window.setTimeout : setTimeout)(() => {
+      console.log('[ERROR BOUNDARY] Resetting error state');
       this.resetError();
-    }, 1000);
+    }, 1000) as number;
   };
 
   copyErrorToClipboard = async () => {
@@ -264,8 +306,9 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
     const errorText = `
 Error ID: ${eventId}
 Time: ${new Date().toISOString()}
-URL: ${window.location.href}
-User Agent: ${navigator.userAgent}
+URL: ${typeof window !== 'undefined' ? window.location.href : 'N/A'}
+User Agent: ${typeof navigator !== 'undefined' ? navigator.userAgent : 'N/A'}
+Environment: ${process.env.NODE_ENV}
 
 Error: ${error?.message}
 
@@ -277,10 +320,16 @@ ${errorInfo?.componentStack}
     `.trim();
 
     try {
-      await navigator.clipboard.writeText(errorText);
-      alert("Error details copied to clipboard");
+      if (typeof navigator !== 'undefined' && navigator.clipboard) {
+        await navigator.clipboard.writeText(errorText);
+        alert("Error details copied to clipboard");
+      } else {
+        console.log('[ERROR BOUNDARY] Error details (clipboard not available):', errorText);
+        alert("Error details logged to console (clipboard not available)");
+      }
     } catch (err) {
-      console.error("Failed to copy error details:", err);
+      console.error("[ERROR BOUNDARY] Failed to copy error details:", err);
+      console.log('[ERROR BOUNDARY] Error details:', errorText);
     }
   };
 
@@ -390,7 +439,12 @@ ${errorInfo?.componentStack}
               </button>
 
               <button
-                onClick={() => window.location.reload()}
+                onClick={() => {
+                  console.log('[ERROR BOUNDARY] Refresh page clicked');
+                  if (typeof window !== 'undefined') {
+                    window.location.reload();
+                  }
+                }}
                 className="
                   flex items-center justify-center gap-2 px-4 py-2 
                   bg-gray-600 text-white rounded-lg hover:bg-gray-700 
@@ -424,11 +478,21 @@ ${errorInfo?.componentStack}
 
                 <button
                   onClick={() => {
-                    const errors = JSON.parse(
-                      localStorage.getItem("react-error-boundary-logs") || "[]",
-                    );
-                    console.table(errors);
-                    alert(`${errors.length} errors logged to console`);
+                    try {
+                      if (typeof localStorage !== 'undefined') {
+                        const errors = JSON.parse(
+                          localStorage.getItem("react-error-boundary-logs") || "[]",
+                        );
+                        console.table(errors);
+                        alert(`${errors.length} errors logged to console`);
+                      } else {
+                        console.log('[ERROR BOUNDARY] localStorage not available');
+                        alert('Error logs not available (localStorage not supported)');
+                      }
+                    } catch (err) {
+                      console.error('[ERROR BOUNDARY] Failed to access error logs:', err);
+                      alert('Failed to access error logs');
+                    }
                   }}
                   className="
                     flex items-center justify-center gap-2 w-full px-3 py-2 

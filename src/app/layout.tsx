@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { ErrorBoundary } from "@/providers/ErrorBoundary";
+import { ProductionDebugger } from "@/components/Debug/ProductionDebugger";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -22,6 +23,7 @@ export default function RootLayout({
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
         <ErrorBoundary>
           <ReactQueryProvider>{children}</ReactQueryProvider>
+          <ProductionDebugger />
         </ErrorBoundary>
       </body>
     </html>

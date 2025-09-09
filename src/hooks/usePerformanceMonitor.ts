@@ -18,14 +18,22 @@ interface PerformanceState {
 }
 
 export const usePerformanceMonitor = (componentName?: string) => {
+  console.log(`[PERFORMANCE] Initializing monitor for ${componentName || 'component'}`);
+  
   const [performanceState, setPerformanceState] = useState<PerformanceState>({
     metrics: { renderTime: 0 },
     isMonitoring: false,
     alerts: []
   });
 
-  const renderStartTime = useRef<number>(performance.now());
+  // SSR-safe performance measurement
+  const renderStartTime = useRef<number>(
+    typeof performance !== 'undefined' ? performance.now() : Date.now()
+  );
   const observer = useRef<PerformanceObserver | null>(null);
+  
+  // Check if we're in a browser environment
+  const isBrowser = typeof window !== 'undefined' && typeof performance !== 'undefined';
 
   // Track component render performance
   const trackRenderStart = useCallback(() => {
@@ -33,22 +41,30 @@ export const usePerformanceMonitor = (componentName?: string) => {
   }, []);
 
   const trackRenderEnd = useCallback(() => {
-    if (renderStartTime.current) {
-      const renderTime = performance.now() - renderStartTime.current;
-      setPerformanceState(prev => ({
-        ...prev,
-        metrics: { ...prev.metrics, renderTime }
-      }));
-      
-      // Alert if render time is too high
-      if (renderTime > 16) { // > 16ms can cause jank at 60fps
+    try {
+      if (renderStartTime.current) {
+        const renderTime = (isBrowser ? performance.now() : Date.now()) - renderStartTime.current;
+        console.log(`[PERFORMANCE] ${componentName || 'Component'} render end: ${renderTime.toFixed(2)}ms`);
+        
         setPerformanceState(prev => ({
           ...prev,
-          alerts: [...prev.alerts, `Slow render: ${renderTime.toFixed(2)}ms in ${componentName || 'component'}`]
+          metrics: { ...prev.metrics, renderTime }
         }));
+        
+        // Alert if render time is too high
+        if (renderTime > 16) { // > 16ms can cause jank at 60fps
+          const alertMessage = `Slow render: ${renderTime.toFixed(2)}ms in ${componentName || 'component'}`;
+          console.warn(`[PERFORMANCE] ${alertMessage}`);
+          setPerformanceState(prev => ({
+            ...prev,
+            alerts: [...prev.alerts, alertMessage]
+          }));
+        }
       }
+    } catch (error) {
+      console.warn('[PERFORMANCE] Failed to track render end:', error);
     }
-  }, [componentName]);
+  }, [componentName, isBrowser]);
 
   // Monitor Web Vitals
   const startWebVitalsMonitoring = useCallback(() => {
@@ -132,33 +148,48 @@ export const usePerformanceMonitor = (componentName?: string) => {
       console.warn('Performance monitoring not supported:', error);
     }
 
-    return () => {
-      lcpObserver.disconnect();
-      fcpObserver.disconnect();
-      clsObserver.disconnect();
-      fidObserver.disconnect();
-    };
-  }, []);
+      return () => {
+        try {
+          lcpObserver.disconnect();
+          fcpObserver.disconnect();
+          clsObserver.disconnect();
+          fidObserver.disconnect();
+          console.log('[PERFORMANCE] Web Vitals observers disconnected');
+        } catch (error) {
+          console.warn('[PERFORMANCE] Failed to disconnect observers:', error);
+        }
+      };
+    } catch (error) {
+      console.warn('[PERFORMANCE] Failed to start Web Vitals monitoring:', error);
+      return () => {}; // Return empty cleanup function
+    }
+  }, [isBrowser]);
 
-  // Monitor memory usage
+  // Monitor memory usage (SSR-safe)
   const trackMemoryUsage = useCallback(() => {
-    if ('memory' in performance) {
-      const memoryInfo = (performance as any).memory;
-      setPerformanceState(prev => ({
-        ...prev,
-        metrics: { ...prev.metrics, memoryUsage: memoryInfo }
-      }));
-      
-      // Alert if memory usage is high
-      const usagePercent = (memoryInfo.usedJSHeapSize / memoryInfo.totalJSHeapSize) * 100;
-      if (usagePercent > 80) {
+    try {
+      if (isBrowser && 'memory' in performance) {
+        const memoryInfo = (performance as any).memory;
         setPerformanceState(prev => ({
           ...prev,
-          alerts: [...prev.alerts, `High memory usage: ${usagePercent.toFixed(1)}%`]
+          metrics: { ...prev.metrics, memoryUsage: memoryInfo }
         }));
+        
+        // Alert if memory usage is high
+        const usagePercent = (memoryInfo.usedJSHeapSize / memoryInfo.totalJSHeapSize) * 100;
+        if (usagePercent > 80) {
+          const alertMessage = `High memory usage: ${usagePercent.toFixed(1)}%`;
+          console.warn(`[PERFORMANCE] ${alertMessage}`);
+          setPerformanceState(prev => ({
+            ...prev,
+            alerts: [...prev.alerts, alertMessage]
+          }));
+        }
       }
+    } catch (error) {
+      console.warn('[PERFORMANCE] Failed to track memory usage:', error);
     }
-  }, []);
+  }, [isBrowser]);
 
   // Clear alerts
   const clearAlerts = useCallback(() => {

@@ -1,7 +1,14 @@
-// @ts-nocheck
 'use client';
 
 import React, { useState, useCallback, memo, Suspense } from 'react';
+
+// PRODUCTION DEBUGGING
+console.log('[HOMEPAGE] Starting to load, environment:', {
+  NODE_ENV: process.env.NODE_ENV,
+  NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
+  isClient: typeof window !== 'undefined',
+  timestamp: new Date().toISOString()
+});
 import { motion } from 'framer-motion';
 import { MotionHeader, MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
 import { Search, Settings, Download, BarChart3, BookOpen, MessageCircle, Brain } from 'lucide-react';
@@ -12,16 +19,45 @@ import { LoadingSpinner } from '@/components/Loading/LoadingSpinner';
 import { ErrorBoundary } from '@/providers/ErrorBoundary';
 import { DescriptionStyle } from '@/types';
 
-// Lazy load main application components
-const LazyImageSearch = React.lazy(() => import('@/components/ImageSearch/ImageSearch').then(module => ({
-  default: module.ImageSearch
-})));
+// Lazy load main application components with error handling
+const LazyImageSearch = React.lazy(() => 
+  import('@/components/ImageSearch/ImageSearch')
+    .then(module => ({
+      default: module.ImageSearch
+    }))
+    .catch(error => {
+      console.error('[DYNAMIC IMPORT] Failed to load ImageSearch:', error);
+      throw error;
+    })
+);
 
-const LazyDescriptionPanel = React.lazy(() => import('@/components/DescriptionPanel').then(module => ({
-  default: module.DescriptionPanel
-})));
-const LazyQAPanel = React.lazy(() => import('@/components/QAPanel'));
-const LazyPhrasesPanel = React.lazy(() => import('@/components/EnhancedPhrasesPanel'));
+const LazyDescriptionPanel = React.lazy(() => 
+  import('@/components/DescriptionPanel')
+    .then(module => ({
+      default: module.DescriptionPanel
+    }))
+    .catch(error => {
+      console.error('[DYNAMIC IMPORT] Failed to load DescriptionPanel:', error);
+      throw error;
+    })
+);
+
+const LazyQAPanel = React.lazy(() => 
+  import('@/components/QAPanel')
+    .catch(error => {
+      console.error('[DYNAMIC IMPORT] Failed to load QAPanel:', error);
+      throw error;
+    })
+);
+
+const LazyPhrasesPanel = React.lazy(() => 
+  import('@/components/EnhancedPhrasesPanel')
+    .catch(error => {
+      console.error('[DYNAMIC IMPORT] Failed to load PhrasesPanel:', error);
+      throw error;
+    })
+);
+
 import { SettingsModal } from '@/components/SettingsModal';
 
 interface HomePageState {
@@ -34,14 +70,37 @@ interface HomePageState {
 }
 
 const HomePageBase: React.FC = () => {
-  const { trackRenderStart, trackRenderEnd, performanceState, getPerformanceScore } = usePerformanceMonitor('HomePage');
+  console.log('[HOMEPAGE] Component initializing...');
+  
+  // PRODUCTION DEBUGGING: Wrap performance monitor with error handling
+  let performanceHook;
+  try {
+    performanceHook = usePerformanceMonitor('HomePage');
+    console.log('[HOMEPAGE] Performance monitor initialized');
+  } catch (error) {
+    console.error('[HOMEPAGE] Performance monitor failed:', error);
+    // Fallback performance object
+    performanceHook = {
+      trackRenderStart: () => {},
+      trackRenderEnd: () => {},
+      performanceState: { alerts: [] },
+      getPerformanceScore: () => 100
+    };
+  }
+  
+  const { trackRenderStart, trackRenderEnd, performanceState, getPerformanceScore } = performanceHook;
   
   // Track component render performance
   React.useEffect(() => {
-    trackRenderStart();
-    return () => {
-      trackRenderEnd();
-    };
+    try {
+      console.log('[HOMEPAGE] Starting render tracking');
+      trackRenderStart();
+      return () => {
+        trackRenderEnd();
+      };
+    } catch (error) {
+      console.error('[HOMEPAGE] Render tracking failed:', error);
+    }
   }, [trackRenderStart, trackRenderEnd]);
 
   const [state, setState] = useState<HomePageState>({
@@ -53,13 +112,29 @@ const HomePageBase: React.FC = () => {
     darkMode: false
   });
 
-  // Use the descriptions hook for generating descriptions
+  // PRODUCTION DEBUGGING: Wrap descriptions hook with error handling
+  let descriptionsHook;
+  try {
+    console.log('[HOMEPAGE] Initializing descriptions hook');
+    descriptionsHook = useDescriptions(state.selectedImage?.urls?.regular || state.selectedImage?.url || '');
+    console.log('[HOMEPAGE] Descriptions hook initialized');
+  } catch (error) {
+    console.error('[HOMEPAGE] Descriptions hook failed:', error);
+    // Fallback descriptions object
+    descriptionsHook = {
+      descriptions: [],
+      isLoading: false,
+      error: null,
+      generateDescription: () => {}
+    };
+  }
+  
   const {
     descriptions,
     isLoading: isGenerating,
     error: descriptionError,
     generateDescription
-  } = useDescriptions(state.selectedImage?.urls?.regular || state.selectedImage?.url || '');
+  } = descriptionsHook;
 
   // Memoized callbacks to prevent unnecessary re-renders
   const handleTabChange = useCallback((tab: HomePageState['activeTab']) => {
@@ -105,7 +180,22 @@ const HomePageBase: React.FC = () => {
 
   // Pre-load components when user starts interacting
   React.useEffect(() => {
-    preloadCriticalComponents();
+    try {
+      console.log('[HOMEPAGE] Preloading critical components');
+      preloadCriticalComponents();
+      console.log('[HOMEPAGE] Critical components preloaded');
+    } catch (error) {
+      console.error('[HOMEPAGE] Failed to preload components:', error);
+    }
+  }, []);
+
+  // PRODUCTION DEBUGGING: Component mount/unmount tracking
+  React.useEffect(() => {
+    console.log('[HOMEPAGE] Component mounted successfully');
+    
+    return () => {
+      console.log('[HOMEPAGE] Component unmounting');
+    };
   }, []);
 
   const tabConfig = React.useMemo(() => [
@@ -343,19 +433,25 @@ const HomePageBase: React.FC = () => {
         )}
 
         {/* Settings Modal */}
-        {console.log('Rendering settings modal check:', state.showSettings)}
+        {(() => {
+          console.log('[HOMEPAGE] Rendering settings modal check:', state.showSettings);
+          return null;
+        })()}
         {state.showSettings ? (
-          <SettingsModal
-            isOpen={true}
-            onClose={() => {
-              console.log('Closing settings modal');
-              setState(prev => ({ ...prev, showSettings: false }));
-            }}
-            darkMode={state.darkMode}
-            onToggleDarkMode={() => {
-              setState(prev => ({ ...prev, darkMode: !prev.darkMode }));
-            }}
-          />
+          <React.Suspense fallback={<div>Loading settings...</div>}>
+            <SettingsModal
+              isOpen={true}
+              onClose={() => {
+                console.log('[HOMEPAGE] Closing settings modal');
+                setState(prev => ({ ...prev, showSettings: false }));
+              }}
+              darkMode={state.darkMode}
+              onToggleDarkMode={() => {
+                console.log('[HOMEPAGE] Toggling dark mode');
+                setState(prev => ({ ...prev, darkMode: !prev.darkMode }));
+              }}
+            />
+          </React.Suspense>
         ) : null}
       </div>
     </ErrorBoundary>
@@ -366,4 +462,43 @@ const HomePageBase: React.FC = () => {
 const HomePage = memo(HomePageBase);
 HomePage.displayName = 'HomePage';
 
-export default HomePage;
+// PRODUCTION DEBUGGING: Wrap component with additional error boundary
+const HomePageWithDebug: React.FC = () => {
+  React.useEffect(() => {
+    console.log('[HOMEPAGE] Debug wrapper mounted');
+    
+    // Global error handler for uncaught errors
+    const handleError = (event: ErrorEvent) => {
+      console.error('[HOMEPAGE] Uncaught error:', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error
+      });
+    };
+    
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      console.error('[HOMEPAGE] Unhandled promise rejection:', event.reason);
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('error', handleError);
+      window.addEventListener('unhandledrejection', handleUnhandledRejection);
+      
+      return () => {
+        window.removeEventListener('error', handleError);
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      };
+    }
+  }, []);
+  
+  try {
+    return <HomePage />;
+  } catch (error) {
+    console.error('[HOMEPAGE] Component render error:', error);
+    throw error; // Re-throw to be caught by error boundary
+  }
+};
+
+export default HomePageWithDebug;
