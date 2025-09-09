@@ -144,10 +144,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
       observer.current = lcpObserver; // Store reference for cleanup
       
       setPerformanceState(prev => ({ ...prev, isMonitoring: true }));
-    } catch (error) {
-      console.warn('Performance monitoring not supported:', error);
-    }
-
+      
       return () => {
         try {
           lcpObserver.disconnect();
