@@ -79,7 +79,7 @@ export async function HEAD(request: NextRequest) {
 export async function GET(request: NextRequest) {
   const startTime = performance.now();
 
-  console.log("[API] Image search endpoint called");
+  console.log("[API] Image search endpoint called at", new Date().toISOString());
   
   // Check if user provided an API key in the request
   const userProvidedKey = request.nextUrl.searchParams.get('api_key');
