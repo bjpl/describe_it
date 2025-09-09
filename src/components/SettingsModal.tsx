@@ -218,10 +218,10 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
       className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
       onClick={handleOverlayClick}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
         <div className="flex flex-1 min-h-0">
           {/* Sidebar */}
-          <div className="w-64 bg-gray-50 dark:bg-gray-900 p-4 overflow-y-auto">
+          <div className="w-64 bg-gray-50 dark:bg-gray-900 p-4 overflow-y-auto flex-shrink-0">
             <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
               Settings
             </h2>

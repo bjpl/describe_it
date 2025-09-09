@@ -141,6 +141,7 @@ export function useImageSearch() {
       const url = new URL("/api/images/search", window.location.origin);
       url.searchParams.set("query", query);
       url.searchParams.set("page", page.toString());
+      url.searchParams.set("per_page", "20");
 
       console.log("[useImageSearch] Making API request to:", url.toString());
 
