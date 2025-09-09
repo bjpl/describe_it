@@ -10,7 +10,7 @@ import {
 } from "../../types/api";
 
 import { vercelKvCache } from "./vercel-kv";
-import { API_KEYS } from "../config/api-keys";
+import { apiKeyProvider } from "./keyProvider";
 
 class UnsplashService {
   private client: AxiosInstance | null = null;
@@ -23,24 +23,45 @@ class UnsplashService {
   };
   private imageCache = new Map<string, ProcessedImage>();
   private duplicateUrls = new Set<string>();
+  private keyUpdateUnsubscribe: (() => void) | null = null;
 
   constructor() {
-    // Use centralized API key configuration
-    this.accessKey = API_KEYS.unsplash.accessKey;
+    this.initializeWithKeyProvider();
+    this.setupKeyUpdateListener();
+  }
 
-    console.log("[UnsplashService] Initializing with access key check:", {
+  /**
+   * Initialize service with current key from provider
+   */
+  private initializeWithKeyProvider(): void {
+    const config = apiKeyProvider.getServiceConfig('unsplash');
+    this.accessKey = config.apiKey;
+
+    console.log("[UnsplashService] Initializing with keyProvider:", {
       hasKey: !!this.accessKey,
       accessKeyLength: this.accessKey.length,
-      isDemo: this.accessKey === "demo" || !this.accessKey,
-      source: this.accessKey === 'DPM5yTFbvoZW0imPQWe5pAXAxbEMhhBZE1GllByUPzY' ? 'fallback' : 'env'
+      isDemo: config.isDemo,
+      source: config.source,
+      isValid: config.isValid,
     });
 
-    if (!this.accessKey) {
-      console.warn(
-        "Unsplash API key not configured. Using demo mode.",
-      );
+    if (config.isDemo || !config.isValid) {
+      console.warn("Unsplash API key not configured or invalid. Using demo mode.");
       this.accessKey = "demo";
+      this.client = null;
       this.initializeDemoMode();
+      return;
+    }
+
+    this.initializeClient();
+  }
+
+  /**
+   * Initialize HTTP client with current key
+   */
+  private initializeClient(): void {
+    if (!this.accessKey || this.accessKey === "demo") {
+      this.client = null;
       return;
     }
 
@@ -61,6 +82,42 @@ class UnsplashService {
     };
 
     this.setupInterceptors();
+  }
+
+  /**
+   * Setup listener for key updates from keyProvider
+   */
+  private setupKeyUpdateListener(): void {
+    this.keyUpdateUnsubscribe = apiKeyProvider.addListener((keys) => {
+      const newKey = keys.unsplash;
+      
+      if (newKey !== this.accessKey) {
+        console.log("[UnsplashService] Key updated, reinitializing service");
+        this.accessKey = newKey;
+        
+        // Clear any existing client
+        this.client = null;
+        
+        // Reinitialize with new key
+        const config = apiKeyProvider.getServiceConfig('unsplash');
+        if (config.isDemo || !config.isValid) {
+          this.accessKey = "demo";
+          this.initializeDemoMode();
+        } else {
+          this.initializeClient();
+        }
+      }
+    });
+  }
+
+  /**
+   * Cleanup method for service destruction
+   */
+  public destroy(): void {
+    if (this.keyUpdateUnsubscribe) {
+      this.keyUpdateUnsubscribe();
+      this.keyUpdateUnsubscribe = null;
+    }
   }
 
   private setupInterceptors(): void {

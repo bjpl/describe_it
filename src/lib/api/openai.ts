@@ -10,15 +10,16 @@ import {
   TranslationRequest,
 } from "../../types/api";
 import { vercelKvCache } from "./vercel-kv";
+import { apiKeyProvider } from "./keyProvider";
 
 class OpenAIService {
   private client: OpenAI | null;
   private retryConfig: RetryConfig;
   private isValidApiKey: boolean = false;
+  private currentApiKey: string = '';
+  private keyUpdateUnsubscribe: (() => void) | null = null;
 
   constructor() {
-    const apiKey = process.env.OPENAI_API_KEY;
-
     // Initialize retryConfig first
     this.retryConfig = {
       maxRetries: 3,
@@ -30,21 +31,88 @@ class OpenAIService {
       },
     };
 
-    // Validate API key securely
-    if (!this.validateApiKey(apiKey)) {
-      // OPENAI_API_KEY not configured or invalid - demo mode enabled
-      this.client = null; // Will use demo mode
+    this.initializeWithKeyProvider();
+    this.setupKeyUpdateListener();
+  }
+
+  /**
+   * Initialize service with current key from provider
+   */
+  private initializeWithKeyProvider(): void {
+    const config = apiKeyProvider.getServiceConfig('openai');
+    this.currentApiKey = config.apiKey;
+
+    console.log("[OpenAIService] Initializing with keyProvider:", {
+      hasKey: !!this.currentApiKey,
+      isDemo: config.isDemo,
+      source: config.source,
+      isValid: config.isValid,
+    });
+
+    if (config.isDemo || !config.isValid) {
+      console.warn("OpenAI API key not configured or invalid. Using demo mode.");
+      this.client = null;
+      this.isValidApiKey = false;
       this.initializeDemoMode();
       return;
     }
 
+    this.initializeClient();
+  }
+
+  /**
+   * Initialize OpenAI client with current key
+   */
+  private initializeClient(): void {
+    if (!this.currentApiKey || !this.validateApiKey(this.currentApiKey)) {
+      this.client = null;
+      this.isValidApiKey = false;
+      return;
+    }
+
     this.client = new OpenAI({
-      apiKey,
+      apiKey: this.currentApiKey,
       timeout: 60000, // 60 seconds
       maxRetries: 0, // We handle retries manually
     });
 
     this.isValidApiKey = true;
+  }
+
+  /**
+   * Setup listener for key updates from keyProvider
+   */
+  private setupKeyUpdateListener(): void {
+    this.keyUpdateUnsubscribe = apiKeyProvider.addListener((keys) => {
+      const newKey = keys.openai;
+      
+      if (newKey !== this.currentApiKey) {
+        console.log("[OpenAIService] Key updated, reinitializing service");
+        this.currentApiKey = newKey;
+        
+        // Clear any existing client
+        this.client = null;
+        this.isValidApiKey = false;
+        
+        // Reinitialize with new key
+        const config = apiKeyProvider.getServiceConfig('openai');
+        if (config.isDemo || !config.isValid) {
+          this.initializeDemoMode();
+        } else {
+          this.initializeClient();
+        }
+      }
+    });
+  }
+
+  /**
+   * Cleanup method for service destruction
+   */
+  public destroy(): void {
+    if (this.keyUpdateUnsubscribe) {
+      this.keyUpdateUnsubscribe();
+      this.keyUpdateUnsubscribe = null;
+    }
   }
 
   /**
