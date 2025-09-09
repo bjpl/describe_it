@@ -7,7 +7,6 @@ import {
   RefreshCw,
   Bug,
   Copy,
-  ExternalLink,
 } from "lucide-react";
 import { errorHandler, ErrorCategory, ErrorSeverity, RecoveryStrategy } from "@/lib/errorHandler";
 import { logger } from "@/lib/logger";
@@ -327,9 +326,7 @@ ${errorInfo?.componentStack}
                 Something went wrong
               </h2>
               <p className="text-gray-600">
-                {isolate
-                  ? "This component encountered an error and couldn&apos;t render properly."
-                  : "We&apos;re sorry, but something unexpected happened."}
+                We encountered an unexpected error. Please try refreshing the page or contact support if the problem persists.
               </p>
               {errorCount > 1 && (
                 <p className="text-sm text-orange-600">
@@ -400,8 +397,8 @@ ${errorInfo?.componentStack}
                   transition-colors
                 "
               >
-                <ExternalLink className="w-4 h-4" />
-                Reload Page
+                <RefreshCw className="w-4 h-4" />
+                Refresh Page
               </button>
             </MotionDiv>
 
