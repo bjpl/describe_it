@@ -43,17 +43,6 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
   // Update settings when they change
   useEffect(() => {
     const unsubscribe = settingsManager.addListener(setSettings);
-    
-    // Sync existing API keys on mount
-    const currentSettings = settingsManager.getSettings();
-    if (currentSettings.apiKeys.unsplash || currentSettings.apiKeys.openai) {
-      fetch('/api/settings/sync', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKeys: currentSettings.apiKeys }),
-      }).catch(err => console.error('Failed to sync API keys on mount:', err));
-    }
-    
     return unsubscribe;
   }, []);
 
@@ -79,18 +68,6 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
       updates: Partial<AppSettings[K]>,
     ) => {
       settingsManager.updateSection(section, updates);
-      
-      // Sync API keys to server when they change
-      if (section === 'apiKeys') {
-        const currentSettings = settingsManager.getSettings();
-        fetch('/api/settings/sync', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            apiKeys: { ...currentSettings.apiKeys, ...updates }
-          }),
-        }).catch(err => console.error('Failed to sync API keys:', err));
-      }
     },
     [],
   );

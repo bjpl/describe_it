@@ -142,6 +142,21 @@ export function useImageSearch() {
       url.searchParams.set("query", query);
       url.searchParams.set("page", page.toString());
       url.searchParams.set("per_page", "20");
+      
+      // Add API key from settings if available
+      try {
+        if (typeof window !== 'undefined' && window.localStorage) {
+          const settingsStr = localStorage.getItem('app-settings');
+          if (settingsStr) {
+            const settings = JSON.parse(settingsStr);
+            if (settings.data?.apiKeys?.unsplash) {
+              url.searchParams.set("api_key", settings.data.apiKeys.unsplash);
+            }
+          }
+        }
+      } catch (e) {
+        // Fallback to environment variables
+      }
 
       console.log("[useImageSearch] Making API request to:", url.toString());
 

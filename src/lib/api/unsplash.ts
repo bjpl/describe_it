@@ -57,6 +57,17 @@ class UnsplashService {
   }
 
   /**
+   * Temporarily use a specific API key for a request
+   */
+  public useTemporaryKey(apiKey: string): void {
+    if (apiKey && apiKey.trim()) {
+      this.accessKey = apiKey.trim();
+      this.initializeClient();
+      console.log("[UnsplashService] Using temporary API key");
+    }
+  }
+
+  /**
    * Initialize HTTP client with current key
    */
   private initializeClient(): void {

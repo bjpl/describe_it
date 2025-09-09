@@ -81,17 +81,29 @@ export async function GET(request: NextRequest) {
 
   console.log("[API] Image search endpoint called");
   
+  // Check if user provided an API key in the request
+  const userProvidedKey = request.nextUrl.searchParams.get('api_key');
+  
+  // If user provided a key, temporarily set it for this request
+  if (userProvidedKey) {
+    console.log("[API] Using user-provided API key from settings");
+    // Temporarily override the service with user's key
+    unsplashService.useTemporaryKey(userProvidedKey);
+  }
+  
   // Use the key provider to check API key status
   const unsplashConfig = apiKeyProvider.getServiceConfig('unsplash');
   console.log("[API] Key provider check:", {
-    hasKey: !!unsplashConfig.apiKey,
-    isValid: unsplashConfig.isValid,
-    source: unsplashConfig.source,
-    isDemo: unsplashConfig.isDemo
+    hasKey: !!unsplashConfig.apiKey || !!userProvidedKey,
+    isValid: unsplashConfig.isValid || !!userProvidedKey,
+    source: userProvidedKey ? 'user-settings' : unsplashConfig.source,
+    isDemo: !userProvidedKey && unsplashConfig.isDemo
   });
 
   try {
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
+    // Remove the api_key from params before parsing
+    delete searchParams.api_key;
     console.log("[API] Search params:", searchParams);
     const params = searchSchema.parse(searchParams);
 
