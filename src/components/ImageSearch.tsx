@@ -22,11 +22,15 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
 
     try {
       const response = await fetch(
-        `/api/images/search?query=${encodeURIComponent(query)}&limit=12`,
+        `/api/images/search?query=${encodeURIComponent(query)}&per_page=12`,
       );
       const data = await response.json();
 
-      if (data.success && data.data?.images) {
+      // Check if we have images directly in the response
+      if (data.images && Array.isArray(data.images)) {
+        setImages(data.images);
+      } else if (data.success && data.data?.images) {
+        // Fallback for wrapped response
         setImages(data.data.images);
       } else {
         setError(data.error || "Failed to search images");
