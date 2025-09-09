@@ -24,6 +24,10 @@ A comprehensive Next.js 14 application that combines visual learning with AI-pow
 - **Radix UI** for accessible components
 - **Tailwind CSS** for styling
 
+## 🚀 Quick Start
+
+> Last deployed: December 9, 2024 - Cache cleared and fixed runtime errors
+
 ## 🚀 Getting Started
 
 ### Prerequisites
