@@ -72,37 +72,13 @@ interface HomePageState {
 const HomePageBase: React.FC = () => {
   console.log('[HOMEPAGE] Component initializing...');
   
-  // PRODUCTION DEBUGGING: Wrap performance monitor with error handling
-  let performanceHook;
-  try {
-    performanceHook = usePerformanceMonitor('HomePage');
-    console.log('[HOMEPAGE] Performance monitor initialized');
-  } catch (error) {
-    console.error('[HOMEPAGE] Performance monitor failed:', error);
-    // Fallback performance object
-    performanceHook = {
-      trackRenderStart: () => {},
-      trackRenderEnd: () => {},
-      performanceState: { alerts: [] },
-      getPerformanceScore: () => 100
-    };
-  }
+  // PRODUCTION DEBUGGING: Only initialize performance monitor in browser
+  const [isClient, setIsClient] = React.useState(false);
   
-  const { trackRenderStart, trackRenderEnd, performanceState, getPerformanceScore } = performanceHook;
-  
-  // Track component render performance
   React.useEffect(() => {
-    try {
-      console.log('[HOMEPAGE] Starting render tracking');
-      trackRenderStart();
-      return () => {
-        trackRenderEnd();
-      };
-    } catch (error) {
-      console.error('[HOMEPAGE] Render tracking failed:', error);
-    }
-  }, [trackRenderStart, trackRenderEnd]);
-
+    setIsClient(true);
+  }, []);
+  
   const [state, setState] = useState<HomePageState>({
     activeTab: 'search',
     selectedImage: null,
@@ -112,22 +88,27 @@ const HomePageBase: React.FC = () => {
     darkMode: false
   });
 
-  // PRODUCTION DEBUGGING: Wrap descriptions hook with error handling
-  let descriptionsHook;
-  try {
-    console.log('[HOMEPAGE] Initializing descriptions hook');
-    descriptionsHook = useDescriptions(state.selectedImage?.urls?.regular || state.selectedImage?.url || '');
-    console.log('[HOMEPAGE] Descriptions hook initialized');
-  } catch (error) {
-    console.error('[HOMEPAGE] Descriptions hook failed:', error);
-    // Fallback descriptions object
-    descriptionsHook = {
-      descriptions: [],
-      isLoading: false,
-      error: null,
-      generateDescription: () => {}
-    };
-  }
+  // Always call hooks - but make them SSR-safe internally
+  const performanceHook = usePerformanceMonitor('HomePage');
+  const { trackRenderStart, trackRenderEnd, performanceState, getPerformanceScore } = performanceHook;
+  
+  // Track component render performance - only in client
+  React.useEffect(() => {
+    if (!isClient) return;
+    
+    try {
+      console.log('[HOMEPAGE] Starting render tracking');
+      trackRenderStart();
+      return () => {
+        trackRenderEnd();
+      };
+    } catch (error) {
+      console.error('[HOMEPAGE] Render tracking failed:', error);
+    }
+  }, [isClient, trackRenderStart, trackRenderEnd]);
+
+  // Always call hooks - descriptions hook should be SSR-safe internally
+  const descriptionsHook = useDescriptions(state.selectedImage?.urls?.regular || state.selectedImage?.url || '');
   
   const {
     descriptions,
@@ -178,8 +159,10 @@ const HomePageBase: React.FC = () => {
     }
   }, [state.selectedImage, state.selectedStyle, generateDescription]);
 
-  // Pre-load components when user starts interacting
+  // Pre-load components when user starts interacting - only in client
   React.useEffect(() => {
+    if (!isClient) return;
+    
     try {
       console.log('[HOMEPAGE] Preloading critical components');
       preloadCriticalComponents();
@@ -187,7 +170,7 @@ const HomePageBase: React.FC = () => {
     } catch (error) {
       console.error('[HOMEPAGE] Failed to preload components:', error);
     }
-  }, []);
+  }, [isClient]);
 
   // PRODUCTION DEBUGGING: Component mount/unmount tracking
   React.useEffect(() => {
@@ -211,8 +194,9 @@ const HomePageBase: React.FC = () => {
   }, [state.activeTab, tabConfig]);
 
   const performanceScore = React.useMemo(() => {
+    if (!isClient) return 100;
     return getPerformanceScore();
-  }, [getPerformanceScore]);
+  }, [isClient, getPerformanceScore]);
 
   return (
     <ErrorBoundary>

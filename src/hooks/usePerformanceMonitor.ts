@@ -26,10 +26,8 @@ export const usePerformanceMonitor = (componentName?: string) => {
     alerts: []
   });
 
-  // SSR-safe performance measurement
-  const renderStartTime = useRef<number>(
-    typeof performance !== 'undefined' ? performance.now() : Date.now()
-  );
+  // SSR-safe performance measurement - NEVER call performance.now() during SSR
+  const renderStartTime = useRef<number>(0);
   const observer = useRef<PerformanceObserver | null>(null);
   
   // Check if we're in a browser environment
@@ -37,12 +35,16 @@ export const usePerformanceMonitor = (componentName?: string) => {
 
   // Track component render performance
   const trackRenderStart = useCallback(() => {
-    renderStartTime.current = performance.now();
-  }, []);
+    if (isBrowser) {
+      renderStartTime.current = performance.now();
+    } else {
+      renderStartTime.current = Date.now();
+    }
+  }, [isBrowser]);
 
   const trackRenderEnd = useCallback(() => {
     try {
-      if (renderStartTime.current) {
+      if (renderStartTime.current > 0) {
         const renderTime = (isBrowser ? performance.now() : Date.now()) - renderStartTime.current;
         console.log(`[PERFORMANCE] ${componentName || 'Component'} render end: ${renderTime.toFixed(2)}ms`);
         
@@ -201,8 +203,10 @@ export const usePerformanceMonitor = (componentName?: string) => {
     setPerformanceState(prev => ({ ...prev, isMonitoring: false }));
   }, []);
 
-  // Automatic monitoring setup
+  // Automatic monitoring setup - SSR safe
   useEffect(() => {
+    if (!isBrowser) return;
+    
     trackRenderStart();
     const cleanup = startWebVitalsMonitoring();
     
@@ -214,7 +218,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
       clearInterval(memoryInterval);
       trackRenderEnd();
     };
-  }, [startWebVitalsMonitoring, trackMemoryUsage, trackRenderStart, trackRenderEnd]);
+  }, [isBrowser, startWebVitalsMonitoring, trackMemoryUsage, trackRenderStart, trackRenderEnd]);
 
   // Performance utilities
   const getPerformanceScore = useCallback(() => {

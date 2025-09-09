@@ -144,12 +144,18 @@ export const LazyWrapper: React.FC<LazyWrapperProps> = ({
 
 // Pre-load critical components
 export const preloadCriticalComponents = () => {
-  if (typeof window !== 'undefined') {
+  if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
     // Pre-load components that are likely to be used soon
     requestIdleCallback(() => {
       import('@/components/ImageSearch/ImageSearch');
       import('@/components/DescriptionPanel');
     }, { timeout: 5000 });
+  } else if (typeof window !== 'undefined') {
+    // Fallback for browsers without requestIdleCallback
+    setTimeout(() => {
+      import('@/components/ImageSearch/ImageSearch');
+      import('@/components/DescriptionPanel');
+    }, 2000);
   }
 };
 

@@ -2,7 +2,7 @@
  * Store utilities for performance optimization and memory leak prevention
  */
 
-import { useCallback, useMemo, useRef } from 'react';
+import React, { useCallback, useMemo, useRef } from 'react';
 
 /**
  * Shallow comparison utility for objects
@@ -298,15 +298,15 @@ export function useCleanupManager(): CleanupManager {
     cleanupManagerRef.current = new CleanupManager();
   }
 
-  // Cleanup on unmount
-  useMemo(() => {
+  // Cleanup on unmount - SSR safe
+  React.useEffect(() => {
     const cleanup = () => {
       if (cleanupManagerRef.current) {
         cleanupManagerRef.current.cleanup();
       }
     };
     
-    // Register cleanup for unmount
+    // Register cleanup for unmount - browser only
     if (typeof window !== 'undefined') {
       window.addEventListener('beforeunload', cleanup);
       return () => {
@@ -316,7 +316,7 @@ export function useCleanupManager(): CleanupManager {
     }
     
     return cleanup;
-  }, [] as React.DependencyList);
+  }, []);
 
   return cleanupManagerRef.current;
 }
