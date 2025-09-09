@@ -116,9 +116,28 @@ export class ApiKeyProvider {
   }
 
   /**
-   * Get API key from environment variables
+   * Get API key from environment variables or cookies (server-side)
    */
   private getEnvironmentKey(service: ServiceType): string {
+    // First check cookies if we're on the server
+    if (typeof window === 'undefined') {
+      try {
+        // Try to get from cookies (server-side)
+        const { cookies } = require('next/headers');
+        const cookieStore = cookies();
+        
+        const cookieName = service === 'openai' ? 'openai_key' : 'unsplash_key';
+        const cookieValue = cookieStore.get(cookieName)?.value;
+        
+        if (cookieValue && cookieValue.trim()) {
+          return cookieValue.trim();
+        }
+      } catch (error) {
+        // Cookies not available or error accessing them
+      }
+    }
+    
+    // Fallback to environment variables
     if (typeof process === 'undefined' || !process.env) {
       return '';
     }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unsplashService } from "@/lib/api/unsplash";
+import { apiKeyProvider } from "@/lib/api/keyProvider";
 import { z } from "zod";
 
 // CORS headers
@@ -79,10 +80,14 @@ export async function GET(request: NextRequest) {
   const startTime = performance.now();
 
   console.log("[API] Image search endpoint called");
-  console.log("[API] Environment check:", {
-    hasNextPublicKey: !!process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY,
-    hasServerKey: !!process.env.UNSPLASH_ACCESS_KEY,
-    isDemoMode: !process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY && !process.env.UNSPLASH_ACCESS_KEY
+  
+  // Use the key provider to check API key status
+  const unsplashConfig = apiKeyProvider.getServiceConfig('unsplash');
+  console.log("[API] Key provider check:", {
+    hasKey: !!unsplashConfig.apiKey,
+    isValid: unsplashConfig.isValid,
+    source: unsplashConfig.source,
+    isDemo: unsplashConfig.isDemo
   });
 
   try {
@@ -168,9 +173,7 @@ export async function GET(request: NextRequest) {
         "X-Cache": "MISS",
         "X-Response-Time": `${performance.now() - startTime}ms`,
         "X-Rate-Limit-Remaining": "1000", // Mock rate limit
-        "X-Demo-Mode": !process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY
-          ? "true"
-          : "false",
+        "X-Demo-Mode": unsplashConfig.isDemo ? "true" : "false",
       },
     });
   } catch (error) {
