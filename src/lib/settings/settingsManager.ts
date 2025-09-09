@@ -443,17 +443,13 @@ export class SettingsManager {
 
     // Validate Unsplash API key
     if (this.settings.apiKeys.unsplash) {
-      try {
-        const response = await fetch(
-          `https://api.unsplash.com/photos?per_page=1`,
-          {
-            headers: {
-              Authorization: `Client-ID ${this.settings.apiKeys.unsplash}`,
-            },
-          },
-        );
-        results.unsplash = response.ok;
-      } catch {
+      // Check if it's a valid format (Unsplash keys are typically 40+ characters)
+      const key = this.settings.apiKeys.unsplash.trim();
+      if (key.length >= 20 && /^[a-zA-Z0-9_-]+$/.test(key)) {
+        // For now, just validate the format since direct API calls cause CORS issues
+        // The actual validation happens when making search requests
+        results.unsplash = true;
+      } else {
         results.unsplash = false;
       }
     }
