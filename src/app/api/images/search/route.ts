@@ -159,9 +159,15 @@ export async function GET(request: NextRequest) {
   
   // If user provided a key, temporarily set it for this request
   if (userProvidedKey) {
-    console.log("[API] Using user-provided API key from request");
+    console.log("[API] User provided API key:", {
+      keyLength: userProvidedKey.length,
+      keyPrefix: userProvidedKey.substring(0, 10) + '...',
+      timestamp: new Date().toISOString()
+    });
     // Temporarily override the service with user's key
     unsplashService.useTemporaryKey(userProvidedKey);
+  } else {
+    console.log("[API] No user API key provided in request");
   }
   
   // Use the key provider to check API key status (with timeout to prevent blocking)

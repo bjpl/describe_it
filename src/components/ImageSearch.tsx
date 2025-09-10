@@ -28,13 +28,30 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
       
       // Add API key from localStorage if available
       try {
+        // Try multiple possible storage locations
         const settingsStr = localStorage.getItem('app-settings');
+        const describeItSettingsStr = localStorage.getItem('describe-it-settings');
+        
+        let apiKey = null;
+        
+        // Check app-settings first
         if (settingsStr) {
           const settings = JSON.parse(settingsStr);
-          if (settings.data?.apiKeys?.unsplash) {
-            url.searchParams.set('api_key', settings.data.apiKeys.unsplash);
-            console.log('[ImageSearch] Using API key from settings');
-          }
+          // Check both possible paths
+          apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
+        }
+        
+        // Check describe-it-settings if not found
+        if (!apiKey && describeItSettingsStr) {
+          const settings = JSON.parse(describeItSettingsStr);
+          apiKey = settings.apiKeys?.unsplash;
+        }
+        
+        if (apiKey) {
+          url.searchParams.set('api_key', apiKey);
+          console.log('[ImageSearch] Using API key from settings (found)');
+        } else {
+          console.log('[ImageSearch] No API key found in localStorage');
         }
       } catch (e) {
         console.warn('[ImageSearch] Could not retrieve API key from settings:', e);

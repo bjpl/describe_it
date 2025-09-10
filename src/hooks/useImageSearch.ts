@@ -146,16 +146,32 @@ export function useImageSearch() {
       // Add API key from settings if available
       try {
         if (typeof window !== 'undefined' && window.localStorage) {
+          // Try multiple possible storage locations
           const settingsStr = localStorage.getItem('app-settings');
+          const describeItSettingsStr = localStorage.getItem('describe-it-settings');
+          
+          let apiKey = null;
+          
+          // Check app-settings first
           if (settingsStr) {
             const settings = JSON.parse(settingsStr);
-            if (settings.data?.apiKeys?.unsplash) {
-              url.searchParams.set("api_key", settings.data.apiKeys.unsplash);
-            }
+            // Check both possible paths
+            apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
+          }
+          
+          // Check describe-it-settings if not found
+          if (!apiKey && describeItSettingsStr) {
+            const settings = JSON.parse(describeItSettingsStr);
+            apiKey = settings.apiKeys?.unsplash;
+          }
+          
+          if (apiKey) {
+            url.searchParams.set("api_key", apiKey);
+            console.log('[useImageSearch] Found and using API key');
           }
         }
       } catch (e) {
-        // Fallback to environment variables
+        console.warn('[useImageSearch] Could not retrieve API key:', e);
       }
 
       console.log("[useImageSearch] Making API request to:", url.toString());
