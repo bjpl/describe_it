@@ -1,238 +1,181 @@
 /** @type {import('next').NextConfig} */
+
+// Import Sentry webpack plugin for source maps
+const { withSentryConfig } = require('@sentry/nextjs');
+
 const nextConfig = {
-  reactStrictMode: true,
-  // swcMinify deprecated in Next 15
-
-  // Performance optimizations
-  compress: true,
-  poweredByHeader: false,
-  
-  // Disable type checking during build for deployment
-  typescript: {
-    ignoreBuildErrors: true,
-  },
-  
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
-
-  // Turbopack configuration (moved from experimental.turbo)
-  turbopack: {
-    rules: {
-      "*.svg": {
-        loaders: ["@svgr/webpack"],
-        as: "*.js",
-      },
-    },
-  },
-
-  // Bundle optimization
+  // Enable experimental features for better performance
   experimental: {
-    optimizeCss: true,
-    optimizePackageImports: [
-      "framer-motion",
-      "lucide-react",
-      "@radix-ui/react-dialog",
-      "@radix-ui/react-dropdown-menu",
-      "@tanstack/react-query",
-      "axios",
-      "clsx",
-      "recharts",
-      "zustand",
-    ],
-    webVitalsAttribution: ["CLS", "LCP", "FCP", "FID", "TTFB", "INP"],
+    // Enable optimized package imports
+    optimizePackageImports: ['lucide-react', 'recharts'],
   },
 
-  // Bundle analyzer
+  // Image optimization
+  images: {
+    domains: ['images.unsplash.com', 'plus.unsplash.com'],
+    formats: ['image/avif', 'image/webp'],
+    minimumCacheTTL: 60 * 60 * 24 * 7, // 7 days
+  },
+
+  // Webpack configuration
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
-    // Bundle analyzer (conditionally require for ESM compatibility)
-    if (process.env.ANALYZE === "true") {
-      // Use dynamic require in webpack context (still CommonJS)
-      const BundleAnalyzerPlugin = eval('require')("webpack-bundle-analyzer").BundleAnalyzerPlugin;
+    // Bundle analyzer
+    if (process.env.ANALYZE === 'true') {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
       config.plugins.push(
         new BundleAnalyzerPlugin({
-          analyzerMode: "server",
-          analyzerPort: isServer ? 8888 : 8889,
-          openAnalyzer: true,
-        }),
+          analyzerMode: 'static',
+          openAnalyzer: false,
+          reportFilename: isServer
+            ? '../analyze/server.html'
+            : './analyze/client.html',
+        })
       );
     }
 
-    // Optimize chunks
-    if (!dev && !isServer) {
-      config.optimization.splitChunks = {
-        chunks: "all",
-        cacheGroups: {
-          vendor: {
-            test: /[\\/]node_modules[\\/]/,
-            name: "vendors",
-            chunks: "all",
-            priority: 10,
-          },
-          ui: {
-            test: /[\\/]src[\\/]components[\\/]ui[\\/]/,
-            name: "ui",
-            chunks: "all",
-            priority: 5,
-          },
-          common: {
-            minChunks: 2,
-            chunks: "all",
-            name: "common",
-            priority: 1,
-          },
-        },
+    // Ignore node_modules for client bundles to reduce size
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+        crypto: false,
       };
     }
 
     return config;
   },
 
-  // Image optimization
-  images: {
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'plus.unsplash.com',
-      }
-    ],
-    formats: ["image/webp", "image/avif"],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
-  },
-
-  // Comprehensive security headers configuration with CORS support
+  // Headers for security and performance
   async headers() {
-    const isDevelopment = process.env.NODE_ENV === 'development';
-    
-    // Define allowed origins for CORS
-    const allowedOrigins = isDevelopment 
-      ? ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000']
-      : [
-          'https://describe-it-lovat.vercel.app',
-          ...(process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) || [])
-        ];
-
     return [
       {
-        source: "/:path*",
+        source: '/(.*)',
         headers: [
+          // Security headers
           {
-            key: "X-DNS-Prefetch-Control",
-            value: "on",
+            key: 'X-Frame-Options',
+            value: 'DENY',
           },
           {
-            key: "Strict-Transport-Security",
-            value: "max-age=63072000; includeSubDomains; preload",
+            key: 'X-Content-Type-Options',
+            value: 'nosniff',
           },
           {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin',
           },
           {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          {
-            key: "X-XSS-Protection",
-            value: "1; mode=block",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "strict-origin-when-cross-origin",
-          },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=(), payment=(), usb=(), bluetooth=()",
-          },
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live",
-              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-              "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.vercel.app https://picsum.photos https://*.picsum.photos",
-              "connect-src 'self' https://api.openai.com https://*.supabase.co https://*.vercel.app wss://*.supabase.co https://api.unsplash.com",
-              "frame-src 'none'",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "form-action 'self'",
-              "upgrade-insecure-requests"
-            ].join("; "),
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
           },
         ],
       },
       {
-        source: "/api/:path*",
+        source: '/api/(.*)',
         headers: [
+          // API-specific headers
           {
-            key: "Access-Control-Allow-Methods",
-            value: "GET, POST, PUT, DELETE, HEAD, OPTIONS",
+            key: 'Access-Control-Allow-Origin',
+            value: process.env.ALLOWED_ORIGINS || 'http://localhost:3000',
           },
           {
-            key: "Access-Control-Allow-Headers",
-            value: "Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, If-None-Match, X-API-Key",
+            key: 'Access-Control-Allow-Methods',
+            value: 'GET, POST, PUT, DELETE, OPTIONS',
           },
           {
-            key: "Access-Control-Max-Age",
-            value: "86400",
-          },
-          {
-            key: "Access-Control-Expose-Headers",
-            value: "X-Cache, X-Response-Time, X-Rate-Limit-Remaining, ETag",
-          },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
-          },
-          {
-            key: "X-Frame-Options",
-            value: "DENY",
-          },
-          {
-            key: "X-XSS-Protection",
-            value: "1; mode=block",
-          },
-          {
-            key: "Referrer-Policy",
-            value: "no-referrer",
-          },
-          {
-            key: "X-Robots-Tag",
-            value: "noindex, nofollow, nosnippet, notranslate, noimageindex",
-          },
-          {
-            key: "Vary",
-            value: "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+            key: 'Access-Control-Allow-Headers',
+            value: 'Content-Type, Authorization, X-API-Key',
           },
         ],
       },
       {
-        source: "/static/:path*",
+        source: '/static/(.*)',
         headers: [
+          // Cache static assets for 1 year
           {
-            key: "Cache-Control",
-            value: "public, max-age=31536000, immutable",
-          },
-          {
-            key: "X-Content-Type-Options",
-            value: "nosniff",
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
           },
         ],
       },
     ];
   },
 
-  // Environment variables are automatically available in Next.js 15
+  // Redirects
+  async redirects() {
+    return [
+      // Redirect old paths if needed
+      {
+        source: '/dashboard',
+        destination: '/admin',
+        permanent: false,
+      },
+    ];
+  },
 
-  // Server external packages
-  serverExternalPackages: [],
+  // Rewrites for API routing
+  async rewrites() {
+    return [
+      // Health check endpoints
+      {
+        source: '/health',
+        destination: '/api/health',
+      },
+      {
+        source: '/healthz',
+        destination: '/api/health',
+      },
+    ];
+  },
+
+  // Environment variables for client-side
+  env: {
+    CUSTOM_KEY: process.env.CUSTOM_KEY,
+  },
+
+  // Compress responses
+  compress: true,
+
+  // Power optimizations
+  poweredByHeader: false,
+
+  // Strict mode for better development experience
+  reactStrictMode: true,
+
+  // TypeScript configuration
+  typescript: {
+    // Don't fail build on TypeScript errors in development
+    ignoreBuildErrors: process.env.NODE_ENV === 'development',
+  },
+
+  // ESLint configuration
+  eslint: {
+    // Don't fail build on ESLint errors in development
+    ignoreDuringBuilds: process.env.NODE_ENV === 'development',
+  },
 };
 
-export default nextConfig;
+// Sentry configuration
+const sentryWebpackPluginOptions = {
+  // Suppresses source map uploading logs during build
+  silent: true,
+  
+  // Upload source maps in production builds
+  dryRun: process.env.NODE_ENV !== 'production',
+  
+  // Automatically clean up old releases
+  cleanArtifacts: true,
+  
+  // For all available options, see:
+  // https://github.com/getsentry/sentry-webpack-plugin#options
+  org: process.env.SENTRY_ORG,
+  project: process.env.SENTRY_PROJECT,
+  authToken: process.env.SENTRY_AUTH_TOKEN,
+};
+
+// Make sure adding Sentry options is the last code to run before exporting
+module.exports = process.env.SENTRY_DSN
+  ? withSentryConfig(nextConfig, sentryWebpackPluginOptions)
+  : nextConfig;

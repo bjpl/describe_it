@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { unsplashService } from "@/lib/api/unsplash";
 import { apiKeyProvider } from "@/lib/api/keyProvider";
+import { withBasicAuth } from "@/lib/middleware/withAuth";
+import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 import { z } from "zod";
 import { getCorsHeaders, createCorsPreflightResponse, validateCorsRequest } from "@/lib/utils/cors";
 
@@ -66,7 +68,23 @@ function cleanCache() {
   }
 }
 
-// Enhanced CORS preflight handler with comprehensive security
+/**
+ * CORS Preflight Handler
+ * 
+ * Handles CORS preflight requests with comprehensive security validation.
+ * Validates origins, methods, and headers before allowing cross-origin requests.
+ * 
+ * @param request - The incoming preflight request
+ * @returns NextResponse with appropriate CORS headers or 403 if rejected
+ * 
+ * @example
+ * ```typescript
+ * // Browser will send OPTIONS request before actual request
+ * OPTIONS /api/images/search
+ * Origin: http://localhost:3000
+ * Access-Control-Request-Method: GET
+ * ```
+ */
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get('origin');
   const requestedMethod = request.headers.get('access-control-request-method');
@@ -120,7 +138,21 @@ export async function OPTIONS(request: NextRequest) {
   return corsResponse;
 }
 
-// Enhanced HEAD endpoint for image prefetch with CORS validation
+/**
+ * HEAD Request Handler
+ * 
+ * Provides metadata for image search endpoint without returning response body.
+ * Useful for prefetching and cache validation.
+ * 
+ * @param request - The incoming HEAD request
+ * @returns NextResponse with headers only (no body)
+ * 
+ * @example
+ * ```typescript
+ * HEAD /api/images/search?query=mountain
+ * // Returns: Cache-Control, X-Prefetch-Enabled headers
+ * ```
+ */
 export async function HEAD(request: NextRequest) {
   const origin = request.headers.get('origin');
   
@@ -149,10 +181,12 @@ export async function HEAD(request: NextRequest) {
   });
 }
 
-export async function GET(request: NextRequest) {
+async function handleImageSearch(request: AuthenticatedRequest) {
   const startTime = performance.now();
+  const userId = request.user?.id;
+  const userTier = request.user?.subscription_status || 'free';
 
-  console.log("[API] Image search endpoint called at", new Date().toISOString());
+  console.log("[API] Image search endpoint called at", new Date().toISOString(), { userId, userTier });
   
   // Check if user provided an API key in the request
   const userProvidedKey = request.nextUrl.searchParams.get('api_key');
@@ -352,6 +386,8 @@ export async function GET(request: NextRequest) {
         "X-Response-Time": `${performance.now() - startTime}ms`,
         "X-Rate-Limit-Remaining": "1000", // Mock rate limit
         "X-Demo-Mode": unsplashConfig.isDemo ? "true" : "false",
+        "X-User-ID": userId || 'anonymous',
+        "X-User-Tier": userTier,
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY"
       },
@@ -451,3 +487,14 @@ export async function GET(request: NextRequest) {
     });
   }
 }
+
+// Export authenticated handler
+export const GET = withBasicAuth(
+  handleImageSearch,
+  {
+    requiredFeatures: ['image_search'],
+    errorMessages: {
+      featureRequired: 'Image search requires a valid subscription. Free tier includes basic image search.',
+    },
+  }
+);

@@ -1,0 +1,380 @@
+name: PR Preview Deployment
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened, ready_for_review]
+  pull_request_target:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency:
+  group: pr-preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+  checks: write
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  NODE_OPTIONS: '--max-old-space-size=4096'
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # Check if PR should get a preview
+  check-preview-eligibility:
+    name: Check Preview Eligibility
+    runs-on: ubuntu-latest
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+      pr-number: ${{ steps.check.outputs.pr-number }}
+      branch-name: ${{ steps.check.outputs.branch-name }}
+    steps:
+      - name: Check PR eligibility
+        id: check
+        run: |
+          # Skip drafts unless explicitly requested
+          if [[ "${{ github.event.pull_request.draft }}" == "true" ]]; then
+            if [[ "${{ contains(github.event.pull_request.labels.*.name, 'preview-deploy') }}" == "true" ]]; then
+              echo "should-deploy=true" >> $GITHUB_OUTPUT
+              echo "✅ Draft PR with preview-deploy label - deploying"
+            else
+              echo "should-deploy=false" >> $GITHUB_OUTPUT
+              echo "⏭️ Skipping draft PR without preview-deploy label"
+            fi
+          else
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "✅ Ready PR - deploying preview"
+          fi
+          
+          # Set PR details
+          echo "pr-number=${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+          echo "branch-name=${{ github.event.pull_request.head.ref }}" >> $GITHUB_OUTPUT
+
+  # Security check for external PRs
+  security-check:
+    name: Security Check
+    runs-on: ubuntu-latest
+    needs: check-preview-eligibility
+    if: needs.check-preview-eligibility.outputs.should-deploy == 'true'
+    outputs:
+      is-safe: ${{ steps.security.outputs.is-safe }}
+    steps:
+      - name: Check PR security
+        id: security
+        run: |
+          # Check if PR is from a fork
+          if [[ "${{ github.event.pull_request.head.repo.full_name }}" != "${{ github.repository }}" ]]; then
+            echo "⚠️ External fork detected: ${{ github.event.pull_request.head.repo.full_name }}"
+            
+            # Check if author is a collaborator
+            AUTHOR="${{ github.event.pull_request.user.login }}"
+            if [[ "$AUTHOR" == "dependabot[bot]" || "$AUTHOR" == "renovate[bot]" ]]; then
+              echo "is-safe=true" >> $GITHUB_OUTPUT
+              echo "✅ Trusted bot PR"
+            else
+              echo "is-safe=false" >> $GITHUB_OUTPUT
+              echo "❌ External PR requires manual approval"
+            fi
+          else
+            echo "is-safe=true" >> $GITHUB_OUTPUT
+            echo "✅ Internal PR - safe to deploy"
+          fi
+
+  # Build and deploy preview
+  deploy-preview:
+    name: Deploy PR Preview
+    runs-on: ubuntu-latest
+    needs: [check-preview-eligibility, security-check]
+    if: |
+      needs.check-preview-eligibility.outputs.should-deploy == 'true' && 
+      needs.security-check.outputs.is-safe == 'true'
+    timeout-minutes: 15
+    environment:
+      name: preview-pr-${{ needs.check-preview-eligibility.outputs.pr-number }}
+      url: ${{ steps.deploy.outputs.preview-url }}
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          check-latest: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            .next/cache
+            node_modules
+          key: ${{ runner.os }}-pr-${{ needs.check-preview-eligibility.outputs.pr-number }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-pr-${{ needs.check-preview-eligibility.outputs.pr-number }}-
+            ${{ runner.os }}-nextjs-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --legacy-peer-deps
+
+      - name: Run basic checks
+        run: |
+          echo "🔍 Running basic quality checks..."
+          npm run lint || echo "⚠️ Linting issues found"
+          npm run typecheck || echo "⚠️ Type checking issues found"
+        continue-on-error: true
+
+      - name: Run quick tests
+        run: npm run test:run
+        env:
+          NODE_ENV: test
+        continue-on-error: true
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project for Preview
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NODE_ENV: production
+          NEXT_PUBLIC_APP_URL: https://pr-${{ needs.check-preview-eligibility.outputs.pr-number }}-describe-it.vercel.app
+          NEXT_PUBLIC_ENVIRONMENT: preview
+          NEXT_PUBLIC_PR_NUMBER: ${{ needs.check-preview-eligibility.outputs.pr-number }}
+
+      - name: Deploy Preview
+        id: deploy
+        run: |
+          # Deploy to Vercel
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          
+          # Create custom preview alias
+          PR_NUMBER="${{ needs.check-preview-eligibility.outputs.pr-number }}"
+          PREVIEW_URL="https://pr-${PR_NUMBER}-describe-it.vercel.app"
+          
+          # Try to alias, but don't fail if it doesn't work
+          vercel alias "$DEPLOYMENT_URL" "$PREVIEW_URL" --token=${{ secrets.VERCEL_TOKEN }} || {
+            echo "⚠️ Failed to create custom alias, using deployment URL"
+            PREVIEW_URL="$DEPLOYMENT_URL"
+          }
+          
+          echo "preview-url=$PREVIEW_URL" >> $GITHUB_OUTPUT
+          echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          echo "🚀 Preview deployed: $PREVIEW_URL"
+
+      - name: Wait for preview to be ready
+        run: |
+          echo "⏳ Waiting for preview deployment to be ready..."
+          npx wait-on "${{ steps.deploy.outputs.preview-url }}" --timeout 180000 --interval 5000
+
+      - name: Basic preview validation
+        run: |
+          echo "🔍 Running basic preview validation..."
+          
+          # Health check
+          if curl -f "${{ steps.deploy.outputs.preview-url }}/api/health"; then
+            echo "✅ Health check passed"
+          else
+            echo "⚠️ Health check failed"
+          fi
+          
+          # Basic content check
+          if curl -s "${{ steps.deploy.outputs.preview-url }}" | grep -q "<!DOCTYPE html"; then
+            echo "✅ HTML content check passed"
+          else
+            echo "⚠️ HTML content check failed"
+          fi
+
+  # Comment on PR with preview link
+  comment-preview:
+    name: Comment Preview Link
+    runs-on: ubuntu-latest
+    needs: [check-preview-eligibility, deploy-preview]
+    if: needs.deploy-preview.result == 'success'
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const previewUrl = '${{ needs.deploy-preview.outputs.preview-url }}';
+            const deploymentUrl = '${{ needs.deploy-preview.outputs.deployment-url }}';
+            const prNumber = '${{ needs.check-preview-eligibility.outputs.pr-number }}';
+            const branchName = '${{ needs.check-preview-eligibility.outputs.branch-name }}';
+            
+            const comment = `## 🚀 Preview Deployment Ready!
+            
+            Your changes have been deployed to a preview environment for testing.
+            
+            ### 📱 Preview Links
+            - **🌐 Preview URL:** ${previewUrl}
+            - **🔗 Direct URL:** ${deploymentUrl}
+            
+            ### 📊 Details
+            - **PR:** #${prNumber}
+            - **Branch:** \`${branchName}\`
+            - **Commit:** \`${{ github.event.pull_request.head.sha }}\`
+            - **Environment:** Preview
+            
+            ### 🧪 Test Areas
+            Please test the following areas in the preview:
+            - [ ] 🎨 UI/UX changes and responsiveness
+            - [ ] 🔌 API functionality
+            - [ ] 🔐 Authentication flow
+            - [ ] 🖼️ Image search and generation
+            - [ ] ✍️ Text description generation
+            - [ ] 📱 Mobile compatibility
+            - [ ] ⚡ Performance and loading times
+            
+            ### 🔗 Quick Actions
+            - [📖 Open Preview](${previewUrl})
+            - [🛠️ Vercel Dashboard](https://vercel.com/dashboard)
+            - [📝 View Deployment](${deploymentUrl})
+            - [🔄 Re-run Deployment](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+            
+            ---
+            
+            💡 **Tip:** This preview will automatically update when you push new commits to this PR.
+            
+            🤖 *Deployed via GitHub Actions*`;
+            
+            // Find and update existing preview comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.find(comment => 
+              comment.body.includes('🚀 Preview Deployment Ready!')
+            );
+            
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+              console.log('Updated existing preview comment');
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+              console.log('Created new preview comment');
+            }
+
+  # Run preview tests
+  test-preview:
+    name: Test Preview
+    runs-on: ubuntu-latest
+    needs: [deploy-preview]
+    if: needs.deploy-preview.result == 'success'
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --legacy-peer-deps
+
+      - name: Run smoke tests on preview
+        run: npm run test:smoke
+        env:
+          TEST_URL: ${{ needs.deploy-preview.outputs.preview-url }}
+        continue-on-error: true
+
+      - name: Run accessibility tests
+        run: |
+          # Basic accessibility check
+          echo "🔍 Running accessibility check..."
+          curl -s "${{ needs.deploy-preview.outputs.preview-url }}" | grep -q 'lang=' && echo "✅ Language attribute found" || echo "⚠️ Language attribute missing"
+          curl -s "${{ needs.deploy-preview.outputs.preview-url }}" | grep -q '<title>' && echo "✅ Page title found" || echo "⚠️ Page title missing"
+        continue-on-error: true
+
+  # Update deployment status
+  update-deployment-status:
+    name: Update Deployment Status
+    runs-on: ubuntu-latest
+    needs: [check-preview-eligibility, deploy-preview, test-preview]
+    if: always() && needs.check-preview-eligibility.outputs.should-deploy == 'true'
+    steps:
+      - name: Set deployment status
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentState = '${{ needs.test-preview.result }}' === 'success' || '${{ needs.test-preview.result }}' === 'skipped' 
+              ? 'success' 
+              : '${{ needs.deploy-preview.result }}' === 'success' 
+                ? 'success' 
+                : 'failure';
+            
+            const previewUrl = '${{ needs.deploy-preview.outputs.preview-url }}';
+            const prNumber = '${{ needs.check-preview-eligibility.outputs.pr-number }}';
+            
+            try {
+              // Create deployment record
+              const { data: deployment } = await github.rest.repos.createDeployment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: '${{ github.event.pull_request.head.sha }}',
+                environment: `preview-pr-${prNumber}`,
+                description: `Preview deployment for PR #${prNumber}`,
+                auto_merge: false,
+                required_contexts: []
+              });
+              
+              // Update deployment status
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                state: deploymentState,
+                environment_url: previewUrl,
+                description: deploymentState === 'success' 
+                  ? `Preview deployment ready for PR #${prNumber}`
+                  : `Preview deployment failed for PR #${prNumber}`
+              });
+              
+              console.log(`Deployment status updated: ${deploymentState}`);
+            } catch (error) {
+              console.error('Failed to update deployment status:', error);
+            }
+
+      - name: Create deployment summary
+        run: |
+          echo "## 👀 PR Preview Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**PR Number:** #${{ needs.check-preview-eligibility.outputs.pr-number }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ needs.check-preview-eligibility.outputs.branch-name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.event.pull_request.head.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ needs.deploy-preview.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [[ "${{ needs.deploy-preview.result }}" == "success" ]]; then
+            echo "### 🔗 Preview URL" >> $GITHUB_STEP_SUMMARY
+            echo "[${{ needs.deploy-preview.outputs.preview-url }}](${{ needs.deploy-preview.outputs.preview-url }})" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 📊 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "- **Smoke Tests:** ${{ needs.test-preview.result }}" >> $GITHUB_STEP_SUMMARY

@@ -8,7 +8,13 @@ export default defineConfig({
   plugins: [
     react({
       jsxRuntime: 'automatic',
-      jsxImportSource: 'react'
+      jsxImportSource: 'react',
+      // React 19 compatibility
+      babel: {
+        plugins: [
+          // Support React 19 features
+        ]
+      }
     })
   ],
   test: {
@@ -39,11 +45,27 @@ export default defineConfig({
     },
     testTimeout: 30000,
     hookTimeout: 30000,
+    // React 19 specific configuration
+    isolate: false,
+    threads: false,
+    // Better error reporting
+    reporter: process.env.CI ? ['basic'] : ['verbose'],
+    bail: process.env.CI ? 1 : 0,
     // React 19 and Next.js 15 compatibility
     server: {
       deps: {
-        external: ['next'],
-        inline: ['@testing-library/react']
+        external: ['next', '@supabase/supabase-js'],
+        inline: [
+          '@testing-library/react',
+          '@testing-library/jest-dom',
+          'vitest-canvas-mock'
+        ]
+      }
+    },
+    // Environment setup for React 19
+    poolOptions: {
+      threads: {
+        singleThread: true
       }
     }
   },
@@ -52,13 +74,20 @@ export default defineConfig({
       '@': resolve(fileURLToPath(new URL('./src', import.meta.url)))
     }
   },
-  // ESM compatibility
+  // ESM compatibility for React 19
   define: {
-    'import.meta.vitest': undefined
+    'import.meta.vitest': undefined,
+    'process.env.NODE_ENV': '"test"',
+    global: 'globalThis'
   },
   esbuild: {
     target: 'node20',
     jsx: 'automatic',
-    jsxImportSource: 'react'
+    jsxImportSource: 'react',
+    // React 19 support
+    jsxDev: false,
+    define: {
+      'process.env.NODE_ENV': '"test"'
+    }
   }
 })

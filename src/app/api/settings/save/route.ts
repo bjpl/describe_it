@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { descriptionCache } from "@/lib/cache";
+import { withBasicAuth } from "@/lib/middleware/withAuth";
+import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 
 // Input validation schemas
 const userSettingsSchema = z.object({
@@ -475,11 +477,29 @@ class SettingsService {
 const settingsService = new SettingsService();
 
 // POST endpoint - Save settings
-export async function POST(request: NextRequest) {
+async function handleSettingsSave(request: AuthenticatedRequest) {
   const startTime = performance.now();
+  const authenticatedUserId = request.user?.id;
+  const userTier = request.user?.subscription_status || 'free';
+
+  // Enforce user ID from auth context
+  if (!authenticatedUserId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "User ID required",
+        message: "Authentication required to save settings",
+      },
+      { status: 401 }
+    );
+  }
 
   try {
     const body = await request.json();
+    
+    // Override any userId in the request body with authenticated user ID
+    body.userId = authenticatedUserId;
+    
     const { userId, settings, metadata } = userSettingsSchema.parse(body);
 
     // Validate settings
@@ -563,7 +583,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET endpoint - Retrieve settings
-export async function GET(request: NextRequest) {
+async function handleSettingsGet(request: AuthenticatedRequest) {
   const startTime = performance.now();
 
   try {
@@ -643,7 +663,7 @@ export async function GET(request: NextRequest) {
 }
 
 // DELETE endpoint - Reset settings
-export async function DELETE(request: NextRequest) {
+async function handleSettingsDelete(request: AuthenticatedRequest) {
   const startTime = performance.now();
 
   try {
@@ -698,3 +718,35 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+
+
+// Export authenticated handlers
+export const POST = withBasicAuth(
+  handleSettingsSave,
+  {
+    requiredFeatures: ['settings_save'],
+    errorMessages: {
+      featureRequired: 'Settings management requires a valid subscription. Free tier includes basic settings.',
+    },
+  }
+);
+
+export const GET = withBasicAuth(
+  handleSettingsGet,
+  {
+    requiredFeatures: ['settings_save'],
+    errorMessages: {
+      featureRequired: 'Settings access requires a valid subscription. Free tier includes basic settings access.',
+    },
+  }
+);
+
+export const DELETE = withBasicAuth(
+  handleSettingsDelete,
+  {
+    requiredFeatures: ['settings_save'],
+    errorMessages: {
+      featureRequired: 'Settings deletion requires a valid subscription. Free tier includes basic settings management.',
+    },
+  }
+);

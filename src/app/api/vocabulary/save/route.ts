@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { descriptionCache } from "@/lib/cache";
+import { withBasicAuth } from "@/lib/middleware/withAuth";
+import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 
 // Type definitions from Zod schemas
 type VocabularyItem = z.infer<typeof vocabularySaveSchema>["vocabulary"] & {
@@ -391,11 +393,28 @@ class VocabularyStorage {
 const vocabularyStorage = new VocabularyStorage();
 
 // POST endpoint - Save vocabulary
-export async function POST(request: NextRequest) {
+async function handleVocabularySave(request: AuthenticatedRequest) {
   const startTime = performance.now();
+  const userId = request.user?.id;
+  const userTier = request.user?.subscription_status || 'free';
+
+  // Enforce user ID from auth context
+  if (!userId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "User ID required",
+        message: "Authentication required to save vocabulary",
+      },
+      { status: 401 }
+    );
+  }
 
   try {
     const body = await request.json();
+    
+    // Override any userId in the request body with authenticated user ID
+    body.userId = userId;
 
     // Check if it's bulk save or single save
     if (body.vocabularyItems && Array.isArray(body.vocabularyItems)) {
@@ -507,13 +526,27 @@ export async function POST(request: NextRequest) {
 }
 
 // GET endpoint - Retrieve vocabulary
-export async function GET(request: NextRequest) {
+async function handleVocabularyGet(request: AuthenticatedRequest) {
   const startTime = performance.now();
+  const userId = request.user?.id;
+  const userTier = request.user?.subscription_status || 'free';
+
+  // Enforce user ID from auth context
+  if (!userId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "User ID required",
+        message: "Authentication required to retrieve vocabulary",
+      },
+      { status: 401 }
+    );
+  }
 
   try {
     const { searchParams } = new URL(request.url);
     const filters = vocabularyQuerySchema.parse({
-      userId: searchParams.get("userId") || undefined,
+      userId: userId, // Use authenticated user ID
       collectionName: searchParams.get("collectionName") || undefined,
       category: searchParams.get("category") || undefined,
       difficulty: searchParams.get("difficulty") || undefined,
@@ -597,3 +630,25 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
+// Export authenticated handlers
+export const POST = withBasicAuth(
+  handleVocabularySave,
+  {
+    requiredFeatures: ['vocabulary_save'],
+    errorMessages: {
+      featureRequired: 'Vocabulary saving requires a valid subscription. Free tier includes basic vocabulary saving.',
+    },
+  }
+);
+
+export const GET = withBasicAuth(
+  handleVocabularyGet,
+  {
+    requiredFeatures: ['vocabulary_save'],
+    errorMessages: {
+      featureRequired: 'Vocabulary access requires a valid subscription. Free tier includes basic vocabulary access.',
+    },
+  }
+);

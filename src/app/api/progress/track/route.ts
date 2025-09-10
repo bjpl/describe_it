@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { descriptionCache } from "@/lib/cache";
+import { withBasicAuth } from "@/lib/middleware/withAuth";
+import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 
 // Input validation schemas
 const progressEventSchema = z.object({
@@ -497,11 +499,29 @@ class ProgressTracker {
 const progressTracker = new ProgressTracker();
 
 // POST endpoint - Track progress event
-export async function POST(request: NextRequest) {
+async function handleProgressTrack(request: AuthenticatedRequest) {
   const startTime = performance.now();
+  const authenticatedUserId = request.user?.id;
+  const userTier = request.user?.subscription_status || 'free';
+
+  // Enforce user ID from auth context
+  if (!authenticatedUserId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "User ID required",
+        message: "Authentication required to track progress",
+      },
+      { status: 401 }
+    );
+  }
 
   try {
     const body = await request.json();
+    
+    // Override any userId in the request body with authenticated user ID
+    body.userId = authenticatedUserId;
+    
     const { userId, sessionId, eventType, eventData, timestamp } =
       progressEventSchema.parse(body);
 
@@ -576,13 +596,27 @@ export async function POST(request: NextRequest) {
 }
 
 // GET endpoint - Retrieve progress
-export async function GET(request: NextRequest) {
+async function handleProgressGet(request: AuthenticatedRequest) {
   const startTime = performance.now();
+  const authenticatedUserId = request.user?.id;
+  const userTier = request.user?.subscription_status || 'free';
+
+  // Enforce user ID from auth context
+  if (!authenticatedUserId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "User ID required",
+        message: "Authentication required to retrieve progress",
+      },
+      { status: 401 }
+    );
+  }
 
   try {
     const { searchParams } = new URL(request.url);
     const filters = progressQuerySchema.parse({
-      userId: searchParams.get("userId") || undefined,
+      userId: authenticatedUserId, // Use authenticated user ID
       sessionId: searchParams.get("sessionId") || undefined,
       eventType: searchParams.getAll("eventType"),
       category: searchParams.get("category") || undefined,
@@ -655,3 +689,25 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
+// Export authenticated handlers
+export const POST = withBasicAuth(
+  handleProgressTrack,
+  {
+    requiredFeatures: ['progress_tracking'],
+    errorMessages: {
+      featureRequired: 'Progress tracking requires a valid subscription. Free tier includes basic progress tracking.',
+    },
+  }
+);
+
+export const GET = withBasicAuth(
+  handleProgressGet,
+  {
+    requiredFeatures: ['progress_tracking'],
+    errorMessages: {
+      featureRequired: 'Progress data access requires a valid subscription. Free tier includes basic progress access.',
+    },
+  }
+);

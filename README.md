@@ -56,27 +56,112 @@ npm install
 3. Copy environment variables:
 
 ```bash
-cp .env.example .env.local
+cp .env.local.example .env.local
 ```
 
 4. Configure environment variables in `.env.local`:
 
+Follow the comprehensive setup instructions below to configure all required environment variables.
+
+### 🔧 Environment Configuration
+
+#### Required Environment Variables
+
+**For core functionality, you need these API keys:**
+
+| Service | Variable | Required | Get From |
+|---------|----------|----------|----------|
+| **Supabase** | `NEXT_PUBLIC_SUPABASE_URL` | ✅ | [Supabase Dashboard](https://supabase.com/dashboard) → Project Settings → API |
+| **Supabase** | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | [Supabase Dashboard](https://supabase.com/dashboard) → Project Settings → API |
+| **Supabase** | `SUPABASE_SERVICE_ROLE_KEY` | ✅ | [Supabase Dashboard](https://supabase.com/dashboard) → Project Settings → API |
+| **OpenAI** | `OPENAI_API_KEY` | ✅ | [OpenAI Platform](https://platform.openai.com/api-keys) |
+| **Unsplash** | `NEXT_PUBLIC_UNSPLASH_ACCESS_KEY` | ✅ | [Unsplash Developers](https://unsplash.com/developers) |
+| **Unsplash** | `UNSPLASH_ACCESS_KEY` | ✅ | Same as above (for server-side) |
+
+#### Optional but Recommended
+
+| Service | Variable | Purpose | Get From |
+|---------|----------|---------|----------|
+| **Vercel KV** | `KV_REST_API_URL` | Redis caching | [Vercel Dashboard](https://vercel.com/dashboard/stores) → Storage |
+| **Vercel KV** | `KV_REST_API_TOKEN` | Redis auth | [Vercel Dashboard](https://vercel.com/dashboard/stores) → Storage |
+
+#### Security Configuration (Auto-generated)
+
+Generate these security keys using the Node.js commands provided:
+
+```bash
+# Generate API secret (32 bytes)
+node -e "console.log('API_SECRET_KEY=' + require('crypto').randomBytes(32).toString('hex'))"
+
+# Generate JWT secret (32 bytes)
+node -e "console.log('JWT_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
+
+# Generate session secret (16 bytes)
+node -e "console.log('SESSION_SECRET=' + require('crypto').randomBytes(16).toString('hex'))"
+```
+
+#### Quick Setup Example
+
+Create your `.env.local` file with the following structure:
+
+```bash
+# Copy from .env.local.example
+cp .env.local.example .env.local
+```
+
+Then edit `.env.local` with your actual values:
+
 ```env
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+# Required API Keys
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+OPENAI_API_KEY=sk-proj-...
+NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=your-unsplash-access-key
+UNSPLASH_ACCESS_KEY=your-unsplash-access-key
 
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key
+# Security Keys (generate with commands above)
+API_SECRET_KEY=your-generated-32-byte-hex-key
+JWT_SECRET=your-generated-32-byte-hex-key
+SESSION_SECRET=your-generated-16-byte-hex-key
 
-# Unsplash
-UNSPLASH_ACCESS_KEY=your_unsplash_access_key
+# Optional: Vercel KV (for better caching)
+KV_REST_API_URL=https://your-kv-instance.kv.vercel-storage.com
+KV_REST_API_TOKEN=your-kv-token
+```
 
-# Vercel KV (will be auto-configured on Vercel)
-KV_URL=your_kv_url
-KV_REST_API_URL=your_kv_rest_api_url
-KV_REST_API_TOKEN=your_kv_rest_api_token
+#### Environment Files Overview
+
+The project uses multiple environment files for different purposes:
+
+- **`.env.local.example`** - Template with all variables and documentation
+- **`.env.local`** - Your local development configuration (not committed)
+- **`.env.production`** - Production configuration (not committed)
+- **`.env.example`** - Comprehensive template with all options
+
+#### Typed Environment Access
+
+The project includes typed environment configuration at `src/lib/config/env.ts` which:
+
+- ✅ Validates all required variables at startup
+- ✅ Provides TypeScript types for all environment variables
+- ✅ Separates client-side and server-side variables for security
+- ✅ Includes helper functions for feature flags and arrays
+- ✅ Prevents accidental exposure of secrets to the client
+
+Usage example:
+
+```typescript
+import { env, clientEnv, serverEnv, getFeatureFlag } from '@/lib/config/env';
+
+// Client-side (safe to use anywhere)
+const appUrl = clientEnv.NEXT_PUBLIC_APP_URL;
+
+// Server-side only (API routes, server components)
+const openaiKey = serverEnv.OPENAI_API_KEY;
+
+// Feature flags
+const isImageSearchEnabled = getFeatureFlag('ENABLE_IMAGE_SEARCH');
 ```
 
 5. Run database migrations:

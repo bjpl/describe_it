@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { descriptionCache } from "@/lib/cache";
+import { withPremiumAuth } from "@/lib/middleware/withAuth";
+import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 
 // Input validation schema
 const exportRequestSchema = z.object({
@@ -398,11 +400,29 @@ class ExportService {
 const exportService = new ExportService();
 
 // POST endpoint - Generate export
-export async function POST(request: NextRequest) {
+async function handleExportGenerate(request: AuthenticatedRequest) {
   const startTime = performance.now();
+  const authenticatedUserId = request.user?.id;
+  const userTier = request.user?.subscription_status || 'free';
+
+  // Enforce user ID from auth context
+  if (!authenticatedUserId) {
+    return NextResponse.json(
+      {
+        success: false,
+        error: "User ID required",
+        message: "Authentication required to generate exports",
+      },
+      { status: 401 }
+    );
+  }
 
   try {
     const body = await request.json();
+    
+    // Override any userId in the request body with authenticated user ID
+    body.userId = authenticatedUserId;
+    
     const { userId, exportType, contentType, filters, formatting } =
       exportRequestSchema.parse(body);
 
@@ -506,7 +526,7 @@ export async function POST(request: NextRequest) {
 }
 
 // GET endpoint - Download export file
-export async function GET(request: NextRequest) {
+async function handleExportDownload(request: AuthenticatedRequest) {
   const { searchParams } = new URL(request.url);
   const filename = searchParams.get("filename");
   const format = searchParams.get("format") || "attachment";
@@ -552,3 +572,27 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+
+// Export authenticated handlers - Premium features
+export const POST = withPremiumAuth(
+  handleExportGenerate,
+  {
+    requiredFeatures: ['all_exports'],
+    errorMessages: {
+      featureRequired: 'Advanced export generation requires a premium subscription. Upgrade to access PDF, Anki, and bulk export features.',
+      tierRequired: 'Export generation is a premium feature. Please upgrade your subscription.',
+    },
+  }
+);
+
+export const GET = withPremiumAuth(
+  handleExportDownload,
+  {
+    requiredFeatures: ['all_exports'],
+    errorMessages: {
+      featureRequired: 'Export download requires a premium subscription. Upgrade to access your generated exports.',
+      tierRequired: 'Export download is a premium feature. Please upgrade your subscription.',
+    },
+  }
+);

@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { openAIService } from "@/lib/api/openai";
 import { withAPIMiddleware } from "@/lib/middleware/api-middleware";
+import { withBasicAuth } from "@/lib/middleware/withAuth";
+import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 import { 
   descriptionGenerateSchema,
   validateRequestSize,
@@ -25,15 +27,25 @@ const securityHeaders = {
   "Content-Type": "application/json",
 };
 
+/**
+ * CORS Preflight Handler
+ * 
+ * Handles CORS preflight requests for description generation endpoint.
+ * 
+ * @param request - The incoming preflight request
+ * @returns NextResponse with CORS headers
+ */
 export async function OPTIONS(request: NextRequest) {
   // Import here to avoid circular dependency
   const { handleCORSPreflight } = await import("@/lib/middleware/api-middleware");
   return handleCORSPreflight(request);
 }
 
-async function handleDescriptionGenerate(request: NextRequest): Promise<NextResponse> {
+async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise<NextResponse> {
   const startTime = performance.now();
   const requestId = crypto.randomUUID();
+  const userId = request.user?.id;
+  const userTier = request.user?.subscription_status || 'free';
 
   try {
     // Security validation
@@ -141,6 +153,8 @@ async function handleDescriptionGenerate(request: NextRequest): Promise<NextResp
         responseTime: `${responseTime.toFixed(2)}ms`,
         timestamp: new Date().toISOString(),
         requestId,
+        userId,
+        userTier,
         demoMode: !openAIService.isConfiguredSecurely(),
         version: "2.0.0",
       },
@@ -238,7 +252,7 @@ async function handleDescriptionGenerate(request: NextRequest): Promise<NextResp
   }
 }
 
-async function handleHealthCheck(request: NextRequest): Promise<NextResponse> {
+async function handleHealthCheck(request: AuthenticatedRequest): Promise<NextResponse> {
   const requestId = crypto.randomUUID();
   
   return NextResponse.json(
@@ -276,13 +290,29 @@ async function handleHealthCheck(request: NextRequest): Promise<NextResponse> {
   );
 }
 
-// Export wrapped handlers
-export const POST = withAPIMiddleware(
-  "/api/descriptions/generate",
-  handleDescriptionGenerate
+// Export wrapped handlers with authentication
+export const POST = withBasicAuth(
+  (request: AuthenticatedRequest) => 
+    withAPIMiddleware(
+      "/api/descriptions/generate",
+      handleDescriptionGenerate
+    )(request as NextRequest),
+  {
+    requiredFeatures: ['basic_descriptions'],
+    errorMessages: {
+      featureRequired: 'Description generation requires a valid subscription. Free tier includes basic descriptions.',
+    },
+  }
 );
 
-export const GET = withAPIMiddleware(
-  "/api/descriptions/generate",
-  handleHealthCheck
+export const GET = withBasicAuth(
+  (request: AuthenticatedRequest) => 
+    withAPIMiddleware(
+      "/api/descriptions/generate",
+      handleHealthCheck
+    )(request as NextRequest),
+  {
+    allowGuest: true,
+    required: false,
+  }
 );
