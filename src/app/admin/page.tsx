@@ -1,9 +1,9 @@
+'use client';
+
 /**
  * Admin Dashboard - Monitoring and Analytics Overview
  * Provides comprehensive system monitoring and user analytics
  */
-
-'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
