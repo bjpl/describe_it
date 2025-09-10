@@ -21,9 +21,26 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
     setError(null);
 
     try {
-      const response = await fetch(
-        `/api/images/search?query=${encodeURIComponent(query)}&per_page=12`,
-      );
+      // Build URL with query parameters
+      const url = new URL('/api/images/search', window.location.origin);
+      url.searchParams.set('query', query);
+      url.searchParams.set('per_page', '12');
+      
+      // Add API key from localStorage if available
+      try {
+        const settingsStr = localStorage.getItem('app-settings');
+        if (settingsStr) {
+          const settings = JSON.parse(settingsStr);
+          if (settings.data?.apiKeys?.unsplash) {
+            url.searchParams.set('api_key', settings.data.apiKeys.unsplash);
+            console.log('[ImageSearch] Using API key from settings');
+          }
+        }
+      } catch (e) {
+        console.warn('[ImageSearch] Could not retrieve API key from settings:', e);
+      }
+
+      const response = await fetch(url.toString());
       const data = await response.json();
 
       // Check if we have images directly in the response
