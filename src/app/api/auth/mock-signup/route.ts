@@ -16,21 +16,29 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // For testing: just return success
-    // In a real app, you'd save to a database here
+    // For testing: return success with auto-confirmed account
+    // This is mock data - not saved to any database
+    
+    console.log('[MockAuth] Creating mock user for:', email);
     
     return NextResponse.json({
       success: true,
-      message: 'Mock signup successful! (Not actually saved)',
+      message: 'Account created successfully! (Mock mode - not saved to database)',
       user: {
         id: 'mock-' + Date.now(),
         email: email,
-        emailConfirmed: false
+        email_confirmed_at: new Date().toISOString(), // Auto-confirmed for mock
+        emailConfirmed: true
       },
       session: {
         access_token: 'mock-token-' + Date.now(),
         refresh_token: 'mock-refresh-' + Date.now(),
-        expires_at: Date.now() + 3600000 // 1 hour
+        expires_at: Date.now() + 3600000, // 1 hour
+        user: {
+          id: 'mock-' + Date.now(),
+          email: email,
+          email_confirmed_at: new Date().toISOString()
+        }
       }
     });
     

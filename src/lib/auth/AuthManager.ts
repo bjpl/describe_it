@@ -208,12 +208,20 @@ class AuthManager {
       });
 
       if (data.user) {
-        // Create user profile with default settings
-        await this.createUserProfile(data.user.id, {
-          email,
-          full_name: metadata?.full_name,
-          username: metadata?.username
-        });
+        // For mock auth, set the user immediately
+        if (data.user.id?.startsWith('mock-')) {
+          console.log('[AuthManager] Mock user created, setting session');
+          this.currentUser = data.user as any;
+          this.currentSession = data.session as any;
+          this.notifyListeners();
+        } else {
+          // Real auth - create user profile
+          await this.createUserProfile(data.user.id, {
+            email,
+            full_name: metadata?.full_name,
+            username: metadata?.username
+          });
+        }
       }
 
       return { success: true };
