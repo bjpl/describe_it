@@ -1,14 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
-import { ErrorBoundary } from "@/providers/ErrorBoundary";
-import { AuthProvider } from "@/providers/AuthProvider";
-import { ProductionDebugger } from "@/components/Debug/ProductionDebugger";
-import { WebVitalsMonitor } from "@/components/Performance/WebVitalsMonitor";
-import { PerformanceDashboard } from "@/components/Performance/PerformanceDashboard";
-import { SentryErrorBoundary } from "@/lib/monitoring/error-boundary";
-import { initializeAnalytics } from "@/lib/analytics";
+import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -47,14 +40,6 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Initialize analytics on app start
-  if (typeof window !== 'undefined') {
-    initializeAnalytics({
-      enableConsoleLogging: process.env.NODE_ENV === 'development',
-      enableLocalStorage: true,
-    });
-  }
-
   return (
     <html lang="en">
       <head>
@@ -77,20 +62,9 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
-        <SentryErrorBoundary level="page" showDetails={process.env.NODE_ENV === 'development'}>
-          <ErrorBoundary>
-            <AuthProvider>
-              <ReactQueryProvider>{children}</ReactQueryProvider>
-            </AuthProvider>
-            <ProductionDebugger />
-            {process.env.NODE_ENV === 'development' && (
-              <>
-                <WebVitalsMonitor />
-                <PerformanceDashboard />
-              </>
-            )}
-          </ErrorBoundary>
-        </SentryErrorBoundary>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

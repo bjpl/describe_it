@@ -3,7 +3,7 @@
  * Handles user authentication, API key management, and data isolation
  */
 
-import { supabase } from '../supabase';
+import { supabase } from '../supabase/client';
 import { hybridStorage } from '../storage/HybridStorageManager';
 import { logger } from '../logger';
 import type { User, Session } from '@supabase/supabase-js';
