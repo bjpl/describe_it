@@ -149,11 +149,5 @@
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     }
-  ],
-  "analytics": {
-    "enable": true
-  },
-  "speedInsights": {
-    "enable": true
-  }
+  ]
 }
