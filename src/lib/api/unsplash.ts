@@ -15,6 +15,7 @@ import { apiKeyProvider } from "./keyProvider";
 class UnsplashService {
   private client: AxiosInstance | null = null;
   private accessKey: string = '';
+  private isDemo: boolean = false;
   private rateLimitInfo: RateLimitInfo = {
     remaining: 50,
     reset: Date.now() + 3600000,
@@ -49,11 +50,13 @@ class UnsplashService {
       if (config.isDemo || !config.isValid) {
         console.warn("Unsplash API key not configured or invalid. Using demo mode.");
         this.accessKey = "demo";
+        this.isDemo = true;
         this.client = null;
         this.initializeDemoMode();
         return;
       }
 
+      this.isDemo = false;
       this.initializeClient();
     } catch (error) {
       console.warn("[UnsplashService] KeyProvider failed, falling back to demo mode:", error);
@@ -69,8 +72,10 @@ class UnsplashService {
   public useTemporaryKey(apiKey: string): void {
     if (apiKey && apiKey.trim()) {
       this.accessKey = apiKey.trim();
+      this.isDemo = false; // Explicitly set to non-demo mode
+      this.isDemo = false;
       this.initializeClient();
-      console.log("[UnsplashService] Using temporary API key");
+      console.log("[UnsplashService] Using temporary API key, demo mode:", this.isDemo);
     }
   }
 
@@ -85,7 +90,7 @@ class UnsplashService {
 
     this.client = axios.create({
       baseURL: "https://api.unsplash.com",
-      timeout: 2500, // Aggressive timeout for Vercel serverless (2.5s)
+      timeout: 5000, // 5 second timeout for real API calls
       headers: {
         "Accept-Version": "v1",
         Authorization: `Client-ID ${this.accessKey}`,
@@ -124,7 +129,8 @@ class UnsplashService {
               this.accessKey = "demo";
               this.initializeDemoMode();
             } else {
-              this.initializeClient();
+              this.isDemo = false;
+      this.initializeClient();
             }
           } catch (error) {
             console.warn("[UnsplashService] Failed to reinitialize after key update:", error);
@@ -460,12 +466,13 @@ class UnsplashService {
     console.log("[UnsplashService] searchImages called with:", {
       query: params.query,
       page: params.page,
-      isDemo: this.accessKey === "demo",
+      isDemo: this.isDemo,
+      accessKey: this.accessKey?.substring(0, 10) + '...',
       hasClient: !!this.client
     });
 
-    // Return demo data if no API key
-    if (this.accessKey === "demo") {
+    // Return demo data if no API key or explicitly in demo mode
+    if (this.accessKey === "demo" || this.isDemo) {
       console.log("[UnsplashService] Using demo mode - generating demo images");
       return this.generateDemoImages(params);
     }
@@ -496,7 +503,7 @@ class UnsplashService {
       const timeoutId = setTimeout(() => {
         controller.abort();
         console.warn('[UnsplashService] Request timeout - falling back to demo mode');
-      }, 2000); // 2 second hard limit
+      }, 4000); // 4 second limit for real API calls
       
       try {
         const response = await this.client.get<UnsplashSearchResponse>(
