@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { ErrorBoundary } from "@/providers/ErrorBoundary";
+import { AuthProvider } from "@/providers/AuthProvider";
 import { ProductionDebugger } from "@/components/Debug/ProductionDebugger";
 import { WebVitalsMonitor } from "@/components/Performance/WebVitalsMonitor";
 import { PerformanceDashboard } from "@/components/Performance/PerformanceDashboard";
@@ -67,7 +68,9 @@ export default function RootLayout({
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
         <ErrorBoundary>
-          <ReactQueryProvider>{children}</ReactQueryProvider>
+          <AuthProvider>
+            <ReactQueryProvider>{children}</ReactQueryProvider>
+          </AuthProvider>
           <ProductionDebugger />
           {process.env.NODE_ENV === 'development' && (
             <>

@@ -18,6 +18,7 @@ import { useDescriptions } from '@/hooks/useDescriptions';
 import { LoadingSpinner } from '@/components/Loading/LoadingSpinner';
 import { ErrorBoundary } from '@/providers/ErrorBoundary';
 import { DescriptionStyle } from '@/types';
+import { UserMenu } from '@/components/Auth/UserMenu';
 
 // Lazy load main application components with error handling
 const LazyImageSearch = React.lazy(() => 
@@ -255,6 +256,9 @@ const HomePageBase: React.FC = () => {
                 >
                   <Settings className="w-5 h-5" />
                 </button>
+                
+                {/* User Menu */}
+                <UserMenu />
               </div>
             </div>
           </div>

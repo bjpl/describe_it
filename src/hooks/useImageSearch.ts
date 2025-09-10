@@ -143,32 +143,55 @@ export function useImageSearch() {
       url.searchParams.set("page", page.toString());
       url.searchParams.set("per_page", "20");
       
-      // Add API key from settings if available
+      // Add API key from authenticated user or settings
       try {
-        if (typeof window !== 'undefined' && window.localStorage) {
-          // Try multiple possible storage locations
-          const settingsStr = localStorage.getItem('app-settings');
-          const describeItSettingsStr = localStorage.getItem('describe-it-settings');
+        let apiKey = null;
+        
+        // First, try to get API key from authenticated user via AuthManager
+        if (typeof window !== 'undefined') {
+          // Import AuthManager dynamically to avoid SSR issues
+          const { authManager } = await import('@/lib/auth/AuthManager');
           
-          let apiKey = null;
-          
-          // Check app-settings first
-          if (settingsStr) {
-            const settings = JSON.parse(settingsStr);
-            // Check both possible paths
-            apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
+          // Check if user is authenticated and has API keys
+          const authState = authManager.getAuthState();
+          if (authState.isAuthenticated) {
+            const userApiKeys = await authManager.getApiKeys();
+            if (userApiKeys?.unsplash) {
+              apiKey = userApiKeys.unsplash;
+              console.log('[useImageSearch] Using API key from authenticated user');
+            }
           }
           
-          // Check describe-it-settings if not found
-          if (!apiKey && describeItSettingsStr) {
-            const settings = JSON.parse(describeItSettingsStr);
-            apiKey = settings.apiKeys?.unsplash;
+          // Fallback to localStorage if not authenticated
+          if (!apiKey && window.localStorage) {
+            // Try multiple possible storage locations
+            const settingsStr = localStorage.getItem('app-settings');
+            const describeItSettingsStr = localStorage.getItem('describe-it-settings');
+            
+            // Check app-settings first
+            if (settingsStr) {
+              const settings = JSON.parse(settingsStr);
+              // Check both possible paths
+              apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
+            }
+            
+            // Check describe-it-settings if not found
+            if (!apiKey && describeItSettingsStr) {
+              const settings = JSON.parse(describeItSettingsStr);
+              apiKey = settings.apiKeys?.unsplash;
+            }
+            
+            if (apiKey) {
+              console.log('[useImageSearch] Using API key from localStorage');
+            }
           }
-          
-          if (apiKey) {
-            url.searchParams.set("api_key", apiKey);
-            console.log('[useImageSearch] Found and using API key');
-          }
+        }
+        
+        if (apiKey) {
+          url.searchParams.set("api_key", apiKey);
+          console.log('[useImageSearch] Found and using API key');
+        } else {
+          console.log('[useImageSearch] No API key found - will use demo mode');
         }
       } catch (e) {
         console.warn('[useImageSearch] Could not retrieve API key:', e);

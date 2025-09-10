@@ -73,7 +73,6 @@ class UnsplashService {
     if (apiKey && apiKey.trim()) {
       this.accessKey = apiKey.trim();
       this.isDemo = false; // Explicitly set to non-demo mode
-      this.isDemo = false;
       this.initializeClient();
       console.log("[UnsplashService] Using temporary API key, demo mode:", this.isDemo);
     }
