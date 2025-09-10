@@ -134,14 +134,47 @@ class AuthManager {
         hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       });
 
-      const { data, error } = await client.auth.signUp({
-        email,
-        password,
-        options: {
-          data: metadata,
-          emailRedirectTo: `${window.location.origin}/auth/callback`
+      // Try direct Supabase signup first
+      let data: any;
+      let error: any;
+      
+      try {
+        const result = await client.auth.signUp({
+          email,
+          password,
+          options: {
+            data: metadata,
+            emailRedirectTo: `${window.location.origin}/auth/callback`
+          }
+        });
+        data = result.data;
+        error = result.error;
+      } catch (corsError: any) {
+        // If CORS fails, use proxy endpoint
+        console.log('[AuthManager] CORS error detected, using proxy endpoint');
+        
+        const response = await fetch('/api/auth/signup', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, metadata })
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          error = { message: result.error, status: response.status };
+        } else {
+          data = { user: result.user, session: result.session };
+          
+          // If we got a session, set it in the client
+          if (result.session) {
+            await client.auth.setSession({
+              access_token: result.session.access_token,
+              refresh_token: result.session.refresh_token
+            });
+          }
         }
-      });
+      }
 
       if (error) {
         console.error('[AuthManager] Signup error:', {
