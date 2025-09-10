@@ -8,7 +8,7 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { captureError, Sentry } from './sentry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/ui/Button';
 import { AlertTriangle, RefreshCw, Bug } from 'lucide-react';
 
 interface Props {
