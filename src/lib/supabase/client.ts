@@ -10,34 +10,47 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Browser client for client-side operations with SSR support
-export const createBrowserSupabaseClient = () =>
-  createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true,
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10,
-      },
-    },
-  })
+// Singleton instance to prevent multiple clients
+let browserClient: ReturnType<typeof createBrowserClient<Database>> | null = null;
+let legacyClient: ReturnType<typeof createClient<Database>> | null = null;
 
-// Legacy client for backwards compatibility
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true,
-    detectSessionInUrl: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
-})
+// Browser client for client-side operations with SSR support
+export const createBrowserSupabaseClient = () => {
+  if (!browserClient) {
+    browserClient = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    });
+  }
+  return browserClient;
+}
+
+// Legacy client for backwards compatibility (singleton)
+export const supabase = (() => {
+  if (!legacyClient) {
+    legacyClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+      realtime: {
+        params: {
+          eventsPerSecond: 10,
+        },
+      },
+    });
+  }
+  return legacyClient;
+})()
 
 // Auth state management helpers
 export const authHelpers = {
