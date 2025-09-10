@@ -14,7 +14,7 @@ import { apiKeyProvider } from "./keyProvider";
 
 class UnsplashService {
   private client: AxiosInstance | null = null;
-  private accessKey: string;
+  private accessKey: string = '';
   private rateLimitInfo: RateLimitInfo = {
     remaining: 50,
     reset: Date.now() + 3600000,
@@ -34,26 +34,33 @@ class UnsplashService {
    * Initialize service with current key from provider
    */
   private initializeWithKeyProvider(): void {
-    const config = apiKeyProvider.getServiceConfig('unsplash');
-    this.accessKey = config.apiKey;
+    try {
+      const config = apiKeyProvider.getServiceConfig('unsplash');
+      this.accessKey = config.apiKey;
 
-    console.log("[UnsplashService] Initializing with keyProvider:", {
-      hasKey: !!this.accessKey,
-      accessKeyLength: this.accessKey.length,
-      isDemo: config.isDemo,
-      source: config.source,
-      isValid: config.isValid,
-    });
+      console.log("[UnsplashService] Initializing with keyProvider:", {
+        hasKey: !!this.accessKey,
+        accessKeyLength: this.accessKey.length,
+        isDemo: config.isDemo,
+        source: config.source,
+        isValid: config.isValid,
+      });
 
-    if (config.isDemo || !config.isValid) {
-      console.warn("Unsplash API key not configured or invalid. Using demo mode.");
+      if (config.isDemo || !config.isValid) {
+        console.warn("Unsplash API key not configured or invalid. Using demo mode.");
+        this.accessKey = "demo";
+        this.client = null;
+        this.initializeDemoMode();
+        return;
+      }
+
+      this.initializeClient();
+    } catch (error) {
+      console.warn("[UnsplashService] KeyProvider failed, falling back to demo mode:", error);
       this.accessKey = "demo";
       this.client = null;
       this.initializeDemoMode();
-      return;
     }
-
-    this.initializeClient();
   }
 
   /**
@@ -78,7 +85,7 @@ class UnsplashService {
 
     this.client = axios.create({
       baseURL: "https://api.unsplash.com",
-      timeout: 30000,
+      timeout: 7000, // Reduced for Vercel function limits
       headers: {
         "Accept-Version": "v1",
         Authorization: `Client-ID ${this.accessKey}`,
@@ -99,26 +106,36 @@ class UnsplashService {
    * Setup listener for key updates from keyProvider
    */
   private setupKeyUpdateListener(): void {
-    this.keyUpdateUnsubscribe = apiKeyProvider.addListener((keys) => {
-      const newKey = keys.unsplash;
-      
-      if (newKey !== this.accessKey) {
-        console.log("[UnsplashService] Key updated, reinitializing service");
-        this.accessKey = newKey;
+    try {
+      this.keyUpdateUnsubscribe = apiKeyProvider.addListener((keys) => {
+        const newKey = keys.unsplash;
         
-        // Clear any existing client
-        this.client = null;
-        
-        // Reinitialize with new key
-        const config = apiKeyProvider.getServiceConfig('unsplash');
-        if (config.isDemo || !config.isValid) {
-          this.accessKey = "demo";
-          this.initializeDemoMode();
-        } else {
-          this.initializeClient();
+        if (newKey !== this.accessKey) {
+          console.log("[UnsplashService] Key updated, reinitializing service");
+          this.accessKey = newKey;
+          
+          // Clear any existing client
+          this.client = null;
+          
+          // Reinitialize with new key
+          try {
+            const config = apiKeyProvider.getServiceConfig('unsplash');
+            if (config.isDemo || !config.isValid) {
+              this.accessKey = "demo";
+              this.initializeDemoMode();
+            } else {
+              this.initializeClient();
+            }
+          } catch (error) {
+            console.warn("[UnsplashService] Failed to reinitialize after key update:", error);
+            this.accessKey = "demo";
+            this.initializeDemoMode();
+          }
         }
-      }
-    });
+      });
+    } catch (error) {
+      console.warn("[UnsplashService] Failed to setup key update listener:", error);
+    }
   }
 
   /**

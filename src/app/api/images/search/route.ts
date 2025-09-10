@@ -2,74 +2,21 @@ import { NextRequest, NextResponse } from "next/server";
 import { unsplashService } from "@/lib/api/unsplash";
 import { apiKeyProvider } from "@/lib/api/keyProvider";
 import { z } from "zod";
-import { getCorsHeaders as getStandardCorsHeaders, createCorsPreflightResponse } from "@/lib/utils/cors";
+import { getCorsHeaders, createCorsPreflightResponse, validateCorsRequest } from "@/lib/utils/cors";
 
-// Legacy CORS headers function - will be replaced
-function getLegacyCorsHeaders(request: NextRequest) {
-  const origin = request.headers.get('origin');
-  const isDevelopment = process.env.NODE_ENV === 'development';
-  
-  // Define allowed origins based on environment
-  let allowedOrigins: string[];
-  if (isDevelopment) {
-    allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000'];
-  } else {
-    // Production origins with Vercel deployment support
-    const envOrigins = process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) || [];
-    allowedOrigins = [
-      'https://describe-it-lovat.vercel.app',
-      ...envOrigins
-    ];
-  }
-  
-  const corsHeaders: Record<string, string> = {
-    "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization, If-None-Match, X-Requested-With",
-    "Access-Control-Max-Age": "86400",
-    "Vary": "Origin"
-  };
-
-  // Enhanced origin matching with wildcard support for Vercel deployments
-  function isOriginAllowed(requestOrigin: string, allowed: string[]): boolean {
-    return allowed.some(allowedOrigin => {
-      // Exact match
-      if (allowedOrigin === requestOrigin) return true;
-      
-      // Wildcard support for Vercel preview deployments
-      if (allowedOrigin.includes('*')) {
-        const pattern = allowedOrigin.replace(/\*/g, '[^.]*');
-        const regex = new RegExp(`^${pattern}$`);
-        return regex.test(requestOrigin);
-      }
-      
-      // Support for Vercel preview deployments (describe-*.vercel.app)
-      if (requestOrigin.match(/^https:\/\/describe-[a-zA-Z0-9-]+\.vercel\.app$/)) {
-        return allowedOrigins.includes('https://describe-*.vercel.app') ||
-               allowedOrigins.includes('https://*.vercel.app');
-      }
-      
-      return false;
-    });
-  }
-
-  // Set origin based on security policy
-  if (isDevelopment) {
-    // Allow localhost in development
-    corsHeaders["Access-Control-Allow-Origin"] = origin && origin.includes('localhost') ? origin : "http://localhost:3000";
-  } else if (origin && isOriginAllowed(origin, allowedOrigins)) {
-    // Allow specific origins and Vercel preview deployments in production
-    corsHeaders["Access-Control-Allow-Origin"] = origin;
-    corsHeaders["Access-Control-Allow-Credentials"] = "true";
-  } else if (!origin) {
-    // Allow same-origin requests
-    corsHeaders["Access-Control-Allow-Origin"] = allowedOrigins[0] || "null";
-  } else {
-    // Reject unauthorized origins
-    corsHeaders["Access-Control-Allow-Origin"] = "null";
-  }
-
-  return corsHeaders;
-}
+// Enhanced security configuration
+const ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS'] as const;
+const ALLOWED_HEADERS = [
+  'Content-Type', 
+  'Authorization', 
+  'If-None-Match', 
+  'X-Requested-With',
+  'Accept',
+  'Origin',
+  'Cache-Control',
+  'X-API-Key'
+] as const;
+const MAX_AGE = 86400; // 24 hours
 
 // Force dynamic rendering to fix build error
 export const dynamic = "force-dynamic";
@@ -118,41 +65,85 @@ function cleanCache() {
   }
 }
 
-// Handle CORS preflight requests
+// Enhanced CORS preflight handler with comprehensive security
 export async function OPTIONS(request: NextRequest) {
   const origin = request.headers.get('origin');
+  const requestedMethod = request.headers.get('access-control-request-method');
+  const requestedHeaders = request.headers.get('access-control-request-headers');
   
-  // Log CORS preflight for security monitoring
+  // Enhanced security logging for CORS preflight
   console.log('[SECURITY] CORS preflight request:', {
     origin,
-    method: request.headers.get('access-control-request-method'),
-    headers: request.headers.get('access-control-request-headers'),
-    timestamp: new Date().toISOString()
+    requestedMethod,
+    requestedHeaders,
+    userAgent: request.headers.get('user-agent'),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV
   });
 
-  // Use centralized CORS utility
+  // Validate the CORS request
+  const { isValid, headers } = validateCorsRequest(request);
+  
+  if (!isValid && origin) {
+    console.warn('[SECURITY] CORS preflight rejected:', {
+      origin,
+      reason: 'Origin not allowed',
+      timestamp: new Date().toISOString()
+    });
+    
+    return new NextResponse(null, {
+      status: 403,
+      headers: {
+        'X-CORS-Error': 'Origin not allowed',
+        'X-Content-Type-Options': 'nosniff'
+      }
+    });
+  }
+
+  // Create preflight response with enhanced config
   const corsResponse = createCorsPreflightResponse(origin, {
-    allowedMethods: ['GET', 'HEAD', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'If-None-Match', 'X-Requested-With'],
-    maxAge: 86400
+    allowedMethods: [...ALLOWED_METHODS],
+    allowedHeaders: [...ALLOWED_HEADERS],
+    maxAge: MAX_AGE,
+    allowCredentials: true
   });
 
-  // Add additional security headers
-  corsResponse.headers.set("X-Security-Policy", "CORS-Enabled");
-  corsResponse.headers.set("X-Content-Type-Options", "nosniff");
+  // Add comprehensive security headers
+  corsResponse.headers.set('X-Security-Policy', 'CORS-Enabled');
+  corsResponse.headers.set('X-Content-Type-Options', 'nosniff');
+  corsResponse.headers.set('X-Frame-Options', 'DENY');
+  corsResponse.headers.set('X-XSS-Protection', '1; mode=block');
+  corsResponse.headers.set('Referrer-Policy', 'no-referrer');
+  corsResponse.headers.set('Access-Control-Expose-Headers', 'X-Cache, X-Response-Time, X-Rate-Limit-Remaining, ETag');
 
   return corsResponse;
 }
 
-// Add prefetch endpoint for critical images
+// Enhanced HEAD endpoint for image prefetch with CORS validation
 export async function HEAD(request: NextRequest) {
-  const corsHeaders = getStandardCorsHeaders(request.headers.get('origin'));
+  const origin = request.headers.get('origin');
   
-  // Return headers only for prefetch requests
+  // Validate CORS for HEAD requests
+  const { isValid, headers: corsHeaders } = validateCorsRequest(request);
+  
+  if (!isValid && origin) {
+    return new NextResponse(null, {
+      status: 403,
+      headers: {
+        'X-CORS-Error': 'Origin not allowed',
+        'X-Content-Type-Options': 'nosniff'
+      }
+    });
+  }
+  
+  // Return headers for prefetch requests with security headers
   return new NextResponse(null, {
     headers: {
       ...corsHeaders,
-      "Cache-Control": "public, max-age=300",
+      'Cache-Control': 'public, max-age=300, stale-while-revalidate=600',
+      'X-Content-Type-Options': 'nosniff',
+      'X-Frame-Options': 'DENY',
+      'X-Prefetch-Enabled': 'true'
     },
   });
 }
@@ -252,7 +243,7 @@ export async function GET(request: NextRequest) {
         hasNextPage: params.page < (cached.data.totalPages || 1),
       };
 
-      const corsHeaders = getStandardCorsHeaders(request.headers.get('origin'));
+      const corsHeaders = getCorsHeaders(request.headers.get('origin'));
     return NextResponse.json(transformedCached, {
         headers: {
           ...corsHeaders,
@@ -271,7 +262,7 @@ export async function GET(request: NextRequest) {
     // Add timeout to prevent infinite waiting
     const searchPromise = unsplashService.searchImages(params as any);
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Search timeout')), 15000); // 15 second timeout
+      setTimeout(() => reject(new Error('Search timeout')), 8000); // 8 second timeout for Vercel
     });
     
     const results = await Promise.race([searchPromise, timeoutPromise]);
@@ -302,7 +293,7 @@ export async function GET(request: NextRequest) {
       hasNextPage: params.page < (results.totalPages || 1),
     };
 
-    const corsHeaders = getStandardCorsHeaders(request.headers.get('origin'));
+    const corsHeaders = getCorsHeaders(request.headers.get('origin'));
     return NextResponse.json(transformedResults, {
       headers: {
         ...corsHeaders,
@@ -320,7 +311,7 @@ export async function GET(request: NextRequest) {
     const responseTime = performance.now() - startTime;
 
     if (error instanceof z.ZodError) {
-      const corsHeaders = getStandardCorsHeaders(request.headers.get('origin'));
+      const corsHeaders = getCorsHeaders(request.headers.get('origin'));
       return NextResponse.json(
         {
           error: "Invalid parameters",
@@ -355,7 +346,7 @@ export async function GET(request: NextRequest) {
         hasNextPage: (searchParams.page || 1) < (cached.data.totalPages || 1),
       };
 
-      const corsHeaders = getStandardCorsHeaders(request.headers.get('origin'));
+      const corsHeaders = getCorsHeaders(request.headers.get('origin'));
       return NextResponse.json(transformedStale, {
         headers: {
           ...corsHeaders,
@@ -397,7 +388,7 @@ export async function GET(request: NextRequest) {
       hasNextPage: false,
     };
 
-    const corsHeaders = getStandardCorsHeaders(request.headers.get('origin'));
+    const corsHeaders = getCorsHeaders(request.headers.get('origin'));
     return NextResponse.json(demoFallback, {
       headers: {
         ...corsHeaders,
