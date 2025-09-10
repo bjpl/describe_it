@@ -1,5 +1,43 @@
 import { createClient, SupabaseClient } from "@supabase/supabase-js";
-import { cacheManager } from "@/components/Performance/AdvancedCaching";
+
+// Simple server-side cache
+const serverCache = new Map<string, { data: any; timestamp: number }>();
+const cacheStats = { hits: 0, misses: 0, size: 0 };
+
+const simpleCache = {
+  get: (namespace: string, key: string) => {
+    const fullKey = `${namespace}:${key}`;
+    const cached = serverCache.get(fullKey);
+    if (cached && Date.now() - cached.timestamp < 5 * 60 * 1000) {
+      cacheStats.hits++;
+      return cached.data;
+    }
+    cacheStats.misses++;
+    serverCache.delete(fullKey);
+    return null;
+  },
+  set: (namespace: string, key: string, value: any, _ttl?: number) => {
+    const fullKey = `${namespace}:${key}`;
+    serverCache.set(fullKey, { data: value, timestamp: Date.now() });
+    cacheStats.size = serverCache.size;
+  },
+  delete: (namespace: string, key: string) => {
+    const fullKey = `${namespace}:${key}`;
+    serverCache.delete(fullKey);
+  },
+  getStats: () => cacheStats,
+  clear: (namespace?: string) => {
+    if (namespace) {
+      for (const key of serverCache.keys()) {
+        if (key.startsWith(`${namespace}:`)) {
+          serverCache.delete(key);
+        }
+      }
+    } else {
+      serverCache.clear();
+    }
+  }
+};
 
 interface QueryConfig {
   cacheable?: boolean;
@@ -118,7 +156,7 @@ class OptimizedSupabaseClient {
 
     // Check cache first
     if (cacheable) {
-      const cached = cacheManager.get("api", cacheKey);
+      const cached = simpleCache.get("api", cacheKey);
       if (cached) {
         const metrics: QueryMetrics = {
           queryTime: performance.now() - startTime,
@@ -159,7 +197,7 @@ class OptimizedSupabaseClient {
 
         // Cache successful results
         if (cacheable && result.data && !result.error) {
-          cacheManager.set("api", cacheKey, result.data, cacheTTL);
+          simpleCache.set("api", cacheKey, result.data, cacheTTL);
         }
 
         const metrics: QueryMetrics = {
@@ -377,7 +415,7 @@ class OptimizedSupabaseClient {
 
     // Check cache for RPC calls
     if (cacheable) {
-      const cached = cacheManager.get("api", cacheKey);
+      const cached = simpleCache.get("api", cacheKey);
       if (cached) {
         const metrics: QueryMetrics = {
           queryTime: performance.now() - startTime,
@@ -400,7 +438,7 @@ class OptimizedSupabaseClient {
 
       // Cache successful RPC results
       if (cacheable && result.data && !result.error) {
-        cacheManager.set("api", cacheKey, result.data, cacheTTL);
+        simpleCache.set("api", cacheKey, result.data, cacheTTL);
       }
 
       const metrics: QueryMetrics = {
@@ -491,10 +529,10 @@ class OptimizedSupabaseClient {
 
   private invalidateTableCache(table: string) {
     // Clear all cache entries related to this table
-    const stats = cacheManager.getStats();
+    const stats = simpleCache.getStats();
     stats.entries.forEach((entry) => {
       if (entry.key.startsWith(`${table}:`)) {
-        cacheManager.delete("api", entry.key);
+        simpleCache.delete("api", entry.key);
       }
     });
   }

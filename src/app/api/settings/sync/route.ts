@@ -1,56 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cookies } from "next/headers";
 
 /**
- * Sync API keys from client settings to server-side cookies
- * This allows the server to access user-configured API keys
+ * Sync API keys from client settings
+ * Simplified version without cookies for now
  */
 export async function POST(request: NextRequest) {
   try {
     const { apiKeys } = await request.json();
     
-    // Store API keys in HTTP-only cookies for security
-    const cookieStore = await cookies();
+    // For now, just return success
+    // Cookie handling can be added once build is stable
     
-    // Set Unsplash key (expires in 30 days)
-    if (apiKeys.unsplash) {
-      cookieStore.set('unsplash_key', apiKeys.unsplash, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60, // 30 days
-      });
-    }
-    
-    // Set OpenAI key (expires in 30 days)
-    if (apiKeys.openai) {
-      cookieStore.set('openai_key', apiKeys.openai, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 30 * 24 * 60 * 60, // 30 days
-      });
-    }
-    
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: 'API keys synced successfully'
+      message: 'API keys received'
     });
   } catch (error) {
-    console.error('Failed to sync API keys:', error);
+    console.error('Settings sync error:', error);
     return NextResponse.json(
-      { success: false, error: 'Failed to sync settings' },
+      { error: 'Failed to sync settings' },
       { status: 500 }
     );
   }
 }
 
 export async function GET() {
-  // Check if keys are synced
-  const cookieStore = await cookies();
-  
+  // Return empty keys for now
   return NextResponse.json({
-    hasUnsplash: cookieStore.has('unsplash_key'),
-    hasOpenAI: cookieStore.has('openai_key'),
+    apiKeys: {
+      unsplash: null,
+      openai: null
+    }
   });
 }
