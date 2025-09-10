@@ -134,9 +134,10 @@ class AuthManager {
         hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
       });
 
-      // Try direct Supabase signup first
+      // Try direct Supabase signup first, with fallback to proxy
       let data: any;
       let error: any;
+      let usedProxy = false;
       
       try {
         const result = await client.auth.signUp({
@@ -150,29 +151,41 @@ class AuthManager {
         data = result.data;
         error = result.error;
       } catch (corsError: any) {
-        // If CORS fails, use proxy endpoint
-        console.log('[AuthManager] CORS error detected, using proxy endpoint');
+        // Any network error (including CORS) will trigger the proxy
+        console.log('[AuthManager] Network/CORS error detected, using proxy endpoint:', corsError.message);
+        usedProxy = true;
+      }
+      
+      // If we got an error or need to use proxy
+      if (error?.message?.includes('NetworkError') || error?.message?.includes('fetch') || usedProxy) {
+        console.log('[AuthManager] Using proxy endpoint for signup');
         
-        const response = await fetch('/api/auth/signup', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password, metadata })
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok) {
-          error = { message: result.error, status: response.status };
-        } else {
-          data = { user: result.user, session: result.session };
+        try {
+          const response = await fetch('/api/auth/signup', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, metadata })
+          });
           
-          // If we got a session, set it in the client
-          if (result.session) {
-            await client.auth.setSession({
-              access_token: result.session.access_token,
-              refresh_token: result.session.refresh_token
-            });
+          const result = await response.json();
+          
+          if (!response.ok) {
+            error = { message: result.error || 'Signup failed', status: response.status };
+          } else {
+            data = { user: result.user, session: result.session };
+            error = null; // Clear any previous error
+            
+            // If we got a session, set it in the client
+            if (result.session) {
+              await client.auth.setSession({
+                access_token: result.session.access_token,
+                refresh_token: result.session.refresh_token
+              });
+            }
           }
+        } catch (proxyError: any) {
+          console.error('[AuthManager] Proxy signup also failed:', proxyError);
+          error = { message: 'Both direct and proxy signup failed', originalError: error, proxyError };
         }
       }
 
@@ -214,7 +227,7 @@ class AuthManager {
   }
 
   /**
-   * Sign in existing user
+   * Sign in existing user with CORS fallback
    */
   async signIn(email: string, password: string): Promise<{ 
     success: boolean; 
@@ -222,13 +235,56 @@ class AuthManager {
     requiresVerification?: boolean;
   }> {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+      // Use the simpler client if available in browser context
+      const client = (typeof window !== 'undefined' && supabaseSimple) ? supabaseSimple : supabase;
+      
+      let data: any;
+      let error: any;
+      let usedProxy = false;
+      
+      // Try direct signin first
+      try {
+        const result = await client.auth.signInWithPassword({
+          email,
+          password
+        });
+        data = result.data;
+        error = result.error;
+      } catch (corsError: any) {
+        console.log('[AuthManager] Network/CORS error on signin, using proxy:', corsError.message);
+        usedProxy = true;
+      }
+      
+      // If network error or need to use proxy
+      if (error?.message?.includes('NetworkError') || error?.message?.includes('fetch') || usedProxy) {
+        console.log('[AuthManager] Using proxy endpoint for signin');
+        
+        const response = await fetch('/api/auth/signup', {
+          method: 'PUT', // PUT for signin
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        
+        const result = await response.json();
+        
+        if (!response.ok) {
+          error = { message: result.error || 'Signin failed', status: response.status };
+        } else {
+          data = { user: result.user, session: result.session };
+          error = null;
+          
+          // Set the session if we got one
+          if (result.session) {
+            await client.auth.setSession({
+              access_token: result.session.access_token,
+              refresh_token: result.session.refresh_token
+            });
+          }
+        }
+      }
 
       if (error) {
-        if (error.message.includes('Email not confirmed')) {
+        if (error.message?.includes('Email not confirmed')) {
           return { 
             success: false, 
             requiresVerification: true,
