@@ -161,7 +161,8 @@ class AuthManager {
         console.log('[AuthManager] Using proxy endpoint for signup');
         
         try {
-          const response = await fetch('/api/auth/simple-signup', {
+          // Temporarily use mock signup to bypass Supabase issues
+          const response = await fetch('/api/auth/mock-signup', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password, metadata })
