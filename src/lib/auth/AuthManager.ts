@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '../supabase/client';
+import { supabaseSimple } from '../supabase/client-simple';
 import { hybridStorage } from '../storage/HybridStorageManager';
 import { logger } from '../logger';
 import type { User, Session } from '@supabase/supabase-js';
@@ -122,7 +123,18 @@ class AuthManager {
     username?: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      // Use the simpler client if available in browser context
+      const client = (typeof window !== 'undefined' && supabaseSimple) ? supabaseSimple : supabase;
+      
+      console.log('[AuthManager] Attempting signup with:', {
+        email,
+        hasClient: !!client,
+        isSimpleClient: client === supabaseSimple,
+        url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
+        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      });
+
+      const { data, error } = await client.auth.signUp({
         email,
         password,
         options: {
@@ -131,7 +143,22 @@ class AuthManager {
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('[AuthManager] Signup error:', {
+          message: error.message,
+          status: error.status,
+          name: error.name,
+          cause: error.cause
+        });
+        throw error;
+      }
+
+      console.log('[AuthManager] Signup response:', {
+        hasUser: !!data.user,
+        hasSession: !!data.session,
+        userId: data.user?.id,
+        email: data.user?.email
+      });
 
       if (data.user) {
         // Create user profile with default settings
@@ -145,6 +172,7 @@ class AuthManager {
       return { success: true };
     } catch (error: any) {
       logger.error('Sign up failed', error);
+      console.error('[AuthManager] Full signup error:', error);
       return { 
         success: false, 
         error: error.message || 'Failed to sign up' 
