@@ -29,6 +29,8 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+.env.production
+.env.staging
 .env.*.local
 *.env
 !.env.example
@@ -122,3 +124,5 @@ claude-flow
 claude-flow.bat
 claude-flow.ps1
 hive-mind-prompt-*.txt
+
+.vercel

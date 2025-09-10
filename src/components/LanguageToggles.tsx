@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { MotionButton } from "@/components/ui/MotionComponents";
 import { Eye, EyeOff } from "lucide-react";
 import { LanguageVisibility } from "@/types";
 

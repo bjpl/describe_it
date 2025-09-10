@@ -100,7 +100,7 @@ class Logger {
   private sendToExternalService(errorData: any) {
     // Placeholder for external service integration (Sentry, LogRocket, etc.)
     // This could be implemented to send to actual monitoring services
-    if (typeof window !== 'undefined' && window.fetch) {
+    if (typeof window !== 'undefined' && 'fetch' in window) {
       // Example: Send to monitoring service
       // fetch('/api/errors', {
       //   method: 'POST',

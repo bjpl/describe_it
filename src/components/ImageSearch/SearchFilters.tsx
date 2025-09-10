@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { MotionDiv, MotionButton } from "@/components/ui/MotionComponents";
 import * as RadioGroup from "../ui/RadioGroup";
 
 interface SearchFiltersProps {

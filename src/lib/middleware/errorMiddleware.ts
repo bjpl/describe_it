@@ -169,13 +169,19 @@ export class ErrorMiddleware {
       // Show more detailed messages in development
       const devMessages = {
         [ErrorCategory.DATABASE]: 'Database connection or query error occurred',
-        [ErrorCategory.AUTHENTICATION]: 'Authentication or authorization failed',
+        [ErrorCategory.AUTHENTICATION]: 'Authentication failed',
+        [ErrorCategory.AUTHORIZATION]: 'Authorization check failed - insufficient permissions',
         [ErrorCategory.VALIDATION]: 'Request validation failed',
         [ErrorCategory.EXTERNAL_SERVICE]: 'External service call failed',
         [ErrorCategory.FILE_SYSTEM]: 'File system operation failed',
         [ErrorCategory.API]: 'API request processing error',
         [ErrorCategory.NETWORK]: 'Network connectivity issue',
+        [ErrorCategory.PERFORMANCE]: 'Performance threshold exceeded',
+        [ErrorCategory.SECURITY]: 'Security validation failed',
+        [ErrorCategory.UI_COMPONENT]: 'UI component error occurred',
+        [ErrorCategory.BUSINESS_LOGIC]: 'Business logic validation failed',
         [ErrorCategory.SYSTEM]: 'System-level error occurred',
+        [ErrorCategory.UNKNOWN]: 'Unknown error category'
       };
       return devMessages[category] || 'An unexpected error occurred';
     }
@@ -183,13 +189,19 @@ export class ErrorMiddleware {
     // Production user-friendly messages
     const prodMessages = {
       [ErrorCategory.DATABASE]: 'Unable to process your request right now',
-      [ErrorCategory.AUTHENTICATION]: 'Authentication required or permission denied',
+      [ErrorCategory.AUTHENTICATION]: 'Authentication required',
+      [ErrorCategory.AUTHORIZATION]: 'Permission denied for this action',
       [ErrorCategory.VALIDATION]: 'Invalid request data provided',
       [ErrorCategory.EXTERNAL_SERVICE]: 'Service temporarily unavailable',
       [ErrorCategory.FILE_SYSTEM]: 'Unable to access requested resource',
       [ErrorCategory.API]: 'Unable to process your request',
       [ErrorCategory.NETWORK]: 'Connection issue occurred',
+      [ErrorCategory.PERFORMANCE]: 'System is running slowly',
+      [ErrorCategory.SECURITY]: 'Security check failed',
+      [ErrorCategory.UI_COMPONENT]: 'Interface error occurred',
+      [ErrorCategory.BUSINESS_LOGIC]: 'Request could not be processed',
       [ErrorCategory.SYSTEM]: 'Unexpected error occurred',
+      [ErrorCategory.UNKNOWN]: 'An error occurred'
     };
     return prodMessages[category] || 'An unexpected error occurred';
   }
@@ -327,7 +339,7 @@ export class ErrorMiddleware {
     return async (request: NextRequest): Promise<NextResponse> => {
       const startTime = Date.now();
       const context = this.extractRequestContext(request);
-      let response: NextResponse;
+      let response: NextResponse | undefined;
 
       try {
         // Add request context to headers for downstream handlers

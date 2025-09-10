@@ -1,7 +1,7 @@
 "use client";
 
 import React, { ReactNode, memo, useMemo, useCallback } from "react";
-import { ErrorBoundary } from "./ErrorBoundary";
+import { ErrorBoundary } from "@/providers/ErrorBoundary";
 import {
   AlertCircle,
   RefreshCw,
@@ -138,7 +138,7 @@ export const SectionErrorBoundary = memo<SectionErrorBoundaryProps>(
 
     const customFallback = useMemo(
       () => fallback ? 
-        ({ error, reset }: { error: Error; reset: () => void }) => fallback :
+        ({ error, reset }: { error: Error; reset: () => void }) => (fallback as React.ReactElement) :
         ({ error, reset }: { error: Error; reset: () => void }) => (
           <div
             className={`
@@ -200,7 +200,7 @@ export const SectionErrorBoundary = memo<SectionErrorBoundaryProps>(
     );
 
     return (
-      <ErrorBoundary fallback={customFallback}>
+      <ErrorBoundary fallback={customFallback as any}>
         {children}
       </ErrorBoundary>
     );

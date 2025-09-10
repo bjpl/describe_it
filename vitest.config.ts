@@ -8,14 +8,13 @@ export default defineConfig({
   plugins: [
     react({
       jsxRuntime: 'automatic',
-      jsxImportSource: 'react',
-      fastRefresh: true
+      jsxImportSource: 'react'
     })
   ],
   test: {
     globals: true,
     environment: 'jsdom',
-    setupFiles: ['./tests/setup.tsx'],
+    setupFiles: ['./tests/setup.tsx', './tests/test-config.ts'],
     include: ['tests/**/*.{test,spec}.{js,ts,tsx}'],
     exclude: ['node_modules', 'dist', '.next', 'tests/e2e/**'],
     coverage: {

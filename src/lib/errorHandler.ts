@@ -315,9 +315,13 @@ export class ErrorHandler {
       [ErrorCategory.AUTHORIZATION]: 'You don\'t have permission to perform this action.',
       [ErrorCategory.VALIDATION]: 'Please check your input and try again.',
       [ErrorCategory.DATABASE]: 'Unable to save changes right now. Please try again.',
-      [ErrorCategory.UI_COMPONENT]: 'Something went wrong with the interface. Refreshing might help.',
+      [ErrorCategory.FILE_SYSTEM]: 'Unable to access file system. Please try again.',
+      [ErrorCategory.EXTERNAL_SERVICE]: 'External service is unavailable. Please try again later.',
       [ErrorCategory.PERFORMANCE]: 'The operation is taking longer than expected.',
       [ErrorCategory.SECURITY]: 'Security issue detected. Please refresh and try again.',
+      [ErrorCategory.UI_COMPONENT]: 'Something went wrong with the interface. Refreshing might help.',
+      [ErrorCategory.BUSINESS_LOGIC]: 'A processing error occurred. Please contact support.',
+      [ErrorCategory.SYSTEM]: 'A system error occurred. Please try again.',
       [ErrorCategory.UNKNOWN]: 'An unexpected error occurred. Please try again.'
     };
 
@@ -412,7 +416,7 @@ export class ErrorHandler {
           return false;
       }
     } catch (recoveryError) {
-      logger.error('Recovery attempt failed', recoveryError, { originalError: error.id });
+      logger.error('Recovery attempt failed', recoveryError as Error, { originalError: error.id });
       return false;
     }
   }

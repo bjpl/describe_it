@@ -13,7 +13,7 @@ import { vercelKvCache } from "./vercel-kv";
 import { apiKeyProvider } from "./keyProvider";
 
 class OpenAIService {
-  private client: OpenAI | null;
+  private client: OpenAI | null = null;
   private retryConfig: RetryConfig;
   private isValidApiKey: boolean = false;
   private currentApiKey: string = '';

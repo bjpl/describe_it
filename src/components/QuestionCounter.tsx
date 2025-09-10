@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { MotionDiv } from "@/components/ui/MotionComponents";
 import { Clock, Target, TrendingUp, Award, Timer } from "lucide-react";
 
 interface QuestionCounterProps {

@@ -250,23 +250,37 @@ export class APIMiddleware {
   }
 
   /**
-   * Get allowed origins from environment with fallbacks
+   * Get allowed origins from environment with fallbacks and Vercel deployment support
    */
   private getAllowedOrigins(): string[] {
-    const envOrigins = process.env.API_CORS_ORIGINS;
-    const defaultOrigins = [
-      process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "https://describe-it.vercel.app",
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    if (isDevelopment) {
+      return [
+        "http://localhost:3000",
+        "http://localhost:3001", 
+        "http://127.0.0.1:3000"
+      ];
+    }
+    
+    // Production origins with proper Vercel support
+    const envOrigins = process.env.ALLOWED_ORIGINS || process.env.API_CORS_ORIGINS;
+    const productionOrigins = [
+      "https://describe-it-lovat.vercel.app",
+      "https://describe-*.vercel.app", // Wildcard for preview deployments
     ];
     
     if (envOrigins) {
-      const customOrigins = envOrigins.split(',').map(origin => origin.trim());
-      return [...new Set([...customOrigins, ...defaultOrigins])];
+      const customOrigins = envOrigins.split(',').map(origin => origin.trim()).filter(Boolean);
+      return [...new Set([...productionOrigins, ...customOrigins])];
     }
     
-    return defaultOrigins;
+    // Add app URL if specified
+    if (process.env.NEXT_PUBLIC_APP_URL) {
+      productionOrigins.push(process.env.NEXT_PUBLIC_APP_URL);
+    }
+    
+    return [...new Set(productionOrigins)];
   }
 
   /**

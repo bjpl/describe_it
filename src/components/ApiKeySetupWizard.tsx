@@ -60,7 +60,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
     if (!keys.unsplash) return false;
     
     try {
-      const result = await settingsManager.validateApiKeys();
+      const result = await settingsManager.validateAPIKeys();
       setValidation(prev => ({ ...prev, unsplash: result.unsplash }));
       return result.unsplash;
     } catch {
@@ -73,7 +73,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
     if (!keys.openai) return false;
     
     try {
-      const result = await settingsManager.validateApiKeys();
+      const result = await settingsManager.validateAPIKeys();
       setValidation(prev => ({ ...prev, openai: result.openai }));
       return result.openai;
     } catch {
@@ -88,8 +88,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
       // Save the API keys
       settingsManager.updateSection("apiKeys", keys);
       
-      // Mark setup as complete
-      settingsManager.updateSection("general", { hasCompletedSetup: true });
+      // Setup complete - keys are saved
       
       if (onComplete) {
         onComplete();

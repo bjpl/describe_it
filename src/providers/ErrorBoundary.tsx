@@ -2,49 +2,179 @@
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
 
+// SSR-safe check for browser environment
+const isBrowser = typeof window !== 'undefined';
+const isDevelopment = process.env.NODE_ENV === "development";
+
 interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  isolate?: boolean;
+  resetKeys?: Array<string | number>;
+  resetOnPropsChange?: boolean;
 }
 
 interface State {
   hasError: boolean;
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  errorId: string;
+  errorCount: number;
 }
 
 class ErrorBoundaryClass extends Component<Props, State> {
+  private resetTimeoutId: number | null = null;
+
   constructor(props: Props) {
     super(props);
     this.state = {
       hasError: false,
       error: null,
       errorInfo: null,
+      errorId: '',
+      errorCount: 0,
     };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): Partial<State> {
+    const errorId = `err-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    
     return {
       hasError: true,
       error,
-      errorInfo: null,
+      errorId,
     };
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error("ErrorBoundary caught an error:", error, errorInfo);
+    console.group("🔥 React Error Boundary - PRODUCTION DEBUG");
+    console.error("[PRODUCTION ERROR] Error:", error);
+    console.error("[PRODUCTION ERROR] Error Message:", error.message);
+    console.error("[PRODUCTION ERROR] Error Stack:", error.stack);
+    console.error("[PRODUCTION ERROR] Error Info:", errorInfo);
+    console.error("[PRODUCTION ERROR] Component Stack:", errorInfo.componentStack);
+    console.error("[PRODUCTION ERROR] Environment:", {
+      NODE_ENV: process.env.NODE_ENV,
+      isClient: isBrowser,
+      userAgent: isBrowser ? navigator.userAgent : 'N/A',
+      url: isBrowser ? window.location.href : 'N/A',
+      timestamp: new Date().toISOString(),
+      errorCount: this.state.errorCount + 1
+    });
+    console.groupEnd();
 
     this.setState({
-      error,
       errorInfo,
+      errorCount: this.state.errorCount + 1,
     });
 
     // Call the onError callback if provided
     if (this.props.onError) {
       this.props.onError(error, errorInfo);
     }
+
+    // Report error for production debugging
+    this.reportError(error, errorInfo);
   }
+
+  componentDidUpdate(prevProps: Props) {
+    const { resetKeys, resetOnPropsChange } = this.props;
+    const { hasError } = this.state;
+
+    if (hasError) {
+      // Reset on props change if enabled
+      if (resetOnPropsChange && prevProps.children !== this.props.children) {
+        this.resetError();
+      }
+
+      // Reset on specific key changes
+      if (resetKeys && prevProps.resetKeys !== resetKeys) {
+        const hasResetKeyChanged = resetKeys.some(
+          (resetKey, idx) => prevProps.resetKeys?.[idx] !== resetKey
+        );
+        
+        if (hasResetKeyChanged) {
+          this.resetError();
+        }
+      }
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.resetTimeoutId) {
+      clearTimeout(this.resetTimeoutId);
+    }
+  }
+
+  reportError = (error: Error, errorInfo: ErrorInfo) => {
+    try {
+      const errorData = {
+        message: error.message,
+        stack: error.stack,
+        componentStack: errorInfo.componentStack,
+        timestamp: new Date().toISOString(),
+        errorId: this.state.errorId,
+        userAgent: isBrowser ? navigator.userAgent : 'N/A',
+        url: isBrowser ? window.location.href : 'N/A',
+        environment: {
+          NODE_ENV: process.env.NODE_ENV,
+          isClient: isBrowser,
+        },
+        errorCount: this.state.errorCount + 1
+      };
+
+      console.error("[ERROR BOUNDARY REPORT]", JSON.stringify(errorData, null, 2));
+
+      // Store error in local storage for debugging (SSR safe)
+      if (isBrowser && typeof localStorage !== 'undefined') {
+        try {
+          const existingErrors = JSON.parse(
+            localStorage.getItem("react-error-boundary-logs") || "[]",
+          );
+
+          existingErrors.push(errorData);
+
+          // Keep only last 10 errors
+          if (existingErrors.length > 10) {
+            existingErrors.splice(0, existingErrors.length - 10);
+          }
+
+          localStorage.setItem(
+            "react-error-boundary-logs",
+            JSON.stringify(existingErrors),
+          );
+        } catch (storageError) {
+          console.warn('[ERROR BOUNDARY] Failed to store error in localStorage:', storageError);
+        }
+      }
+    } catch (reportingError) {
+      console.error("[ERROR BOUNDARY] Failed to report error:", reportingError);
+    }
+  };
+
+  resetError = () => {
+    if (this.resetTimeoutId) {
+      clearTimeout(this.resetTimeoutId);
+    }
+
+    this.setState({
+      hasError: false,
+      error: null,
+      errorInfo: null,
+      errorId: '',
+    });
+  };
+
+  handleRetry = () => {
+    console.log('[ERROR BOUNDARY] Retry attempt initiated');
+
+    // Add delay to prevent rapid retries (SSR safe)
+    this.resetTimeoutId = (isBrowser ? window.setTimeout : global.setTimeout)(() => {
+      console.log('[ERROR BOUNDARY] Resetting error state');
+      this.resetError();
+    }, 1000) as unknown as number;
+  };
 
   render() {
     if (this.state.hasError) {
@@ -56,9 +186,11 @@ class ErrorBoundaryClass extends Component<Props, State> {
         <ErrorFallback
           error={this.state.error}
           errorInfo={this.state.errorInfo}
-          resetError={() =>
-            this.setState({ hasError: false, error: null, errorInfo: null })
-          }
+          errorId={this.state.errorId}
+          errorCount={this.state.errorCount}
+          resetError={this.resetError}
+          handleRetry={this.handleRetry}
+          isolate={this.props.isolate}
         />
       );
     }
@@ -70,18 +202,58 @@ class ErrorBoundaryClass extends Component<Props, State> {
 interface ErrorFallbackProps {
   error: Error | null;
   errorInfo: ErrorInfo | null;
+  errorId: string;
+  errorCount: number;
   resetError: () => void;
+  handleRetry: () => void;
+  isolate?: boolean;
 }
 
 const ErrorFallback: React.FC<ErrorFallbackProps> = ({
   error,
   errorInfo,
+  errorId,
+  errorCount,
   resetError,
+  handleRetry,
+  isolate,
 }) => {
-  const isDevelopment = process.env.NODE_ENV === "development";
+  const copyErrorToClipboard = async () => {
+    const errorText = `
+Error ID: ${errorId}
+Time: ${new Date().toISOString()}
+URL: ${isBrowser ? window.location.href : 'N/A'}
+User Agent: ${isBrowser ? navigator.userAgent : 'N/A'}
+Environment: ${process.env.NODE_ENV}
+
+Error: ${error?.message}
+
+Stack Trace:
+${error?.stack}
+
+Component Stack:
+${errorInfo?.componentStack}
+    `.trim();
+
+    try {
+      if (isBrowser && navigator.clipboard) {
+        await navigator.clipboard.writeText(errorText);
+        alert("Error details copied to clipboard");
+      } else {
+        console.log('[ERROR BOUNDARY] Error details (clipboard not available):', errorText);
+        alert("Error details logged to console (clipboard not available)");
+      }
+    } catch (err) {
+      console.error("[ERROR BOUNDARY] Failed to copy error details:", err);
+      console.log('[ERROR BOUNDARY] Error details:', errorText);
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+    <div className={`
+      ${isolate ? "min-h-64 border-2 border-red-200 rounded-lg bg-red-50" : "min-h-screen bg-gray-50"}
+      flex items-center justify-center p-4
+    `}>
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-6">
         <div className="flex items-center mb-4">
           <div className="flex-shrink-0">
@@ -111,6 +283,11 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
             We encountered an unexpected error. Please try refreshing the page
             or contact support if the problem persists.
           </p>
+          {errorCount > 1 && (
+            <p className="text-sm text-orange-600 mt-2">
+              This error has occurred {errorCount} times
+            </p>
+          )}
         </div>
 
         {isDevelopment && error && (
@@ -134,20 +311,42 @@ const ErrorFallback: React.FC<ErrorFallbackProps> = ({
           </div>
         )}
 
-        <div className="flex space-x-3">
+        {errorId && (
+          <div className="mb-4 text-xs text-gray-500 font-mono">
+            Error ID: {errorId}
+          </div>
+        )}
+
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3">
           <button
-            onClick={resetError}
-            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            onClick={handleRetry}
+            className="flex-1 bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
           >
             Try Again
           </button>
           <button
-            onClick={() => window.location.reload()}
-            className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            onClick={() => {
+              console.log('[ERROR BOUNDARY] Refresh page clicked');
+              if (isBrowser) {
+                window.location.reload();
+              }
+            }}
+            className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 transition-colors"
           >
             Refresh Page
           </button>
         </div>
+
+        {isDevelopment && (
+          <div className="mt-4 pt-4 border-t border-gray-200">
+            <button
+              onClick={copyErrorToClipboard}
+              className="w-full text-xs text-gray-600 hover:text-gray-800 hover:bg-gray-100 px-3 py-2 rounded transition-colors"
+            >
+              Copy Error Details
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -179,14 +378,23 @@ export const useErrorHandler = () => {
   return { reportError };
 };
 
-// Main ErrorBoundary component
+// Main ErrorBoundary component (SSR-safe)
 export const ErrorBoundary: React.FC<Props> = ({
   children,
   fallback,
   onError,
+  isolate,
+  resetKeys,
+  resetOnPropsChange,
 }) => {
   return (
-    <ErrorBoundaryClass fallback={fallback} onError={onError}>
+    <ErrorBoundaryClass 
+      fallback={fallback} 
+      onError={onError}
+      isolate={isolate}
+      resetKeys={resetKeys}
+      resetOnPropsChange={resetOnPropsChange}
+    >
       {children}
     </ErrorBoundaryClass>
   );

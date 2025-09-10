@@ -38,7 +38,7 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
   } | null>(null);
   const [validating, setValidating] = useState(false);
   const [cacheSize, setCacheSize] = useState(0);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Update settings when they change
   useEffect(() => {
@@ -205,7 +205,7 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
             onExportSettings={exportSettings}
             onImportSettings={importSettings}
             onResetSettings={resetSettings}
-            fileInputRef={fileInputRef}
+            fileInputRef={fileInputRef as React.RefObject<HTMLInputElement>}
           />
         );
       default:

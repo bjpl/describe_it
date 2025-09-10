@@ -62,10 +62,11 @@ export class ApiKeyProvider {
    */
   private initializeKeys(): void {
     try {
-      const settings = settingsManager.getSettings();
+      // Try to get settings with timeout to prevent blocking
+      const settings = this.getSettingsWithTimeout();
       this.cachedKeys = {
-        openai: this.resolveKey('openai', settings.apiKeys.openai),
-        unsplash: this.resolveKey('unsplash', settings.apiKeys.unsplash),
+        openai: this.resolveKey('openai', settings?.apiKeys?.openai || ''),
+        unsplash: this.resolveKey('unsplash', settings?.apiKeys?.unsplash || ''),
       };
     } catch (error) {
       console.warn('[ApiKeyProvider] Failed to initialize from settings, using environment only:', error);
@@ -77,14 +78,36 @@ export class ApiKeyProvider {
   }
 
   /**
+   * Get settings with timeout to prevent blocking
+   */
+  private getSettingsWithTimeout(timeoutMs = 50): any {
+    try {
+      // Quick synchronous check - if settingsManager is not ready, return null
+      if (typeof window === 'undefined' || !settingsManager) {
+        return null;
+      }
+      return settingsManager.getSettings();
+    } catch (error) {
+      console.warn('[ApiKeyProvider] Settings not available:', error);
+      return null;
+    }
+  }
+
+  /**
    * Setup listener for settings changes
    */
   private setupSettingsListener(): void {
     try {
+      // Only setup listener in browser environment
+      if (typeof window === 'undefined' || !settingsManager) {
+        console.log('[ApiKeyProvider] Skipping settings listener setup in server environment');
+        return;
+      }
+      
       settingsManager.addListener((settings) => {
         const newKeys = {
-          openai: this.resolveKey('openai', settings.apiKeys.openai),
-          unsplash: this.resolveKey('unsplash', settings.apiKeys.unsplash),
+          openai: this.resolveKey('openai', settings?.apiKeys?.openai || ''),
+          unsplash: this.resolveKey('unsplash', settings?.apiKeys?.unsplash || ''),
         };
 
         // Check if keys actually changed
@@ -211,10 +234,10 @@ export class ApiKeyProvider {
     }
 
     try {
-      const settings = settingsManager.getSettings();
+      const settings = this.getSettingsWithTimeout();
       const settingsKey = service === 'openai' 
-        ? settings.apiKeys.openai 
-        : settings.apiKeys.unsplash;
+        ? settings?.apiKeys?.openai 
+        : settings?.apiKeys?.unsplash;
 
       if (settingsKey && settingsKey.trim() === key) {
         return 'settings';

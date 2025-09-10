@@ -1,15 +1,9 @@
-// Re-export the consolidated error boundary as the main ErrorBoundary
+// Re-export from the main providers ErrorBoundary (consolidated implementation)
 export {
-  ConsolidatedErrorBoundary as ErrorBoundary,
-  CompactErrorFallback,
+  ErrorBoundary,
   withErrorBoundary,
   useErrorHandler,
-  type ErrorBoundaryProps,
-  type ErrorFallbackProps,
-} from "./ConsolidatedErrorBoundary";
-
-// Export consolidated as enhanced for backward compatibility
-export { ConsolidatedErrorBoundary as EnhancedErrorBoundary } from "./ConsolidatedErrorBoundary";
+} from "@/providers/ErrorBoundary";
 
 // Default export
-export { default } from "./ConsolidatedErrorBoundary";
+export { default } from "@/providers/ErrorBoundary";

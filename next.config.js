@@ -16,6 +16,16 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
+  // Turbopack configuration (moved from experimental.turbo)
+  turbopack: {
+    rules: {
+      "*.svg": {
+        loaders: ["@svgr/webpack"],
+        as: "*.js",
+      },
+    },
+  },
+
   // Bundle optimization
   experimental: {
     optimizeCss: true,
@@ -24,7 +34,13 @@ const nextConfig = {
       "lucide-react",
       "@radix-ui/react-dialog",
       "@radix-ui/react-dropdown-menu",
+      "@tanstack/react-query",
+      "axios",
+      "clsx",
+      "recharts",
+      "zustand",
     ],
+    webVitalsAttribution: ["CLS", "LCP", "FCP", "FID", "TTFB", "INP"],
   },
 
   // Bundle analyzer
@@ -90,8 +106,18 @@ const nextConfig = {
     minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
   },
 
-  // Comprehensive security headers configuration
+  // Comprehensive security headers configuration with CORS support
   async headers() {
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
+    // Define allowed origins for CORS
+    const allowedOrigins = isDevelopment 
+      ? ['http://localhost:3000', 'http://localhost:3001', 'http://127.0.0.1:3000']
+      : [
+          'https://describe-it-lovat.vercel.app',
+          ...(process.env.ALLOWED_ORIGINS?.split(',').map(o => o.trim()).filter(Boolean) || [])
+        ];
+
     return [
       {
         source: "/:path*",
@@ -132,7 +158,7 @@ const nextConfig = {
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
               "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.vercel.app",
-              "connect-src 'self' https://api.openai.com https://*.supabase.co https://*.vercel.app wss://*.supabase.co",
+              "connect-src 'self' https://api.openai.com https://*.supabase.co https://*.vercel.app wss://*.supabase.co https://api.unsplash.com",
               "frame-src 'none'",
               "object-src 'none'",
               "base-uri 'self'",
@@ -145,6 +171,22 @@ const nextConfig = {
       {
         source: "/api/:path*",
         headers: [
+          {
+            key: "Access-Control-Allow-Methods",
+            value: "GET, POST, PUT, DELETE, HEAD, OPTIONS",
+          },
+          {
+            key: "Access-Control-Allow-Headers",
+            value: "Content-Type, Authorization, X-Requested-With, Accept, Origin, Cache-Control, If-None-Match, X-API-Key",
+          },
+          {
+            key: "Access-Control-Max-Age",
+            value: "86400",
+          },
+          {
+            key: "Access-Control-Expose-Headers",
+            value: "X-Cache, X-Response-Time, X-Rate-Limit-Remaining, ETag",
+          },
           {
             key: "X-Content-Type-Options",
             value: "nosniff",
@@ -165,6 +207,10 @@ const nextConfig = {
             key: "X-Robots-Tag",
             value: "noindex, nofollow, nosnippet, notranslate, noimageindex",
           },
+          {
+            key: "Vary",
+            value: "Origin, Access-Control-Request-Method, Access-Control-Request-Headers",
+          },
         ],
       },
       {
@@ -184,10 +230,6 @@ const nextConfig = {
   },
 
   // Environment variables are automatically available in Next.js 15
-
-  // Security configuration
-  poweredByHeader: false,
-  compress: true,
 
   // Server external packages
   serverExternalPackages: [],

@@ -2,6 +2,7 @@
 
 import React, { useCallback, useMemo, memo } from "react";
 import { motion } from "framer-motion";
+import { MotionDiv, MotionButton } from "@/components/ui/MotionComponents";
 import { Heart, Download, User, Calendar } from "lucide-react";
 import { UnsplashImage } from "@/types";
 import {

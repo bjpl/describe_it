@@ -3,20 +3,11 @@
  * Comprehensive set of properly typed motion components that resolve TS2322 errors
  */
 import React from 'react';
-import { motion, MotionProps, HTMLMotionProps } from 'framer-motion';
+import { motion, MotionProps } from 'framer-motion';
 
-// Utility type to properly merge motion props with HTML attributes
-type MotionComponentProps<T extends keyof JSX.IntrinsicElements> = HTMLMotionProps<T> & {
-  children?: React.ReactNode;
-  onClick?: 
-    | (() => void) 
-    | (() => Promise<void>) 
-    | ((event: React.MouseEvent) => void) 
-    | ((event: React.MouseEvent) => Promise<void>);
-  "data-phrase-id"?: string;
-  title?: string;
-  disabled?: boolean;
-};
+// Utility type for motion components that accept all standard HTML attributes
+type MotionComponentProps<T extends keyof React.JSX.IntrinsicElements> = 
+  React.ComponentPropsWithoutRef<T> & MotionProps;
 
 // Motion Div
 export const MotionDiv = React.forwardRef<HTMLDivElement, MotionComponentProps<'div'>>(

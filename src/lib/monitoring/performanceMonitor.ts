@@ -64,6 +64,10 @@ export interface PerformanceMonitorConfig {
     [MetricType.COMPONENT_RENDER]: { warning: number; error: number };
     [MetricType.USER_INTERACTION]: { warning: number; error: number };
     [MetricType.NAVIGATION]: { warning: number; error: number };
+    [MetricType.PAINT]: { warning: number; error: number };
+    [MetricType.LAYOUT]: { warning: number; error: number };
+    [MetricType.MEMORY_USAGE]: { warning: number; error: number };
+    [MetricType.CUSTOM]: { warning: number; error: number };
   };
 }
 
@@ -80,6 +84,10 @@ const DEFAULT_CONFIG: PerformanceMonitorConfig = {
     [MetricType.COMPONENT_RENDER]: { warning: 16, error: 50 },
     [MetricType.USER_INTERACTION]: { warning: 100, error: 300 },
     [MetricType.NAVIGATION]: { warning: 2000, error: 5000 },
+    [MetricType.PAINT]: { warning: 100, error: 300 },
+    [MetricType.LAYOUT]: { warning: 16, error: 50 },
+    [MetricType.MEMORY_USAGE]: { warning: 50000000, error: 100000000 },
+    [MetricType.CUSTOM]: { warning: 1000, error: 3000 },
   },
 };
 
@@ -160,8 +168,8 @@ export class PerformanceMonitor {
       if ('PerformanceEventTiming' in window) {
         const fidObserver = new PerformanceObserver((list) => {
           for (const entry of list.getEntries()) {
-            if (entry.processingStart && entry.startTime) {
-              const fid = entry.processingStart - entry.startTime;
+            if ((entry as any).processingStart && entry.startTime) {
+              const fid = (entry as any).processingStart - entry.startTime;
               this.addMetric({
                 type: MetricType.USER_INTERACTION,
                 name: 'first-input-delay',

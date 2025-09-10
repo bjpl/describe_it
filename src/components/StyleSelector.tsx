@@ -2,6 +2,7 @@
 
 import React from "react";
 import { motion } from "framer-motion";
+import { MotionButton, MotionDiv } from "./ui/MotionComponents";
 import { DescriptionStyle } from "@/types";
 
 interface StyleSelectorProps {

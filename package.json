@@ -48,7 +48,13 @@
     "deps:update:dev": "npm update --save-dev",
     "config:prod": "NODE_ENV=production",
     "test:prod": "vitest --config=config/vitest.config.prod.ts",
-    "build:prod": "tsc --project config/tsconfig.prod.json"
+    "build:prod": "tsc --project config/tsconfig.prod.json",
+    "audit:performance": "node scripts/performance-audit.js",
+    "profile:bundle": "npm run build:analyze && open .next/analyze/client.html",
+    "monitor:vitals": "node scripts/web-vitals-test.js",
+    "validate:env": "node scripts/validate-env.cjs",
+    "validate:env:prod": "NODE_ENV=production node scripts/validate-env.cjs",
+    "validate:env:dev": "NODE_ENV=development node scripts/validate-env.cjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
@@ -63,6 +69,7 @@
     "clsx": "^2.1.1",
     "file-saver": "^2.0.5",
     "framer-motion": "^10.17.9",
+    "isomorphic-dompurify": "^2.26.0",
     "jspdf": "^3.0.2",
     "lucide-react": "^0.303.0",
     "next": "^15.1.6",
@@ -72,6 +79,7 @@
     "react-is": "^19.1.1",
     "recharts": "^3.1.2",
     "sharp": "^0.33.1",
+    "web-vitals": "^5.1.0",
     "zod": "^3.22.4",
     "zustand": "^4.4.7"
   },

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { ErrorBoundary } from "./ErrorBoundary";
+import { ErrorBoundary } from "@/providers/ErrorBoundary";
 import { SectionErrorBoundary } from "./SectionErrorBoundary";
 
 /**

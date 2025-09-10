@@ -1,42 +1,62 @@
 import React from "react";
 
-interface CardProps {
+export interface CardProps {
+  children: React.ReactNode;
+  className?: string;
+  clickable?: boolean;
+  onClick?: () => void;
+  role?: string;
+  'aria-label'?: string;
+  'aria-labelledby'?: string;
+}
+
+export interface CardHeaderProps {
   children: React.ReactNode;
   className?: string;
 }
 
-interface CardHeaderProps {
+export interface CardTitleProps {
+  children: React.ReactNode;
+  className?: string;
+  as?: 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6';
+}
+
+export interface CardDescriptionProps {
   children: React.ReactNode;
   className?: string;
 }
 
-interface CardTitleProps {
+export interface CardContentProps {
   children: React.ReactNode;
   className?: string;
 }
 
-interface CardDescriptionProps {
+export interface CardFooterProps {
   children: React.ReactNode;
   className?: string;
 }
 
-interface CardContentProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-interface CardFooterProps {
-  children: React.ReactNode;
-  className?: string;
-}
-
-export const Card: React.FC<CardProps> = ({ children, className = "" }) => {
+export const Card: React.FC<CardProps> = ({ 
+  children, 
+  className = "", 
+  clickable = false,
+  onClick,
+  role,
+  ...props 
+}) => {
+  const Component = clickable ? 'button' : 'div';
+  
   return (
-    <div
-      className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}
+    <Component
+      className={`rounded-lg border bg-card text-card-foreground shadow-sm ${
+        clickable ? 'hover:shadow-md transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2' : ''
+      } ${className}`}
+      onClick={clickable ? onClick : undefined}
+      role={role}
+      {...props}
     >
       {children}
-    </div>
+    </Component>
   );
 };
 
@@ -54,13 +74,14 @@ export const CardHeader: React.FC<CardHeaderProps> = ({
 export const CardTitle: React.FC<CardTitleProps> = ({
   children,
   className = "",
+  as: Component = 'h3',
 }) => {
   return (
-    <h3
+    <Component
       className={`text-2xl font-semibold leading-none tracking-tight ${className}`}
     >
       {children}
-    </h3>
+    </Component>
   );
 };
 

@@ -383,7 +383,7 @@ export function useErrorReporting(
     errorStats,
     updateConfig,
     isEnabled,
-    setEnabled,
+    setEnabled: setIsEnabled,
   };
 }
 

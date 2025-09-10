@@ -85,7 +85,7 @@ class UnsplashService {
 
     this.client = axios.create({
       baseURL: "https://api.unsplash.com",
-      timeout: 7000, // Reduced for Vercel function limits
+      timeout: 2500, // Aggressive timeout for Vercel serverless (2.5s)
       headers: {
         "Accept-Version": "v1",
         Authorization: `Client-ID ${this.accessKey}`,
@@ -486,44 +486,69 @@ class UnsplashService {
         };
       }
 
-      // Make API request
+      // Make API request with aggressive timeout for Vercel
       if (!this.client) {
         return this.generateDemoImages(params);
       }
       
-      const response = await this.client.get<UnsplashSearchResponse>(
-        "/search/photos",
-        {
-          params: {
-            query: params.query,
-            page: params.page || 1,
-            per_page: Math.min(params.per_page || 30, 30), // Limit to 30 per page
-            order_by: params.order_by || "relevant",
-            collections: params.collections,
-            content_filter: params.content_filter || "low",
-            color: params.color,
-            orientation: params.orientation,
+      // Create a timeout wrapper for Vercel serverless
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => {
+        controller.abort();
+        console.warn('[UnsplashService] Request timeout - falling back to demo mode');
+      }, 2000); // 2 second hard limit
+      
+      try {
+        const response = await this.client.get<UnsplashSearchResponse>(
+          "/search/photos",
+          {
+            params: {
+              query: params.query,
+              page: params.page || 1,
+              per_page: Math.min(params.per_page || 10, 10), // Reduce to 10 for faster response
+              order_by: params.order_by || "relevant",
+              collections: params.collections,
+              content_filter: params.content_filter || "low",
+              color: params.color,
+              orientation: params.orientation,
+            },
+            signal: controller.signal as any,
           },
-        },
-      );
+        );
+        
+        clearTimeout(timeoutId);
 
-      const data = response.data;
+        const data = response.data;
 
-      // Cache the response for 10 minutes
-      await vercelKvCache.set(cacheKey, data, 600);
+        // Cache the response for 30 minutes (increased for better performance)
+        await vercelKvCache.set(cacheKey, data, 1800).catch(err => 
+          console.warn('[UnsplashService] Cache write failed:', err)
+        );
 
-      const processedImages = this.processImages(data.results);
+        const processedImages = this.processImages(data.results);
 
-      return {
-        images: processedImages,
-        total: data.total,
-        totalPages: data.total_pages,
-        currentPage: params.page || 1,
-        hasNextPage: (params.page || 1) < data.total_pages,
-      };
+        return {
+          images: processedImages,
+          total: data.total,
+          totalPages: data.total_pages,
+          currentPage: params.page || 1,
+          hasNextPage: (params.page || 1) < data.total_pages,
+        };
+      } catch (timeoutError) {
+        clearTimeout(timeoutId);
+        if (timeoutError.name === 'CanceledError' || timeoutError.code === 'ECONNABORTED') {
+          console.warn('[UnsplashService] Request timed out, using demo mode');
+          return this.generateDemoImages(params);
+        }
+        throw timeoutError;
+      }
     } catch (error) {
-      // Fallback to demo data on error
-      console.warn("Unsplash API error, falling back to demo mode:", error);
+      // Always fallback to demo data on any error for reliability
+      console.warn("[UnsplashService] API error, falling back to demo mode:", {
+        error: error.message || error,
+        code: error.code,
+        status: error.response?.status
+      });
       return this.generateDemoImages(params);
     }
   }

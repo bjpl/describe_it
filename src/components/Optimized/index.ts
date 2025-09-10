@@ -5,3 +5,9 @@ export {
   useImagePerformance,
 } from "./OptimizedImage";
 export { OptimizedImageGrid } from "./OptimizedImageGrid";
+export {
+  OptimizedList,
+  OptimizedSearchInput,
+  OptimizedModal,
+  OptimizedButton,
+} from "./OptimizedComponents";

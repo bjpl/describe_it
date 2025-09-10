@@ -21,6 +21,7 @@ const MAX_AGE = 86400; // 24 hours
 // Force dynamic rendering to fix build error
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const maxDuration = 5; // 5 seconds max for Vercel hobby plan
 
 // Cache implementation
 const cache = new Map<string, { data: any; timestamp: number; etag: string }>();
@@ -259,13 +260,54 @@ export async function GET(request: NextRequest) {
     // Fetch data (unsplashService handles demo mode internally)
     console.log("[API] Calling unsplashService.searchImages with params:", params);
     
-    // Add timeout to prevent infinite waiting
+    // Add aggressive timeout for Vercel serverless
     const searchPromise = unsplashService.searchImages(params as any);
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Search timeout')), 8000); // 8 second timeout for Vercel
+      setTimeout(() => reject(new Error('Search timeout - using demo mode')), 3000); // 3 seconds max
     });
     
-    const results = await Promise.race([searchPromise, timeoutPromise]);
+    let results;
+    try {
+      results = await Promise.race([searchPromise, timeoutPromise]);
+    } catch (timeoutError) {
+      console.warn('[API] Search timed out, generating demo results');
+      // Generate demo results directly for immediate response
+      results = {
+        images: [
+          {
+            id: `demo-timeout-1`,
+            urls: {
+              small: `https://picsum.photos/400/300?random=${Date.now()}`,
+              regular: `https://picsum.photos/1080/720?random=${Date.now()}`
+            },
+            alt_description: `Demo image for ${params.query}`,
+            user: { name: 'Demo User' }
+          },
+          {
+            id: `demo-timeout-2`,
+            urls: {
+              small: `https://picsum.photos/400/300?random=${Date.now() + 1}`,
+              regular: `https://picsum.photos/1080/720?random=${Date.now() + 1}`
+            },
+            alt_description: `Another demo image for ${params.query}`,
+            user: { name: 'Demo User' }
+          },
+          {
+            id: `demo-timeout-3`,
+            urls: {
+              small: `https://picsum.photos/400/300?random=${Date.now() + 2}`,
+              regular: `https://picsum.photos/1080/720?random=${Date.now() + 2}`
+            },
+            alt_description: `Third demo image for ${params.query}`,
+            user: { name: 'Demo User' }
+          }
+        ],
+        totalPages: 3,
+        currentPage: params.page,
+        total: 50,
+        hasNextPage: params.page < 3
+      };
+    }
     console.log("[API] Results from unsplashService:", {
       hasImages: !!(results.images && results.images.length > 0),
       imageCount: results.images?.length || 0,
