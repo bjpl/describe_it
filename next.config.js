@@ -157,7 +157,7 @@ const nextConfig = {
               "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com https://vercel.live",
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               "font-src 'self' https://fonts.gstatic.com",
-              "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.vercel.app",
+              "img-src 'self' data: blob: https://images.unsplash.com https://plus.unsplash.com https://*.vercel.app https://picsum.photos",
               "connect-src 'self' https://api.openai.com https://*.supabase.co https://*.vercel.app wss://*.supabase.co https://api.unsplash.com",
               "frame-src 'none'",
               "object-src 'none'",
