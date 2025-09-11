@@ -140,18 +140,58 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
   }, [isOpen, getApiKeys]);
 
   const handleSave = async () => {
+    console.log('[ApiKeyModal] Starting save operation');
     setLoading(true);
     try {
-      const success = await saveApiKeys(keys);
+      // Add timeout protection
+      const savePromise = saveApiKeys(keys);
+      const timeoutPromise = new Promise<boolean>((_, reject) => 
+        setTimeout(() => reject(new Error('Save operation timed out')), 5000)
+      );
+      
+      const success = await Promise.race([savePromise, timeoutPromise]);
+      console.log('[ApiKeyModal] Save result:', success);
+      
       if (success) {
+        // Also save to localStorage as backup
+        localStorage.setItem('api-keys-backup', JSON.stringify(keys));
+        
+        // Update settings manager directly
+        const { settingsManager } = await import('@/lib/settings/settingsManager');
+        settingsManager.updateSection('apiKeys', {
+          unsplash: keys.unsplash,
+          openai: keys.openai
+        });
+        
         setSaved(true);
         setTimeout(() => {
           onClose();
           setSaved(false);
         }, 1500);
+      } else {
+        throw new Error('Failed to save API keys');
       }
-    } catch (error) {
-      console.error('Failed to save API keys:', error);
+    } catch (error: any) {
+      console.error('[ApiKeyModal] Failed to save API keys:', error);
+      
+      // Fallback: Save to localStorage directly
+      try {
+        localStorage.setItem('api-keys-backup', JSON.stringify(keys));
+        const { settingsManager } = await import('@/lib/settings/settingsManager');
+        settingsManager.updateSection('apiKeys', {
+          unsplash: keys.unsplash,
+          openai: keys.openai
+        });
+        
+        setSaved(true);
+        setTimeout(() => {
+          onClose();
+          setSaved(false);
+        }, 1500);
+      } catch (fallbackError) {
+        console.error('[ApiKeyModal] Fallback save also failed:', fallbackError);
+        alert('Failed to save API keys. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

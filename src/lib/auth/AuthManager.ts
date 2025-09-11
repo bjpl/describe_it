@@ -472,36 +472,60 @@ class AuthManager {
    * Save user API keys (encrypted)
    */
   async saveApiKeys(keys: Partial<UserApiKeys>): Promise<boolean> {
-    if (!this.currentUser) return false;
-
+    console.log('[AuthManager] saveApiKeys called');
+    
+    // Allow saving even if not authenticated for local storage
+    const userId = this.currentUser?.id || 'local-user';
+    
     try {
-      // In production, encrypt keys before storing
-      const encryptedKeys = await this.encryptApiKeys(keys);
-
-      const { error } = await supabase
-        .from('user_api_keys')
-        .upsert({
-          user_id: this.currentUser.id,
-          unsplash_key: encryptedKeys.unsplash,
-          openai_key: encryptedKeys.openai,
-          anthropic_key: encryptedKeys.anthropic,
-          google_key: encryptedKeys.google,
-          encrypted: true,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
-      // Also save to localStorage for quick access (encrypted)
-      await hybridStorage.save('api-keys', this.currentUser.id, encryptedKeys);
-
+      // Save to localStorage immediately (unencrypted for local use)
+      await hybridStorage.save('api-keys', userId, keys);
+      console.log('[AuthManager] Saved API keys to localStorage');
+      
+      // If user is authenticated, try to save to Supabase
+      if (this.currentUser) {
+        try {
+          // In production, encrypt keys before storing
+          const encryptedKeys = await this.encryptApiKeys(keys);
+          
+          // Create a timeout promise
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Supabase save timeout')), 3000)
+          );
+          
+          // Try to save to Supabase with timeout
+          const savePromise = supabase
+            .from('user_api_keys')
+            .upsert({
+              user_id: this.currentUser.id,
+              unsplash_key: encryptedKeys.unsplash,
+              openai_key: encryptedKeys.openai,
+              anthropic_key: encryptedKeys.anthropic,
+              google_key: encryptedKeys.google,
+              encrypted: true,
+              updated_at: new Date().toISOString()
+            });
+          
+          const result = await Promise.race([savePromise, timeoutPromise]) as any;
+          
+          if (result?.error) {
+            console.warn('[AuthManager] Supabase save failed, but localStorage succeeded:', result.error);
+          } else {
+            console.log('[AuthManager] Saved to Supabase successfully');
+          }
+        } catch (supabaseError) {
+          // Supabase save failed, but localStorage succeeded
+          console.warn('[AuthManager] Supabase operation failed, but localStorage succeeded:', supabaseError);
+        }
+      }
+      
       // Update current profile
       if (this.currentProfile) {
-        this.currentProfile.api_keys = { ...keys, encrypted: true };
+        this.currentProfile.api_keys = { ...keys, encrypted: false };
         this.notifyListeners();
       }
-
-      return true;
+      
+      return true; // Return true since localStorage save succeeded
     } catch (error) {
       logger.error('Failed to save API keys', error as Error);
       return false;
