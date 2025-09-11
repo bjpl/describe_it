@@ -45,8 +45,8 @@ export async function POST(request: NextRequest) {
     // Create Supabase client
     const supabase = createClient(supabaseUrl, supabaseServiceKey, {
       auth: {
-        autoRefreshToken: false,
-        persistSession: false
+        autoRefreshToken: true,
+        persistSession: true
       }
     });
     

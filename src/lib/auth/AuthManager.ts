@@ -66,6 +66,13 @@ class AuthManager {
   }
 
   /**
+   * Public initialize method for external initialization
+   */
+  public async initialize(): Promise<void> {
+    return this.initializeAuth();
+  }
+
+  /**
    * Initialize authentication and listen for changes
    */
   private async initializeAuth(): Promise<void> {
@@ -83,8 +90,9 @@ class AuthManager {
 
       // Listen for auth changes
       supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state changed:', event);
+        console.log('Auth state changed:', event, session ? 'with session' : 'no session');
         
+        // Update state first
         this.currentSession = session;
         this.currentUser = session?.user || null;
         
@@ -94,6 +102,7 @@ class AuthManager {
           this.currentProfile = null;
         }
         
+        // Always notify listeners after state is updated
         this.notifyListeners();
 
         // Handle different auth events
@@ -106,6 +115,9 @@ class AuthManager {
             break;
           case 'USER_UPDATED':
             await this.handleUserUpdate(session!);
+            break;
+          case 'TOKEN_REFRESHED':
+            console.log('Token refreshed for user:', session?.user?.email);
             break;
         }
       });
@@ -256,48 +268,65 @@ class AuthManager {
       console.log('[AuthManager] Signin successful');
       
       // Set up the session
-      if (result.session) {
-        console.log('[AuthManager] Setting up session for user:', result.user?.email);
-        this.currentUser = result.user as any;
-        this.currentSession = result.session as any;
+      if (result.session && result.user) {
+        console.log('[AuthManager] Setting up session for user:', result.user.email);
         
-        // Also set in Supabase client
-        const client = supabase;
-        const { data: sessionData, error: sessionError } = await client.auth.setSession({
-          access_token: result.session.access_token,
-          refresh_token: result.session.refresh_token
-        });
-        
-        if (sessionError) {
-          console.error('[AuthManager] Failed to set session in Supabase client:', sessionError);
-        } else {
-          console.log('[AuthManager] Session set successfully in Supabase client');
-        }
-        
-        // Load user profile
-        if (result.user?.id) {
-          await this.loadUserProfile(result.user.id);
-        }
-        
-        // Force immediate state update
-        this.notifyListeners();
-        
-        // Also trigger a manual auth state change event
-        window.dispatchEvent(new CustomEvent('auth-state-change', { 
-          detail: { isAuthenticated: true, user: result.user } 
-        }));
-        
-        // Double-check the session was set
-        const { data: { session: verifySession } } = await client.auth.getSession();
-        if (!verifySession) {
-          console.error('[AuthManager] Session verification failed - session not persisted');
-          // Try setting it again with the full session object
-          if (result.session) {
-            await client.auth.setSession(result.session);
+        try {
+          // Set session in Supabase client first
+          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+            access_token: result.session.access_token,
+            refresh_token: result.session.refresh_token
+          });
+          
+          if (sessionError) {
+            console.error('[AuthManager] Failed to set session in Supabase client:', sessionError);
+            return {
+              success: false,
+              error: 'Failed to establish session. Please try again.'
+            };
           }
-        } else {
+          
+          console.log('[AuthManager] Session set successfully in Supabase client');
+          
+          // Verify session was set properly
+          const { data: { session: verifySession } } = await supabase.auth.getSession();
+          if (!verifySession) {
+            console.error('[AuthManager] Session verification failed - session not persisted');
+            return {
+              success: false,
+              error: 'Session could not be established. Please try again.'
+            };
+          }
+          
           console.log('[AuthManager] Session verified successfully');
+          
+          // Now update our internal state
+          this.currentUser = result.user as any;
+          this.currentSession = result.session as any;
+          
+          // Load user profile
+          await this.loadUserProfile(result.user.id);
+          
+          // Notify listeners AFTER everything is properly set up
+          this.notifyListeners();
+          
+          // Trigger custom event for additional UI updates
+          window.dispatchEvent(new CustomEvent('auth-state-change', { 
+            detail: { isAuthenticated: true, user: result.user } 
+          }));
+          
+        } catch (sessionSetupError) {
+          console.error('[AuthManager] Session setup failed:', sessionSetupError);
+          return {
+            success: false,
+            error: 'Failed to establish authenticated session. Please try again.'
+          };
         }
+      } else {
+        return {
+          success: false,
+          error: 'Invalid session data received from server.'
+        };
       }
 
       return { success: true };
@@ -409,11 +438,11 @@ class AuthManager {
         .from('user_api_keys')
         .insert({
           user_id: userId,
-          unsplash_key: null,
-          openai_key: null,
-          anthropic_key: null,
-          google_key: null,
-          encrypted: true,
+          unsplash_api_key: null,
+          openai_api_key: null,
+          claude_api_key: null,
+          google_api_key: null,
+          other_api_keys: {},
           created_at: new Date().toISOString()
         });
 
@@ -446,11 +475,11 @@ class AuthManager {
           id: userId,
           email: this.currentUser?.email || '',
           full_name: this.currentUser?.user_metadata?.full_name || '',
+          subscription_status: 'free',
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          last_active_at: new Date().toISOString()
         } as UserProfile;
-        this.notifyListeners();
-        return;
+        return; // Don't notify here, let the caller handle it
       }
 
       // Load API keys (encrypted) - but don't fail if they don't exist
@@ -463,11 +492,11 @@ class AuthManager {
 
         if (!keysError && apiKeys) {
           profile.api_keys = {
-            unsplash: apiKeys.unsplash_key,
-            openai: apiKeys.openai_key,
-            anthropic: apiKeys.anthropic_key,
-            google: apiKeys.google_key,
-            encrypted: apiKeys.encrypted
+            unsplash: apiKeys.unsplash_api_key,
+            openai: apiKeys.openai_api_key,
+            anthropic: apiKeys.claude_api_key,
+            google: apiKeys.google_api_key,
+            encrypted: true
           };
         }
       } catch (keysError) {
@@ -476,7 +505,6 @@ class AuthManager {
 
       this.currentProfile = profile as UserProfile;
       console.log('[AuthManager] User profile loaded successfully');
-      this.notifyListeners();
     } catch (error) {
       console.error('[AuthManager] Failed to load user profile:', error);
       logger.error('Failed to load user profile', error as Error);
@@ -487,10 +515,10 @@ class AuthManager {
           id: userId,
           email: this.currentUser.email || '',
           full_name: this.currentUser.user_metadata?.full_name || '',
+          subscription_status: 'free',
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          last_active_at: new Date().toISOString()
         } as UserProfile;
-        this.notifyListeners();
       }
     }
   }
@@ -555,11 +583,11 @@ class AuthManager {
             .from('user_api_keys')
             .upsert({
               user_id: this.currentUser.id,
-              unsplash_key: encryptedKeys.unsplash,
-              openai_key: encryptedKeys.openai,
-              anthropic_key: encryptedKeys.anthropic,
-              google_key: encryptedKeys.google,
-              encrypted: true,
+              unsplash_api_key: encryptedKeys.unsplash || null,
+              openai_api_key: encryptedKeys.openai || null,
+              claude_api_key: encryptedKeys.anthropic || null,
+              google_api_key: encryptedKeys.google || null,
+              other_api_keys: {},
               updated_at: new Date().toISOString()
             });
           
@@ -737,6 +765,14 @@ class AuthManager {
    */
   private notifyListeners(): void {
     const state = this.getAuthState();
+    console.log('[AuthManager] Notifying listeners:', {
+      isAuthenticated: state.isAuthenticated,
+      hasUser: !!state.user,
+      hasSession: !!state.session,
+      hasProfile: !!state.profile,
+      listenerCount: this.listeners.size
+    });
+    
     this.listeners.forEach(listener => {
       try {
         listener(state);

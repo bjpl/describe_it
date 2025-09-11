@@ -10,16 +10,12 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Global singleton instance to prevent multiple clients
-let globalClient: ReturnType<typeof createClient<Database>> | null = null;
-
-// Ensure we only create one client instance globally
-if (typeof window !== 'undefined' && !globalClient) {
-  // Check if a client already exists on the window object
-  const windowAny = window as any;
-  if (!windowAny.__supabaseClient) {
-    console.log('[Supabase] Creating singleton client instance');
-    windowAny.__supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Create a single client instance for the entire application
+function createSupabaseClient() {
+  if (typeof window !== 'undefined') {
+    // Browser client with persistent sessions
+    console.log('[Supabase] Creating browser client instance');
+    return createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -34,24 +30,20 @@ if (typeof window !== 'undefined' && !globalClient) {
       },
     });
   } else {
-    console.log('[Supabase] Using existing singleton client instance');
+    // Server-side client (SSR) without persistent sessions
+    console.log('[Supabase] Creating server-side client instance');
+    return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false,
+        detectSessionInUrl: false,
+      },
+    });
   }
-  globalClient = windowAny.__supabaseClient;
 }
 
-// For SSR, create a non-persistent client
-if (typeof window === 'undefined' && !globalClient) {
-  globalClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-    auth: {
-      persistSession: false,
-      autoRefreshToken: false,
-      detectSessionInUrl: false,
-    },
-  });
-}
-
-// Export the singleton client
-export const supabase = globalClient!;
+// Create the singleton client instance
+export const supabase = createSupabaseClient();
 
 // Alias for backwards compatibility
 export const createBrowserSupabaseClient = () => supabase;
