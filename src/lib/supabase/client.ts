@@ -10,19 +10,21 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables')
 }
 
-// Singleton instance to prevent multiple clients
-let singletonClient: ReturnType<typeof createClient<Database>> | null = null;
+// Global singleton instance to prevent multiple clients
+let globalClient: ReturnType<typeof createClient<Database>> | null = null;
 
-// Create a single Supabase client instance
-const createSupabaseClient = () => {
-  if (!singletonClient) {
+// Ensure we only create one client instance globally
+if (typeof window !== 'undefined' && !globalClient) {
+  // Check if a client already exists on the window object
+  const windowAny = window as any;
+  if (!windowAny.__supabaseClient) {
     console.log('[Supabase] Creating singleton client instance');
-    singletonClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    windowAny.__supabaseClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storage: window.localStorage,
         storageKey: 'describe-it-auth',
       },
       realtime: {
@@ -31,12 +33,25 @@ const createSupabaseClient = () => {
         },
       },
     });
+  } else {
+    console.log('[Supabase] Using existing singleton client instance');
   }
-  return singletonClient;
+  globalClient = windowAny.__supabaseClient;
 }
 
-// Export a single client instance for all uses
-export const supabase = createSupabaseClient()!;
+// For SSR, create a non-persistent client
+if (typeof window === 'undefined' && !globalClient) {
+  globalClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  });
+}
+
+// Export the singleton client
+export const supabase = globalClient!;
 
 // Alias for backwards compatibility
 export const createBrowserSupabaseClient = () => supabase;
