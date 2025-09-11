@@ -246,26 +246,23 @@ export class ApiKeyProvider {
       return false;
     }
 
-    // Check length based on key type
-    let minLength = 20;
-    let keyType = 'unknown';
+    // Modern OpenAI keys can be VERY long (150+ characters)
+    // We only check for minimum reasonable length
+    const minLength = 20; // Minimum to ensure it's not empty/too short
     
-    if (key.startsWith('sk-proj-')) {
-      minLength = 56; // Modern project keys are longer
-      keyType = 'project';
-    } else if (key.startsWith('sk-')) {
-      minLength = 51; // Standard sk- keys
-      keyType = 'standard';
-    }
-
     if (key.length < minLength) {
-      console.warn('[ApiKeyProvider] OpenAI key validation failed: insufficient length', {
+      console.warn('[ApiKeyProvider] OpenAI key validation failed: too short', {
         keyLength: key.length,
-        expectedMinLength: minLength,
-        keyType
+        expectedMinLength: minLength
       });
       return false;
     }
+    
+    // No maximum length check - keys can be 164+ characters
+    console.log('[ApiKeyProvider] OpenAI key validated successfully', {
+      keyLength: key.length,
+      keyPrefix: key.substring(0, 10) + '...'
+    });
 
     // Check for placeholder keys specific to OpenAI
     const placeholders = [

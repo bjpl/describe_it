@@ -172,22 +172,23 @@ class OpenAIService {
       return false;
     }
 
-    // More specific length validation for different key types
-    let minLength = 20;
-    if (apiKey.startsWith('sk-proj-')) {
-      minLength = 56; // sk-proj- keys are longer
-    } else if (apiKey.startsWith('sk-')) {
-      minLength = 51; // standard sk- keys
-    }
+    // Modern OpenAI keys can be VERY long (150-200+ characters)
+    // Only check for minimum reasonable length, no maximum
+    const minLength = 20;
 
     if (apiKey.length < minLength) {
       console.error('[OpenAIService] API key validation failed: too short', {
         keyLength: apiKey.length,
-        expectedMinLength: minLength,
-        keyType: apiKey.startsWith('sk-proj-') ? 'project' : 'standard'
+        expectedMinLength: minLength
       });
       return false;
     }
+    
+    // Accept any length above minimum - keys can be 164+ characters
+    console.log('[OpenAIService] API key validation passed', {
+      keyLength: apiKey.length,
+      keyType: apiKey.startsWith('sk-proj-') ? 'project' : 'standard'
+    });
 
     // Check for placeholder or example keys
     const invalidPlaceholders = [
