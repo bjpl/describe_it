@@ -9,9 +9,10 @@ interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: 'signin' | 'signup';
+  onAuthSuccess?: (authData: { user: any; profile?: any }) => void;
 }
 
-export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModalProps) {
+export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSuccess }: AuthModalProps) {
   const { signIn, signUp, signInWithProvider } = useAuth();
   const { directSignIn, directSignUp } = useDirectAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
@@ -64,17 +65,46 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
         setSuccess(true);
         setLoading(false);
         
-        // Close modal after brief success message
+        // Set session storage flag for immediate UI feedback
+        sessionStorage.setItem('recent-auth-success', Date.now().toString());
+        
+        // Dispatch custom event immediately for all components
+        window.dispatchEvent(new CustomEvent('auth-state-changed', {
+          detail: {
+            isAuthenticated: true,
+            user: result.user || { email },
+            profile: result.profile
+          }
+        }));
+        
+        // Call success callback if provided
+        if (onAuthSuccess) {
+          onAuthSuccess({
+            user: result.user || { email },
+            profile: result.profile
+          });
+        }
+        
+        // Brief success message then close
         setTimeout(() => {
-          onClose();
           // Reset form
           setEmail('');
           setPassword('');
           setFullName('');
           setSuccess(false);
           setError(null);
-          // Don't reload - let React handle the auth state update
-          // The AuthProvider will automatically update the UI
+          
+          // Close modal
+          onClose();
+          
+          // Force page refresh as last resort if UI doesn't update
+          setTimeout(() => {
+            const currentAuth = localStorage.getItem('describe-it-auth');
+            if (!currentAuth) {
+              console.log('[AuthModal] UI sync failed, forcing page reload');
+              window.location.reload();
+            }
+          }, 2000);
         }, 1500);
       } else {
         setError(result?.error || 'Authentication failed');
@@ -95,10 +125,36 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
     
     try {
       const result = await signInWithProvider(provider);
-      if (!result.success) {
+      if (result.success) {
+        // Set session storage flag
+        sessionStorage.setItem('recent-auth-success', Date.now().toString());
+        
+        // Dispatch custom event
+        window.dispatchEvent(new CustomEvent('auth-state-changed', {
+          detail: {
+            isAuthenticated: true,
+            user: result.user,
+            profile: result.profile
+          }
+        }));
+        
+        // Call success callback if provided
+        if (onAuthSuccess) {
+          onAuthSuccess({
+            user: result.user,
+            profile: result.profile
+          });
+        }
+        
+        // Close modal after brief delay
+        setTimeout(() => {
+          onClose();
+        }, 500);
+      } else {
         setError(result.error || 'Failed to sign in with provider');
       }
     } catch (err) {
+      console.error('[AuthModal] Provider sign in error:', err);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);
@@ -126,8 +182,11 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
         )}
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm">
-            {mode === 'signin' ? 'Successfully signed in!' : 'Account created! Check your email to verify.'}
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg text-green-700 text-sm flex items-center gap-2">
+            <svg className="h-4 w-4 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+            </svg>
+            {mode === 'signin' ? 'Successfully signed in! Updating interface...' : 'Account created! Check your email to verify.'}
           </div>
         )}
 
