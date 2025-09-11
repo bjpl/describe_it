@@ -1,5 +1,5 @@
 /**
- * Server-side only OpenAI service
+ * Server-side only OpenAI service - Production Version
  * This file should ONLY be imported in API routes, never in client components
  */
 
@@ -196,74 +196,29 @@ export async function generateVisionDescription(
   
   // Validate imageUrl - critical validation to prevent API failures
   if (!imageUrl || typeof imageUrl !== 'string') {
-    console.warn('[OpenAI Server] Invalid imageUrl provided, returning demo description', {
+    console.error('[OpenAI Server] Invalid imageUrl provided - this is required for vision API', {
       hasImageUrl: !!imageUrl,
       imageUrlType: typeof imageUrl,
       imageUrlLength: imageUrl?.length
     });
-    return generateDemoDescription(style || 'narrativo', '', language);
+    throw new Error('[OpenAI Server] Invalid imageUrl provided - imageUrl is required for vision API');
   }
 
   // Validate and optimize image data with size limits
   const imageValidation = validateAndOptimizeImageData(imageUrl);
   if (!imageValidation.valid) {
-    console.warn('[OpenAI Server] Image validation failed, returning demo description', {
+    console.error('[OpenAI Server] Image validation failed - cannot proceed with vision API', {
       error: imageValidation.error,
       imageUrlLength: imageUrl?.length
     });
-    return generateDemoDescription(style || 'narrativo', imageUrl || '', language);
+    throw new Error(`[OpenAI Server] Image validation failed: ${imageValidation.error}`);
   }
   
   const optimizedImageUrl = imageValidation.optimized || imageUrl;
 
-  // Validate style parameter
-  if (!style || typeof style !== 'string') {
-    console.warn('[OpenAI Server] Invalid style parameter, using default', {
-      hasStyle: !!style,
-      styleType: typeof style,
-      styleValue: style
-    });
-  }
-
-  const validStyles: DescriptionStyle[] = ['narrativo', 'poetico', 'academico', 'conversacional', 'infantil'];
-  if (style && !validStyles.includes(style)) {
-    console.warn('[OpenAI Server] Invalid style value, using default', {
-      providedStyle: style,
-      validStyles
-    });
-  }
-
-  // Validate language parameter
-  const validLanguages = ['es', 'en'];
-  if (language && !validLanguages.includes(language)) {
-    console.warn('[OpenAI Server] Invalid language parameter, using default', {
-      providedLanguage: language,
-      validLanguages,
-      usingDefault: 'es'
-    });
-  }
-
-  // Validate maxLength parameter
-  if (maxLength && (typeof maxLength !== 'number' || maxLength < 50 || maxLength > 1000)) {
-    console.warn('[OpenAI Server] Invalid maxLength parameter, using default', {
-      providedMaxLength: maxLength,
-      maxLengthType: typeof maxLength,
-      usingDefault: 300
-    });
-  }
-
-  // Validate customPrompt if provided
-  if (customPrompt && (typeof customPrompt !== 'string' || customPrompt.length > 500)) {
-    console.warn('[OpenAI Server] Invalid customPrompt parameter', {
-      hasCustomPrompt: !!customPrompt,
-      customPromptType: typeof customPrompt,
-      customPromptLength: customPrompt?.length
-    });
-  }
-
   // Use validated or default values
-  const validatedStyle = (style && validStyles.includes(style)) ? style : 'narrativo';
-  const validatedLanguage = (language && validLanguages.includes(language)) ? language : 'es';
+  const validatedStyle = (style && ['narrativo', 'poetico', 'academico', 'conversacional', 'infantil'].includes(style)) ? style : 'narrativo';
+  const validatedLanguage = (language && ['es', 'en'].includes(language)) ? language : 'es';
   const validatedMaxLength = (typeof maxLength === 'number' && maxLength >= 50 && maxLength <= 1000) ? maxLength : 300;
   const validatedCustomPrompt = (typeof customPrompt === 'string' && customPrompt.length <= 500) ? customPrompt : undefined;
   
@@ -272,11 +227,8 @@ export async function generateVisionDescription(
       hasImageUrl: !!optimizedImageUrl,
       imageUrlType: optimizedImageUrl?.startsWith('data:') ? 'base64' : 'url',
       imageUrlLength: optimizedImageUrl?.length,
-      originalStyle: style,
       validatedStyle,
-      originalLanguage: language,
       validatedLanguage,
-      originalMaxLength: maxLength,
       validatedMaxLength,
       hasCustomPrompt: !!validatedCustomPrompt
     });
@@ -287,11 +239,29 @@ export async function generateVisionDescription(
     client = getServerOpenAIClient();
   } catch (clientError) {
     console.error('[OpenAI Server] Failed to get OpenAI client:', clientError);
-    return generateDemoDescription(style, imageUrl, language);
+    // Check if we have a valid API key - if so, this is a configuration error
+    try {
+      const config = apiKeyProvider.getServiceConfig('openai');
+      if (config.isValid && config.apiKey) {
+        throw new Error(`[OpenAI Server] Client initialization failed despite valid API key: ${clientError}`);
+      }
+    } catch (keyCheckError) {
+      // If we can't check the key, assume it's invalid and fall back
+    }
+    return generateDemoDescription(validatedStyle, imageUrl, validatedLanguage);
   }
   
   if (!client) {
-    console.warn('[OpenAI Server] No client available, returning demo description');
+    console.warn('[OpenAI Server] No client available, checking if API key exists');
+    // Check if we have a valid API key - if so, this indicates a problem
+    try {
+      const config = apiKeyProvider.getServiceConfig('openai');
+      if (config.isValid && config.apiKey) {
+        throw new Error('[OpenAI Server] OpenAI client is null despite valid API key - configuration issue');
+      }
+    } catch (keyCheckError) {
+      // If we can't check the key, assume it's invalid and fall back
+    }
     return generateDemoDescription(validatedStyle, imageUrl, validatedLanguage);
   }
 
@@ -307,7 +277,7 @@ export async function generateVisionDescription(
 
     if (process.env.NODE_ENV !== 'production') {
       console.log('[OpenAI Server] Calling GPT-4 Vision API:', {
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         validatedStyle,
         validatedLanguage,
         validatedMaxLength,
@@ -316,13 +286,18 @@ export async function generateVisionDescription(
       });
     }
 
-    // Validate image URL format
-    if (!imageUrl || (!imageUrl.startsWith('data:') && !imageUrl.startsWith('http'))) {
-      throw new Error('[OpenAI Server] Invalid or missing image URL format');
+    // Validate image URL format - must use optimizedImageUrl at this point
+    if (!optimizedImageUrl || (!optimizedImageUrl.startsWith('data:') && !optimizedImageUrl.startsWith('http'))) {
+      console.error('[OpenAI Server] Invalid or missing processed image URL format', {
+        hasOptimizedUrl: !!optimizedImageUrl,
+        optimizedUrlType: optimizedImageUrl ? (optimizedImageUrl.startsWith('data:') ? 'base64' : 'url') : 'none',
+        optimizedUrlLength: optimizedImageUrl?.length || 0
+      });
+      throw new Error('[OpenAI Server] Invalid or missing processed image URL format');
     }
 
     const response = await client.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages: [
         {
           role: "system",
@@ -347,7 +322,7 @@ export async function generateVisionDescription(
           ]
         }
       ],
-      max_tokens: Math.min(Math.ceil(validatedMaxLength * 1.5), 1000),
+      max_tokens: Math.min(Math.ceil(validatedMaxLength * 2), 2000),
       temperature: validatedStyle === "poetico" ? 0.9 : validatedStyle === "academico" ? 0.3 : 0.7,
     });
 
@@ -359,8 +334,8 @@ export async function generateVisionDescription(
     const description = response.choices[0]?.message?.content || "";
     
     if (!description.trim()) {
-      console.warn('[OpenAI Server] Empty description returned from API');
-      return generateDemoDescription(validatedStyle, imageUrl, validatedLanguage);
+      console.error('[OpenAI Server] Empty description returned from API - this should not happen with valid API key');
+      throw new Error('[OpenAI Server] Empty description returned from OpenAI Vision API');
     }
     
     if (process.env.NODE_ENV !== 'production') {
@@ -398,11 +373,8 @@ export async function generateVisionDescription(
       code: (error instanceof Error && 'code' in error) ? (error as any).code : undefined,
       status: (error instanceof Error && 'status' in error) ? (error as any).status : undefined,
       requestDetails: {
-        originalStyle: style,
         validatedStyle,
-        originalLanguage: language,
         validatedLanguage,
-        originalMaxLength: maxLength,
         validatedMaxLength,
         imageUrlLength: optimizedImageUrl?.length,
         imageUrlType: optimizedImageUrl?.startsWith('data:') ? 'base64' : 'url'
