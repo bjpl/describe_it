@@ -57,7 +57,18 @@ async function generateParallelDescriptions(
   const { imageUrl, style, maxLength, customPrompt, languages, originalImageUrl } = request;
   const baseTimestamp = Date.now();
   
-  console.log('[Parallel Generation] Starting concurrent description generation for languages:', languages);
+  console.log('[Vision Debug] Starting parallel generation with comprehensive logging:', {
+    step: 'parallel_start',
+    languages: languages,
+    hasImageUrl: !!imageUrl,
+    imageUrlLength: imageUrl?.length,
+    imageUrlType: imageUrl?.startsWith('data:') ? 'base64' : 'url',
+    style: style,
+    maxLength: maxLength,
+    hasCustomPrompt: !!customPrompt,
+    originalImageUrl: originalImageUrl?.substring(0, 100) + '...',
+    timestamp: new Date().toISOString()
+  });
   
   // Create description generation promises for each language
   const descriptionPromises = languages.map(async (language, index) => {
@@ -65,7 +76,19 @@ async function generateParallelDescriptions(
     const languageKey = language === "en" ? "english" : "spanish";
     
     try {
-      console.log(`[Parallel Generation] Starting ${languageLabel} description generation...`);
+      console.log(`[Vision Debug] Starting ${languageLabel} description with full context:`, {
+        step: 'vision_call_start',
+        language: language,
+        languageLabel: languageLabel,
+        style: style,
+        maxLength: maxLength,
+        hasImageUrl: !!imageUrl,
+        imageUrlLength: imageUrl?.length,
+        imageUrlPrefix: imageUrl?.substring(0, 50) + '...',
+        hasCustomPrompt: !!customPrompt,
+        customPromptLength: customPrompt?.length,
+        timestamp: new Date().toISOString()
+      });
       
       const description = await generateVisionDescription({
         imageUrl,
@@ -73,6 +96,17 @@ async function generateParallelDescriptions(
         maxLength,
         customPrompt,
         language
+      });
+      
+      console.log(`[Vision Debug] ${languageLabel} vision call completed:`, {
+        step: 'vision_call_success',
+        language: language,
+        hasDescription: !!description,
+        hasText: !!description?.text,
+        textLength: description?.text?.length,
+        wordCount: description?.wordCount,
+        isDemoMode: description?.text?.includes('[DEMO MODE]') || description?.text?.includes('DEMO MODE'),
+        timestamp: new Date().toISOString()
       });
       
       if (!description || !description.text) {
@@ -94,11 +128,21 @@ async function generateParallelDescriptions(
       };
       
     } catch (error) {
-      console.error(`[Parallel Generation] Failed to generate ${languageLabel} description:`, {
-        error: error instanceof Error ? error.message : error,
+      console.error(`[Vision Debug] Critical failure in ${languageLabel} vision generation:`, {
+        step: 'vision_call_error',
+        language: language,
+        languageLabel: languageLabel,
+        error: error instanceof Error ? error.message : String(error),
+        errorType: error instanceof Error ? error.constructor.name : typeof error,
         stack: error instanceof Error ? error.stack : undefined,
+        code: (error instanceof Error && 'code' in error) ? (error as any).code : undefined,
+        status: (error instanceof Error && 'status' in error) ? (error as any).status : undefined,
         imageUrlLength: imageUrl?.length,
-        style
+        imageUrlType: imageUrl?.startsWith('data:') ? 'base64' : 'url',
+        style: style,
+        maxLength: maxLength,
+        hasCustomPrompt: !!customPrompt,
+        timestamp: new Date().toISOString()
       });
       
       // Return fallback description for this language

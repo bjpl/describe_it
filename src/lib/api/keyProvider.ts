@@ -36,9 +36,10 @@ const ENV_KEY_MAP: Record<ServiceType, string[]> = {
 /**
  * API Key validation patterns
  * Updated to support modern OpenAI key formats (sk- and sk-proj-)
+ * Fixed pattern to properly validate project keys of any length
  */
 const KEY_PATTERNS: Record<ServiceType, RegExp> = {
-  openai: /^sk-([a-zA-Z0-9]{48,}|proj-[a-zA-Z0-9]{20,}T3BlbkFJ[a-zA-Z0-9]{20,})$/,
+  openai: /^sk-(proj-)?[a-zA-Z0-9_-]{20,}$/,
   unsplash: /^[a-zA-Z0-9_-]{20,}$/,
 };
 
@@ -62,36 +63,62 @@ export class ApiKeyProvider {
    * Initialize keys from all sources with enhanced error handling
    */
   private initializeKeys(): void {
-    console.log('[ApiKeyProvider] Initializing API keys from all sources...');
+    console.log('[Vision Debug] Initializing API keys from all sources:', {
+      step: 'key_init_start',
+      environment: typeof window === 'undefined' ? 'server' : 'client',
+      timestamp: new Date().toISOString()
+    });
     
     let settings = null;
     try {
       // Try to get settings with timeout to prevent blocking
       settings = this.getSettingsWithTimeout();
+      console.log('[Vision Debug] Settings retrieved during initialization:', {
+        step: 'settings_retrieved',
+        hasSettings: !!settings,
+        hasApiKeys: !!settings?.apiKeys,
+        hasOpenAIKey: !!settings?.apiKeys?.openai,
+        openaiKeyLength: settings?.apiKeys?.openai?.length || 0,
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
-      console.warn('[ApiKeyProvider] Failed to get settings during initialization:', error);
+      console.warn('[Vision Debug] Failed to get settings during initialization:', {
+        step: 'settings_error',
+        error: error instanceof Error ? error.message : String(error),
+        timestamp: new Date().toISOString()
+      });
     }
 
     try {
+      console.log('[Vision Debug] Resolving keys from all sources:', {
+        step: 'key_resolution_start',
+        settingsOpenAIKey: settings?.apiKeys?.openai?.substring(0, 10) + '...' || 'none',
+        settingsOpenAILength: settings?.apiKeys?.openai?.length || 0,
+        timestamp: new Date().toISOString()
+      });
+      
       this.cachedKeys = {
         openai: this.resolveKey('openai', settings?.apiKeys?.openai || ''),
         unsplash: this.resolveKey('unsplash', settings?.apiKeys?.unsplash || ''),
       };
       
-      if (process.env.NODE_ENV !== 'production') {
-        console.log('[ApiKeyProvider] Keys initialized successfully:', {
-          openai: {
-            hasKey: !!this.cachedKeys.openai,
-            keyLength: this.cachedKeys.openai?.length || 0,
-            source: this.getKeySource('openai')
-          },
-          unsplash: {
-            hasKey: !!this.cachedKeys.unsplash,
-            keyLength: this.cachedKeys.unsplash?.length || 0,
-            source: this.getKeySource('unsplash')
-          }
-        });
-      }
+      console.log('[Vision Debug] Keys initialized successfully with comprehensive details:', {
+        step: 'keys_initialized',
+        openai: {
+          hasKey: !!this.cachedKeys.openai,
+          keyLength: this.cachedKeys.openai?.length || 0,
+          keyPrefix: this.cachedKeys.openai ? this.cachedKeys.openai.substring(0, 6) + '...' : 'none',
+          source: this.getKeySource('openai'),
+          isValid: this.validateKey('openai', this.cachedKeys.openai),
+          keyType: this.cachedKeys.openai?.startsWith('sk-proj-') ? 'project' : this.cachedKeys.openai?.startsWith('sk-') ? 'standard' : 'unknown'
+        },
+        unsplash: {
+          hasKey: !!this.cachedKeys.unsplash,
+          keyLength: this.cachedKeys.unsplash?.length || 0,
+          source: this.getKeySource('unsplash')
+        },
+        timestamp: new Date().toISOString()
+      });
     } catch (error) {
       console.error('[ApiKeyProvider] Critical error during key initialization:', error);
       // Fallback to environment-only keys
@@ -116,10 +143,21 @@ export class ApiKeyProvider {
    * Get settings with enhanced error handling and backup retrieval
    */
   private getSettingsWithTimeout(timeoutMs = 50): any {
+    console.log('[Vision Debug] Getting settings with comprehensive logging:', {
+      step: 'get_settings_start',
+      environment: typeof window === 'undefined' ? 'server' : 'client',
+      timeoutMs: timeoutMs,
+      timestamp: new Date().toISOString()
+    });
+    
     try {
       // Server-side check
       if (typeof window === 'undefined') {
-        console.log('[ApiKeyProvider] Skipping settings retrieval on server-side');
+        console.log('[Vision Debug] Skipping settings retrieval on server-side:', {
+          step: 'server_side_skip',
+          environment: 'server',
+          timestamp: new Date().toISOString()
+        });
         return null;
       }
       
@@ -439,41 +477,89 @@ export class ApiKeyProvider {
    * Get complete configuration for a service with enhanced validation
    */
   public getServiceConfig(service: ServiceType): ApiKeyConfig {
+    console.log(`[Vision Debug] Getting service config for ${service}:`, {
+      step: 'get_service_config_start',
+      service: service,
+      cachedKeyExists: !!this.cachedKeys[service],
+      cachedKeyLength: this.cachedKeys[service]?.length || 0,
+      timestamp: new Date().toISOString()
+    });
+    
     let apiKey = '';
     let isValid = false;
     let source: KeySource = 'none';
     
     try {
       apiKey = this.getKey(service);
+      console.log(`[Vision Debug] Retrieved key for ${service}:`, {
+        step: 'key_retrieved',
+        hasApiKey: !!apiKey,
+        keyLength: apiKey?.length || 0,
+        keyPrefix: apiKey ? apiKey.substring(0, 6) + '...' : 'none',
+        keyType: service === 'openai' && apiKey ? 
+          (apiKey.startsWith('sk-proj-') ? 'project' : 
+           apiKey.startsWith('sk-') ? 'standard' : 'unknown') : 'n/a',
+        timestamp: new Date().toISOString()
+      });
+      
       source = this.getKeySource(service);
+      console.log(`[Vision Debug] Key source determined for ${service}:`, {
+        step: 'source_determined',
+        source: source,
+        timestamp: new Date().toISOString()
+      });
       
       if (apiKey) {
         try {
           isValid = this.validateKey(service, apiKey);
+          console.log(`[Vision Debug] Key validation result for ${service}:`, {
+            step: 'key_validated',
+            isValid: isValid,
+            keyLength: apiKey.length,
+            validationPattern: KEY_PATTERNS[service]?.source,
+            timestamp: new Date().toISOString()
+          });
         } catch (validationError) {
-          console.error(`[ApiKeyProvider] Key validation error for ${service}:`, validationError);
+          console.error(`[Vision Debug] Key validation error for ${service}:`, {
+            step: 'validation_error',
+            error: validationError instanceof Error ? validationError.message : String(validationError),
+            keyLength: apiKey?.length,
+            timestamp: new Date().toISOString()
+          });
           isValid = false;
         }
+      } else {
+        console.warn(`[Vision Debug] No API key available for ${service}:`, {
+          step: 'no_key_available',
+          cachedKeyExists: !!this.cachedKeys[service],
+          timestamp: new Date().toISOString()
+        });
       }
     } catch (configError) {
-      console.error(`[ApiKeyProvider] Error getting service config for ${service}:`, configError);
+      console.error(`[Vision Debug] Critical error getting service config for ${service}:`, {
+        step: 'config_error',
+        error: configError instanceof Error ? configError.message : String(configError),
+        stack: configError instanceof Error ? configError.stack : undefined,
+        timestamp: new Date().toISOString()
+      });
     }
     
     const isDemo = !isValid || !apiKey;
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log(`[ApiKeyProvider] Service config for ${service}:`, {
-        hasApiKey: !!apiKey,
-        keyLength: apiKey?.length || 0,
-        isValid,
-        source,
-        isDemo,
-        keyPrefix: apiKey ? (apiKey.startsWith('sk-proj-') ? 'sk-proj-***' : 'sk-***') : 'none', // Never log actual key
-        keyType: service === 'openai' && apiKey ? 
-          (apiKey.startsWith('sk-proj-') ? 'project' : 
-           apiKey.startsWith('sk-') ? 'standard' : 'unknown') : 'n/a'
-      });
-    }
+    console.log(`[Vision Debug] Final service config for ${service}:`, {
+      step: 'final_config',
+      hasApiKey: !!apiKey,
+      keyLength: apiKey?.length || 0,
+      keyPrefix: apiKey ? apiKey.substring(0, 6) + '...' : 'none',
+      isValid: isValid,
+      source: source,
+      isDemo: isDemo,
+      keyType: service === 'openai' && apiKey ? 
+        (apiKey.startsWith('sk-proj-') ? 'project' : 
+         apiKey.startsWith('sk-') ? 'standard' : 'unknown') : 'n/a',
+      environment: typeof window === 'undefined' ? 'server' : 'client',
+      timestamp: new Date().toISOString()
+    });
 
     return {
       apiKey,

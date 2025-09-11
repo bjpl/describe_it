@@ -252,6 +252,16 @@ class OpenAIService {
       return false;
     }
     
+    // Use consistent regex pattern with keyProvider
+    const keyPattern = /^sk-(proj-)?[a-zA-Z0-9_-]{20,}$/;
+    if (!keyPattern.test(apiKey)) {
+      console.error('[OpenAIService] API key validation failed: invalid format pattern', {
+        keyLength: apiKey.length,
+        keyPrefix: apiKey.substring(0, 8) + '...'
+      });
+      return false;
+    }
+    
     // Accept any length above minimum - keys can be 164+ characters
     if (process.env.NODE_ENV !== 'production') {
       console.log('[OpenAIService] API key validation passed', {
