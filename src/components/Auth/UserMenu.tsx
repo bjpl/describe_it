@@ -151,14 +151,7 @@ export function UserMenu() {
 
   // Enhanced debug logging with state divergence detection
   useEffect(() => {
-    // Dynamically import authManager to avoid circular dependencies
-    let authManagerState = { isAuthenticated: false, user: null, profile: null };
-    try {
-      const { authManager } = require('@/lib/auth/authManager');
-      authManagerState = authManager.getState();
-    } catch (error) {
-      console.warn('Could not access authManager in UserMenu:', error);
-    }
+    // Check for state divergence
     const localStorage = window.localStorage.getItem('describe-it-auth');
     let localStorageData = null;
     
@@ -171,9 +164,9 @@ export function UserMenu() {
     const stateComparison = {
       authProvider: { isAuthenticated, user: user?.email, profile: !!profile },
       zustandStore: { 
-        isAuthenticated: authManagerState.isAuthenticated, 
-        user: authManagerState.user?.email, 
-        profile: !!authManagerState.profile 
+        isAuthenticated: isAuthenticated, 
+        user: user?.email, 
+        profile: !!profile 
       },
       localComponent: { 
         isAuthenticated: localIsAuthenticated, 
@@ -198,12 +191,9 @@ export function UserMenu() {
       divergences.push('AuthProvider vs LocalComponent: isAuthenticated mismatch');
     }
     
-    if (authManagerState.isAuthenticated !== isAuthenticated) {
-      divergences.push('Zustand vs AuthProvider: isAuthenticated mismatch');
-    }
-    
-    if (authManagerState.isAuthenticated !== localIsAuthenticated) {
-      divergences.push('Zustand vs LocalComponent: isAuthenticated mismatch');
+    // Check for divergences between provider and local state
+    if (isAuthenticated !== localIsAuthenticated) {
+      divergences.push('AuthProvider vs LocalComponent: isAuthenticated mismatch');
     }
     
     if (localStorageData?.access_token && !localIsAuthenticated) {
