@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
+import { useDirectAuth } from './useDirectAuth';
 import { X, Mail, Lock, User, KeyRound, Github, Chrome } from 'lucide-react';
 
 interface AuthModalProps {
@@ -12,6 +13,7 @@ interface AuthModalProps {
 
 export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModalProps) {
   const { signIn, signUp, signInWithProvider } = useAuth();
+  const { directSignIn, directSignUp } = useDirectAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>(initialMode);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -24,47 +26,65 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Prevent double submission
+    if (loading) return;
+    
     setLoading(true);
     setError(null);
+    
+    console.log('[AuthModal] Starting', mode, 'for', email);
 
     try {
       let result;
-      if (mode === 'signin') {
-        result = await signIn(email, password);
-      } else {
-        result = await signUp(email, password, { full_name: fullName });
+      
+      // Try AuthManager first with a shorter timeout
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out')), 5000)
+      );
+      
+      try {
+        const authPromise = mode === 'signin' 
+          ? signIn(email, password)
+          : signUp(email, password, { full_name: fullName });
+        
+        result = await Promise.race([authPromise, timeoutPromise]) as any;
+      } catch (authError: any) {
+        console.log('[AuthModal] AuthManager failed, trying direct auth');
+        
+        // Fallback to direct API call
+        result = mode === 'signin'
+          ? await directSignIn(email, password)
+          : await directSignUp(email, password, { full_name: fullName });
       }
+      
+      console.log('[AuthModal] Result:', result);
 
-      if (result.success) {
+      if (result?.success) {
         setSuccess(true);
         setLoading(false);
         
-        // Close modal and reset after brief success message
+        // Close modal after brief success message
         setTimeout(() => {
           onClose();
-          // Reset form after modal closes
-          setTimeout(() => {
-            setEmail('');
-            setPassword('');
-            setFullName('');
-            setSuccess(false);
-            setError(null);
-          }, 100);
+          // Reset form
+          setEmail('');
+          setPassword('');
+          setFullName('');
+          setSuccess(false);
+          setError(null);
+          // Reload page to update auth state
+          window.location.href = '/';
         }, 1000);
-        
-        // Force page reload to ensure auth state updates
-        if (mode === 'signin') {
-          setTimeout(() => {
-            window.location.reload();
-          }, 1500);
-        }
       } else {
-        setError(result.error || 'An error occurred');
+        setError(result?.error || 'Authentication failed');
         setLoading(false);
       }
     } catch (err: any) {
       console.error('[AuthModal] Error:', err);
-      setError(err.message || 'An unexpected error occurred');
+      setError(err.message === 'Request timed out' 
+        ? 'Request timed out. Please try again.' 
+        : err.message || 'An unexpected error occurred');
       setLoading(false);
     }
   };
