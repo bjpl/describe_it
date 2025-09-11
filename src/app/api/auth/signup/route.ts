@@ -43,7 +43,9 @@ export async function POST(request: NextRequest) {
         password,
         options: {
           data: metadata,
-          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://describe-it-lovat.vercel.app'}/auth/callback`
+          emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://describe-it-lovat.vercel.app'}/auth/callback`,
+          // Auto-confirm email for development (remove in production with proper email setup)
+          emailConfirm: false
         }
       });
 
