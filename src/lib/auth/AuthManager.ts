@@ -270,6 +270,11 @@ class AuthManager {
       // Set up the session
       if (result.session && result.user) {
         console.log('[AuthManager] Setting up session for user:', result.user.email);
+        console.log('[AuthManager] Session object:', {
+          hasAccessToken: !!result.session.access_token,
+          hasRefreshToken: !!result.session.refresh_token,
+          expiresAt: result.session.expires_at
+        });
         
         try {
           // Set session in Supabase client first
@@ -303,6 +308,18 @@ class AuthManager {
           // Now update our internal state
           this.currentUser = result.user as any;
           this.currentSession = result.session as any;
+          
+          // Manually ensure session is in localStorage as backup
+          if (typeof window !== 'undefined') {
+            const sessionToStore = {
+              access_token: result.session.access_token,
+              refresh_token: result.session.refresh_token,
+              expires_at: result.session.expires_at || (Date.now() / 1000 + 3600),
+              user: result.user
+            };
+            localStorage.setItem('describe-it-auth', JSON.stringify(sessionToStore));
+            console.log('[AuthManager] Session manually stored to localStorage');
+          }
           
           // Load user profile
           await this.loadUserProfile(result.user.id);

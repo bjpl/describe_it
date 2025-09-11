@@ -27,6 +27,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated: currentState.isAuthenticated,
         hasUser: !!currentState.user
       });
+      
+      // Check localStorage directly for session
+      const storedSession = localStorage.getItem('describe-it-auth');
+      if (storedSession && !currentState.isAuthenticated) {
+        console.log('[AuthProvider] Found session in localStorage but auth not initialized');
+        try {
+          const sessionData = JSON.parse(storedSession);
+          if (sessionData.access_token) {
+            // Initialize auth manager with the stored session
+            await authManager.initialize();
+            const newState = authManager.getAuthState();
+            if (newState.isAuthenticated) {
+              setAuthState(newState);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error('[AuthProvider] Failed to restore session from localStorage:', error);
+        }
+      }
+      
       setAuthState(currentState);
       
       // Also check Supabase directly
