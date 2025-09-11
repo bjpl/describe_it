@@ -257,22 +257,35 @@ class AuthManager {
       
       // Set up the session
       if (result.session) {
+        console.log('[AuthManager] Setting up session for user:', result.user?.email);
         this.currentUser = result.user as any;
         this.currentSession = result.session as any;
         
         // Also set in Supabase client
         const client = supabase;
-        await client.auth.setSession({
+        const { data: sessionData, error: sessionError } = await client.auth.setSession({
           access_token: result.session.access_token,
           refresh_token: result.session.refresh_token
         });
+        
+        if (sessionError) {
+          console.error('[AuthManager] Failed to set session in Supabase client:', sessionError);
+        } else {
+          console.log('[AuthManager] Session set successfully in Supabase client');
+        }
         
         // Load user profile
         if (result.user?.id) {
           await this.loadUserProfile(result.user.id);
         }
         
+        // Force immediate state update
         this.notifyListeners();
+        
+        // Also trigger a manual auth state change event
+        window.dispatchEvent(new CustomEvent('auth-state-change', { 
+          detail: { isAuthenticated: true, user: result.user } 
+        }));
       }
 
       return { success: true };

@@ -30,7 +30,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
     });
 
-    return unsubscribe;
+    // Also listen for custom auth events
+    const handleAuthChange = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      console.log('[AuthProvider] Custom auth event received:', customEvent.detail);
+      // Force a re-fetch of auth state
+      setAuthState(authManager.getAuthState());
+    };
+    
+    window.addEventListener('auth-state-change', handleAuthChange);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('auth-state-change', handleAuthChange);
+    };
   }, []);
 
   const contextValue: AuthContextValue = {
