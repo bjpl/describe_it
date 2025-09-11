@@ -177,32 +177,21 @@ class AnalyticsTracker {
 
   private async sendEvents(events: AnalyticsEvent[], retryCount: number = 0): Promise<void> {
     try {
-      // Send to Supabase
-      const { error } = await supabase
-        .from('analytics_events')
-        .insert(
-          events.map(event => ({
-            event_name: event.eventName,
-            event_data: event,
-            session_id: event.sessionId,
-            user_id: event.userId,
-            user_tier: event.userTier,
-            timestamp: new Date(event.timestamp).toISOString(),
-          }))
-        );
-
-      if (error) {
-        throw error;
-      }
-
-      // Also send to API endpoint for real-time processing
-      await fetch('/api/analytics', {
+      // DISABLED: Direct Supabase calls cause CORS issues in production
+      // Instead, only use the API endpoint which handles server-side storage
+      
+      // Send to API endpoint for processing (this will handle Supabase server-side)
+      const response = await fetch('/api/analytics', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ events }),
       });
+
+      if (!response.ok) {
+        throw new Error(`Analytics API error: ${response.status}`);
+      }
 
     } catch (error) {
       if (retryCount < this.config.maxRetries) {
