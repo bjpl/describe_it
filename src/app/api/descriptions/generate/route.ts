@@ -45,7 +45,8 @@ interface ParallelDescriptionRequest {
  * This reduces generation time from 30+ seconds to ~15 seconds
  */
 async function generateParallelDescriptions(
-  request: ParallelDescriptionRequest
+  request: ParallelDescriptionRequest,
+  userApiKey?: string
 ): Promise<Array<{
   id: string;
   imageId: string;
@@ -96,7 +97,7 @@ async function generateParallelDescriptions(
         maxLength,
         customPrompt,
         language
-      });
+      }, userApiKey);
       
       console.log(`[Vision Debug] ${languageLabel} vision call completed:`, {
         step: 'vision_call_success',
@@ -192,6 +193,18 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
   const requestId = crypto.randomUUID();
   const userId = request.user?.id;
   const userTier = request.user?.subscription_status || 'free';
+  
+  // Extract user's API key from request headers
+  const userApiKey = request.headers.get('X-OpenAI-API-Key') || undefined;
+  
+  if (userApiKey) {
+    console.log('[API Route] Received user API key from headers:', {
+      hasKey: !!userApiKey,
+      keyLength: userApiKey.length,
+      keyPrefix: userApiKey.substring(0, 6) + '...',
+      requestId
+    });
+  }
   
   console.log('[Generate Route] Processing description generation request:', {
     requestId,
@@ -374,7 +387,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
       customPrompt: params.customPrompt as string | undefined,
       languages: ["en", "es"] as const,
       originalImageUrl: params.imageUrl
-    });
+    }, userApiKey);
 
     const responseTime = performance.now() - startTime;
 

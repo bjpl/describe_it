@@ -26,42 +26,57 @@ function getConfigHash(apiKey: string): string {
 /**
  * Get OpenAI client instance for server-side use only
  * Uses singleton pattern with smart caching for memory optimization
+ * @param userApiKey - Optional API key from the user's request
  */
-export function getServerOpenAIClient(): OpenAI | null {
+export function getServerOpenAIClient(userApiKey?: string): OpenAI | null {
   // This function should only run on the server
   if (typeof window !== 'undefined') {
     console.error('[OpenAI Server] This function can only be called server-side');
     throw new Error('[OpenAI Server] This function can only be called server-side');
   }
 
-  let config;
-  try {
-    config = apiKeyProvider.getServiceConfig('openai');
-  } catch (configError) {
-    console.error('[OpenAI Server] Failed to get service config:', configError);
-    return null;
+  let apiKey: string | undefined;
+  
+  // First, try to use the user-provided API key
+  if (userApiKey && userApiKey.startsWith('sk-')) {
+    apiKey = userApiKey;
+    console.log('[OpenAI Server] Using user-provided API key', {
+      keyLength: apiKey.length,
+      keyPrefix: apiKey.substring(0, 6) + '...',
+      source: 'user-header'
+    });
+  } else {
+    // Fall back to environment/config API key
+    let config;
+    try {
+      config = apiKeyProvider.getServiceConfig('openai');
+    } catch (configError) {
+      console.error('[OpenAI Server] Failed to get service config:', configError);
+    }
+    
+    if (config && config.apiKey && config.isValid) {
+      apiKey = config.apiKey;
+      console.log('[OpenAI Server] Using server config API key', {
+        keyLength: apiKey.length,
+        keyPrefix: apiKey.substring(0, 6) + '...',
+        source: config.source
+      });
+    }
   }
   
-  if (!config || !config.apiKey || !config.isValid) {
-    console.warn('[OpenAI Server] No valid API key available', {
-      hasConfig: !!config,
-      hasKey: !!config?.apiKey,
-      keyLength: config?.apiKey?.length || 0,
-      isValid: config?.isValid || false,
-      source: config?.source || 'unknown',
-      isDemo: config?.isDemo || true
-    });
+  if (!apiKey) {
+    console.warn('[OpenAI Server] No valid API key available from user or server');
     return null;
   }
 
   try {
-    const currentConfigHash = getConfigHash(config.apiKey);
+    const currentConfigHash = getConfigHash(apiKey);
     
     // Return cached client if configuration hasn't changed
     if (openAIClientInstance && lastConfigHash === currentConfigHash) {
       console.log('[OpenAI Server] Reusing cached client instance', {
-        keyLength: config.apiKey.length,
-        keyPrefix: config.apiKey.substring(0, 6) + '...',
+        keyLength: apiKey.length,
+        keyPrefix: apiKey.substring(0, 6) + '...',
         cached: true
       });
       return openAIClientInstance;
@@ -69,7 +84,7 @@ export function getServerOpenAIClient(): OpenAI | null {
 
     // Create new client instance with error handling
     const client = new OpenAI({
-      apiKey: config.apiKey,
+      apiKey: apiKey,
       timeout: 60000,
       maxRetries: 0,
       // Ensure server-side only
@@ -87,10 +102,10 @@ export function getServerOpenAIClient(): OpenAI | null {
     lastConfigHash = currentConfigHash;
 
     console.log('[OpenAI Server] Client created successfully', {
-      keyLength: config.apiKey.length,
-      keyPrefix: config.apiKey.substring(0, 6) + '...',
-      source: config.source,
-      keyType: config.apiKey.startsWith('sk-proj-') ? 'project' : 'standard',
+      keyLength: apiKey.length,
+      keyPrefix: apiKey.substring(0, 6) + '...',
+      source: userApiKey ? 'user-header' : 'server-config',
+      keyType: apiKey.startsWith('sk-proj-') ? 'project' : 'standard',
       cached: false
     });
 
@@ -99,8 +114,8 @@ export function getServerOpenAIClient(): OpenAI | null {
     console.error('[OpenAI Server] Failed to create client:', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
-      keyLength: config.apiKey?.length || 0,
-      keyPrefix: config.apiKey ? config.apiKey.substring(0, 6) + '...' : 'none'
+      keyLength: apiKey?.length || 0,
+      keyPrefix: apiKey ? apiKey.substring(0, 6) + '...' : 'none'
     });
     return null;
   }
@@ -184,7 +199,8 @@ function validateAndOptimizeImageData(imageUrl: string): { valid: boolean; optim
  * Server-side only function with memory optimization
  */
 export async function generateVisionDescription(
-  request: DescriptionRequest
+  request: DescriptionRequest,
+  userApiKey?: string
 ): Promise<GeneratedDescription> {
   // Comprehensive input validation
   if (!request) {
@@ -236,17 +252,12 @@ export async function generateVisionDescription(
 
   let client;
   try {
-    client = getServerOpenAIClient();
+    client = getServerOpenAIClient(userApiKey);
   } catch (clientError) {
     console.error('[OpenAI Server] Failed to get OpenAI client:', clientError);
     // Check if we have a valid API key - if so, this is a configuration error
-    try {
-      const config = apiKeyProvider.getServiceConfig('openai');
-      if (config.isValid && config.apiKey) {
-        throw new Error(`[OpenAI Server] Client initialization failed despite valid API key: ${clientError}`);
-      }
-    } catch (keyCheckError) {
-      // If we can't check the key, assume it's invalid and fall back
+    if (userApiKey && userApiKey.startsWith('sk-')) {
+      throw new Error(`[OpenAI Server] Client initialization failed despite valid user API key: ${clientError}`);
     }
     return generateDemoDescription(validatedStyle, imageUrl, validatedLanguage);
   }
@@ -254,13 +265,8 @@ export async function generateVisionDescription(
   if (!client) {
     console.warn('[OpenAI Server] No client available, checking if API key exists');
     // Check if we have a valid API key - if so, this indicates a problem
-    try {
-      const config = apiKeyProvider.getServiceConfig('openai');
-      if (config.isValid && config.apiKey) {
-        throw new Error('[OpenAI Server] OpenAI client is null despite valid API key - configuration issue');
-      }
-    } catch (keyCheckError) {
-      // If we can't check the key, assume it's invalid and fall back
+    if (userApiKey && userApiKey.startsWith('sk-')) {
+      throw new Error('[OpenAI Server] OpenAI client is null despite valid user API key - configuration issue');
     }
     return generateDemoDescription(validatedStyle, imageUrl, validatedLanguage);
   }

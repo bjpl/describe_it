@@ -138,11 +138,17 @@ export function useDescriptions(imageId: string) {
     }, REQUEST_TIMEOUT);
 
     try {
+      // Get the user's API key from settings/localStorage
+      const { apiKeyProvider } = await import('@/lib/api/keyProvider');
+      const openAIConfig = apiKeyProvider.getServiceConfig('openai');
+      
       const response = await fetch("/api/descriptions/generate", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
+          // Pass the user's API key securely in headers
+          "X-OpenAI-API-Key": openAIConfig.apiKey || '',
         },
         body: JSON.stringify(request),
         signal: abortControllerRef.current.signal,
