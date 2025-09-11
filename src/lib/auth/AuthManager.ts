@@ -89,36 +89,59 @@ class AuthManager {
       }
 
       // Listen for auth changes
+      let isProcessingAuthChange = false;
       supabase.auth.onAuthStateChange(async (event, session) => {
         console.log('Auth state changed:', event, session ? 'with session' : 'no session');
         
-        // Update state first
-        this.currentSession = session;
-        this.currentUser = session?.user || null;
-        
-        if (session?.user) {
-          await this.loadUserProfile(session.user.id);
-        } else {
-          this.currentProfile = null;
+        // Prevent duplicate processing
+        if (isProcessingAuthChange) {
+          console.log('Skipping duplicate auth state change event');
+          return;
         }
         
-        // Always notify listeners after state is updated
-        this.notifyListeners();
+        // Ignore SIGNED_OUT if we have a valid session locally
+        if (event === 'SIGNED_OUT' && this.currentSession && this.currentUser) {
+          console.log('Ignoring SIGNED_OUT event - we have a valid session');
+          return;
+        }
+        
+        isProcessingAuthChange = true;
+        
+        try {
+          // Update state first
+          this.currentSession = session;
+          this.currentUser = session?.user || null;
+          
+          if (session?.user) {
+            await this.loadUserProfile(session.user.id);
+          } else if (event === 'SIGNED_OUT') {
+            // Only clear profile on explicit sign out
+            this.currentProfile = null;
+          }
+          
+          // Always notify listeners after state is updated
+          this.notifyListeners();
 
-        // Handle different auth events
-        switch (event) {
-          case 'SIGNED_IN':
-            await this.handleSignIn(session!);
-            break;
-          case 'SIGNED_OUT':
-            await this.handleSignOut();
-            break;
-          case 'USER_UPDATED':
-            await this.handleUserUpdate(session!);
-            break;
-          case 'TOKEN_REFRESHED':
-            console.log('Token refreshed for user:', session?.user?.email);
-            break;
+          // Handle different auth events
+          switch (event) {
+            case 'SIGNED_IN':
+              await this.handleSignIn(session!);
+              break;
+            case 'SIGNED_OUT':
+              // Only handle if we don't have a session
+              if (!session) {
+                await this.handleSignOut();
+              }
+              break;
+            case 'USER_UPDATED':
+              await this.handleUserUpdate(session!);
+              break;
+            case 'TOKEN_REFRESHED':
+              console.log('Token refreshed for user:', session?.user?.email);
+              break;
+          }
+        } finally {
+          isProcessingAuthChange = false;
         }
       });
     } catch (error) {
