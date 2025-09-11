@@ -286,6 +286,18 @@ class AuthManager {
         window.dispatchEvent(new CustomEvent('auth-state-change', { 
           detail: { isAuthenticated: true, user: result.user } 
         }));
+        
+        // Double-check the session was set
+        const { data: { session: verifySession } } = await client.auth.getSession();
+        if (!verifySession) {
+          console.error('[AuthManager] Session verification failed - session not persisted');
+          // Try setting it again with the full session object
+          if (result.session) {
+            await client.auth.setSession(result.session);
+          }
+        } else {
+          console.log('[AuthManager] Session verified successfully');
+        }
       }
 
       return { success: true };
@@ -418,6 +430,8 @@ class AuthManager {
    */
   private async loadUserProfile(userId: string): Promise<void> {
     try {
+      console.log('[AuthManager] Loading user profile for:', userId);
+      
       // Load user profile
       const { data: profile, error: profileError } = await supabase
         .from('users')
@@ -425,29 +439,59 @@ class AuthManager {
         .eq('id', userId)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.warn('[AuthManager] Profile not found in database, creating basic profile');
+        // Create a basic profile if it doesn't exist
+        this.currentProfile = {
+          id: userId,
+          email: this.currentUser?.email || '',
+          full_name: this.currentUser?.user_metadata?.full_name || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as UserProfile;
+        this.notifyListeners();
+        return;
+      }
 
-      // Load API keys (encrypted)
-      const { data: apiKeys, error: keysError } = await supabase
-        .from('user_api_keys')
-        .select('*')
-        .eq('user_id', userId)
-        .single();
+      // Load API keys (encrypted) - but don't fail if they don't exist
+      try {
+        const { data: apiKeys, error: keysError } = await supabase
+          .from('user_api_keys')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
 
-      if (!keysError && apiKeys) {
-        profile.api_keys = {
-          unsplash: apiKeys.unsplash_key,
-          openai: apiKeys.openai_key,
-          anthropic: apiKeys.anthropic_key,
-          google: apiKeys.google_key,
-          encrypted: apiKeys.encrypted
-        };
+        if (!keysError && apiKeys) {
+          profile.api_keys = {
+            unsplash: apiKeys.unsplash_key,
+            openai: apiKeys.openai_key,
+            anthropic: apiKeys.anthropic_key,
+            google: apiKeys.google_key,
+            encrypted: apiKeys.encrypted
+          };
+        }
+      } catch (keysError) {
+        console.log('[AuthManager] No API keys found for user');
       }
 
       this.currentProfile = profile as UserProfile;
+      console.log('[AuthManager] User profile loaded successfully');
       this.notifyListeners();
     } catch (error) {
+      console.error('[AuthManager] Failed to load user profile:', error);
       logger.error('Failed to load user profile', error as Error);
+      
+      // Still set a basic profile so auth works
+      if (this.currentUser) {
+        this.currentProfile = {
+          id: userId,
+          email: this.currentUser.email || '',
+          full_name: this.currentUser.user_metadata?.full_name || '',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        } as UserProfile;
+        this.notifyListeners();
+      }
     }
   }
 

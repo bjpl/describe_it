@@ -20,6 +20,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(authManager.getAuthState());
 
   useEffect(() => {
+    // Check for existing session on mount
+    const checkSession = async () => {
+      const currentState = authManager.getAuthState();
+      console.log('[AuthProvider] Initial auth check:', {
+        isAuthenticated: currentState.isAuthenticated,
+        hasUser: !!currentState.user
+      });
+      setAuthState(currentState);
+      
+      // Also check Supabase directly
+      const { authHelpers } = await import('@/lib/supabase/client');
+      const session = await authHelpers.getCurrentSession();
+      if (session && !currentState.isAuthenticated) {
+        console.log('[AuthProvider] Found session but auth state not updated, forcing update');
+        // Force auth manager to recognize the session
+        await authManager.initialize();
+        setAuthState(authManager.getAuthState());
+      }
+    };
+    
+    checkSession();
+
     // Subscribe to auth state changes
     const unsubscribe = authManager.subscribe((state) => {
       setAuthState(state);
