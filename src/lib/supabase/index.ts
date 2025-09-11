@@ -1,6 +1,9 @@
 // Main entry point for Supabase client
+// Export a single default client to prevent multiple instances
+export { supabase as default, supabase } from './client'
+
+// Export other utilities separately
 export {
-  default as supabase,
   createBrowserSupabaseClient,
   authHelpers,
   realtimeHelpers,
