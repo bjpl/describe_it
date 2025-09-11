@@ -142,6 +142,13 @@ export function useDescriptions(imageId: string) {
       const { apiKeyProvider } = await import('@/lib/api/keyProvider');
       const openAIConfig = apiKeyProvider.getServiceConfig('openai');
       
+      console.log('[useDescriptions] Sending API key to server:', {
+        hasKey: !!openAIConfig.apiKey,
+        keyLength: openAIConfig.apiKey?.length,
+        keyPrefix: openAIConfig.apiKey?.substring(0, 10) + '...',
+        isValid: openAIConfig.isValid
+      });
+      
       const response = await fetch("/api/descriptions/generate", {
         method: "POST",
         headers: {

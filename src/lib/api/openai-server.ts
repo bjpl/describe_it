@@ -38,6 +38,12 @@ export function getServerOpenAIClient(userApiKey?: string): OpenAI | null {
   let apiKey: string | undefined;
   
   // First, try to use the user-provided API key
+  console.log('[OpenAI Server] Checking for user API key:', {
+    hasUserKey: !!userApiKey,
+    userKeyLength: userApiKey?.length,
+    startsWithSk: userApiKey?.startsWith('sk-')
+  });
+  
   if (userApiKey && userApiKey.startsWith('sk-')) {
     apiKey = userApiKey;
     console.log('[OpenAI Server] Using user-provided API key', {
