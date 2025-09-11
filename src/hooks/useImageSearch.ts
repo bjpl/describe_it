@@ -10,10 +10,10 @@ interface SearchError {
   retryable: boolean;
 }
 
-// Request timeout configuration
-const REQUEST_TIMEOUT = 15000; // 15 seconds
-const MAX_RETRIES = 3;
-const RETRY_DELAYS = [1000, 2000, 4000]; // Progressive backoff
+// Request timeout configuration (optimized for Vercel's 5s limit)
+const REQUEST_TIMEOUT = 4500; // 4.5 seconds to fit within Vercel's limit
+const MAX_RETRIES = 2; // Reduced retries to avoid 504 errors
+const RETRY_DELAYS = [500, 1000]; // Faster retries
 
 export function useImageSearch() {
   const [images, setImages] = useState<UnsplashImage[]>([]);

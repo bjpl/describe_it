@@ -102,7 +102,7 @@ class UnsplashService {
     
     this.client = axios.create({
       baseURL: "https://api.unsplash.com",
-      timeout: 10000, // Increased to 10 seconds for real API calls
+      timeout: 3500, // 3.5 seconds to fit within Vercel's limits
       headers: {
         "Accept-Version": "v1",
         Authorization: `Client-ID ${this.accessKey}`,
