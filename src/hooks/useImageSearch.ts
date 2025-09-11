@@ -148,7 +148,7 @@ export function useImageSearch() {
       
       if (typeof window !== 'undefined' && window.localStorage) {
         // Check api-keys-backup first (most reliable)
-        const apiKeysBackupStr = localStorage.getItem('api-keys-backup');
+        const apiKeysBackupStr = sessionStorage.getItem('api-keys-backup');
         if (apiKeysBackupStr) {
           try {
             const keys = JSON.parse(apiKeysBackupStr);

@@ -230,20 +230,36 @@ export class APIMiddleware {
 
     // Check for suspicious headers or patterns
     const userAgent = request.headers.get("user-agent") || "";
-    const suspiciousPatterns = ["bot", "crawler", "spider", "scraper"];
-
-    // Allow legitimate user agents but block suspicious ones
-    const isSuspicious =
-      suspiciousPatterns.some((pattern) =>
-        userAgent.toLowerCase().includes(pattern),
-      ) &&
-      !["googlebot", "bingbot"].some((allowed) =>
-        userAgent.toLowerCase().includes(allowed),
+    
+    // Development mode bypass - allow all common development tools
+    if (process.env.NODE_ENV === 'development') {
+      // In development, only block obvious malicious patterns
+      const maliciousPatterns = ["sqlmap", "nikto", "nmap", "hack", "attack"];
+      const isMalicious = maliciousPatterns.some((pattern) =>
+        userAgent.toLowerCase().includes(pattern)
       );
-
-    if (isSuspicious && Math.random() > 0.8) {
-      // Random blocking of 20% suspicious requests
-      return { passed: false, reason: "Suspicious user agent" };
+      
+      if (isMalicious) {
+        return { passed: false, reason: "Malicious user agent detected" };
+      }
+    } else {
+      // Production mode - more restrictive but allow development tools
+      const suspiciousPatterns = ["sqlmap", "nikto", "nmap", "hack", "attack", "exploit"];
+      const developmentTools = ["curl", "postman", "insomnia", "thunder", "httpie", "wget", "python-requests", "node-fetch"];
+      const legitimateBots = ["googlebot", "bingbot", "slackbot", "twitterbot", "facebookexternalhit"];
+      
+      // Allow development tools and legitimate bots
+      const isAllowed = 
+        developmentTools.some((tool) => userAgent.toLowerCase().includes(tool)) ||
+        legitimateBots.some((bot) => userAgent.toLowerCase().includes(bot));
+      
+      const isSuspicious = suspiciousPatterns.some((pattern) =>
+        userAgent.toLowerCase().includes(pattern)
+      );
+      
+      if (isSuspicious && !isAllowed) {
+        return { passed: false, reason: "Suspicious user agent" };
+      }
     }
 
     return { passed: true };

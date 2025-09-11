@@ -88,7 +88,7 @@ export class SecurityMiddleware {
     });
   }
 
-  // Handle CORS
+  // Handle CORS with development mode support
   private async handleCors(request: NextRequest): Promise<NextResponse | null> {
     if (!this.config.enableCors) return null;
 
@@ -99,22 +99,29 @@ export class SecurityMiddleware {
     if (method === 'OPTIONS') {
       const response = new NextResponse(null, { status: 200 });
       
-      // Check if origin is allowed with enhanced matching
-      if (origin && this.isOriginAllowed(origin)) {
-        response.headers.set('Access-Control-Allow-Origin', origin);
+      // Development mode - allow all origins for easier testing
+      if (process.env.NODE_ENV === 'development') {
+        response.headers.set('Access-Control-Allow-Origin', origin || '*');
         response.headers.set('Access-Control-Allow-Credentials', 'true');
         response.headers.set('Vary', 'Origin');
-      } else if (!origin) {
-        // Allow same-origin requests
-        response.headers.set('Access-Control-Allow-Origin', this.config.allowedOrigins[0] || 'null');
       } else {
-        // Reject unauthorized origins
-        console.warn(`[SECURITY] CORS preflight rejected for origin: ${origin}`);
-        return new NextResponse(null, { status: 403 });
+        // Production mode - strict origin checking
+        if (origin && this.isOriginAllowed(origin)) {
+          response.headers.set('Access-Control-Allow-Origin', origin);
+          response.headers.set('Access-Control-Allow-Credentials', 'true');
+          response.headers.set('Vary', 'Origin');
+        } else if (!origin) {
+          // Allow same-origin requests
+          response.headers.set('Access-Control-Allow-Origin', this.config.allowedOrigins[0] || 'null');
+        } else {
+          // Reject unauthorized origins
+          console.warn(`[SECURITY] CORS preflight rejected for origin: ${origin}`);
+          return new NextResponse(null, { status: 403 });
+        }
       }
       
       response.headers.set('Access-Control-Allow-Methods', this.config.allowedMethods.join(', '));
-      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+      response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, User-Agent');
       response.headers.set('Access-Control-Max-Age', '86400');
 
       return this.applySecurityHeaders(response);
@@ -197,15 +204,38 @@ export class SecurityMiddleware {
       const rateLimitResponse = await this.applyRateLimit(request, endpoint);
       if (rateLimitResponse) return rateLimitResponse;
 
-      // Validate request content type for POST/PUT requests
+      // Validate request content type for POST/PUT requests (relaxed in development)
       if (['POST', 'PUT'].includes(request.method)) {
         const contentType = request.headers.get('Content-Type');
-        if (!contentType || !contentType.includes('application/json')) {
-          const response = NextResponse.json(
-            { error: 'Content-Type must be application/json' },
-            { status: 415 }
-          );
-          return this.applySecurityHeaders(response);
+        
+        // Development mode - allow various content types for testing
+        if (process.env.NODE_ENV === 'development') {
+          // Only reject obviously problematic content types in development
+          if (contentType && contentType.includes('text/html')) {
+            const response = NextResponse.json(
+              { error: 'HTML content type not allowed' },
+              { status: 415 }
+            );
+            return this.applySecurityHeaders(response);
+          }
+        } else {
+          // Production mode - stricter content type validation
+          const allowedContentTypes = [
+            'application/json',
+            'application/x-www-form-urlencoded',
+            'multipart/form-data',
+            'text/plain' // Allow for curl and development tools
+          ];
+          
+          if (!contentType || !allowedContentTypes.some(type => 
+            contentType.toLowerCase().includes(type.toLowerCase())
+          )) {
+            const response = NextResponse.json(
+              { error: 'Invalid Content-Type. Allowed: ' + allowedContentTypes.join(', ') },
+              { status: 415 }
+            );
+            return this.applySecurityHeaders(response);
+          }
         }
       }
 

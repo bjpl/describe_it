@@ -407,31 +407,51 @@ export const ipAddressSchema = z.string().refine((ip) => {
 // ================================
 
 /**
- * Validate user agent string
+ * Validate user agent string with development mode support
  */
 export const validateUserAgent = (userAgent: string): boolean => {
   if (!userAgent || userAgent.length > 512) return false;
   
-  // Block obvious bot patterns
-  const suspiciousPatterns = [
-    /curl/i, /wget/i, /python/i, /ruby/i, /java/i,
-    /scanner/i, /crawler/i, /bot/i, /spider/i
+  // Development mode - allow all development tools
+  if (process.env.NODE_ENV === 'development') {
+    // Only block obviously malicious patterns in development
+    const maliciousPatterns = [
+      /sqlmap/i, /nikto/i, /nmap/i, /hack/i, /attack/i, /exploit/i,
+      /injection/i, /vulnerability/i, /penetration/i
+    ];
+    
+    return !maliciousPatterns.some(pattern => pattern.test(userAgent));
+  }
+  
+  // Production mode - more restrictive but allow development tools
+  const maliciousPatterns = [
+    /sqlmap/i, /nikto/i, /nmap/i, /hack/i, /attack/i, /exploit/i,
+    /injection/i, /vulnerability/i, /penetration/i, /masscan/i
   ];
   
-  // Allow legitimate browsers and known good bots
+  // Allow development tools, legitimate browsers, and known good bots
   const allowedPatterns = [
-    /mozilla/i, /chrome/i, /safari/i, /firefox/i, /edge/i,
-    /googlebot/i, /bingbot/i, /slackbot/i
+    // Browsers
+    /mozilla/i, /chrome/i, /safari/i, /firefox/i, /edge/i, /opera/i,
+    // Development tools
+    /curl/i, /postman/i, /insomnia/i, /thunder/i, /httpie/i, /wget/i,
+    /python-requests/i, /node-fetch/i, /axios/i, /fetch/i,
+    // Legitimate bots and services
+    /googlebot/i, /bingbot/i, /slackbot/i, /twitterbot/i, /facebookexternalhit/i,
+    /linkedinbot/i, /discordbot/i, /whatsapp/i, /telegrambot/i,
+    // Monitoring and testing tools
+    /pingdom/i, /uptimerobot/i, /newrelic/i, /datadog/i, /statuspage/i
   ];
   
-  const isSuspicious = suspiciousPatterns.some(pattern => pattern.test(userAgent));
+  const isMalicious = maliciousPatterns.some(pattern => pattern.test(userAgent));
   const isAllowed = allowedPatterns.some(pattern => pattern.test(userAgent));
   
-  return !isSuspicious || isAllowed;
+  // Block only if malicious, otherwise allow
+  return !isMalicious;
 };
 
 /**
- * Validate request headers for security
+ * Validate request headers for security with development mode support
  */
 export const validateSecurityHeaders = (headers: Headers): { valid: boolean; reason?: string } => {
   const origin = headers.get('origin');
@@ -439,23 +459,55 @@ export const validateSecurityHeaders = (headers: Headers): { valid: boolean; rea
   const userAgent = headers.get('user-agent') || '';
   const contentType = headers.get('content-type') || '';
   
+  // Development mode - more relaxed validation
+  if (process.env.NODE_ENV === 'development') {
+    // Still check for malicious user agents but allow development tools
+    if (!validateUserAgent(userAgent)) {
+      return { valid: false, reason: 'Malicious user agent detected' };
+    }
+    
+    // Allow various content types in development for testing
+    // No need to strictly validate content type in dev mode
+    
+    return { valid: true };
+  }
+  
+  // Production mode - stricter validation
+  
   // Check user agent
   if (!validateUserAgent(userAgent)) {
     return { valid: false, reason: 'Invalid user agent' };
   }
   
-  // For POST/PUT requests, ensure proper content type
-  if (contentType && !contentType.includes('application/json') && 
-      !contentType.includes('application/x-www-form-urlencoded')) {
-    return { valid: false, reason: 'Invalid content type' };
+  // For POST/PUT requests, ensure proper content type but allow common dev tool formats
+  if (contentType && contentType.trim()) {
+    const allowedContentTypes = [
+      'application/json',
+      'application/x-www-form-urlencoded',
+      'multipart/form-data',
+      'text/plain', // Allow for curl and other tools
+      'application/octet-stream' // For binary uploads
+    ];
+    
+    const isValidContentType = allowedContentTypes.some(type => 
+      contentType.toLowerCase().includes(type.toLowerCase())
+    );
+    
+    if (!isValidContentType) {
+      return { valid: false, reason: 'Invalid content type' };
+    }
   }
   
-  // Basic origin/referer validation
+  // Basic origin/referer validation with localhost support
   if (origin || referer) {
     try {
       const url = new URL(origin || referer || '');
-      if (url.protocol !== 'https:' && !url.hostname.includes('localhost')) {
-        return { valid: false, reason: 'Non-HTTPS requests not allowed' };
+      // Allow localhost and development URLs
+      if (url.protocol !== 'https:' && 
+          !url.hostname.includes('localhost') && 
+          !url.hostname.includes('127.0.0.1') &&
+          !url.hostname.includes('0.0.0.0')) {
+        return { valid: false, reason: 'Non-HTTPS requests not allowed in production' };
       }
     } catch {
       return { valid: false, reason: 'Invalid origin/referer' };

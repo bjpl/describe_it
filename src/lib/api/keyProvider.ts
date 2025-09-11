@@ -59,60 +59,131 @@ export class ApiKeyProvider {
   }
 
   /**
-   * Initialize keys from all sources
+   * Initialize keys from all sources with enhanced error handling
    */
   private initializeKeys(): void {
+    console.log('[ApiKeyProvider] Initializing API keys from all sources...');
+    
+    let settings = null;
     try {
       // Try to get settings with timeout to prevent blocking
-      const settings = this.getSettingsWithTimeout();
+      settings = this.getSettingsWithTimeout();
+    } catch (error) {
+      console.warn('[ApiKeyProvider] Failed to get settings during initialization:', error);
+    }
+
+    try {
       this.cachedKeys = {
         openai: this.resolveKey('openai', settings?.apiKeys?.openai || ''),
         unsplash: this.resolveKey('unsplash', settings?.apiKeys?.unsplash || ''),
       };
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[ApiKeyProvider] Keys initialized successfully:', {
+          openai: {
+            hasKey: !!this.cachedKeys.openai,
+            keyLength: this.cachedKeys.openai?.length || 0,
+            source: this.getKeySource('openai')
+          },
+          unsplash: {
+            hasKey: !!this.cachedKeys.unsplash,
+            keyLength: this.cachedKeys.unsplash?.length || 0,
+            source: this.getKeySource('unsplash')
+          }
+        });
+      }
     } catch (error) {
-      console.warn('[ApiKeyProvider] Failed to initialize from settings, using environment only:', error);
-      this.cachedKeys = {
-        openai: this.getEnvironmentKey('openai'),
-        unsplash: this.getEnvironmentKey('unsplash'),
-      };
+      console.error('[ApiKeyProvider] Critical error during key initialization:', error);
+      // Fallback to environment-only keys
+      try {
+        this.cachedKeys = {
+          openai: this.getEnvironmentKey('openai'),
+          unsplash: this.getEnvironmentKey('unsplash'),
+        };
+        console.log('[ApiKeyProvider] Fallback to environment-only keys completed');
+      } catch (fallbackError) {
+        console.error('[ApiKeyProvider] Fallback initialization also failed:', fallbackError);
+        // Ultimate fallback to empty keys
+        this.cachedKeys = {
+          openai: '',
+          unsplash: '',
+        };
+      }
     }
   }
 
   /**
-   * Get settings with timeout to prevent blocking
+   * Get settings with enhanced error handling and backup retrieval
    */
   private getSettingsWithTimeout(timeoutMs = 50): any {
     try {
-      // Quick synchronous check - if settingsManager is not ready, return null
-      if (typeof window === 'undefined' || !settingsManager) {
+      // Server-side check
+      if (typeof window === 'undefined') {
+        console.log('[ApiKeyProvider] Skipping settings retrieval on server-side');
         return null;
       }
       
-      // Try to get settings from settingsManager
-      const settings = settingsManager.getSettings();
+      // Check if settingsManager is available
+      if (!settingsManager) {
+        console.log('[ApiKeyProvider] SettingsManager not available, checking localStorage backup');
+        return this.getLocalStorageBackup();
+      }
       
-      // Also check localStorage directly for API keys backup
-      if (typeof localStorage !== 'undefined') {
-        const apiKeysBackup = localStorage.getItem('api-keys-backup');
-        if (apiKeysBackup) {
-          try {
-            const backupKeys = JSON.parse(apiKeysBackup);
-            // Merge backup keys with settings if they exist
-            if (backupKeys.openai && (!settings?.apiKeys?.openai || settings.apiKeys.openai === '')) {
-              if (!settings) {
-                return { apiKeys: backupKeys };
-              }
-              settings.apiKeys = { ...settings.apiKeys, ...backupKeys };
-            }
-          } catch (e) {
-            console.warn('[ApiKeyProvider] Failed to parse api-keys-backup:', e);
-          }
+      let settings = null;
+      try {
+        settings = settingsManager.getSettings();
+      } catch (settingsError) {
+        console.warn('[ApiKeyProvider] Failed to get settings from settingsManager:', settingsError);
+        return this.getLocalStorageBackup();
+      }
+      
+      // Merge with localStorage backup if available
+      const backupSettings = this.getLocalStorageBackup();
+      if (backupSettings && backupSettings.apiKeys) {
+        if (!settings) {
+          settings = backupSettings;
+        } else {
+          // Merge backup keys for any missing settings
+          settings.apiKeys = {
+            ...backupSettings.apiKeys,
+            ...settings.apiKeys
+          };
         }
       }
       
       return settings;
     } catch (error) {
-      console.warn('[ApiKeyProvider] Settings not available:', error);
+      console.warn('[ApiKeyProvider] Error getting settings with timeout:', error);
+      return this.getLocalStorageBackup();
+    }
+  }
+
+  /**
+   * Get API keys from localStorage backup
+   */
+  private getLocalStorageBackup(): any {
+    if (typeof localStorage === 'undefined') {
+      return null;
+    }
+    
+    try {
+      const apiKeysBackup = sessionStorage.getItem('api-keys-backup');
+      if (!apiKeysBackup) {
+        return null;
+      }
+      
+      const backupKeys = JSON.parse(apiKeysBackup);
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[ApiKeyProvider] Retrieved keys from localStorage backup:', {
+          hasOpenAI: !!backupKeys.openai,
+          hasUnsplash: !!backupKeys.unsplash,
+          openaiKeyLength: backupKeys.openai?.length || 0
+        });
+      }
+      
+      return { apiKeys: backupKeys };
+    } catch (error) {
+      console.warn('[ApiKeyProvider] Failed to parse localStorage backup:', error);
       return null;
     }
   }
@@ -163,21 +234,44 @@ export class ApiKeyProvider {
   }
 
   /**
-   * Get API key from environment variables
+   * Get API key from environment variables with enhanced error handling
    */
   private getEnvironmentKey(service: ServiceType): string {
+    // Check if we're in a server environment
     if (typeof process === 'undefined' || !process.env) {
+      console.log('[ApiKeyProvider] Environment variables not available (client-side or unsupported runtime)');
       return '';
     }
 
     const envKeys = ENV_KEY_MAP[service];
+    if (!envKeys || envKeys.length === 0) {
+      console.warn(`[ApiKeyProvider] No environment key mapping found for service: ${service}`);
+      return '';
+    }
+
     for (const envKey of envKeys) {
-      const value = process.env[envKey];
-      if (value && value.trim()) {
-        return value.trim();
+      try {
+        const value = process.env[envKey];
+        if (value && typeof value === 'string' && value.trim()) {
+          const trimmedValue = value.trim();
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`[ApiKeyProvider] Found environment key for ${service}:`, {
+              envKey,
+              keyLength: trimmedValue.length,
+              keyPrefix: 'sk-***' // Never log actual key prefix
+            });
+          }
+          return trimmedValue;
+        }
+      } catch (error) {
+        console.warn(`[ApiKeyProvider] Error reading environment variable ${envKey}:`, error);
       }
     }
     
+    console.log(`[ApiKeyProvider] No valid environment keys found for ${service}`, {
+      checkedKeys: envKeys,
+      processEnvAvailable: !!process.env
+    });
     return '';
   }
 
@@ -206,10 +300,12 @@ export class ApiKeyProvider {
     
     // Basic format validation
     if (!pattern.test(key)) {
-      console.warn(`[ApiKeyProvider] Key validation failed for ${service}: pattern mismatch`, {
-        keyLength: key.length,
-        keyPrefix: key.substring(0, 10) + '...'
-      });
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn(`[ApiKeyProvider] Key validation failed for ${service}: pattern mismatch`, {
+          keyLength: key.length,
+          keyPrefix: 'sk-***' // Never log actual key prefix
+        });
+      }
       return false;
     }
 
@@ -234,69 +330,98 @@ export class ApiKeyProvider {
   }
 
   /**
-   * Specialized validation for OpenAI API keys
+   * Specialized validation for OpenAI API keys with enhanced error handling
    */
   private validateOpenAIKey(key: string): boolean {
-    // Check if key starts with correct prefix
-    if (!key.startsWith('sk-')) {
-      console.warn('[ApiKeyProvider] OpenAI key validation failed: invalid prefix', {
-        actualPrefix: key.substring(0, 5),
-        expectedPrefix: 'sk-'
-      });
+    try {
+      // Basic type check
+      if (!key || typeof key !== 'string') {
+        console.warn('[ApiKeyProvider] OpenAI key validation failed: invalid type', {
+          hasKey: !!key,
+          type: typeof key
+        });
+        return false;
+      }
+
+      const trimmedKey = key.trim();
+      if (!trimmedKey) {
+        console.warn('[ApiKeyProvider] OpenAI key validation failed: empty after trim');
+        return false;
+      }
+
+      // Check if key starts with correct prefix
+      if (!trimmedKey.startsWith('sk-')) {
+        console.warn('[ApiKeyProvider] OpenAI key validation failed: invalid prefix', {
+          actualPrefix: trimmedKey.substring(0, 5),
+          expectedPrefix: 'sk-',
+          keyLength: trimmedKey.length
+        });
+        return false;
+      }
+
+      // Modern OpenAI keys can be VERY long (150-200+ characters)
+      // We only check for minimum reasonable length
+      const minLength = 20;
+      
+      if (trimmedKey.length < minLength) {
+        console.warn('[ApiKeyProvider] OpenAI key validation failed: too short', {
+          keyLength: trimmedKey.length,
+          expectedMinLength: minLength
+        });
+        return false;
+      }
+      
+      // Check for placeholder keys specific to OpenAI
+      const placeholders = [
+        'sk-your-openai-api-key-here',
+        'sk-example',
+        'sk-placeholder', 
+        'sk-demo',
+        'sk-test',
+        'sk-proj-example',
+        'sk-proj-demo',
+        'sk-proj-test'
+      ];
+
+      const lowerKey = trimmedKey.toLowerCase();
+      const foundPlaceholder = placeholders.find(placeholder => 
+        lowerKey.includes(placeholder.toLowerCase())
+      );
+      
+      if (foundPlaceholder) {
+        if (process.env.NODE_ENV !== 'production') {
+          console.warn('[ApiKeyProvider] OpenAI key validation failed: placeholder detected', {
+            foundPlaceholder,
+            keyPrefix: 'sk-***' // Never log actual key prefix
+          });
+        }
+        return false;
+      }
+
+      // Additional character validation for security
+      const suspiciousChars = /[<>"'`\\]/;
+      if (suspiciousChars.test(trimmedKey)) {
+        console.warn('[ApiKeyProvider] OpenAI key validation failed: suspicious characters detected');
+        return false;
+      }
+
+      // Determine key type
+      const keyType = trimmedKey.startsWith('sk-proj-') ? 'project' : 'standard';
+      
+      if (process.env.NODE_ENV !== 'production') {
+        console.log('[ApiKeyProvider] OpenAI key validation passed', {
+          keyType,
+          keyLength: trimmedKey.length,
+          keyPrefix: keyType === 'project' ? 'sk-proj-***' : 'sk-***', // Never log actual key prefix
+          isModernKey: trimmedKey.length > 51
+        });
+      }
+
+      return true;
+    } catch (error) {
+      console.error('[ApiKeyProvider] Error during OpenAI key validation:', error);
       return false;
     }
-
-    // Modern OpenAI keys can be VERY long (150+ characters)
-    // We only check for minimum reasonable length
-    const minLength = 20; // Minimum to ensure it's not empty/too short
-    
-    if (key.length < minLength) {
-      console.warn('[ApiKeyProvider] OpenAI key validation failed: too short', {
-        keyLength: key.length,
-        expectedMinLength: minLength
-      });
-      return false;
-    }
-    
-    // No maximum length check - keys can be 164+ characters
-    console.log('[ApiKeyProvider] OpenAI key validated successfully', {
-      keyLength: key.length,
-      keyPrefix: key.substring(0, 10) + '...'
-    });
-
-    // Check for placeholder keys specific to OpenAI
-    const placeholders = [
-      'sk-your-openai-api-key-here',
-      'sk-example',
-      'sk-placeholder', 
-      'sk-demo',
-      'sk-test',
-      'sk-proj-example',
-      'sk-proj-demo',
-      'sk-proj-test'
-    ];
-
-    const lowerKey = key.toLowerCase();
-    if (placeholders.some(placeholder => lowerKey.includes(placeholder.toLowerCase()))) {
-      console.warn('[ApiKeyProvider] OpenAI key validation failed: placeholder detected', {
-        keyPrefix: key.substring(0, 15) + '...'
-      });
-      return false;
-    }
-
-    // Additional character validation
-    if (/[<>"'`\\]/.test(key)) {
-      console.warn('[ApiKeyProvider] OpenAI key validation failed: suspicious characters');
-      return false;
-    }
-
-    console.log('[ApiKeyProvider] OpenAI key validation passed', {
-      keyType,
-      keyLength: key.length,
-      keyPrefix: key.substring(0, 12) + '...'
-    });
-
-    return true;
   }
 
   /**
@@ -311,22 +436,44 @@ export class ApiKeyProvider {
   }
 
   /**
-   * Get complete configuration for a service
+   * Get complete configuration for a service with enhanced validation
    */
   public getServiceConfig(service: ServiceType): ApiKeyConfig {
-    const apiKey = this.getKey(service);
-    const isValid = apiKey ? this.validateKey(service, apiKey) : false;
-    const source = this.getKeySource(service);
+    let apiKey = '';
+    let isValid = false;
+    let source: KeySource = 'none';
+    
+    try {
+      apiKey = this.getKey(service);
+      source = this.getKeySource(service);
+      
+      if (apiKey) {
+        try {
+          isValid = this.validateKey(service, apiKey);
+        } catch (validationError) {
+          console.error(`[ApiKeyProvider] Key validation error for ${service}:`, validationError);
+          isValid = false;
+        }
+      }
+    } catch (configError) {
+      console.error(`[ApiKeyProvider] Error getting service config for ${service}:`, configError);
+    }
+    
     const isDemo = !isValid || !apiKey;
 
-    console.log(`[ApiKeyProvider] Service config for ${service}:`, {
-      hasApiKey: !!apiKey,
-      keyLength: apiKey?.length || 0,
-      isValid,
-      source,
-      isDemo,
-      keyPrefix: apiKey ? apiKey.substring(0, 12) + '...' : 'none'
-    });
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(`[ApiKeyProvider] Service config for ${service}:`, {
+        hasApiKey: !!apiKey,
+        keyLength: apiKey?.length || 0,
+        isValid,
+        source,
+        isDemo,
+        keyPrefix: apiKey ? (apiKey.startsWith('sk-proj-') ? 'sk-proj-***' : 'sk-***') : 'none', // Never log actual key
+        keyType: service === 'openai' && apiKey ? 
+          (apiKey.startsWith('sk-proj-') ? 'project' : 
+           apiKey.startsWith('sk-') ? 'standard' : 'unknown') : 'n/a'
+      });
+    }
 
     return {
       apiKey,

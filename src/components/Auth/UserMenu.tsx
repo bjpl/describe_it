@@ -154,7 +154,7 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
       
       if (success) {
         // Also save to localStorage as backup
-        localStorage.setItem('api-keys-backup', JSON.stringify(keys));
+        sessionStorage.setItem('api-keys-backup', JSON.stringify(keys));
         
         // Update settings manager directly
         const { settingsManager } = await import('@/lib/settings/settingsManager');
@@ -181,7 +181,7 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
       
       // Fallback: Save to localStorage directly
       try {
-        localStorage.setItem('api-keys-backup', JSON.stringify(keys));
+        sessionStorage.setItem('api-keys-backup', JSON.stringify(keys));
         const { settingsManager } = await import('@/lib/settings/settingsManager');
         settingsManager.updateSection('apiKeys', {
           unsplash: keys.unsplash,

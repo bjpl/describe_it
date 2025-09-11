@@ -40,7 +40,7 @@ const searchSchema = z.object({
 });
 
 // Generate cache key
-function getCacheKey(params: any): string {
+function getCacheKey(params: z.infer<typeof searchSchema>): string {
   return JSON.stringify(params);
 }
 
@@ -195,7 +195,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
   if (userProvidedKey) {
     console.log("[API] User provided API key:", {
       keyLength: userProvidedKey.length,
-      keyPrefix: userProvidedKey.substring(0, 10) + '...',
+      keyPrefix: userProvidedKey.substring(0, 6) + '...',
       timestamp: new Date().toISOString(),
       source: 'query_param'
     });
@@ -302,7 +302,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     console.log("[API] Calling unsplashService.searchImages with params:", params);
     
     // Add timeout for Vercel serverless (reduced for Vercel's 5s limit on hobby plan)
-    const searchPromise = unsplashService.searchImages(params as any);
+    const searchPromise = unsplashService.searchImages(params);
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Search timeout - using demo mode')), 4000); // 4 seconds max for Vercel hobby
     });
