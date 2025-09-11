@@ -4,7 +4,8 @@
 // Complete database service layer with connection pooling,
 // error handling, retry mechanisms, and full CRUD operations
 
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { supabase } from '../supabase/client';
 import type {
   DatabaseUser,
   SessionType,
@@ -306,7 +307,6 @@ export interface UserSettings {
 
 export class DatabaseService {
   private supabase: SupabaseClient;
-  private supabaseAdmin?: SupabaseClient;
   private config: DatabaseConfig;
   private connectionPool: Map<string, SupabaseClient> = new Map();
   private metrics: ConnectionMetrics;
@@ -326,30 +326,8 @@ export class DatabaseService {
       ...config,
     };
 
-    // Initialize primary client
-    this.supabase = createClient(config.supabaseUrl, config.anonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-      },
-      realtime: {
-        timeout: this.config.connectionTimeout,
-      },
-    });
-
-    // Initialize admin client if service role key is provided
-    if (config.serviceRoleKey) {
-      this.supabaseAdmin = createClient(
-        config.supabaseUrl,
-        config.serviceRoleKey,
-        {
-          auth: {
-            autoRefreshToken: false,
-            persistSession: false,
-          },
-        },
-      );
-    }
+    // Use the singleton client from '../supabase/client'
+    this.supabase = supabase;
 
     this.metrics = {
       activeConnections: 0,
@@ -360,7 +338,7 @@ export class DatabaseService {
       cacheHitRate: 0,
     };
 
-    this.log("DatabaseService initialized successfully");
+    this.log("DatabaseService initialized successfully with singleton client");
   }
 
   // ==============================================
@@ -1429,6 +1407,7 @@ export const createDatabaseService = (
     maxConnections: 10,
   };
 
+  // Note: The DatabaseService now uses the singleton client regardless of config parameters
   return new DatabaseService(config);
 };
 

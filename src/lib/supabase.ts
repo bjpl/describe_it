@@ -10,6 +10,8 @@ import type {
   DescriptionRecord as SavedDescription
 } from "../types/database";
 import type { VocabularyItem } from "../types/unified";
+// Import the singleton client from our client module
+import { supabase as singletonClient } from "./supabase/client";
 
 // Environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -23,19 +25,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
-// Client for browser/frontend use (uses anon key with RLS)
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-  },
-  realtime: {
-    params: {
-      eventsPerSecond: 10,
-    },
-  },
-});
+// Export the singleton client instead of creating a new one
+export const supabase = singletonClient;
 
 // Admin client for server-side operations (bypasses RLS)
 export const supabaseAdmin = supabaseServiceRoleKey

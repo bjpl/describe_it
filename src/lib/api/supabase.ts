@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { supabase } from '../supabase/client';
 import type {
   Database,
   UserProgress,
@@ -193,23 +194,21 @@ class SupabaseService {
   private client: SupabaseClient | null = null;
   private localStorage: LocalStorageAdapter;
   private isDemo: boolean;
-  private url: string;
-  private anonKey: string;
 
   constructor() {
     const config = getServiceConfig("supabaseService");
     this.isDemo = config.demoMode;
     this.localStorage = new LocalStorageAdapter();
 
-    this.url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-    this.anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+    const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
     if (
       !this.isDemo &&
-      (!this.url ||
-        !this.anonKey ||
-        this.url === "https://placeholder.supabase.co" ||
-        this.anonKey === "placeholder_anon_key")
+      (!url ||
+        !anonKey ||
+        url === "https://placeholder.supabase.co" ||
+        anonKey === "placeholder_anon_key")
     ) {
       console.warn(
         "Supabase credentials not configured. Running in demo mode with localStorage.",
@@ -219,17 +218,8 @@ class SupabaseService {
 
     if (!this.isDemo) {
       try {
-        this.client = createClient(this.url, this.anonKey, {
-          auth: {
-            persistSession: true,
-            autoRefreshToken: true,
-          },
-          realtime: {
-            params: {
-              eventsPerSecond: 10,
-            },
-          },
-        });
+        // Use the singleton client from ../supabase/client
+        this.client = supabase;
       } catch (error) {
         console.warn(
           "Failed to initialize Supabase client. Falling back to demo mode.",

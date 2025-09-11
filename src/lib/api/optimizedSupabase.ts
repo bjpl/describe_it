@@ -1,4 +1,5 @@
-import { createClient, SupabaseClient } from "@supabase/supabase-js";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { supabase } from "../supabase/client";
 
 // Simple server-side cache
 const serverCache = new Map<string, { data: any; timestamp: number }>();
@@ -28,7 +29,7 @@ const simpleCache = {
   getStats: () => cacheStats,
   clear: (namespace?: string) => {
     if (namespace) {
-      for (const key of serverCache.keys()) {
+      for (const key of Array.from(serverCache.keys())) {
         if (key.startsWith(`${namespace}:`)) {
           serverCache.delete(key);
         }
@@ -66,38 +67,13 @@ class OptimizedSupabaseClient {
   private batchTimer: NodeJS.Timeout | null = null;
 
   constructor() {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    // Use the singleton client from the main client module
+    this.client = supabase;
 
-    if (!supabaseUrl || !supabaseKey) {
-      console.warn('Supabase credentials not found. Some features will use demo mode.');
-      // Create a mock client for demo mode
-      this.client = null as any;
+    if (!this.client) {
+      console.warn('Supabase client not available. Some features will use demo mode.');
       return;
     }
-
-    this.client = createClient(
-      supabaseUrl,
-      supabaseKey,
-      {
-        // Connection pooling and performance optimizations
-        db: {
-          schema: "public",
-        },
-        realtime: {
-          // Optimize realtime connections
-          params: {
-            eventsPerSecond: 10,
-          },
-        },
-        auth: {
-          // Optimize auth flow
-          persistSession: true,
-          autoRefreshToken: true,
-          detectSessionInUrl: true,
-        },
-      },
-    );
 
     this.setupConnectionOptimizations();
   }
@@ -481,7 +457,7 @@ class OptimizedSupabaseClient {
       tableStats: {} as Record<string, { queries: number; avgTime: number }>,
     };
 
-    for (const [table, tableMetrics] of this.queryMetrics) {
+    for (const [table, tableMetrics] of Array.from(this.queryMetrics)) {
       metrics.totalQueries += tableMetrics.length;
 
       const avgTime =
@@ -529,12 +505,12 @@ class OptimizedSupabaseClient {
 
   private invalidateTableCache(table: string) {
     // Clear all cache entries related to this table
-    const stats = simpleCache.getStats();
-    stats.entries.forEach((entry) => {
-      if (entry.key.startsWith(`${table}:`)) {
-        simpleCache.delete("api", entry.key);
+    for (const key of Array.from(serverCache.keys())) {
+      if (key.startsWith(`api:${table}:`)) {
+        serverCache.delete(key);
       }
-    });
+    }
+    cacheStats.size = serverCache.size;
   }
 
   private estimateSize(data: any): number {
