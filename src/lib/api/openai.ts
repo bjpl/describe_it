@@ -45,17 +45,20 @@ class OpenAIService {
     console.log("[OpenAIService] Initializing with keyProvider:", {
       hasKey: !!this.currentApiKey,
       keyLength: this.currentApiKey?.length || 0,
-      keyPrefix: this.currentApiKey ? this.currentApiKey.substring(0, 10) + '...' : 'none',
+      keyPrefix: this.currentApiKey ? this.currentApiKey.substring(0, 12) + '...' : 'none',
       isDemo: config.isDemo,
       source: config.source,
       isValid: config.isValid,
+      keyPattern: this.currentApiKey ? (this.currentApiKey.startsWith('sk-proj-') ? 'sk-proj-*' : this.currentApiKey.startsWith('sk-') ? 'sk-*' : 'unknown') : 'none'
     });
 
-    if (config.isDemo || !config.isValid) {
-      console.warn("[OpenAIService] API key not configured or invalid. Using demo mode.", {
-        isDemo: config.isDemo,
-        isValid: config.isValid,
-        keyLength: this.currentApiKey?.length || 0
+    // First check if we have a valid API key before falling back to demo mode
+    if (!this.currentApiKey || !this.validateApiKey(this.currentApiKey)) {
+      console.warn("[OpenAIService] API key not found or invalid format. Using demo mode.", {
+        hasKey: !!this.currentApiKey,
+        keyLength: this.currentApiKey?.length || 0,
+        validationResult: this.currentApiKey ? this.validateApiKey(this.currentApiKey) : false,
+        reason: !this.currentApiKey ? 'no_key' : 'invalid_format'
       });
       this.client = null;
       this.isValidApiKey = false;
@@ -63,6 +66,13 @@ class OpenAIService {
       return;
     }
 
+    // Key exists and has valid format, initialize client
+    console.log("[OpenAIService] Valid API key detected, initializing OpenAI client", {
+      keyLength: this.currentApiKey.length,
+      keyPrefix: this.currentApiKey.substring(0, 12) + '...',
+      source: config.source
+    });
+    
     this.initializeClient();
   }
 
@@ -70,19 +80,39 @@ class OpenAIService {
    * Initialize OpenAI client with current key
    */
   private initializeClient(): void {
-    if (!this.currentApiKey || !this.validateApiKey(this.currentApiKey)) {
+    if (!this.currentApiKey) {
+      console.error('[OpenAIService] Cannot initialize client: no API key available');
       this.client = null;
       this.isValidApiKey = false;
       return;
     }
 
-    this.client = new OpenAI({
-      apiKey: this.currentApiKey,
-      timeout: 60000, // 60 seconds
-      maxRetries: 0, // We handle retries manually
-    });
+    if (!this.validateApiKey(this.currentApiKey)) {
+      console.error('[OpenAIService] Cannot initialize client: API key validation failed');
+      this.client = null;
+      this.isValidApiKey = false;
+      return;
+    }
 
-    this.isValidApiKey = true;
+    try {
+      this.client = new OpenAI({
+        apiKey: this.currentApiKey,
+        timeout: 60000, // 60 seconds
+        maxRetries: 0, // We handle retries manually
+      });
+
+      this.isValidApiKey = true;
+      
+      console.log('[OpenAIService] OpenAI client successfully initialized', {
+        hasClient: !!this.client,
+        isValidApiKey: this.isValidApiKey,
+        keyType: this.currentApiKey.startsWith('sk-proj-') ? 'project' : 'standard'
+      });
+    } catch (error) {
+      console.error('[OpenAIService] Failed to initialize OpenAI client:', error);
+      this.client = null;
+      this.isValidApiKey = false;
+    }
   }
 
   /**
@@ -126,19 +156,36 @@ class OpenAIService {
    */
   private validateApiKey(apiKey: string | undefined): boolean {
     if (!apiKey || typeof apiKey !== 'string') {
-      console.warn('OpenAI API key is missing or invalid type');
+      console.warn('[OpenAIService] API key validation failed: missing or invalid type', {
+        hasKey: !!apiKey,
+        type: typeof apiKey
+      });
       return false;
     }
 
     // Check API key format (OpenAI keys start with 'sk-' or 'sk-proj-')
     if (!apiKey.startsWith('sk-')) {
-      console.error('Invalid OpenAI API key format: must start with "sk-"');
+      console.error('[OpenAIService] API key validation failed: invalid format', {
+        keyPrefix: apiKey.substring(0, 5),
+        expectedFormat: 'sk-* or sk-proj-*'
+      });
       return false;
     }
 
-    // Check minimum length (OpenAI keys are typically 51+ characters)
-    if (apiKey.length < 20) {
-      console.error('Invalid OpenAI API key: too short');
+    // More specific length validation for different key types
+    let minLength = 20;
+    if (apiKey.startsWith('sk-proj-')) {
+      minLength = 56; // sk-proj- keys are longer
+    } else if (apiKey.startsWith('sk-')) {
+      minLength = 51; // standard sk- keys
+    }
+
+    if (apiKey.length < minLength) {
+      console.error('[OpenAIService] API key validation failed: too short', {
+        keyLength: apiKey.length,
+        expectedMinLength: minLength,
+        keyType: apiKey.startsWith('sk-proj-') ? 'project' : 'standard'
+      });
       return false;
     }
 
@@ -148,20 +195,33 @@ class OpenAIService {
       'sk-example',
       'sk-placeholder',
       'sk-demo',
-      'sk-test'
+      'sk-test',
+      'sk-proj-example',
+      'sk-proj-demo',
+      'sk-proj-test'
     ];
 
     if (invalidPlaceholders.some(placeholder => apiKey.toLowerCase().includes(placeholder.toLowerCase()))) {
-      console.error('Invalid OpenAI API key: appears to be a placeholder');
+      console.error('[OpenAIService] API key validation failed: placeholder detected', {
+        keyPrefix: apiKey.substring(0, 15) + '...'
+      });
       return false;
     }
 
     // Additional security: check for obvious patterns that shouldn't be in API keys
     const suspiciousPatterns = /[<>"'`\\]/;
     if (suspiciousPatterns.test(apiKey)) {
-      console.error('Invalid OpenAI API key: contains suspicious characters');
+      console.error('[OpenAIService] API key validation failed: suspicious characters', {
+        keyPrefix: apiKey.substring(0, 10) + '...'
+      });
       return false;
     }
+
+    console.log('[OpenAIService] API key validation passed', {
+      keyLength: apiKey.length,
+      keyType: apiKey.startsWith('sk-proj-') ? 'project' : 'standard',
+      keyPrefix: apiKey.substring(0, 12) + '...'
+    });
 
     return true;
   }
@@ -384,7 +444,18 @@ class OpenAIService {
    * Check if running in demo mode
    */
   private isDemoMode(): boolean {
-    return this.client === null || !this.isValidApiKey;
+    const demoMode = this.client === null || !this.isValidApiKey;
+    
+    if (demoMode) {
+      console.warn('[OpenAIService] Currently in demo mode', {
+        hasClient: !!this.client,
+        isValidApiKey: this.isValidApiKey,
+        hasCurrentApiKey: !!this.currentApiKey,
+        keyLength: this.currentApiKey?.length || 0
+      });
+    }
+    
+    return demoMode;
   }
 
   /**

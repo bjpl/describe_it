@@ -35,10 +35,10 @@ const ENV_KEY_MAP: Record<ServiceType, string[]> = {
 
 /**
  * API Key validation patterns
- * Updated to support modern OpenAI key formats (proj_ and sk-)
+ * Updated to support modern OpenAI key formats (sk- and sk-proj-)
  */
 const KEY_PATTERNS: Record<ServiceType, RegExp> = {
-  openai: /^(sk-[a-zA-Z0-9]{20,}|sk-proj-[a-zA-Z0-9]{20,})$/,
+  openai: /^sk-([a-zA-Z0-9]{48,}|proj-[a-zA-Z0-9]{20,}T3BlbkFJ[a-zA-Z0-9]{20,})$/,
   unsplash: /^[a-zA-Z0-9_-]{20,}$/,
 };
 
@@ -186,6 +186,10 @@ export class ApiKeyProvider {
    */
   public validateKey(service: ServiceType, key: string): boolean {
     if (!key || typeof key !== 'string') {
+      console.warn(`[ApiKeyProvider] Key validation failed for ${service}: missing or invalid type`, {
+        hasKey: !!key,
+        type: typeof key
+      });
       return false;
     }
 
@@ -193,28 +197,107 @@ export class ApiKeyProvider {
       throw new Error(`Unknown service type: ${service}`);
     }
 
+    // Special validation for OpenAI keys
+    if (service === 'openai') {
+      return this.validateOpenAIKey(key);
+    }
+
     const pattern = KEY_PATTERNS[service];
     
     // Basic format validation
     if (!pattern.test(key)) {
+      console.warn(`[ApiKeyProvider] Key validation failed for ${service}: pattern mismatch`, {
+        keyLength: key.length,
+        keyPrefix: key.substring(0, 10) + '...'
+      });
       return false;
     }
 
     // Check for placeholder keys
     const placeholders = [
-      'example', 'placeholder', 'demo', 'test', 'your-key-here',
-      'sk-your-openai-api-key-here', 'sk-example', 'sk-demo'
+      'example', 'placeholder', 'demo', 'test', 'your-key-here'
     ];
 
     const lowerKey = key.toLowerCase();
     if (placeholders.some(placeholder => lowerKey.includes(placeholder))) {
+      console.warn(`[ApiKeyProvider] Key validation failed for ${service}: placeholder detected`);
       return false;
     }
 
     // Additional security checks
     if (/[<>"'`\\]/.test(key)) {
+      console.warn(`[ApiKeyProvider] Key validation failed for ${service}: suspicious characters`);
       return false;
     }
+
+    return true;
+  }
+
+  /**
+   * Specialized validation for OpenAI API keys
+   */
+  private validateOpenAIKey(key: string): boolean {
+    // Check if key starts with correct prefix
+    if (!key.startsWith('sk-')) {
+      console.warn('[ApiKeyProvider] OpenAI key validation failed: invalid prefix', {
+        actualPrefix: key.substring(0, 5),
+        expectedPrefix: 'sk-'
+      });
+      return false;
+    }
+
+    // Check length based on key type
+    let minLength = 20;
+    let keyType = 'unknown';
+    
+    if (key.startsWith('sk-proj-')) {
+      minLength = 56; // Modern project keys are longer
+      keyType = 'project';
+    } else if (key.startsWith('sk-')) {
+      minLength = 51; // Standard sk- keys
+      keyType = 'standard';
+    }
+
+    if (key.length < minLength) {
+      console.warn('[ApiKeyProvider] OpenAI key validation failed: insufficient length', {
+        keyLength: key.length,
+        expectedMinLength: minLength,
+        keyType
+      });
+      return false;
+    }
+
+    // Check for placeholder keys specific to OpenAI
+    const placeholders = [
+      'sk-your-openai-api-key-here',
+      'sk-example',
+      'sk-placeholder', 
+      'sk-demo',
+      'sk-test',
+      'sk-proj-example',
+      'sk-proj-demo',
+      'sk-proj-test'
+    ];
+
+    const lowerKey = key.toLowerCase();
+    if (placeholders.some(placeholder => lowerKey.includes(placeholder.toLowerCase()))) {
+      console.warn('[ApiKeyProvider] OpenAI key validation failed: placeholder detected', {
+        keyPrefix: key.substring(0, 15) + '...'
+      });
+      return false;
+    }
+
+    // Additional character validation
+    if (/[<>"'`\\]/.test(key)) {
+      console.warn('[ApiKeyProvider] OpenAI key validation failed: suspicious characters');
+      return false;
+    }
+
+    console.log('[ApiKeyProvider] OpenAI key validation passed', {
+      keyType,
+      keyLength: key.length,
+      keyPrefix: key.substring(0, 12) + '...'
+    });
 
     return true;
   }
@@ -235,9 +318,18 @@ export class ApiKeyProvider {
    */
   public getServiceConfig(service: ServiceType): ApiKeyConfig {
     const apiKey = this.getKey(service);
-    const isValid = this.validateKey(service, apiKey);
+    const isValid = apiKey ? this.validateKey(service, apiKey) : false;
     const source = this.getKeySource(service);
     const isDemo = !isValid || !apiKey;
+
+    console.log(`[ApiKeyProvider] Service config for ${service}:`, {
+      hasApiKey: !!apiKey,
+      keyLength: apiKey?.length || 0,
+      isValid,
+      source,
+      isDemo,
+      keyPrefix: apiKey ? apiKey.substring(0, 12) + '...' : 'none'
+    });
 
     return {
       apiKey,
