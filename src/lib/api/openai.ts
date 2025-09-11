@@ -44,13 +44,19 @@ class OpenAIService {
 
     console.log("[OpenAIService] Initializing with keyProvider:", {
       hasKey: !!this.currentApiKey,
+      keyLength: this.currentApiKey?.length || 0,
+      keyPrefix: this.currentApiKey ? this.currentApiKey.substring(0, 10) + '...' : 'none',
       isDemo: config.isDemo,
       source: config.source,
       isValid: config.isValid,
     });
 
     if (config.isDemo || !config.isValid) {
-      console.warn("OpenAI API key not configured or invalid. Using demo mode.");
+      console.warn("[OpenAIService] API key not configured or invalid. Using demo mode.", {
+        isDemo: config.isDemo,
+        isValid: config.isValid,
+        keyLength: this.currentApiKey?.length || 0
+      });
       this.client = null;
       this.isValidApiKey = false;
       this.initializeDemoMode();
@@ -124,7 +130,7 @@ class OpenAIService {
       return false;
     }
 
-    // Check API key format (OpenAI keys start with 'sk-' and have specific length)
+    // Check API key format (OpenAI keys start with 'sk-' or 'sk-proj-')
     if (!apiKey.startsWith('sk-')) {
       console.error('Invalid OpenAI API key format: must start with "sk-"');
       return false;
@@ -677,8 +683,17 @@ class OpenAIService {
 
       return description;
     } catch (error) {
+      // Log the actual error for debugging
+      console.error('[OpenAI] generateDescription error:', {
+        error: error instanceof Error ? error.message : error,
+        isDemoMode: this.isDemoMode(),
+        hasClient: !!this.client,
+        imageUrlLength: imageUrl?.length,
+        style,
+        language
+      });
+      
       // Fallback to demo mode on error
-      // OpenAI API error, falling back to demo mode (structured logging)
       return this.generateDemoDescription(style, imageUrl, language);
     }
   }

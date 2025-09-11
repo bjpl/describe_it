@@ -84,13 +84,37 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
 
     const params = descriptionGenerateSchema.parse(body);
 
+    // Process image URL - convert to base64 if it's an external URL
+    let processedImageUrl = params.imageUrl as string;
+    
+    // If it's an external URL (not a data URI), proxy it
+    if (processedImageUrl && !processedImageUrl.startsWith('data:')) {
+      try {
+        const proxyResponse = await fetch(`${request.nextUrl.origin}/api/images/proxy`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageUrl: processedImageUrl }),
+        });
+        
+        if (proxyResponse.ok) {
+          const proxyData = await proxyResponse.json();
+          processedImageUrl = proxyData.dataUri;
+          console.log('[Generate] Image proxied successfully, size:', proxyData.size);
+        } else {
+          console.warn('[Generate] Image proxy failed, using original URL');
+        }
+      } catch (error) {
+        console.warn('[Generate] Image proxy error, using original URL:', error);
+      }
+    }
+
     // Generate descriptions for both languages
     const descriptions = [];
     
     // Generate English description
     try {
       const englishDescription = await openAIService.generateDescription({
-        imageUrl: params.imageUrl as string,
+        imageUrl: processedImageUrl,
         style: params.style as DescriptionStyle,
         maxLength: params.maxLength as number,
         customPrompt: params.customPrompt as string | undefined,
@@ -119,7 +143,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     // Generate Spanish description
     try {
       const spanishDescription = await openAIService.generateDescription({
-        imageUrl: params.imageUrl as string,
+        imageUrl: processedImageUrl,
         style: params.style as any,
         maxLength: params.maxLength as number | undefined,
         language: "es" as const

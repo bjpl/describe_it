@@ -35,9 +35,10 @@ const ENV_KEY_MAP: Record<ServiceType, string[]> = {
 
 /**
  * API Key validation patterns
+ * Updated to support modern OpenAI key formats (proj_ and sk-)
  */
 const KEY_PATTERNS: Record<ServiceType, RegExp> = {
-  openai: /^sk-[a-zA-Z0-9]{20,}$/,
+  openai: /^(sk-[a-zA-Z0-9]{20,}|sk-proj-[a-zA-Z0-9]{20,})$/,
   unsplash: /^[a-zA-Z0-9_-]{20,}$/,
 };
 
