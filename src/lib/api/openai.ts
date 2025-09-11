@@ -182,6 +182,17 @@ class OpenAIService {
   }
 
   /**
+   * Force refresh the service with latest keys
+   */
+  public refreshService(): void {
+    console.log('[OpenAIService] Force refreshing service');
+    // Force the key provider to refresh
+    apiKeyProvider.refreshKeys();
+    // Reinitialize with latest keys
+    this.initializeWithKeyProvider();
+  }
+
+  /**
    * Generate demo Q&A when API key is not available
    */
   private generateDemoQA(

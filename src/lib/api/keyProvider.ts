@@ -87,7 +87,30 @@ export class ApiKeyProvider {
       if (typeof window === 'undefined' || !settingsManager) {
         return null;
       }
-      return settingsManager.getSettings();
+      
+      // Try to get settings from settingsManager
+      const settings = settingsManager.getSettings();
+      
+      // Also check localStorage directly for API keys backup
+      if (typeof localStorage !== 'undefined') {
+        const apiKeysBackup = localStorage.getItem('api-keys-backup');
+        if (apiKeysBackup) {
+          try {
+            const backupKeys = JSON.parse(apiKeysBackup);
+            // Merge backup keys with settings if they exist
+            if (backupKeys.openai && (!settings?.apiKeys?.openai || settings.apiKeys.openai === '')) {
+              if (!settings) {
+                return { apiKeys: backupKeys };
+              }
+              settings.apiKeys = { ...settings.apiKeys, ...backupKeys };
+            }
+          } catch (e) {
+            console.warn('[ApiKeyProvider] Failed to parse api-keys-backup:', e);
+          }
+        }
+      }
+      
+      return settings;
     } catch (error) {
       console.warn('[ApiKeyProvider] Settings not available:', error);
       return null;

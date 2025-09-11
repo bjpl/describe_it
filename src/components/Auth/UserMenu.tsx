@@ -163,6 +163,11 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
           openai: keys.openai
         });
         
+        // Force refresh OpenAI service with new key
+        const { openAIService } = await import('@/lib/api/openai');
+        openAIService.refreshService();
+        console.log('[ApiKeyModal] OpenAI service refreshed with new key');
+        
         setSaved(true);
         setTimeout(() => {
           onClose();
