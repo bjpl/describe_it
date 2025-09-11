@@ -10,10 +10,10 @@ interface SearchError {
   retryable: boolean;
 }
 
-// Request timeout configuration (optimized for Vercel's 5s limit)
-const REQUEST_TIMEOUT = 4500; // 4.5 seconds to fit within Vercel's limit
-const MAX_RETRIES = 2; // Reduced retries to avoid 504 errors
-const RETRY_DELAYS = [500, 1000]; // Faster retries
+// Request timeout configuration (optimized for Edge Runtime)
+const REQUEST_TIMEOUT = 3000; // 3 seconds for Edge Runtime endpoint
+const MAX_RETRIES = 1; // Single retry for Edge endpoint
+const RETRY_DELAYS = [500]; // Fast retry
 
 export function useImageSearch() {
   const [images, setImages] = useState<UnsplashImage[]>([]);
@@ -138,105 +138,51 @@ export function useImageSearch() {
     }, REQUEST_TIMEOUT);
 
     try {
-      const url = new URL("/api/images/search", window.location.origin);
+      // Use the new edge-optimized endpoint
+      const url = new URL("/api/images/search-edge", window.location.origin);
       url.searchParams.set("query", query);
       url.searchParams.set("page", page.toString());
-      url.searchParams.set("per_page", "20");
       
-      // Add API key from authenticated user or settings
-      try {
-        let apiKey = null;
-        
-        // First, try to get API key from authenticated user via AuthManager
-        if (typeof window !== 'undefined') {
-          // Import AuthManager dynamically to avoid SSR issues
-          const { authManager } = await import('@/lib/auth/AuthManager');
-          
-          // Check if user is authenticated and has API keys
-          const authState = authManager.getAuthState();
-          if (authState.isAuthenticated) {
-            const userApiKeys = await authManager.getApiKeys();
-            if (userApiKeys?.unsplash) {
-              apiKey = userApiKeys.unsplash;
-              console.log('[useImageSearch] Using API key from authenticated user');
+      // Simplified API key retrieval - check localStorage only
+      let apiKey = null;
+      
+      if (typeof window !== 'undefined' && window.localStorage) {
+        // Check api-keys-backup first (most reliable)
+        const apiKeysBackupStr = localStorage.getItem('api-keys-backup');
+        if (apiKeysBackupStr) {
+          try {
+            const keys = JSON.parse(apiKeysBackupStr);
+            apiKey = keys.unsplash;
+            if (apiKey) {
+              console.log('[useImageSearch] Using API key from backup');
             }
-          }
-          
-          // Fallback to localStorage if not authenticated
-          if (!apiKey && window.localStorage) {
-            // Try multiple possible storage locations
-            const settingsStr = localStorage.getItem('app-settings');
-            const describeItSettingsStr = localStorage.getItem('describe-it-settings');
-            const apiKeysBackupStr = localStorage.getItem('api-keys-backup');
-            const hybridStorageStr = localStorage.getItem('hybrid-storage-api-keys-local-user');
-            
-            // Check api-keys-backup first (from our UserMenu save)
-            if (apiKeysBackupStr) {
-              try {
-                const keys = JSON.parse(apiKeysBackupStr);
-                apiKey = keys.unsplash;
-                if (apiKey) {
-                  console.log('[useImageSearch] Using API key from api-keys-backup');
-                }
-              } catch (e) {
-                console.warn('[useImageSearch] Failed to parse api-keys-backup:', e);
-              }
-            }
-            
-            // Check hybrid storage
-            if (!apiKey && hybridStorageStr) {
-              try {
-                const data = JSON.parse(hybridStorageStr);
-                apiKey = data.data?.unsplash;
-                if (apiKey) {
-                  console.log('[useImageSearch] Using API key from hybrid storage');
-                }
-              } catch (e) {
-                console.warn('[useImageSearch] Failed to parse hybrid storage:', e);
-              }
-            }
-            
-            // Check app-settings
-            if (!apiKey && settingsStr) {
-              try {
-                const settings = JSON.parse(settingsStr);
-                // Check both possible paths
-                apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
-                if (apiKey) {
-                  console.log('[useImageSearch] Using API key from app-settings');
-                }
-              } catch (e) {
-                console.warn('[useImageSearch] Failed to parse app-settings:', e);
-              }
-            }
-            
-            // Check describe-it-settings if not found
-            if (!apiKey && describeItSettingsStr) {
-              try {
-                const settings = JSON.parse(describeItSettingsStr);
-                apiKey = settings.settings?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
-                if (apiKey) {
-                  console.log('[useImageSearch] Using API key from describe-it-settings');
-                }
-              } catch (e) {
-                console.warn('[useImageSearch] Failed to parse describe-it-settings:', e);
-              }
-            }
-            
-            if (!apiKey) {
-              console.log('[useImageSearch] No API key found in any localStorage location');
-            }
+          } catch (e) {
+            console.warn('[useImageSearch] Failed to parse api-keys-backup:', e);
           }
         }
         
-        if (apiKey) {
-          url.searchParams.set("api_key", apiKey);
-          console.log('[useImageSearch] Found and using API key');
-        } else {
-          console.log('[useImageSearch] No API key found - will use demo mode');
+        // Fallback to app-settings if no backup
+        if (!apiKey) {
+          const settingsStr = localStorage.getItem('app-settings');
+          if (settingsStr) {
+            try {
+              const settings = JSON.parse(settingsStr);
+              apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
+              if (apiKey) {
+                console.log('[useImageSearch] Using API key from settings');
+              }
+            } catch (e) {
+              console.warn('[useImageSearch] Failed to parse app-settings:', e);
+            }
+          }
         }
-      } catch (e) {
-        console.warn('[useImageSearch] Could not retrieve API key:', e);
+      }
+      
+      if (apiKey) {
+        url.searchParams.set("api_key", apiKey);
+        console.log('[useImageSearch] API key added to request');
+      } else {
+        console.log('[useImageSearch] No API key - using demo mode');
       }
 
       console.log("[useImageSearch] Making API request to:", url.toString());
