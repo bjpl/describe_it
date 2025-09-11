@@ -599,8 +599,19 @@ class OpenAIService {
   ): Promise<GeneratedDescription> {
     const { imageUrl, style, language = "es", maxLength = 300 } = request;
 
+    console.log('[OpenAI] generateDescription called:', {
+      hasImageUrl: !!imageUrl,
+      imageUrlType: imageUrl?.startsWith('data:') ? 'base64' : 'url',
+      style,
+      language,
+      isDemoMode: this.isDemoMode(),
+      hasClient: !!this.client,
+      isValidApiKey: this.isValidApiKey
+    });
+
     // Return demo description if in demo mode
     if (this.isDemoMode()) {
+      console.warn('[OpenAI] Running in DEMO MODE - no real vision analysis will occur');
       return this.generateDemoDescription(style, imageUrl, language);
     }
 
@@ -624,6 +635,15 @@ class OpenAIService {
           : `The description should be approximately ${maxLength} words.`;
 
       const systemPrompt = `${stylePrompt} ${lengthInstruction}`;
+
+      console.log('[OpenAI] Calling GPT-4 Vision with:', {
+        model: 'gpt-4o',
+        style,
+        language,
+        temperature: style === "poetico" ? 0.9 : style === "academico" ? 0.3 : 0.7,
+        imageUrlLength: imageUrl?.length,
+        systemPromptPreview: systemPrompt.substring(0, 100) + '...'
+      });
 
       const response = await this.withRetry(async () => {
         if (!this.client) {
