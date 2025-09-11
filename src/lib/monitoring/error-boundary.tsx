@@ -6,7 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import { captureError, Sentry } from './sentry';
+import { captureError } from './sentry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/Button';
 import { AlertTriangle, RefreshCw, Bug } from 'lucide-react';

@@ -123,111 +123,85 @@ class AuthManager {
     username?: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      // Use the simpler client if available in browser context
-      const client = (typeof window !== 'undefined' && supabaseSimple) ? supabaseSimple : supabase;
+      console.log('[AuthManager] Starting signup for:', email);
       
-      console.log('[AuthManager] Attempting signup with:', {
-        email,
-        hasClient: !!client,
-        isSimpleClient: client === supabaseSimple,
-        url: process.env.NEXT_PUBLIC_SUPABASE_URL?.substring(0, 30) + '...',
-        hasKey: !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+      // Always use server-side proxy to avoid CORS issues
+      const response = await fetch('/api/auth/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password, metadata })
       });
-
-      // Try direct Supabase signup first, with fallback to proxy
-      let data: any;
-      let error: any;
-      let usedProxy = false;
       
-      try {
-        const result = await client.auth.signUp({
-          email,
-          password,
-          options: {
-            data: metadata,
-            emailRedirectTo: `${window.location.origin}/auth/callback`
-          }
-        });
-        data = result.data;
-        error = result.error;
-      } catch (corsError: any) {
-        // Any network error (including CORS) will trigger the proxy
-        console.log('[AuthManager] Network/CORS error detected, using proxy endpoint:', corsError.message);
-        usedProxy = true;
-      }
+      const result = await response.json();
       
-      // If we got an error or need to use proxy
-      if (error?.message?.includes('NetworkError') || error?.message?.includes('fetch') || usedProxy) {
-        console.log('[AuthManager] Using proxy endpoint for signup');
+      if (!response.ok) {
+        console.error('[AuthManager] Signup failed:', result);
         
-        try {
-          // Temporarily use mock signup to bypass Supabase issues
-          const response = await fetch('/api/auth/mock-signup', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, metadata })
-          });
-          
-          const result = await response.json();
-          
-          if (!response.ok) {
-            error = { message: result.error || 'Signup failed', status: response.status };
-          } else {
-            data = { user: result.user, session: result.session };
-            error = null; // Clear any previous error
-            
-            // If we got a session, set it in the client
-            if (result.session) {
-              await client.auth.setSession({
-                access_token: result.session.access_token,
-                refresh_token: result.session.refresh_token
-              });
-            }
-          }
-        } catch (proxyError: any) {
-          console.error('[AuthManager] Proxy signup also failed:', proxyError);
-          error = { message: 'Both direct and proxy signup failed', originalError: error, proxyError };
+        // Handle specific error cases
+        if (result.error?.includes('already registered')) {
+          return {
+            success: false,
+            error: 'This email is already registered. Please sign in instead.'
+          };
         }
+        
+        return {
+          success: false,
+          error: result.error || 'Failed to create account'
+        };
       }
-
-      if (error) {
-        console.error('[AuthManager] Signup error:', {
-          message: error.message,
-          status: error.status,
-          name: error.name,
-          cause: error.cause
-        });
-        throw error;
-      }
-
-      console.log('[AuthManager] Signup response:', {
-        hasUser: !!data.user,
-        hasSession: !!data.session,
-        userId: data.user?.id,
-        email: data.user?.email
+      
+      console.log('[AuthManager] Signup successful:', {
+        hasUser: !!result.user,
+        hasSession: !!result.session,
+        needsConfirmation: result.needsEmailConfirmation
       });
-
-      if (data.user) {
-        // For mock auth, set the user immediately
-        if (data.user.id?.startsWith('mock-')) {
-          console.log('[AuthManager] Mock user created, setting session');
-          this.currentUser = data.user as any;
-          this.currentSession = data.session as any;
-          this.notifyListeners();
-        } else {
-          // Real auth - create user profile
-          await this.createUserProfile(data.user.id, {
+      
+      // If we got a session, set it up
+      if (result.session) {
+        this.currentUser = result.user as any;
+        this.currentSession = result.session as any;
+        
+        // Also set in Supabase client for consistency
+        const client = (typeof window !== 'undefined' && supabaseSimple) ? supabaseSimple : supabase;
+        await client.auth.setSession({
+          access_token: result.session.access_token,
+          refresh_token: result.session.refresh_token
+        });
+        
+        // Load or create user profile
+        if (result.user?.id) {
+          await this.createUserProfile(result.user.id, {
             email,
             full_name: metadata?.full_name,
             username: metadata?.username
           });
         }
+        
+        this.notifyListeners();
       }
-
-      return { success: true };
+      
+      return { 
+        success: true,
+        error: result.needsEmailConfirmation 
+          ? 'Please check your email to confirm your account'
+          : undefined
+      };
+      
     } catch (error: any) {
       logger.error('Sign up failed', error);
-      console.error('[AuthManager] Full signup error:', error);
+      console.error('[AuthManager] Signup error:', error);
+      
+      // If the server is completely unreachable, provide clear error
+      if (error.message?.includes('Failed to fetch')) {
+        return {
+          success: false,
+          error: 'Unable to connect to authentication service. Please check your connection and try again.'
+        };
+      }
+      
       return { 
         success: false, 
         error: error.message || 'Failed to sign up' 
@@ -244,68 +218,77 @@ class AuthManager {
     requiresVerification?: boolean;
   }> {
     try {
-      // Use the simpler client if available in browser context
-      const client = (typeof window !== 'undefined' && supabaseSimple) ? supabaseSimple : supabase;
+      console.log('[AuthManager] Starting signin for:', email);
       
-      let data: any;
-      let error: any;
-      let usedProxy = false;
+      // Always use server-side proxy for consistency
+      const response = await fetch('/api/auth/signin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
       
-      // Try direct signin first
-      try {
-        const result = await client.auth.signInWithPassword({
-          email,
-          password
-        });
-        data = result.data;
-        error = result.error;
-      } catch (corsError: any) {
-        console.log('[AuthManager] Network/CORS error on signin, using proxy:', corsError.message);
-        usedProxy = true;
-      }
+      const result = await response.json();
       
-      // If network error or need to use proxy
-      if (error?.message?.includes('NetworkError') || error?.message?.includes('fetch') || usedProxy) {
-        console.log('[AuthManager] Using proxy endpoint for signin');
+      if (!response.ok) {
+        console.error('[AuthManager] Signin failed:', result);
         
-        const response = await fetch('/api/auth/signup', {
-          method: 'PUT', // PUT for signin
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, password })
-        });
-        
-        const result = await response.json();
-        
-        if (!response.ok) {
-          error = { message: result.error || 'Signin failed', status: response.status };
-        } else {
-          data = { user: result.user, session: result.session };
-          error = null;
-          
-          // Set the session if we got one
-          if (result.session) {
-            await client.auth.setSession({
-              access_token: result.session.access_token,
-              refresh_token: result.session.refresh_token
-            });
-          }
-        }
-      }
-
-      if (error) {
-        if (error.message?.includes('Email not confirmed')) {
+        // Handle specific error cases
+        if (result.error?.includes('Email not confirmed') || result.error?.includes('confirm your email')) {
           return { 
             success: false, 
             requiresVerification: true,
             error: 'Please verify your email before signing in' 
           };
         }
-        throw error;
+        
+        if (result.error?.includes('Invalid')) {
+          return {
+            success: false,
+            error: 'Invalid email or password'
+          };
+        }
+        
+        return {
+          success: false,
+          error: result.error || 'Failed to sign in'
+        };
+      }
+      
+      console.log('[AuthManager] Signin successful');
+      
+      // Set up the session
+      if (result.session) {
+        this.currentUser = result.user as any;
+        this.currentSession = result.session as any;
+        
+        // Also set in Supabase client
+        const client = (typeof window !== 'undefined' && supabaseSimple) ? supabaseSimple : supabase;
+        await client.auth.setSession({
+          access_token: result.session.access_token,
+          refresh_token: result.session.refresh_token
+        });
+        
+        // Load user profile
+        if (result.user?.id) {
+          await this.loadUserProfile(result.user.id);
+        }
+        
+        this.notifyListeners();
       }
 
       return { success: true };
+      
     } catch (error: any) {
       logger.error('Sign in failed', error);
+      
+      // Handle network errors
+      if (error.message?.includes('Failed to fetch')) {
+        return {
+          success: false,
+          error: 'Unable to connect to authentication service. Please check your connection and try again.'
+        };
+      }
+      
       return { 
         success: false, 
         error: error.message || 'Failed to sign in' 
