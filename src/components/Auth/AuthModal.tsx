@@ -73,9 +73,9 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin' }: AuthModal
           setFullName('');
           setSuccess(false);
           setError(null);
-          // Reload page to update auth state
-          window.location.href = '/';
-        }, 1000);
+          // Don't reload - let React handle the auth state update
+          // The AuthProvider will automatically update the UI
+        }, 1500);
       } else {
         setError(result?.error || 'Authentication failed');
         setLoading(false);
