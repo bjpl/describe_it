@@ -104,6 +104,16 @@ export async function POST(request: NextRequest) {
         isMock: true
       });
     }
+    
+    // If we get here, we have data from Supabase
+    const { data } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: metadata,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'https://describe-it-lovat.vercel.app'}/auth/callback`
+      }
+    });
 
     // Return success with user data
     return NextResponse.json({
