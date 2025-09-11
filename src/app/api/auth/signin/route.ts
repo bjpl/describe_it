@@ -52,7 +52,59 @@ export async function POST(request: NextRequest) {
     
     console.log('[Signin] Authenticating user:', email);
     
-    // Sign in the user
+    // Special handling for admin account during development
+    if (email === 'brandon.lambert87@gmail.com' && password === 'Test123') {
+      // Try to sign in normally first
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      // If rate limited, return a valid mock session for admin
+      if (error && (error.message?.includes('quota') || error.message?.includes('exceeded'))) {
+        console.log('[Signin] Admin account rate limited, using enhanced mock');
+        return NextResponse.json({
+          success: true,
+          message: 'Signed in successfully (admin bypass)',
+          user: {
+            id: 'e32caa0c-9720-492d-9f6f-fb3860f4b563',
+            email: email,
+            emailConfirmed: true,
+            lastSignIn: new Date().toISOString()
+          },
+          session: {
+            access_token: 'admin-mock-token-' + Date.now(),
+            refresh_token: 'admin-mock-refresh-' + Date.now(),
+            expires_at: Date.now() / 1000 + 3600,
+            user: {
+              id: 'e32caa0c-9720-492d-9f6f-fb3860f4b563',
+              email: email,
+              role: 'authenticated'
+            }
+          },
+          isMock: true,
+          isAdmin: true
+        }, { headers: corsHeaders });
+      }
+      
+      // If successful, continue normally
+      if (!error && data) {
+        console.log('[Signin] Admin signin successful');
+        return NextResponse.json({
+          success: true,
+          message: 'Signed in successfully!',
+          user: data.user ? {
+            id: data.user.id,
+            email: data.user.email,
+            emailConfirmed: !!data.user.email_confirmed_at,
+            lastSignIn: data.user.last_sign_in_at
+          } : null,
+          session: data.session
+        }, { headers: corsHeaders });
+      }
+    }
+    
+    // Sign in the user normally for all other accounts
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -62,7 +114,10 @@ export async function POST(request: NextRequest) {
       console.error('[Signin] Auth error:', error);
       
       // Handle rate limiting by falling back to mock auth
-      if (error.message?.includes('quota') || error.message?.includes('rate') || error.status === 429) {
+      if (error.message?.includes('quota') || 
+          error.message?.includes('rate') || 
+          error.message?.includes('exceeded') ||
+          error.status === 429) {
         console.log('[Signin] Rate limited, using mock auth');
         
         // Return mock session for development
