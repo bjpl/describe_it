@@ -92,13 +92,17 @@ class UnsplashService {
    */
   private initializeClient(): void {
     if (!this.accessKey || this.accessKey === "demo") {
+      console.log("[UnsplashService] No valid access key, client not initialized");
       this.client = null;
+      this.isDemo = true;
       return;
     }
 
+    console.log("[UnsplashService] Initializing Unsplash client with key:", this.accessKey.substring(0, 10) + '...');
+    
     this.client = axios.create({
       baseURL: "https://api.unsplash.com",
-      timeout: 5000, // 5 second timeout for real API calls
+      timeout: 10000, // Increased to 10 seconds for real API calls
       headers: {
         "Accept-Version": "v1",
         Authorization: `Client-ID ${this.accessKey}`,
@@ -112,7 +116,9 @@ class UnsplashService {
       isBlocked: false,
     };
 
+    this.isDemo = false; // Explicitly set to non-demo mode when client is initialized
     this.setupInterceptors();
+    console.log("[UnsplashService] Client initialized successfully, isDemo:", this.isDemo);
   }
 
   /**

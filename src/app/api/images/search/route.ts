@@ -301,10 +301,10 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     // Fetch data (unsplashService handles demo mode internally)
     console.log("[API] Calling unsplashService.searchImages with params:", params);
     
-    // Add aggressive timeout for Vercel serverless
+    // Add timeout for Vercel serverless (increased to match client timeout)
     const searchPromise = unsplashService.searchImages(params as any);
     const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('Search timeout - using demo mode')), 3000); // 3 seconds max
+      setTimeout(() => reject(new Error('Search timeout - using demo mode')), 9000); // 9 seconds to allow client's 10 second timeout
     });
     
     let results;
