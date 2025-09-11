@@ -194,17 +194,8 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
   const userId = request.user?.id;
   const userTier = request.user?.subscription_status || 'free';
   
-  // Extract user's API key from request headers
-  const userApiKey = request.headers.get('X-OpenAI-API-Key') || undefined;
-  
-  if (userApiKey) {
-    console.log('[API Route] Received user API key from headers:', {
-      hasKey: !!userApiKey,
-      keyLength: userApiKey.length,
-      keyPrefix: userApiKey.substring(0, 6) + '...',
-      requestId
-    });
-  }
+  // Note: Vercel strips custom headers, so we receive API key in request body instead
+  let userApiKey: string | undefined;
   
   console.log('[Generate Route] Processing description generation request:', {
     requestId,
@@ -249,6 +240,20 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     }
 
     const params = descriptionGenerateSchema.parse(body);
+    
+    // Extract user's API key from request body (Vercel-compatible approach)
+    userApiKey = body.userApiKey || undefined;
+    
+    if (userApiKey) {
+      console.log('[API Route] Received user API key from request body:', {
+        hasKey: !!userApiKey,
+        keyLength: userApiKey.length,
+        keyPrefix: userApiKey.substring(0, 10) + '...',
+        requestId
+      });
+    } else {
+      console.log('[API Route] No user API key provided, will use server default');
+    }
     
     // Additional validation for style parameter
     const validStyles = ['narrativo', 'poetico', 'academico', 'conversacional', 'infantil'];

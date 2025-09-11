@@ -154,10 +154,12 @@ export function useDescriptions(imageId: string) {
         headers: {
           "Content-Type": "application/json",
           Accept: "application/json",
-          // Pass the user's API key securely in headers
-          "X-OpenAI-API-Key": openAIConfig.apiKey || '',
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify({
+          ...request,
+          // Pass the API key in the request body to bypass Vercel header restrictions
+          userApiKey: openAIConfig.apiKey || ''
+        }),
         signal: abortControllerRef.current.signal,
       });
 
