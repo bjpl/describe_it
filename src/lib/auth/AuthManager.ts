@@ -53,6 +53,7 @@ class AuthManager {
   private currentSession: Session | null = null;
   private currentProfile: UserProfile | null = null;
   private listeners: Set<(state: AuthState) => void> = new Set();
+  private isSigningOut: boolean = false;
 
   private constructor() {
     this.initializeAuth();
@@ -99,9 +100,15 @@ class AuthManager {
           return;
         }
         
-        // Ignore SIGNED_OUT if we have a valid session locally
-        if (event === 'SIGNED_OUT' && this.currentSession && this.currentUser) {
-          console.log('Ignoring SIGNED_OUT event - we have a valid session');
+        // Ignore SIGNED_OUT if we have a valid session locally and not explicitly signing out
+        if (event === 'SIGNED_OUT' && this.currentSession && this.currentUser && !this.isSigningOut) {
+          console.log('Ignoring SIGNED_OUT event - we have a valid session and not signing out');
+          return;
+        }
+        
+        // Don't process events during sign-out unless it's the SIGNED_OUT event
+        if (this.isSigningOut && event !== 'SIGNED_OUT') {
+          console.log('Ignoring event during sign-out process:', event);
           return;
         }
         
@@ -328,6 +335,9 @@ class AuthManager {
           
           console.log('[AuthManager] Session verified successfully');
           
+          // Clear any pending sign-out state
+          this.isSigningOut = false;
+          
           // Now update our internal state
           this.currentUser = result.user as any;
           this.currentSession = result.session as any;
@@ -421,19 +431,33 @@ class AuthManager {
    */
   async signOut(): Promise<void> {
     try {
+      // Set flag to indicate intentional sign-out
+      this.isSigningOut = true;
+      
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       
       // Clear local storage for user-specific data
       await hybridStorage.clearCategory('user-data');
       
+      // Clear the session from localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('describe-it-auth');
+      }
+      
       this.currentUser = null;
       this.currentSession = null;
       this.currentProfile = null;
       
       this.notifyListeners();
+      
+      // Reset the flag after a delay
+      setTimeout(() => {
+        this.isSigningOut = false;
+      }, 1000);
     } catch (error) {
       logger.error('Sign out failed', error as Error);
+      this.isSigningOut = false;
     }
   }
 
