@@ -4,7 +4,6 @@
  */
 
 import { supabase } from '../supabase/client';
-import { supabaseSimple } from '../supabase/client-simple';
 import { hybridStorage } from '../storage/HybridStorageManager';
 import { logger } from '../logger';
 import type { User, Session } from '@supabase/supabase-js';
@@ -165,7 +164,7 @@ class AuthManager {
         this.currentSession = result.session as any;
         
         // Also set in Supabase client for consistency
-        const client = (typeof window !== 'undefined' && supabaseSimple) ? supabaseSimple : supabase;
+        const client = supabase;
         await client.auth.setSession({
           access_token: result.session.access_token,
           refresh_token: result.session.refresh_token
@@ -262,7 +261,7 @@ class AuthManager {
         this.currentSession = result.session as any;
         
         // Also set in Supabase client
-        const client = (typeof window !== 'undefined' && supabaseSimple) ? supabaseSimple : supabase;
+        const client = supabase;
         await client.auth.setSession({
           access_token: result.session.access_token,
           refresh_token: result.session.refresh_token

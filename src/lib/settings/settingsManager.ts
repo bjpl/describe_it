@@ -165,8 +165,39 @@ export class SettingsManager {
     return { ...DEFAULT_SETTINGS };
   }
 
-  // Save settings to localStorage
-  private saveSettings(): void {
+  // Save settings to localStorage (made public and async for external use)
+  async saveSettings(): Promise<boolean> {
+    // SSR safety check
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return false;
+    }
+
+    try {
+      const data = {
+        version: this.STORAGE_VERSION,
+        settings: this.settings,
+        timestamp: new Date().toISOString(),
+      };
+      
+      // Use a Promise to make it properly async
+      return await new Promise<boolean>((resolve) => {
+        try {
+          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+          console.log('[SettingsManager] Settings saved successfully');
+          resolve(true);
+        } catch (error) {
+          console.error("Failed to save settings to localStorage:", error);
+          resolve(false);
+        }
+      });
+    } catch (error) {
+      console.error("Failed to save settings:", error);
+      return false;
+    }
+  }
+  
+  // Private synchronous version for internal use
+  private saveSettingsSync(): void {
     // SSR safety check
     if (typeof window === "undefined" || typeof localStorage === "undefined") {
       return;
@@ -312,7 +343,7 @@ export class SettingsManager {
   // Update settings (partial update)
   updateSettings(updates: Partial<AppSettings>): void {
     this.settings = { ...this.settings, ...updates };
-    this.saveSettings();
+    this.saveSettingsSync();
     this.applySettings();
     this.notifyListeners();
   }
@@ -323,7 +354,7 @@ export class SettingsManager {
     updates: Partial<AppSettings[K]>,
   ): void {
     this.settings[section] = { ...this.settings[section], ...updates };
-    this.saveSettings();
+    this.saveSettingsSync();
     this.applySettings();
     this.notifyListeners();
   }
@@ -331,7 +362,7 @@ export class SettingsManager {
   // Reset settings to defaults
   resetSettings(): void {
     this.settings = { ...DEFAULT_SETTINGS };
-    this.saveSettings();
+    this.saveSettingsSync();
     this.applySettings();
     this.notifyListeners();
   }
@@ -362,7 +393,7 @@ export class SettingsManager {
       const parsed = JSON.parse(data);
       if (parsed.version && parsed.settings) {
         this.settings = { ...DEFAULT_SETTINGS, ...parsed.settings };
-        this.saveSettings();
+        this.saveSettingsSync();
         this.applySettings();
         this.notifyListeners();
         return true;

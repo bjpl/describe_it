@@ -142,34 +142,79 @@ export function ApiKeysSection() {
   }, [updateSection, validation, testApiKey]);
 
   const handleSave = useCallback(async () => {
+    console.log('[ApiKeysSection] Starting save operation');
     setSaveStatus('saving');
     
     try {
-      // Save to local storage
-      await settingsManager.saveSettings();
+      // Add timeout protection
+      const saveTimeout = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Save operation timed out')), 5000)
+      );
       
-      // If user is authenticated, save to cloud
-      const userId = localStorage.getItem('userId');
-      if (userId) {
-        const response = await fetch('/api/settings/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            settings: { apiKeys: settings.apiKeys }
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to save to cloud');
+      // Save to local storage with timeout
+      const savePromise = settingsManager.saveSettings();
+      const saveResult = await Promise.race([savePromise, saveTimeout]) as boolean;
+      
+      if (!saveResult) {
+        throw new Error('Failed to save settings locally');
+      }
+      
+      console.log('[ApiKeysSection] Settings saved to localStorage');
+      
+      // Optional: Save to cloud if authenticated
+      try {
+        const authUser = localStorage.getItem('auth_user');
+        if (authUser) {
+          const user = JSON.parse(authUser);
+          if (user?.id) {
+            console.log('[ApiKeysSection] Attempting cloud save for user:', user.email);
+            
+            const cloudTimeout = new Promise((_, reject) => 
+              setTimeout(() => reject(new Error('Cloud save timed out')), 3000)
+            );
+            
+            const cloudPromise = fetch('/api/settings/apikeys', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                userId: user.id,
+                settings: { apiKeys: settings.apiKeys }
+              })
+            });
+            
+            const response = await Promise.race([cloudPromise, cloudTimeout]) as Response;
+            
+            if (!response.ok) {
+              console.warn('[ApiKeysSection] Cloud save failed, but local save succeeded');
+            } else {
+              console.log('[ApiKeysSection] Cloud save successful');
+            }
+          }
         }
+      } catch (cloudError) {
+        // Cloud save is optional, don't fail the whole operation
+        console.warn('[ApiKeysSection] Cloud save failed:', cloudError);
+      }
+
+      // Trigger Unsplash service update
+      if (settings.apiKeys.unsplash) {
+        console.log('[ApiKeysSection] Updating Unsplash service with new API key');
+        // Dispatch a custom event to notify the Unsplash service
+        window.dispatchEvent(new CustomEvent('apiKeysUpdated', { 
+          detail: { unsplash: settings.apiKeys.unsplash } 
+        }));
       }
 
       setSaveStatus('saved');
+      console.log('[ApiKeysSection] Save operation completed successfully');
+      
+      // Reset status after showing success
       setTimeout(() => setSaveStatus('idle'), 2000);
-    } catch (error) {
-      console.error('Failed to save API keys:', error);
+    } catch (error: any) {
+      console.error('[ApiKeysSection] Save operation failed:', error);
       setSaveStatus('error');
+      
+      // Show error for longer
       setTimeout(() => setSaveStatus('idle'), 3000);
     }
   }, [settings.apiKeys]);
@@ -333,16 +378,43 @@ export function ApiKeysSection() {
       </div>
 
       {/* Save Button */}
-      <div className="flex justify-end">
+      <div className="flex justify-end gap-3">
+        {/* Status Message */}
+        {saveStatus === 'error' && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-lg">
+            <AlertCircle className="h-4 w-4" />
+            <span className="text-sm">Failed to save. Please try again.</span>
+          </div>
+        )}
+        
         <button
           onClick={handleSave}
           disabled={saveStatus === 'saving'}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center gap-2"
+          className={`
+            px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2
+            ${saveStatus === 'saved' 
+              ? 'bg-green-600 hover:bg-green-700 text-white' 
+              : saveStatus === 'error'
+              ? 'bg-red-600 hover:bg-red-700 text-white'
+              : 'bg-blue-600 hover:bg-blue-700 text-white'
+            }
+            disabled:opacity-50 disabled:cursor-not-allowed
+          `}
         >
           {saveStatus === 'saving' ? (
             <>
               <RefreshCw className="h-4 w-4 animate-spin" />
               Saving...
+            </>
+          ) : saveStatus === 'saved' ? (
+            <>
+              <Check className="h-4 w-4" />
+              Saved!
+            </>
+          ) : saveStatus === 'error' ? (
+            <>
+              <X className="h-4 w-4" />
+              Retry Save
             </>
           ) : (
             <>

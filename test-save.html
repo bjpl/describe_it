@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test API Key Save</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #1a1a1a; color: #fff; }
+        button { padding: 10px 20px; margin: 5px; cursor: pointer; }
+        .success { color: #4ade80; }
+        .error { color: #f87171; }
+        .info { color: #60a5fa; }
+        pre { background: #2a2a2a; padding: 10px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>API Key Save Test</h1>
+    <button onclick="testLocalSave()">Test Local Save</button>
+    <button onclick="testApiSave()">Test API Save</button>
+    <button onclick="testSettingsManager()">Test Settings Manager</button>
+    <div id="output"></div>
+
+    <script>
+        const log = (msg, type = 'info') => {
+            const output = document.getElementById('output');
+            const entry = document.createElement('div');
+            entry.className = type;
+            entry.innerHTML = `<pre>${new Date().toISOString().slice(11, 19)} - ${msg}</pre>`;
+            output.appendChild(entry);
+        };
+
+        async function testLocalSave() {
+            log('Testing localStorage save...');
+            try {
+                const testData = {
+                    version: '1.0.0',
+                    settings: {
+                        apiKeys: {
+                            unsplash: 'test-key-' + Date.now(),
+                            openai: 'sk-test-' + Date.now()
+                        }
+                    },
+                    timestamp: new Date().toISOString()
+                };
+                
+                localStorage.setItem('describe-it-settings', JSON.stringify(testData));
+                log('✓ Saved to localStorage', 'success');
+                
+                const retrieved = localStorage.getItem('describe-it-settings');
+                const parsed = JSON.parse(retrieved);
+                log('✓ Retrieved: ' + JSON.stringify(parsed.settings.apiKeys, null, 2), 'success');
+            } catch (err) {
+                log('✗ Error: ' + err.message, 'error');
+            }
+        }
+
+        async function testApiSave() {
+            log('Testing API endpoint save...');
+            try {
+                const response = await fetch('/api/settings/apikeys', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: 'test-user',
+                        settings: {
+                            apiKeys: {
+                                unsplash: 'api-test-' + Date.now(),
+                                openai: 'sk-api-test-' + Date.now()
+                            }
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                log('Response status: ' + response.status, response.ok ? 'success' : 'error');
+                log('Response data: ' + JSON.stringify(data, null, 2), response.ok ? 'success' : 'error');
+            } catch (err) {
+                log('✗ API Error: ' + err.message, 'error');
+            }
+        }
+
+        async function testSettingsManager() {
+            log('Testing Settings Manager save...');
+            try {
+                // Simulate the save operation with timeout
+                const savePromise = new Promise((resolve) => {
+                    setTimeout(() => {
+                        localStorage.setItem('test-settings-manager', JSON.stringify({
+                            saved: true,
+                            timestamp: new Date().toISOString()
+                        }));
+                        resolve(true);
+                    }, 100);
+                });
+                
+                const timeoutPromise = new Promise((_, reject) => 
+                    setTimeout(() => reject(new Error('Timeout')), 5000)
+                );
+                
+                const result = await Promise.race([savePromise, timeoutPromise]);
+                log('✓ Settings Manager save completed: ' + result, 'success');
+            } catch (err) {
+                log('✗ Settings Manager Error: ' + err.message, 'error');
+            }
+        }
+
+        // Auto-run tests
+        window.onload = () => {
+            log('Page loaded - Ready to test', 'info');
+        };
+    </script>
+</body>
+</html>

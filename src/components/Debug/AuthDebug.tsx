@@ -1,7 +1,71 @@
 'use client';
 
 import React, { useState } from 'react';
-import { testSupabaseConnection, testSignup } from '@/lib/supabase/client-simple';
+import { supabase } from '@/lib/supabase/client';
+
+// Test functions using the main client
+async function testSupabaseConnection() {
+  if (!supabase) {
+    return {
+      success: false,
+      error: 'Supabase client not initialized',
+      isBrowser: typeof window !== 'undefined'
+    };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    return {
+      success: !error,
+      error: error?.message || null,
+      hasSession: !!data?.session,
+      timestamp: new Date().toISOString()
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'Unknown error',
+      stack: err.stack
+    };
+  }
+}
+
+async function testSignup(email: string, password: string) {
+  if (!supabase) {
+    return {
+      success: false,
+      error: 'Supabase client not initialized'
+    };
+  }
+
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password
+    });
+
+    if (error) {
+      return {
+        success: false,
+        error: error.message,
+        code: error.status,
+        details: error
+      };
+    }
+
+    return {
+      success: true,
+      user: data.user?.email,
+      session: !!data.session,
+      confirmationRequired: !data.session && !!data.user
+    };
+  } catch (err: any) {
+    return {
+      success: false,
+      error: err.message || 'Unknown error'
+    };
+  }
+}
 
 export function AuthDebug() {
   const [connectionResult, setConnectionResult] = useState<any>(null);

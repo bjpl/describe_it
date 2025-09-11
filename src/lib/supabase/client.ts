@@ -11,17 +11,19 @@ if (!supabaseUrl || !supabaseAnonKey) {
 }
 
 // Singleton instance to prevent multiple clients
-let browserClient: ReturnType<typeof createBrowserClient<Database>> | null = null;
-let legacyClient: ReturnType<typeof createClient<Database>> | null = null;
+let singletonClient: ReturnType<typeof createClient<Database>> | null = null;
 
-// Browser client for client-side operations with SSR support
-export const createBrowserSupabaseClient = () => {
-  if (!browserClient) {
-    browserClient = createBrowserClient<Database>(supabaseUrl, supabaseAnonKey, {
+// Create a single Supabase client instance
+const createSupabaseClient = () => {
+  if (!singletonClient) {
+    console.log('[Supabase] Creating singleton client instance');
+    singletonClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        storageKey: 'describe-it-auth',
       },
       realtime: {
         params: {
@@ -30,27 +32,14 @@ export const createBrowserSupabaseClient = () => {
       },
     });
   }
-  return browserClient;
+  return singletonClient;
 }
 
-// Legacy client for backwards compatibility (singleton)
-export const supabase = (() => {
-  if (!legacyClient) {
-    legacyClient = createClient<Database>(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-      },
-      realtime: {
-        params: {
-          eventsPerSecond: 10,
-        },
-      },
-    });
-  }
-  return legacyClient;
-})()
+// Export a single client instance for all uses
+export const supabase = createSupabaseClient()!;
+
+// Alias for backwards compatibility
+export const createBrowserSupabaseClient = () => supabase;
 
 // Auth state management helpers
 export const authHelpers = {
