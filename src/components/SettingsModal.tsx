@@ -14,6 +14,7 @@ import {
   type TabType,
   type Tab,
 } from "./Settings";
+import { ApiKeysSection } from "./Settings/ApiKeysSection";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -150,9 +151,10 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
 
   const tabs: Tab[] = [
     { id: "general", label: "General", icon: "⚙️" },
-    { id: "api", label: "Privacy & API", icon: "🔑" },
+    { id: "apikeys", label: "API Keys", icon: "🔑" },
     { id: "theme", label: "Appearance", icon: "🎨" },
     { id: "study", label: "Study & Notifications", icon: "📚" },
+    { id: "privacy", label: "Privacy", icon: "🔒" },
     { id: "cache", label: "Data & Export", icon: "💾" },
   ];
 
@@ -168,7 +170,10 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
             onSettingChange={handleSettingChange}
           />
         );
-      case "api":
+      case "apikeys":
+        return <ApiKeysSection />;
+      case "privacy":
+      case "api": // Legacy support
       case "language": // Legacy support
         return (
           <PrivacySettings

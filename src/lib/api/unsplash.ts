@@ -47,6 +47,15 @@ class UnsplashService {
         isValid: config.isValid,
       });
 
+      // Always prefer user-provided settings API key
+      if (config.source === 'settings' && config.apiKey && config.apiKey.trim()) {
+        console.log("[UnsplashService] Using API key from user settings");
+        this.accessKey = config.apiKey.trim();
+        this.isDemo = false;
+        this.initializeClient();
+        return;
+      }
+
       if (config.isDemo || !config.isValid) {
         console.warn("Unsplash API key not configured or invalid. Using demo mode.");
         this.accessKey = "demo";
