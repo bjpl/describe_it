@@ -167,22 +167,64 @@ export function useImageSearch() {
             // Try multiple possible storage locations
             const settingsStr = localStorage.getItem('app-settings');
             const describeItSettingsStr = localStorage.getItem('describe-it-settings');
+            const apiKeysBackupStr = localStorage.getItem('api-keys-backup');
+            const hybridStorageStr = localStorage.getItem('hybrid-storage-api-keys-local-user');
             
-            // Check app-settings first
-            if (settingsStr) {
-              const settings = JSON.parse(settingsStr);
-              // Check both possible paths
-              apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
+            // Check api-keys-backup first (from our UserMenu save)
+            if (apiKeysBackupStr) {
+              try {
+                const keys = JSON.parse(apiKeysBackupStr);
+                apiKey = keys.unsplash;
+                if (apiKey) {
+                  console.log('[useImageSearch] Using API key from api-keys-backup');
+                }
+              } catch (e) {
+                console.warn('[useImageSearch] Failed to parse api-keys-backup:', e);
+              }
+            }
+            
+            // Check hybrid storage
+            if (!apiKey && hybridStorageStr) {
+              try {
+                const data = JSON.parse(hybridStorageStr);
+                apiKey = data.data?.unsplash;
+                if (apiKey) {
+                  console.log('[useImageSearch] Using API key from hybrid storage');
+                }
+              } catch (e) {
+                console.warn('[useImageSearch] Failed to parse hybrid storage:', e);
+              }
+            }
+            
+            // Check app-settings
+            if (!apiKey && settingsStr) {
+              try {
+                const settings = JSON.parse(settingsStr);
+                // Check both possible paths
+                apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
+                if (apiKey) {
+                  console.log('[useImageSearch] Using API key from app-settings');
+                }
+              } catch (e) {
+                console.warn('[useImageSearch] Failed to parse app-settings:', e);
+              }
             }
             
             // Check describe-it-settings if not found
             if (!apiKey && describeItSettingsStr) {
-              const settings = JSON.parse(describeItSettingsStr);
-              apiKey = settings.apiKeys?.unsplash;
+              try {
+                const settings = JSON.parse(describeItSettingsStr);
+                apiKey = settings.settings?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
+                if (apiKey) {
+                  console.log('[useImageSearch] Using API key from describe-it-settings');
+                }
+              } catch (e) {
+                console.warn('[useImageSearch] Failed to parse describe-it-settings:', e);
+              }
             }
             
-            if (apiKey) {
-              console.log('[useImageSearch] Using API key from localStorage');
+            if (!apiKey) {
+              console.log('[useImageSearch] No API key found in any localStorage location');
             }
           }
         }
