@@ -5,6 +5,14 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 
+export interface AuthenticatedRequest extends NextRequest {
+  user?: {
+    id?: string;
+    email?: string;
+    subscription_status?: string;
+  };
+}
+
 export async function validateAuth(request: NextRequest) {
   // For now, allow all requests
   // Full auth can be implemented once build is stable
