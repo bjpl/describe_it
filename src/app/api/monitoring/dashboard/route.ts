@@ -180,17 +180,19 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     const responseTime = performance.now() - startTime;
     
-    // Log dashboard access
-    monitoring.logEvent(
-      monitoring.createLogContext(request, requestId),
-      'dashboard_accessed',
-      {
-        responseTime,
-        systemStatus: overallStatus,
-        alertCount: systemHealth.alerts.length,
-        errorCount: errorAnalytics.totalErrors
-      }
-    );
+    // Log dashboard access (only in development to avoid build issues)
+    if (process.env.NODE_ENV === 'development') {
+      monitoring.logEvent(
+        monitoring.createLogContext(request, requestId),
+        'dashboard_accessed',
+        {
+          responseTime,
+          systemStatus: overallStatus,
+          alertCount: systemHealth.alerts.length,
+          errorCount: errorAnalytics.totalErrors
+        }
+      );
+    }
 
     return NextResponse.json(dashboardResponse, {
       status: 200,
@@ -206,12 +208,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   } catch (error) {
     const responseTime = performance.now() - startTime;
     
-    // Log error
-    monitoring.logError(
-      monitoring.createLogContext(request, requestId),
-      error instanceof Error ? error : new Error(String(error)),
-      { category: 'system', severity: 'high', code: 'DASHBOARD_ERROR' }
-    );
+    // Log error (only in development to avoid build issues)
+    if (process.env.NODE_ENV === 'development') {
+      monitoring.logError(
+        monitoring.createLogContext(request, requestId),
+        error instanceof Error ? error : new Error(String(error)),
+        { category: 'system', severity: 'high', code: 'DASHBOARD_ERROR' }
+      );
+    }
 
     return NextResponse.json(
       {
