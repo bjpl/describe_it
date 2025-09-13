@@ -16,8 +16,8 @@ import SpacedRepetitionSystem, {
 import VocabularyStorage, {
   StudySession,
 } from "@/lib/storage/vocabularyStorage";
-import {
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import {
   VocabularyList,
   VocabularyForm,
   VocabularyActions,

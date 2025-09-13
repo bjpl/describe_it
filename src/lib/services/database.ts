@@ -19,8 +19,8 @@ import type {
   QuestionType,
   LearningPhase,
 } from "../../types/database";
-import type {
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import type {
   VocabularyItem,
   PartOfSpeech,
   DifficultyNumber,

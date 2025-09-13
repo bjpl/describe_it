@@ -1,6 +1,6 @@
 // Session Logger - Comprehensive user interaction tracking
-import {
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import {
   SessionInteraction,
   InteractionType,
   InteractionData,
