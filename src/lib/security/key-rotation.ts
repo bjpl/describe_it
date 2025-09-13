@@ -1,5 +1,5 @@
 import { SecretsManager, SecretManagerConfig } from './secrets-manager';
-import { SymmetricEncryption, AsymmetricEncryption } from './encryption';
+import CryptoUtils from './encryption';
 import { getAuditLogger } from './audit-logger';
 import { Redis } from 'ioredis';
 import cron from 'node-cron';

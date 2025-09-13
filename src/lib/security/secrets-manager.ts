@@ -1,5 +1,5 @@
 import { VaultClient, VaultConfig, SecretData } from './vault-client';
-import { SymmetricEncryption, EncryptedData } from './encryption';
+import CryptoUtils from './encryption';
 import { getAuditLogger } from './audit-logger';
 import { Redis } from 'ioredis';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
@@ -42,12 +42,10 @@ export interface SecretFilter {
 }
 
 export abstract class BaseSecretProvider {
-  protected encryption?: SymmetricEncryption;
   protected encryptionKey?: string;
 
   constructor(protected config: SecretManagerConfig) {
     if (config.encryption?.enabled && config.encryption.key) {
-      this.encryption = new SymmetricEncryption();
       this.encryptionKey = config.encryption.key;
     }
   }
@@ -58,18 +56,18 @@ export abstract class BaseSecretProvider {
   abstract list(filter?: SecretFilter): Promise<string[]>;
   abstract exists(key: string): Promise<boolean>;
 
-  protected encryptValue(value: string): string | EncryptedData {
-    if (!this.encryption || !this.encryptionKey) {
+  protected encryptValue(value: string): string | any {
+    if (!this.encryptionKey) {
       return value;
     }
-    return this.encryption.encrypt(value, this.encryptionKey);
+    return CryptoUtils.encrypt(value, this.encryptionKey);
   }
 
-  protected decryptValue(value: string | EncryptedData): string {
-    if (!this.encryption || !this.encryptionKey || typeof value === 'string') {
+  protected decryptValue(value: string | any): string {
+    if (!this.encryptionKey || typeof value === 'string') {
       return value as string;
     }
-    return this.encryption.decrypt(value as EncryptedData, this.encryptionKey);
+    return CryptoUtils.decrypt(value, this.encryptionKey);
   }
 }
 

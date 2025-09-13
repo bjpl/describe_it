@@ -1,9 +1,8 @@
 /**
- * Centralized Winston-based structured logging framework
- * Replaces console statements with proper logging
+ * Centralized structured logging framework
+ * Uses Winston on server, console on client
  */
 
-import winston from 'winston';
 import { NextRequest } from 'next/server';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
@@ -13,173 +12,250 @@ const levels = {
   warn: 1,
   info: 2,
   http: 3,
-  debug: 4,
+  verbose: 4,
+  debug: 5,
+  silly: 6,
 };
 
-// Define colors for each level
-const colors = {
-  error: 'red',
-  warn: 'yellow',
-  info: 'green',
-  http: 'magenta',
-  debug: 'blue',
-};
-
-// Tell winston about our colors
-winston.addColors(colors);
-
-// Define format for development
-const devFormat = winston.format.combine(
-  winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  winston.format.colorize({ all: true }),
-  winston.format.printf(
-    ({ timestamp, level, message, context, ...metadata }) => {
-      let msg = `${timestamp} [${level}]`;
-      if (context) msg += ` [${context}]`;
-      msg += `: ${message}`;
-      if (Object.keys(metadata).length > 0) {
-        msg += ` ${JSON.stringify(metadata)}`;
-      }
-      return msg;
-    }
-  )
-);
-
-// Define format for production
-const prodFormat = winston.format.combine(
-  winston.format.timestamp(),
-  winston.format.errors({ stack: true }),
-  winston.format.json()
-);
-
-// Create transports
-const transports: winston.transport[] = [];
-
-// Console transport for all environments
-if (process.env.NODE_ENV !== 'test') {
-  transports.push(
-    new winston.transports.Console({
-      format: process.env.NODE_ENV === 'production' ? prodFormat : devFormat,
-    })
-  );
-}
-
-// File transport for production (server-side only)
-if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
-  transports.push(
-    new winston.transports.File({
-      filename: 'logs/error.log',
-      level: 'error',
-      format: prodFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    })
-  );
+// Simple console logger for client-side
+class SimpleLogger {
+  private context: string;
   
-  transports.push(
-    new winston.transports.File({
-      filename: 'logs/combined.log',
-      format: prodFormat,
-      maxsize: 5242880, // 5MB
-      maxFiles: 5,
-    })
-  );
-}
-
-// Create the base logger
-const baseLogger = winston.createLogger({
-  level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
-  levels,
-  transports,
-});
-
-/**
- * Logger class with context and request tracking
- */
-export class Logger {
-  private context?: string;
-  private requestId?: string;
-  private userId?: string;
-  private metadata: Record<string, any> = {};
-
-  constructor(context?: string) {
+  constructor(context: string = 'app') {
     this.context = context;
   }
-
-  /**
-   * Set request context for tracking
-   */
-  setRequest(request: NextRequest | { requestId?: string; userId?: string }) {
-    if ('headers' in request) {
-      // NextRequest
-      this.requestId = request.headers.get('x-request-id') || undefined;
-      this.userId = request.headers.get('x-user-id') || undefined;
-    } else {
-      // Plain object
-      this.requestId = request.requestId;
-      this.userId = request.userId;
+  
+  private formatMessage(level: string, message: string, meta?: any) {
+    const timestamp = new Date().toISOString();
+    const metaStr = meta ? ` ${safeStringify(meta)}` : '';
+    return `[${timestamp}] [${level.toUpperCase()}] [${this.context}] ${message}${metaStr}`;
+  }
+  
+  error(message: string, error?: Error | any, meta?: Record<string, any>) {
+    console.error(this.formatMessage('error', message, { ...meta, error: error?.message || error }));
+  }
+  
+  warn(message: string, meta?: Record<string, any>) {
+    console.warn(this.formatMessage('warn', message, meta));
+  }
+  
+  info(message: string, meta?: Record<string, any>) {
+    console.info(this.formatMessage('info', message, meta));
+  }
+  
+  debug(message: string, meta?: Record<string, any>) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.debug(this.formatMessage('debug', message, meta));
     }
+  }
+  
+  http(message: string, meta?: Record<string, any>) {
+    if (process.env.NODE_ENV !== 'production') {
+      console.log(this.formatMessage('http', message, meta));
+    }
+  }
+  
+  setContext(context: string) {
+    this.context = context;
     return this;
   }
-
-  /**
-   * Add metadata to all log entries
-   */
-  addMetadata(metadata: Record<string, any>) {
-    this.metadata = { ...this.metadata, ...metadata };
-    return this;
+  
+  setRequest(meta: Record<string, any>) {
+    return this; // For API compatibility
   }
+}
 
-  /**
-   * Create log entry with context
-   */
-  private log(level: string, message: string, meta?: Record<string, any>) {
-    const logData: Record<string, any> = {
-      ...this.metadata,
-      ...meta,
-    };
+// Server-side Winston logger
+let winstonLogger: any = null;
 
-    if (this.context) logData.context = this.context;
-    if (this.requestId) logData.requestId = this.requestId;
-    if (this.userId) logData.userId = this.userId;
-
-    baseLogger.log(level, message, logData);
-  }
-
-  // Standard log methods
-  error(message: string, error?: Error | unknown, meta?: Record<string, any>) {
-    const errorMeta: Record<string, any> = { ...meta };
+if (typeof window === 'undefined') {
+  try {
+    const winston = require('winston');
     
-    if (error instanceof Error) {
-      errorMeta.error = {
-        message: error.message,
+    // Define custom colors
+    const colors = {
+      error: 'red',
+      warn: 'yellow',
+      info: 'green',
+      http: 'magenta',
+      verbose: 'cyan',
+      debug: 'white',
+      silly: 'grey',
+    };
+    
+    winston.addColors(colors);
+    
+    // Define format for development
+    const devFormat = winston.format.combine(
+      winston.format.colorize({ all: true }),
+      winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
+      winston.format.printf(
+        (info: any) => `${info.timestamp} ${info.level}: ${info.message}`
+      )
+    );
+    
+    // Define format for production
+    const prodFormat = winston.format.combine(
+      winston.format.timestamp(),
+      winston.format.errors({ stack: true }),
+      winston.format.json()
+    );
+    
+    // Create transports
+    const transports: any[] = [];
+    
+    // Console transport for all environments
+    if (process.env.NODE_ENV !== 'test') {
+      transports.push(
+        new winston.transports.Console({
+          format: process.env.NODE_ENV === 'production' ? prodFormat : devFormat,
+        })
+      );
+    }
+    
+    // File transport for production (server-side only)
+    if (process.env.NODE_ENV === 'production') {
+      transports.push(
+        new winston.transports.File({
+          filename: 'logs/error.log',
+          level: 'error',
+          format: prodFormat,
+          maxsize: 5242880, // 5MB
+          maxFiles: 5,
+        })
+      );
+      
+      transports.push(
+        new winston.transports.File({
+          filename: 'logs/combined.log',
+          format: prodFormat,
+          maxsize: 5242880, // 5MB
+          maxFiles: 5,
+        })
+      );
+    }
+    
+    // Create the Winston logger
+    winstonLogger = winston.createLogger({
+      level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+      levels,
+      transports,
+    });
+  } catch (error) {
+    console.error('Failed to initialize Winston logger:', error);
+  }
+}
+
+/**
+ * Logger class that provides structured logging
+ */
+export class Logger {
+  private context: string;
+  private logger: any;
+  private requestMeta: Record<string, any> = {};
+
+  constructor(context: string = 'app') {
+    this.context = context;
+    this.logger = winstonLogger || new SimpleLogger(context);
+  }
+
+  /**
+   * Set request-specific metadata
+   */
+  setRequest(meta: Record<string, any>) {
+    this.requestMeta = meta;
+    return this;
+  }
+
+  /**
+   * Log an error
+   */
+  error(message: string, error?: Error | any, meta?: Record<string, any>) {
+    const logData = {
+      context: this.context,
+      ...this.requestMeta,
+      ...meta,
+      error: error ? {
+        message: error.message || error,
         stack: error.stack,
         name: error.name,
-      };
-    } else if (error) {
-      errorMeta.error = error;
-    }
+      } : undefined,
+    };
     
-    this.log('error', message, errorMeta);
+    if (winstonLogger) {
+      winstonLogger.error(message, logData);
+    } else {
+      this.logger.error(message, error, logData);
+    }
   }
 
+  /**
+   * Log a warning
+   */
   warn(message: string, meta?: Record<string, any>) {
-    this.log('warn', message, meta);
+    const logData = {
+      context: this.context,
+      ...this.requestMeta,
+      ...meta,
+    };
+    
+    if (winstonLogger) {
+      winstonLogger.warn(message, logData);
+    } else {
+      this.logger.warn(message, logData);
+    }
   }
 
+  /**
+   * Log an info message
+   */
   info(message: string, meta?: Record<string, any>) {
-    this.log('info', message, meta);
+    const logData = {
+      context: this.context,
+      ...this.requestMeta,
+      ...meta,
+    };
+    
+    if (winstonLogger) {
+      winstonLogger.info(message, logData);
+    } else {
+      this.logger.info(message, logData);
+    }
   }
 
-  http(message: string, meta?: Record<string, any>) {
-    this.log('http', message, meta);
-  }
-
+  /**
+   * Log a debug message
+   */
   debug(message: string, meta?: Record<string, any>) {
-    this.log('debug', message, meta);
+    const logData = {
+      context: this.context,
+      ...this.requestMeta,
+      ...meta,
+    };
+    
+    if (winstonLogger) {
+      winstonLogger.debug(message, logData);
+    } else {
+      this.logger.debug(message, logData);
+    }
   }
 
-  // Specialized logging methods
+  /**
+   * Log an HTTP request
+   */
+  http(message: string, meta?: Record<string, any>) {
+    const logData = {
+      context: this.context,
+      ...this.requestMeta,
+      ...meta,
+    };
+    
+    if (winstonLogger) {
+      winstonLogger.http(message, logData);
+    } else {
+      this.logger.http(message, logData);
+    }
+  }
 
   /**
    * Log API request
@@ -195,10 +271,10 @@ export class Logger {
   /**
    * Log API response
    */
-  apiResponse(status: number, duration: number, meta?: Record<string, any>) {
-    const level = status >= 400 ? 'warn' : 'http';
-    this.log(level, `API Response: ${status} (${duration}ms)`, {
-      status,
+  apiResponse(statusCode: number, duration: number, meta?: Record<string, any>) {
+    const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
+    this[level](`API Response: ${statusCode}`, {
+      statusCode,
       duration,
       ...meta,
     });
@@ -209,7 +285,7 @@ export class Logger {
    */
   securityEvent(event: string, meta?: Record<string, any>) {
     this.warn(`Security Event: ${event}`, {
-      securityEvent: event,
+      event,
       ...meta,
     });
   }
@@ -217,70 +293,46 @@ export class Logger {
   /**
    * Log performance metric
    */
-  performance(metric: string, value: number, unit: string = 'ms', meta?: Record<string, any>) {
-    this.info(`Performance: ${metric} = ${value}${unit}`, {
+  performance(metric: string, value: number, meta?: Record<string, any>) {
+    this.info(`Performance: ${metric}`, {
       metric,
       value,
-      unit,
       ...meta,
     });
-  }
-
-  /**
-   * Log database query
-   */
-  database(operation: string, table: string, duration?: number, meta?: Record<string, any>) {
-    this.debug(`Database: ${operation} on ${table}`, {
-      operation,
-      table,
-      duration,
-      ...meta,
-    });
-  }
-
-  /**
-   * Log cache operation
-   */
-  cache(operation: 'hit' | 'miss' | 'set' | 'delete', key: string, meta?: Record<string, any>) {
-    this.debug(`Cache ${operation}: ${key}`, {
-      cacheOperation: operation,
-      key,
-      ...meta,
-    });
-  }
-
-  /**
-   * Create a child logger with additional context
-   */
-  child(context: string): Logger {
-    const child = new Logger(`${this.context}:${context}`);
-    child.requestId = this.requestId;
-    child.userId = this.userId;
-    child.metadata = { ...this.metadata };
-    return child;
   }
 }
 
-// Export singleton logger instances for common contexts
-export const logger = new Logger();
-export const apiLogger = new Logger('API');
-export const authLogger = new Logger('Auth');
-export const dbLogger = new Logger('Database');
-export const cacheLogger = new Logger('Cache');
-export const securityLogger = new Logger('Security');
-export const performanceLogger = new Logger('Performance');
-
-// Helper function to create logger for a specific context
+/**
+ * Create a logger instance for a specific context
+ */
 export function createLogger(context: string): Logger {
   return new Logger(context);
 }
 
-// Middleware to add request tracking
-export function loggerMiddleware(request: NextRequest): Logger {
-  const requestLogger = new Logger('Request');
-  requestLogger.setRequest(request);
-  return requestLogger;
+/**
+ * Create a logger with context from a request
+ */
+export function createContextLogger(context: string, request?: NextRequest): Logger {
+  const logger = new Logger(context);
+  
+  if (request) {
+    logger.setRequest({
+      method: request.method,
+      url: request.url,
+      headers: Object.fromEntries(request.headers.entries()),
+      ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
+    });
+  }
+  
+  return logger;
 }
 
-// Export the base Winston logger for advanced use cases
-export { baseLogger as winstonLogger };
+// Export specialized loggers
+export const apiLogger = createLogger('api');
+export const authLogger = createLogger('auth');
+export const dbLogger = createLogger('database');
+export const securityLogger = createLogger('security');
+export const performanceLogger = createLogger('performance');
+
+// Default export
+export default createLogger('app');
