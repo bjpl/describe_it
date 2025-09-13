@@ -28,6 +28,7 @@ import {
 } from "@/lib/services/phraseExtractor";
 import { VocabularyManager } from "@/lib/services/vocabularyManager";
 import GammaVocabularyExtractor from "./GammaVocabularyExtractor";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface EnhancedVocabularyPanelProps {
   selectedImage: any;
@@ -163,7 +164,7 @@ const EnhancedVocabularyPanel: React.FC<EnhancedVocabularyPanelProps> = ({
       if (typeof window !== "undefined") {
         window.sessionStorage.setItem(
           "gamma3-coordination",
-          JSON.stringify(coordinationData),
+          safeStringify(coordinationData),
         );
       }
     }
@@ -199,7 +200,7 @@ const EnhancedVocabularyPanel: React.FC<EnhancedVocabularyPanelProps> = ({
 
         window.sessionStorage.setItem(
           "gamma3-latest-extraction",
-          JSON.stringify(extractionEvent),
+          safeStringify(extractionEvent),
         );
 
         // Dispatch custom event for real-time coordination
@@ -276,7 +277,7 @@ const EnhancedVocabularyPanel: React.FC<EnhancedVocabularyPanelProps> = ({
 
         window.sessionStorage.setItem(
           "gamma3-latest-export",
-          JSON.stringify(exportEvent),
+          safeStringify(exportEvent),
         );
         window.dispatchEvent(
           new CustomEvent("vocabularyExported", { detail: exportEvent }),

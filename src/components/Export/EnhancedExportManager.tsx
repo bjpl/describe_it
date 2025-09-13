@@ -4,6 +4,7 @@ import React, { useState, useCallback, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton } from "@/components/ui/MotionComponents";
 import {
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
   Download,
   FileText,
   FileSpreadsheet,
@@ -346,7 +347,7 @@ const EnhancedExportManager: React.FC<{
       },
     };
 
-    const blob = new Blob([JSON.stringify(exportedData, null, 2)], {
+    const blob = new Blob([safeStringify(exportedData, null, 2)], {
       type: "application/json",
     });
 
@@ -729,7 +730,7 @@ const EnhancedExportManager: React.FC<{
                     animate={{ opacity: 1 }}
                     className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs font-mono overflow-x-auto"
                   >
-                    <pre>{JSON.stringify(previewData, null, 2)}</pre>
+                    <pre>{safeStringify(previewData, null, 2)}</pre>
                   </MotionDiv>
                 )}
               </div>

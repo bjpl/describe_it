@@ -18,6 +18,7 @@ import {
   type ResponseItem,
 } from "../lib/export/csvExporter";
 import { QAProgressIndicator, TextContentSkeleton } from "./ProgressIndicator";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface Question {
   id: string;
@@ -134,7 +135,7 @@ const QAPanel = memo<QAPanelProps>(function QAPanel({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({
+        body: safeStringify({
           description: descriptionText,
           language: "es",
           count: 4, // Generate 4 questions

@@ -5,6 +5,7 @@
  */
 
 import { logger, LogContext } from './logger';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 // Error Categories
 export enum ErrorCategory {

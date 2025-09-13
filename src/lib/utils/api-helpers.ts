@@ -1,5 +1,8 @@
 import { NextRequest } from "next/server";
 import { descriptionCache } from "@/lib/cache/tiered-cache";
+import { performanceLogger, createLogger } from "@/lib/logging/logger";
+
+const apiHelperLogger = createLogger('APIHelpers');
 
 // Rate limiting configuration
 interface RateLimitConfig {
@@ -90,7 +93,7 @@ export class RateLimiter {
         totalRequests: requestCount,
       };
     } catch (error) {
-      console.warn("Rate limiting check failed:", error);
+      apiHelperLogger.warn('Rate limiting check failed', error);
       // Allow request if rate limiting check fails
       return {
         allowed: true,
@@ -323,7 +326,7 @@ export class PerformanceMonitor {
         responseTime,
       );
     } catch (error) {
-      console.warn("Failed to record metrics:", error);
+      performanceLogger.warn('Failed to record metrics', error);
     }
   }
 
@@ -365,7 +368,7 @@ export class PerformanceMonitor {
         sessionTTL: 0, // Don't cache in session
       });
     } catch (error) {
-      console.warn("Failed to update aggregated metrics:", error);
+      performanceLogger.warn('Failed to update aggregated metrics', error);
     }
   }
 }
@@ -487,7 +490,7 @@ export function buildApiUrl(endpoint: string, params?: Record<string, any>): str
 }
 
 export async function handleApiError(error: any, context?: string): Promise<never> {
-  console.error(`API Error${context ? ` in ${context}` : ''}:`, error);
+  apiHelperLogger.error(`API Error${context ? ` in ${context}` : ''}`, error);
   
   if (error.response) {
     // Server responded with error status

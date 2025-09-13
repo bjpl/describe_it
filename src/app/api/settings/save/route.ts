@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { z } from "zod";
 import { descriptionCache } from "@/lib/cache";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
@@ -495,7 +496,15 @@ async function handleSettingsSave(request: AuthenticatedRequest) {
   }
 
   try {
-    const body = await request.json();
+    const requestText = await request.text();
+    const body = safeParse(requestText);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    };
     
     // Override any userId in the request body with authenticated user ID
     body.userId = authenticatedUserId;

@@ -12,6 +12,7 @@ import {
 } from "./tiered-cache";
 import { vercelKvCache } from "../api/vercel-kv";
 import { memoryCache } from "./memory-cache";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 interface CacheTestResult {
   success: boolean;
@@ -57,7 +58,7 @@ async function testMemoryCache(): Promise<CacheTestResult> {
     // Test get
     const retrieved = memoryCache.get(testKey);
 
-    if (!retrieved || JSON.stringify(retrieved) !== JSON.stringify(testValue)) {
+    if (!retrieved || JSON.stringify(retrieved) !== safeStringify(testValue)) {
       throw new Error("Retrieved value does not match original");
     }
 
@@ -107,7 +108,7 @@ async function testVercelKvCache(): Promise<CacheTestResult> {
     // Test get
     const retrieved = await vercelKvCache.get(testKey);
 
-    if (!retrieved || JSON.stringify(retrieved) !== JSON.stringify(testValue)) {
+    if (!retrieved || JSON.stringify(retrieved) !== safeStringify(testValue)) {
       throw new Error("Retrieved value does not match original");
     }
 
@@ -161,7 +162,7 @@ async function testTieredCache(): Promise<CacheTestResult> {
     // Test get
     const retrieved = await tieredCache.get(testKey);
 
-    if (!retrieved || JSON.stringify(retrieved) !== JSON.stringify(testValue)) {
+    if (!retrieved || JSON.stringify(retrieved) !== safeStringify(testValue)) {
       throw new Error("Retrieved value does not match original");
     }
 
@@ -218,7 +219,7 @@ async function testSpecializedCache(
     // Test get
     const retrieved = await cache.get(testKey);
 
-    if (!retrieved || JSON.stringify(retrieved) !== JSON.stringify(testValue)) {
+    if (!retrieved || JSON.stringify(retrieved) !== safeStringify(testValue)) {
       throw new Error("Retrieved value does not match original");
     }
 

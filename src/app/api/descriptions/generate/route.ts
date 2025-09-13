@@ -12,6 +12,12 @@ import {
 } from "@/lib/schemas/api-validation";
 import type { DescriptionStyle } from "@/types/api";
 import { z } from "zod";
+import { withSecurity, getSecureApiKey, type SecureRequest } from "@/lib/security/secure-middleware";
+import { getAuditLogger } from "@/lib/security/audit-logger";
+import { safeStringify, safeParse } from "@/lib/utils/json-safe";
+import { apiLogger, securityLogger, performanceLogger } from "@/lib/logging/logger";
+
+const logger = getAuditLogger('description-api');
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // 60 seconds timeout - increased for parallel processing
@@ -58,17 +64,14 @@ async function generateParallelDescriptions(
   const { imageUrl, style, maxLength, customPrompt, languages, originalImageUrl } = request;
   const baseTimestamp = Date.now();
   
-  console.log('[Vision Debug] Starting parallel generation with comprehensive logging:', {
+  apiLogger.info('Starting parallel description generation', {
     step: 'parallel_start',
     languages: languages,
     hasImageUrl: !!imageUrl,
-    imageUrlLength: imageUrl?.length,
     imageUrlType: imageUrl?.startsWith('data:') ? 'base64' : 'url',
     style: style,
     maxLength: maxLength,
-    hasCustomPrompt: !!customPrompt,
-    originalImageUrl: originalImageUrl?.substring(0, 100) + '...',
-    timestamp: new Date().toISOString()
+    hasCustomPrompt: !!customPrompt
   });
   
   // Create description generation promises for each language
@@ -77,18 +80,14 @@ async function generateParallelDescriptions(
     const languageKey = language === "en" ? "english" : "spanish";
     
     try {
-      console.log(`[Vision Debug] Starting ${languageLabel} description with full context:`, {
+      apiLogger.debug(`Starting ${languageLabel} description generation`, {
         step: 'vision_call_start',
         language: language,
         languageLabel: languageLabel,
         style: style,
         maxLength: maxLength,
         hasImageUrl: !!imageUrl,
-        imageUrlLength: imageUrl?.length,
-        imageUrlPrefix: imageUrl?.substring(0, 50) + '...',
-        hasCustomPrompt: !!customPrompt,
-        customPromptLength: customPrompt?.length,
-        timestamp: new Date().toISOString()
+        hasCustomPrompt: !!customPrompt
       });
       
       const description = await generateVisionDescription({
@@ -99,22 +98,21 @@ async function generateParallelDescriptions(
         language
       }, userApiKey);
       
-      console.log(`[Vision Debug] ${languageLabel} vision call completed:`, {
+      apiLogger.info(`${languageLabel} vision call completed successfully`, {
         step: 'vision_call_success',
         language: language,
         hasDescription: !!description,
         hasText: !!description?.text,
         textLength: description?.text?.length,
         wordCount: description?.wordCount,
-        isDemoMode: description?.text?.includes('[DEMO MODE]') || description?.text?.includes('DEMO MODE'),
-        timestamp: new Date().toISOString()
+        isDemoMode: description?.text?.includes('[DEMO MODE]') || description?.text?.includes('DEMO MODE')
       });
       
       if (!description || !description.text) {
         throw new Error(`Empty description returned from vision service for ${languageLabel}`);
       }
       
-      console.log(`[Parallel Generation] ${languageLabel} description generated successfully`, {
+      performanceLogger.info(`${languageLabel} description generated successfully`, {
         contentLength: description.text.length,
         wordCount: description.wordCount
       });
@@ -129,21 +127,14 @@ async function generateParallelDescriptions(
       };
       
     } catch (error) {
-      console.error(`[Vision Debug] Critical failure in ${languageLabel} vision generation:`, {
+      apiLogger.error(`Critical failure in ${languageLabel} vision generation`, error, {
         step: 'vision_call_error',
         language: language,
         languageLabel: languageLabel,
-        error: error instanceof Error ? error.message : String(error),
-        errorType: error instanceof Error ? error.constructor.name : typeof error,
-        stack: error instanceof Error ? error.stack : undefined,
-        code: (error instanceof Error && 'code' in error) ? (error as any).code : undefined,
-        status: (error instanceof Error && 'status' in error) ? (error as any).status : undefined,
-        imageUrlLength: imageUrl?.length,
         imageUrlType: imageUrl?.startsWith('data:') ? 'base64' : 'url',
         style: style,
         maxLength: maxLength,
-        hasCustomPrompt: !!customPrompt,
-        timestamp: new Date().toISOString()
+        hasCustomPrompt: !!customPrompt
       });
       
       // Return fallback description for this language
@@ -163,10 +154,10 @@ async function generateParallelDescriptions(
   });
   
   // Execute all description generations in parallel
-  console.log('[Parallel Generation] Executing parallel description generation...');
+  apiLogger.debug('Executing parallel description generation');
   const results = await Promise.all(descriptionPromises);
   
-  console.log('[Parallel Generation] Parallel generation completed successfully', {
+  performanceLogger.info('Parallel generation completed successfully', {
     totalDescriptions: results.length,
     languages: results.map(r => r.language)
   });
@@ -197,11 +188,10 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
   // Note: Vercel strips custom headers, so we receive API key in request body instead
   let userApiKey: string | undefined;
   
-  console.log('[Generate Route] Processing description generation request:', {
-    requestId,
-    userId: userId || 'anonymous',
+  const requestLogger = apiLogger.setRequest({ requestId, userId });
+  requestLogger.apiRequest('POST', '/api/descriptions/generate', {
     userTier,
-    timestamp: new Date().toISOString()
+    hasUser: !!userId
   });
 
   try {
@@ -223,7 +213,29 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     }
 
     // Parse and validate request body with size limits
-    const body = await request.json();
+    requestLogger.debug('Parsing request body');
+    let body;
+    try {
+      const text = await request.text();
+      body = safeParse(text, {});
+    } catch (error) {
+      requestLogger.error('Invalid JSON in request body', error);
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid JSON in request body",
+          requestId,
+        },
+        { 
+          status: 400,
+          headers: securityHeaders,
+        }
+      );
+    }
+    requestLogger.debug('Request body parsed successfully', {
+      hasBody: !!body,
+      bodyKeys: Object.keys(body || {}).length
+    });
     
     if (!validateRequestSize(body, 50 * 1024)) { // 50KB limit
       return NextResponse.json(
@@ -239,27 +251,27 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
       );
     }
 
+    requestLogger.debug('Validating request with schema');
     const params = descriptionGenerateSchema.parse(body);
+    requestLogger.debug('Schema validation passed');
     
-    // Extract user's API key from request body (Vercel-compatible approach)
-    userApiKey = body.userApiKey || undefined;
+    // Extract user's API key from validated params (Vercel-compatible approach)
+    userApiKey = params.userApiKey || undefined;
     
     if (userApiKey) {
-      console.log('[API Route] Received user API key from request body:', {
+      securityLogger.info('User API key received from request body', {
         hasKey: !!userApiKey,
-        keyLength: userApiKey.length,
-        keyPrefix: userApiKey.substring(0, 10) + '...',
         requestId
       });
     } else {
-      console.log('[API Route] No user API key provided, will use server default');
+      requestLogger.debug('No user API key provided, using server default');
     }
     
     // Additional validation for style parameter
     const validStyles = ['narrativo', 'poetico', 'academico', 'conversacional', 'infantil'];
     const validatedStyle = (params.style && validStyles.includes(params.style as string)) ? params.style : 'narrativo';
     if (params.style !== validatedStyle) {
-      console.warn('[Generate Route] Invalid style parameter, using default', {
+      requestLogger.warn('Invalid style parameter, using default', {
         providedStyle: params.style,
         validatedStyle,
         validStyles
@@ -271,7 +283,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
       ? params.maxLength 
       : 300;
     if (params.maxLength !== validatedMaxLength) {
-      console.warn('[Generate Route] Invalid maxLength parameter, using default', {
+      requestLogger.warn('Invalid maxLength parameter, using default', {
         providedMaxLength: params.maxLength,
         validatedMaxLength
       });
@@ -347,44 +359,60 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     // If it's an external URL (not a data URI), proxy it
     if (processedImageUrl && !processedImageUrl.startsWith('data:')) {
       try {
-        console.log('[Generate Route] Proxying external image URL...');
+        requestLogger.debug('Proxying external image URL');
         const proxyResponse = await fetch(`${request.nextUrl.origin}/api/images/proxy`, {
           method: 'POST',
           headers: { 
             'Content-Type': 'application/json',
             'User-Agent': 'DescribeIt/2.0.0'
           },
-          body: JSON.stringify({ imageUrl: processedImageUrl }),
+          body: safeStringify({ imageUrl: processedImageUrl }) || '',
         });
         
         if (proxyResponse.ok) {
           const proxyData = await proxyResponse.json();
           if (proxyData.dataUri && proxyData.dataUri.startsWith('data:')) {
             processedImageUrl = proxyData.dataUri;
-            console.log('[Generate Route] Image proxied successfully:', {
+            performanceLogger.info('Image proxied successfully', {
               originalLength: params.imageUrl.length,
               proxiedLength: processedImageUrl.length,
               size: proxyData.size
             });
           } else {
-            console.warn('[Generate Route] Proxy returned invalid data URI');
+            requestLogger.warn('Proxy returned invalid data URI');
           }
         } else {
-          console.warn('[Generate Route] Image proxy failed:', {
+          requestLogger.warn('Image proxy failed', {
             status: proxyResponse.status,
             statusText: proxyResponse.statusText
           });
         }
       } catch (error) {
-        console.warn('[Generate Route] Image proxy error, using original URL:', {
-          error: error instanceof Error ? error.message : error,
-          originalUrl: processedImageUrl.substring(0, 100) + '...'
-        });
+        requestLogger.warn('Image proxy error, using original URL', error);
       }
     }
 
+    // Get secure API key for OpenAI operations
+    const secureApiKey = await getSecureApiKey('OPENAI_API_KEY', params.openaiApiKey);
+    
+    if (!secureApiKey) {
+      securityLogger.error('Failed to retrieve secure API key');
+      return NextResponse.json(
+        {
+          success: false,
+          error: "API configuration error",
+          details: "Failed to retrieve API key",
+          requestId,
+        },
+        { 
+          status: 500,
+          headers: securityHeaders,
+        }
+      );
+    }
+    
     // Generate descriptions for both languages in parallel using server-side OpenAI
-    console.log('[Generate Route] Starting parallel description generation...');
+    requestLogger.info('Starting parallel description generation');
     const descriptions = await generateParallelDescriptions({
       imageUrl: processedImageUrl,
       style: validatedStyle as DescriptionStyle,
@@ -392,7 +420,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
       customPrompt: params.customPrompt as string | undefined,
       languages: ["en", "es"] as const,
       originalImageUrl: params.imageUrl
-    }, userApiKey);
+    }, secureApiKey);
 
     const responseTime = performance.now() - startTime;
 
@@ -454,7 +482,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     }
 
     // Handle other errors
-    console.error("Description generation error:", error);
+    requestLogger.error('Description generation error', error);
 
     // Provide fallback demo descriptions even on complete failure
     const fallbackDescriptions = [

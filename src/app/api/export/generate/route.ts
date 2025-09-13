@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 import { descriptionCache } from "@/lib/cache";
 import { withPremiumAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
@@ -202,7 +203,7 @@ class ExportService {
     };
 
     return {
-      data: JSON.stringify(exportData, null, 2),
+      data: safeStringify(exportData, '{}', 'export-data-stringify', null, 2),
       filename: `export_${Date.now()}.json`,
       contentType: "application/json",
     };
@@ -418,7 +419,15 @@ async function handleExportGenerate(request: AuthenticatedRequest) {
   }
 
   try {
-    const body = await request.json();
+    const requestText = await request.text();
+    const body = safeParse(requestText);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    };
     
     // Override any userId in the request body with authenticated user ID
     body.userId = authenticatedUserId;
@@ -427,7 +436,7 @@ async function handleExportGenerate(request: AuthenticatedRequest) {
       exportRequestSchema.parse(body);
 
     // Generate cache key for export
-    const cacheKey = `export:${userId}:${exportType}:${contentType}:${JSON.stringify(filters).substring(0, 50)}`;
+    const cacheKey = `export:${userId}:${exportType}:${contentType}:${safeStringify(filters, '{}', 'cache-key-filters').substring(0, 50)}`;
 
     // Check cache first
     let exportResult = await descriptionCache.get(cacheKey);

@@ -2,6 +2,7 @@
 
 import { getCLS, getFID, getFCP, getLCP, getTTFB, Metric } from 'web-vitals';
 import { useEffect } from 'react';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface AnalyticsData {
   name: string;
@@ -48,7 +49,7 @@ function sendToAnalytics({ name, value, rating, delta, id }: AnalyticsData) {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
+      body: safeStringify({
         name,
         value: Math.round(value),
         rating,

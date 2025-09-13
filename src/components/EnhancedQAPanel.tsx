@@ -22,6 +22,7 @@ import QAExporter, {
   type QAUserResponse,
 } from "../lib/export/qaExporter";
 import { getCurrentTimestamp } from "../lib/export/csvExporter";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface Question {
   id: string;
@@ -127,7 +128,7 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
       const response = await fetch("/api/qa/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
+        body: safeStringify({
           imageUrl: selectedImage.urls?.regular,
           descriptionText: descriptionText,
           style: style,

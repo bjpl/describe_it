@@ -4,9 +4,18 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { createClient } from '@supabase/supabase-js';
 import { AnalyticsEvent, validateEvent } from '@/lib/analytics/events';
 import { captureError } from '@/lib/monitoring/sentry';
+import { 
+  analyticsTrackSchema,
+  validateSecurityHeaders,
+  validateRequestSize,
+  createErrorResponse,
+  createSuccessResponse
+} from '@/lib/schemas/api-validation';
+import { z } from 'zod';
 
 interface AnalyticsRequestBody {
   events: AnalyticsEvent[];
@@ -16,24 +25,87 @@ export async function POST(request: NextRequest) {
   console.log('[Analytics] Endpoint called');
   
   try {
-    const body: AnalyticsRequestBody = await request.json();
-    
-    if (!body.events || !Array.isArray(body.events)) {
-      return NextResponse.json(
-        { error: 'Invalid request body. Expected events array.' },
-        { status: 400 }
+    // Security validation
+    const securityCheck = validateSecurityHeaders(request.headers);
+    if (!securityCheck.valid) {
+      return createErrorResponse(
+        "Security validation failed",
+        403,
+        [{ field: "security", message: securityCheck.reason || "Security check failed" }]
       );
     }
 
-    // Validate all events
-    const validEvents = body.events.filter(validateEvent);
+    // Parse and validate request size
+    const requestText = await request.text();
     
-    if (validEvents.length === 0) {
-      return NextResponse.json(
-        { error: 'No valid events provided' },
-        { status: 400 }
+    if (!validateRequestSize(requestText, 100 * 1024)) { // 100KB limit for analytics
+      return createErrorResponse("Request too large", 413);
+    }
+
+    const body = safeParse(requestText);
+    if (!body) {
+      return createErrorResponse("Invalid JSON in request body", 400);
+    }
+    
+    // Enhanced validation for analytics events array
+    if (!body.events || !Array.isArray(body.events)) {
+      return createErrorResponse(
+        'Invalid request body. Expected events array.',
+        400,
+        [{ field: "events", message: "Events must be provided as an array" }]
       );
     }
+
+    // Validate each event using our analytics schema
+    const validatedEvents = [];
+    const validationErrors = [];
+
+    for (let i = 0; i < body.events.length; i++) {
+      try {
+        // Transform event to match our schema and validate
+        const event = body.events[i];
+        const validatedEvent = analyticsTrackSchema.parse({
+          event: event.eventName || event.event,
+          properties: event.properties || {},
+          timestamp: event.timestamp,
+          userId: event.userId,
+          sessionId: event.sessionId,
+        });
+        
+        validatedEvents.push({
+          ...event,
+          eventName: validatedEvent.event,
+          properties: validatedEvent.properties,
+          timestamp: validatedEvent.timestamp || new Date().toISOString(),
+        });
+      } catch (error) {
+        if (error instanceof z.ZodError) {
+          validationErrors.push({
+            index: i,
+            errors: error.errors.map(err => ({
+              field: err.path.join('.'),
+              message: err.message,
+            }))
+          });
+        }
+      }
+    }
+
+    // Check if we have any valid events after validation
+    if (validatedEvents.length === 0) {
+      return createErrorResponse(
+        'No valid events provided',
+        400,
+        validationErrors.length > 0 ? [
+          { field: "events", message: `${validationErrors.length} validation errors found`, code: "VALIDATION_ERRORS" }
+        ] : [
+          { field: "events", message: "All events failed validation" }
+        ]
+      );
+    }
+
+    // Use existing validation as fallback for compatibility
+    const validEvents = validatedEvents.filter(validateEvent);
 
     // Check if Supabase is configured
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -46,11 +118,11 @@ export async function POST(request: NextRequest) {
         console.log('[Analytics] Events received:', validEvents);
       }
       
-      return NextResponse.json({
-        success: true,
+      return createSuccessResponse({
         processed: validEvents.length,
         skipped: body.events.length - validEvents.length,
         storage: 'in-memory',
+        validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
       });
     }
 
@@ -89,12 +161,12 @@ export async function POST(request: NextRequest) {
             console.log('[Analytics] Events that would be stored:', eventsToStore);
           }
           
-          return NextResponse.json({
-            success: true,
+          return createSuccessResponse({
             processed: validEvents.length,
             skipped: body.events.length - validEvents.length,
             storage: 'fallback',
             message: 'Analytics table not configured, events processed but not persisted',
+            validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
           });
         }
         
@@ -102,34 +174,34 @@ export async function POST(request: NextRequest) {
         if (dbError.message?.includes('quota') || dbError.message?.includes('rate')) {
           console.warn('[Analytics] Rate limited, using fallback');
           
-          return NextResponse.json({
-            success: true,
+          return createSuccessResponse({
             processed: validEvents.length,
             skipped: body.events.length - validEvents.length,
             storage: 'rate-limited',
+            validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
           });
         }
         
         // Other database errors
         console.error('[Analytics] Database error:', dbError);
         
-        return NextResponse.json({
-          success: true,  // Return success to prevent client retries
+        return createSuccessResponse({
           processed: validEvents.length,
           skipped: body.events.length - validEvents.length,
           storage: 'error',
           warning: 'Events processed but storage failed',
+          validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
         });
       }
     } catch (fetchError: any) {
       console.error('[Analytics] Network error:', fetchError);
       
       // Return success to prevent client from accumulating events
-      return NextResponse.json({
-        success: true,
+      return createSuccessResponse({
         processed: validEvents.length,
         skipped: body.events.length - validEvents.length,
         storage: 'network-error',
+        validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
       });
     }
 
@@ -137,11 +209,11 @@ export async function POST(request: NextRequest) {
     // Disabled for now to prevent additional errors
     // await processRealTimeAlerts(validEvents);
 
-    return NextResponse.json({
-      success: true,
+    return createSuccessResponse({
       processed: validEvents.length,
       skipped: body.events.length - validEvents.length,
       storage: 'supabase',
+      validationErrors: validationErrors.length > 0 ? validationErrors : undefined,
     });
 
   } catch (error) {
@@ -151,9 +223,10 @@ export async function POST(request: NextRequest) {
       method: 'POST',
     });
 
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
+    return createErrorResponse(
+      'Internal server error',
+      500,
+      [{ field: "server", message: error instanceof Error ? error.message : "Unexpected error occurred" }]
     );
   }
 }
@@ -314,8 +387,13 @@ function getSeverity(alertType: string): 'low' | 'medium' | 'high' | 'critical' 
 }
 
 export async function GET(request: NextRequest) {
-  return NextResponse.json({
+  return createSuccessResponse({
     message: 'Analytics API is running',
     timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    endpoints: {
+      POST: '/api/analytics - Submit analytics events',
+      GET: '/api/analytics - Health check'
+    }
   });
 }

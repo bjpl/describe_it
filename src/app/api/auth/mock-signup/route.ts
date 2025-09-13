@@ -4,10 +4,11 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password } = safeParse(await request.text(), {});
     
     if (!email || !password) {
       return NextResponse.json(

@@ -6,6 +6,7 @@
 import { exportResponses } from "./csvExporter";
 import { SessionReportGenerator } from "../logging/sessionReportGenerator";
 import { getSessionLogger } from "../logging/sessionLogger";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface ExportData {
   descriptions?: Array<{
@@ -208,7 +209,7 @@ export class UnifiedExporter {
       hiveMindAgent: "Epsilon-5 Integration Controller",
     };
 
-    const jsonString = JSON.stringify(exportData, null, 2);
+    const jsonString = safeStringify(exportData, null, 2);
     this.downloadFile(`${baseFilename}.json`, jsonString, "application/json");
   }
 

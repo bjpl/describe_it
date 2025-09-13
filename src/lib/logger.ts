@@ -33,7 +33,7 @@ class Logger {
     context?: LogContext,
   ): string {
     const timestamp = new Date().toISOString();
-    const contextStr = context ? JSON.stringify(context) : "";
+    const contextStr = context ? safeStringify(context) : "";
     return `[${timestamp}] ${level.toUpperCase()}: ${message} ${contextStr}`;
   }
 
@@ -336,7 +336,7 @@ class Logger {
       const key = localStorage.key(i);
       if (key?.startsWith('app-error-')) {
         try {
-          const errorData = JSON.parse(localStorage.getItem(key) || '{}');
+          const errorData = safeParse(localStorage.getItem(key) || '{}');
           errors.push(errorData);
         } catch {
           // Skip invalid JSON
@@ -355,7 +355,7 @@ class Logger {
       const key = localStorage.key(i);
       if (key?.startsWith('perf-')) {
         try {
-          const perfData = JSON.parse(localStorage.getItem(key) || '{}');
+          const perfData = safeParse(localStorage.getItem(key) || '{}');
           metrics.push(perfData);
         } catch {
           // Skip invalid JSON
@@ -376,7 +376,7 @@ class Logger {
       const key = localStorage.key(i);
       if (key?.startsWith('app-error-') || key?.startsWith('perf-')) {
         try {
-          const data = JSON.parse(localStorage.getItem(key) || '{}');
+          const data = safeParse(localStorage.getItem(key) || '{}');
           if (new Date(data.timestamp).getTime() < cutoffTime) {
             keysToRemove.push(key);
           }

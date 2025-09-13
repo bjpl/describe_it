@@ -1,0 +1,127 @@
+# Multi-stage production Dockerfile for describe_it
+# Security-hardened with non-root user and minimal attack surface
+
+# ===== BUILD STAGE =====
+FROM node:20.11.0-alpine AS base
+
+# Install security updates and build dependencies
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    dumb-init \
+    curl \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Create app user and group with specific UID/GID for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 -G nodejs
+
+WORKDIR /app
+
+# Copy package files for dependency installation
+COPY package*.json ./
+COPY next.config.mjs ./
+COPY tailwind.config.ts ./
+COPY tsconfig.json ./
+COPY postcss.config.cjs ./
+
+# ===== DEPENDENCIES STAGE =====
+FROM base AS deps
+
+# Install production dependencies only
+RUN npm ci --only=production --frozen-lockfile && \
+    npm cache clean --force
+
+# ===== BUILD STAGE =====
+FROM base AS builder
+
+# Copy all dependencies (including dev dependencies for build)
+RUN npm ci --frozen-lockfile
+
+# Copy source code
+COPY src ./src
+COPY public ./public
+COPY instrumentation.ts ./
+COPY sentry.*.config.ts ./
+COPY vitest.config.ts ./
+
+# Set build environment variables
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build the application
+RUN npm run build
+
+# ===== SECURITY SCANNER STAGE =====
+FROM aquasec/trivy:latest AS security
+
+WORKDIR /app
+COPY --from=builder /app .
+
+# Run security scan (will fail build if HIGH/CRITICAL vulnerabilities found)
+RUN trivy fs --exit-code 1 --severity HIGH,CRITICAL --no-progress /app
+
+# ===== PRODUCTION STAGE =====
+FROM node:20.11.0-alpine AS production
+
+# Install security updates and runtime dependencies only
+RUN apk update && apk upgrade && \
+    apk add --no-cache \
+    dumb-init \
+    curl \
+    ca-certificates \
+    && rm -rf /var/cache/apk/*
+
+# Create app user and group (non-root)
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 -G nodejs
+
+WORKDIR /app
+
+# Copy production dependencies
+COPY --from=deps --chown=nextjs:nodejs /app/node_modules ./node_modules
+
+# Copy built application
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Copy configuration files
+COPY --chown=nextjs:nodejs next.config.mjs ./
+COPY --chown=nextjs:nodejs package.json ./
+
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Security configurations
+ENV NODE_OPTIONS="--max-old-space-size=1024"
+ENV NPM_CONFIG_FUND=false
+ENV NPM_CONFIG_AUDIT=false
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Switch to non-root user
+USER nextjs
+
+# Expose port
+EXPOSE 3000
+
+# Use dumb-init to handle signals properly
+ENTRYPOINT ["dumb-init", "--"]
+
+# Start the application
+CMD ["node", "server.js"]
+
+# Metadata labels
+LABEL maintainer="describe_it team"
+LABEL version="1.0.0"
+LABEL description="Production-ready describe_it application"
+LABEL org.opencontainers.image.source="https://github.com/your-org/describe_it"
+LABEL org.opencontainers.image.vendor="describe_it"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL security.scan="trivy"

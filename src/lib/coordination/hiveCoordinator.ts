@@ -453,7 +453,7 @@ export class HiveCoordinator {
 
     try {
       const storedData = window.sessionStorage.getItem("gamma3-coordination");
-      return storedData ? JSON.parse(storedData) : null;
+      return storedData ? safeParse(storedData) : null;
     } catch (error) {
       console.error("Error extracting stored vocabulary data:", error);
       return null;

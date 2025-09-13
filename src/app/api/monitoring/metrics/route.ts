@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { logger } from "@/lib/monitoring/logger";
 import { metrics } from "@/lib/monitoring/metrics";
 import { errorTracker } from "@/lib/monitoring/errorTracking";
@@ -410,7 +411,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const requestId = logger.generateRequestId();
   
   try {
-    const body = await request.json();
+    const requestText = await request.text();
+    const body = safeParse(requestText);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    };
     const { event, data, userId, userTier } = body;
     
     // Log custom metric event

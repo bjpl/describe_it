@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface LogContext {
   requestId: string;

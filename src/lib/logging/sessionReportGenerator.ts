@@ -7,6 +7,7 @@ import {
   InteractionType,
 } from "../../types/session";
 import { SessionLogger } from "./sessionLogger";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface ChartData {
   labels: string[];
@@ -959,7 +960,7 @@ export class SessionReportGenerator {
 
     switch (format) {
       case "json":
-        return JSON.stringify(report, null, 2);
+        return safeStringify(report, null, 2);
       case "text":
         return this.formatReportAsText(report);
       case "csv":
@@ -967,7 +968,7 @@ export class SessionReportGenerator {
       case "pdf":
         return this.generatePDFReport(report);
       default:
-        return JSON.stringify(report, null, 2);
+        return safeStringify(report, null, 2);
     }
   }
 

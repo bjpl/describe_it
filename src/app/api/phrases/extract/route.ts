@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { z } from "zod";
 import { PhraseExtractor } from "@/lib/services/phraseExtractor";
 
@@ -186,7 +187,15 @@ export async function POST(request: NextRequest) {
   const startTime = performance.now();
 
   try {
-    const body = await request.json();
+    const requestText = await request.text();
+    const body = safeParse(requestText);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    };
     const {
       imageUrl,
       descriptionText,

@@ -47,6 +47,7 @@ import {
   ClickToAddOptions,
 } from "@/lib/services/vocabularyManager";
 import {
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
   getDifficultyColor,
   getCategoryColor,
   createSortKey,
@@ -197,7 +198,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
 
       window.sessionStorage.setItem(
         "gamma3-status",
-        JSON.stringify(coordinationData),
+        safeStringify(coordinationData),
       );
       window.dispatchEvent(
         new CustomEvent("gamma3StatusUpdate", { detail: coordinationData }),
@@ -284,7 +285,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
 
         window.sessionStorage.setItem(
           "gamma3-latest-extraction",
-          JSON.stringify(extractionEvent),
+          safeStringify(extractionEvent),
         );
         window.dispatchEvent(
           new CustomEvent("vocabularyExtracted", { detail: extractionEvent }),
@@ -430,7 +431,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
 
         window.sessionStorage.setItem(
           "gamma3-latest-export",
-          JSON.stringify(exportEvent),
+          safeStringify(exportEvent),
         );
         window.dispatchEvent(
           new CustomEvent("vocabularyExported", { detail: exportEvent }),

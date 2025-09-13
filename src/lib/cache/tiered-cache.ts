@@ -9,6 +9,7 @@
 import { redisCache } from "../api/redis-adapter";
 import { vercelKvCache } from "../api/vercel-kv";
 import { memoryCache } from "./memory-cache";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 interface CacheConfig {
   enableRedis: boolean;
@@ -143,7 +144,7 @@ export class TieredCache {
       try {
         const sessionData = sessionStorage.getItem(prefixedKey);
         if (sessionData) {
-          const parsed = JSON.parse(sessionData);
+          const parsed = safeParse(sessionData);
           const now = Date.now();
 
           if (now - parsed.timestamp < this.config.sessionTTL * 1000) {
@@ -223,7 +224,7 @@ export class TieredCache {
               data: value,
               timestamp: Date.now(),
             };
-            sessionStorage.setItem(prefixedKey, JSON.stringify(sessionEntry));
+            sessionStorage.setItem(prefixedKey, safeStringify(sessionEntry));
           } catch (error) {
             console.warn("Session cache error during set:", error);
           }

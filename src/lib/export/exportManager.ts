@@ -23,6 +23,7 @@ import {
   SessionExportItem,
   ImageExportItem,
 } from "../../types/export";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from '@/lib/utils/json-safe';
 
 // Import all exporters
 // import { exportToPDF } from "./pdfExporter"; // Temporarily disabled
@@ -577,7 +578,8 @@ export class ExportManager implements IExportManager {
     // Simple estimation based on data size
     // This could be made more sophisticated
     const data = await this.gatherFilteredData(options, "estimate");
-    const jsonSize = JSON.stringify(data).length;
+    const dataString = safeStringify(data);
+    const jsonSize = dataString ? dataString.length : 0;
 
     // Rough multipliers for different formats
     const multipliers = {
@@ -659,10 +661,7 @@ export class ExportManager implements IExportManager {
   private saveTemplatesToStorage(): void {
     try {
       const templates = Array.from(this.templates.values());
-      localStorage.setItem(
-        "describe-it-export-templates",
-        JSON.stringify(templates),
-      );
+      safeSetLocalStorage("describe-it-export-templates", templates);
     } catch (error) {
       console.warn("Failed to save templates to storage:", error);
     }
@@ -670,9 +669,8 @@ export class ExportManager implements IExportManager {
 
   private loadTemplatesFromStorage(): void {
     try {
-      const stored = localStorage.getItem("describe-it-export-templates");
-      if (stored) {
-        const templates = JSON.parse(stored) as ExportTemplate[];
+      const templates = safeParseLocalStorage<ExportTemplate[]>("describe-it-export-templates", []);
+      if (templates && templates.length > 0) {
         templates.forEach((template) => {
           this.templates.set(template.id, template);
         });
@@ -685,10 +683,7 @@ export class ExportManager implements IExportManager {
   private saveScheduledExportsToStorage(): void {
     try {
       const scheduled = Array.from(this.scheduledExports.values());
-      localStorage.setItem(
-        "describe-it-scheduled-exports",
-        JSON.stringify(scheduled),
-      );
+      safeSetLocalStorage("describe-it-scheduled-exports", scheduled);
     } catch (error) {
       console.warn("Failed to save scheduled exports to storage:", error);
     }
@@ -696,9 +691,8 @@ export class ExportManager implements IExportManager {
 
   private loadScheduledExportsFromStorage(): void {
     try {
-      const stored = localStorage.getItem("describe-it-scheduled-exports");
-      if (stored) {
-        const scheduled = JSON.parse(stored) as ScheduledExport[];
+      const scheduled = safeParseLocalStorage<ScheduledExport[]>("describe-it-scheduled-exports", []);
+      if (scheduled && scheduled.length > 0) {
         scheduled.forEach((item) => {
           this.scheduledExports.set(item.id, item);
         });
@@ -710,10 +704,7 @@ export class ExportManager implements IExportManager {
 
   private saveHistoryToStorage(): void {
     try {
-      localStorage.setItem(
-        "describe-it-export-history",
-        JSON.stringify(this.exportHistory),
-      );
+      safeSetLocalStorage("describe-it-export-history", this.exportHistory);
     } catch (error) {
       console.warn("Failed to save export history to storage:", error);
     }
@@ -721,9 +712,9 @@ export class ExportManager implements IExportManager {
 
   private loadHistoryFromStorage(): void {
     try {
-      const stored = localStorage.getItem("describe-it-export-history");
-      if (stored) {
-        this.exportHistory = JSON.parse(stored);
+      const stored = safeParseLocalStorage<ExportHistoryItem[]>("describe-it-export-history", []);
+      if (stored && stored.length > 0) {
+        this.exportHistory = stored;
       }
     } catch (error) {
       console.warn("Failed to load export history from storage:", error);

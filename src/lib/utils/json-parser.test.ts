@@ -4,6 +4,7 @@
  */
 
 import { RobustJSONParser } from "./json-parser";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 // Test data simulating different OpenAI response formats
 const testCases = {
@@ -95,7 +96,7 @@ function runTests() {
     if (result.success) {
       console.log(`✅ PASSED - Method: ${result.method}`);
       console.log(
-        `   Data: ${JSON.stringify(result.data).substring(0, 100)}...`,
+        `   Data: ${safeStringify(result.data).substring(0, 100)}...`,
       );
       passed++;
     } else {

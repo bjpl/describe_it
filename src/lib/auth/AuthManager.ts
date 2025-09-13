@@ -6,7 +6,9 @@
 import { supabase } from '../supabase/client';
 import { hybridStorage } from '../storage/HybridStorageManager';
 import { logger } from '../logger';
+import { authLogger, securityLogger } from '@/lib/logging/logger';
 import type { User, Session } from '@supabase/supabase-js';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface UserProfile {
   id: string;
@@ -92,23 +94,23 @@ class AuthManager {
       // Listen for auth changes
       let isProcessingAuthChange = false;
       supabase.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state changed:', event, session ? 'with session' : 'no session');
+        authLogger.debug('Auth state changed', { event, hasSession: !!session });
         
         // Prevent duplicate processing
         if (isProcessingAuthChange) {
-          console.log('Skipping duplicate auth state change event');
+          authLogger.debug('Skipping duplicate auth state change event');
           return;
         }
         
         // Ignore SIGNED_OUT if we have a valid session locally and not explicitly signing out
         if (event === 'SIGNED_OUT' && this.currentSession && this.currentUser && !this.isSigningOut) {
-          console.log('Ignoring SIGNED_OUT event - we have a valid session and not signing out');
+          authLogger.debug('Ignoring SIGNED_OUT event - we have a valid session and not signing out');
           return;
         }
         
         // Don't process events during sign-out unless it's the SIGNED_OUT event
         if (this.isSigningOut && event !== 'SIGNED_OUT') {
-          console.log('Ignoring event during sign-out process:', event);
+          authLogger.debug('Ignoring event during sign-out process', { event });
           return;
         }
         
@@ -144,7 +146,7 @@ class AuthManager {
               await this.handleUserUpdate(session!);
               break;
             case 'TOKEN_REFRESHED':
-              console.log('Token refreshed for user:', session?.user?.email);
+              authLogger.debug('Token refreshed for user', { hasUser: !!session?.user });
               break;
           }
         } finally {
@@ -164,7 +166,7 @@ class AuthManager {
     username?: string;
   }): Promise<{ success: boolean; error?: string }> {
     try {
-      console.log('[AuthManager] Starting signup for:', email);
+      authLogger.info('Starting user signup', { email });
       
       // Always use server-side proxy to avoid CORS issues
       const response = await fetch('/api/auth/signup', {
@@ -178,7 +180,7 @@ class AuthManager {
       const result = await response.json();
       
       if (!response.ok) {
-        console.error('[AuthManager] Signup failed:', result);
+        authLogger.error('Signup failed', result);
         
         // Handle specific error cases
         if (result.error?.includes('already registered')) {
@@ -194,7 +196,7 @@ class AuthManager {
         };
       }
       
-      console.log('[AuthManager] Signup successful:', {
+      authLogger.info('Signup successful', {
         hasUser: !!result.user,
         hasSession: !!result.session,
         needsConfirmation: result.needsEmailConfirmation
@@ -233,7 +235,7 @@ class AuthManager {
       
     } catch (error: any) {
       logger.error('Sign up failed', error);
-      console.error('[AuthManager] Signup error:', error);
+      authLogger.error('Signup error', error);
       
       // If the server is completely unreachable, provide clear error
       if (error.message?.includes('Failed to fetch')) {
@@ -259,7 +261,7 @@ class AuthManager {
     requiresVerification?: boolean;
   }> {
     try {
-      console.log('[AuthManager] Starting signin for:', email);
+      authLogger.info('Starting user signin', { email });
       
       // Always use server-side proxy for consistency
       const response = await fetch('/api/auth/signin', {
@@ -271,7 +273,7 @@ class AuthManager {
       const result = await response.json();
       
       if (!response.ok) {
-        console.error('[AuthManager] Signin failed:', result);
+        authLogger.error('Signin failed', result);
         
         // Handle specific error cases
         if (result.error?.includes('Email not confirmed') || result.error?.includes('confirm your email')) {
@@ -295,12 +297,12 @@ class AuthManager {
         };
       }
       
-      console.log('[AuthManager] Signin successful');
+      authLogger.info('Signin successful');
       
       // Set up the session
       if (result.session && result.user) {
-        console.log('[AuthManager] Setting up session for user:', result.user.email);
-        console.log('[AuthManager] Session object:', {
+        authLogger.info('Setting up session for user', { 
+          email: result.user.email,
           hasAccessToken: !!result.session.access_token,
           hasRefreshToken: !!result.session.refresh_token,
           expiresAt: result.session.expires_at
@@ -314,26 +316,26 @@ class AuthManager {
           });
           
           if (sessionError) {
-            console.error('[AuthManager] Failed to set session in Supabase client:', sessionError);
+            authLogger.error('Failed to set session in Supabase client', sessionError);
             return {
               success: false,
               error: 'Failed to establish session. Please try again.'
             };
           }
           
-          console.log('[AuthManager] Session set successfully in Supabase client');
+          authLogger.debug('Session set successfully in Supabase client');
           
           // Verify session was set properly
           const { data: { session: verifySession } } = await supabase.auth.getSession();
           if (!verifySession) {
-            console.error('[AuthManager] Session verification failed - session not persisted');
+            authLogger.error('Session verification failed - session not persisted');
             return {
               success: false,
               error: 'Session could not be established. Please try again.'
             };
           }
           
-          console.log('[AuthManager] Session verified successfully');
+          authLogger.debug('Session verified successfully');
           
           // Clear any pending sign-out state
           this.isSigningOut = false;
@@ -350,8 +352,8 @@ class AuthManager {
               expires_at: result.session.expires_at || (Date.now() / 1000 + 3600),
               user: result.user
             };
-            localStorage.setItem('describe-it-auth', JSON.stringify(sessionToStore));
-            console.log('[AuthManager] Session manually stored to localStorage');
+            localStorage.setItem('describe-it-auth', safeStringify(sessionToStore));
+            authLogger.debug('Session manually stored to localStorage');
           }
           
           // Load user profile
@@ -366,7 +368,7 @@ class AuthManager {
           }));
           
         } catch (sessionSetupError) {
-          console.error('[AuthManager] Session setup failed:', sessionSetupError);
+          authLogger.error('Session setup failed', sessionSetupError);
           return {
             success: false,
             error: 'Failed to establish authenticated session. Please try again.'
@@ -523,7 +525,7 @@ class AuthManager {
    */
   private async loadUserProfile(userId: string): Promise<void> {
     try {
-      console.log('[AuthManager] Loading user profile for:', userId);
+      authLogger.debug('Loading user profile', { userId });
       
       // Load user profile
       const { data: profile, error: profileError } = await supabase
@@ -533,7 +535,7 @@ class AuthManager {
         .single();
 
       if (profileError) {
-        console.warn('[AuthManager] Profile not found in database, creating basic profile');
+        authLogger.warn('Profile not found in database, creating basic profile');
         // Create a basic profile if it doesn't exist
         this.currentProfile = {
           id: userId,
@@ -564,13 +566,13 @@ class AuthManager {
           };
         }
       } catch (keysError) {
-        console.log('[AuthManager] No API keys found for user');
+        authLogger.debug('No API keys found for user');
       }
 
       this.currentProfile = profile as UserProfile;
-      console.log('[AuthManager] User profile loaded successfully');
+      authLogger.info('User profile loaded successfully');
     } catch (error) {
-      console.error('[AuthManager] Failed to load user profile:', error);
+      authLogger.error('Failed to load user profile', error);
       logger.error('Failed to load user profile', error as Error);
       
       // Still set a basic profile so auth works
@@ -621,7 +623,7 @@ class AuthManager {
    * Save user API keys (encrypted)
    */
   async saveApiKeys(keys: Partial<UserApiKeys>): Promise<boolean> {
-    console.log('[AuthManager] saveApiKeys called');
+    securityLogger.debug('saveApiKeys called');
     
     // Allow saving even if not authenticated for local storage
     const userId = this.currentUser?.id || 'local-user';
@@ -629,7 +631,7 @@ class AuthManager {
     try {
       // Save to localStorage immediately (unencrypted for local use)
       await hybridStorage.save('api-keys', userId, keys);
-      console.log('[AuthManager] Saved API keys to localStorage');
+      securityLogger.info('Saved API keys to localStorage');
       
       // If user is authenticated, try to save to Supabase
       if (this.currentUser) {
@@ -658,13 +660,13 @@ class AuthManager {
           const result = await Promise.race([savePromise, timeoutPromise]) as any;
           
           if (result?.error) {
-            console.warn('[AuthManager] Supabase save failed, but localStorage succeeded:', result.error);
+            authLogger.warn('Supabase save failed, but localStorage succeeded', result.error);
           } else {
-            console.log('[AuthManager] Saved to Supabase successfully');
+            securityLogger.info('Saved API keys to Supabase successfully');
           }
         } catch (supabaseError) {
           // Supabase save failed, but localStorage succeeded
-          console.warn('[AuthManager] Supabase operation failed, but localStorage succeeded:', supabaseError);
+          authLogger.warn('Supabase operation failed, but localStorage succeeded', supabaseError);
         }
       }
       
@@ -742,7 +744,7 @@ class AuthManager {
    * Handle sign in event
    */
   private async handleSignIn(session: Session): Promise<void> {
-    console.log('User signed in:', session.user.email);
+    authLogger.info('User signed in', { email: session.user.email });
     
     // Load user-specific data from Supabase
     await hybridStorage.load('user-data', session.user.id);
@@ -758,7 +760,7 @@ class AuthManager {
    * Handle sign out event
    */
   private async handleSignOut(): Promise<void> {
-    console.log('User signed out');
+    authLogger.info('User signed out');
     
     // Clear user-specific data from localStorage
     await hybridStorage.clearCategory('user-data');
@@ -768,7 +770,7 @@ class AuthManager {
    * Handle user update event
    */
   private async handleUserUpdate(session: Session): Promise<void> {
-    console.log('User updated:', session.user.email);
+    authLogger.info('User updated', { email: session.user.email });
     
     // Reload user profile
     await this.loadUserProfile(session.user.id);
@@ -829,7 +831,7 @@ class AuthManager {
    */
   private notifyListeners(): void {
     const state = this.getAuthState();
-    console.log('[AuthManager] Notifying listeners:', {
+    authLogger.debug('Notifying listeners', {
       isAuthenticated: state.isAuthenticated,
       hasUser: !!state.user,
       hasSession: !!state.session,
@@ -841,7 +843,7 @@ class AuthManager {
       try {
         listener(state);
       } catch (error) {
-        console.error('Auth listener error:', error);
+        authLogger.error('Auth listener error', error);
       }
     });
   }

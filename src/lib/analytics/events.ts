@@ -273,12 +273,12 @@ export function validateEvent(event: AnalyticsEvent): boolean {
 
 // Event serialization for storage
 export function serializeEvent(event: AnalyticsEvent): string {
-  return JSON.stringify(event);
+  return safeStringify(event);
 }
 
 export function deserializeEvent(eventString: string): AnalyticsEvent | null {
   try {
-    const event = JSON.parse(eventString);
+    const event = safeParse(eventString);
     return validateEvent(event) ? event : null;
   } catch {
     return null;

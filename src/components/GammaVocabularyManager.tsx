@@ -56,6 +56,7 @@ import {
   getCategoryColor,
 } from "@/lib/utils/phrase-helpers";
 import GammaVocabularyExtractor from "./GammaVocabularyExtractor";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface GammaVocabularyManagerProps {
   selectedImage: UnsplashImage | null;
@@ -196,7 +197,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
 
       window.sessionStorage.setItem(
         "gamma3-manager-status",
-        JSON.stringify(coordinationData),
+        safeStringify(coordinationData),
       );
 
       if (settings.logToDelta4 && onLogEvent) {

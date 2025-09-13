@@ -20,6 +20,7 @@ import type {
   LearningPhase,
 } from "../../types/database";
 import type {
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
   VocabularyItem,
   PartOfSpeech,
   DifficultyNumber,
@@ -356,7 +357,7 @@ export class DatabaseService {
     operation: string,
     params?: any,
   ): string {
-    return `${table}:${operation}:${JSON.stringify(params || {})}`;
+    return `${table}:${operation}:${safeStringify(params || {})}`;
   }
 
   private getFromCache<T>(key: string): T | null {

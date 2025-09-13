@@ -83,7 +83,7 @@ class ImageTracker {
         .sort((a, b) => b.usedAt - a.usedAt)
         .slice(0, this.maxEntries);
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(imageArray));
+      localStorage.setItem(STORAGE_KEY, safeStringify(imageArray));
     } catch (error) {
       console.error("Failed to save tracked images:", error);
       // If storage is full, try to clear old entries and retry
@@ -93,7 +93,7 @@ class ImageTracker {
           .sort((a, b) => b.usedAt - a.usedAt)
           .slice(0, Math.floor(this.maxEntries / 2)); // Reduce to half capacity
         if (typeof window !== "undefined" && window.localStorage) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(imageArray));
+          localStorage.setItem(STORAGE_KEY, safeStringify(imageArray));
         }
       } catch (retryError) {
         console.error(

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Search, Image as ImageIcon } from "lucide-react";
 import { UnsplashImage } from "@/types";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface ImageSearchProps {
   onImageSelect: (image: UnsplashImage) => void;
@@ -36,14 +37,14 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
         
         // Check app-settings first
         if (settingsStr) {
-          const settings = JSON.parse(settingsStr);
+          const settings = safeParse(settingsStr);
           // Check both possible paths
           apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
         }
         
         // Check describe-it-settings if not found
         if (!apiKey && describeItSettingsStr) {
-          const settings = JSON.parse(describeItSettingsStr);
+          const settings = safeParse(describeItSettingsStr);
           apiKey = settings.apiKeys?.unsplash;
         }
         

@@ -4,6 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { User, Settings, LogOut, KeyRound, ChevronDown } from 'lucide-react';
 import { AuthModal } from './AuthModal';
+import { SettingsModal } from '@/components/SettingsModal';
+import { safeParse, safeStringify, safeParseLocalStorage } from '@/lib/utils/json-safe';
 
 // Custom auth state interface
 interface AuthStateDetail {
@@ -17,6 +19,8 @@ export function UserMenu() {
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
   
   // Local state mirroring for immediate UI updates
   const [localIsAuthenticated, setLocalIsAuthenticated] = useState(isAuthenticated);
@@ -30,6 +34,20 @@ export function UserMenu() {
     setLocalUser(user);
     setLocalProfile(profile);
   }, [isAuthenticated, user, profile]);
+
+  // Initialize dark mode from system/localStorage
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('darkMode');
+    const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    setDarkMode(savedTheme ? savedTheme === 'true' : systemDark);
+  }, []);
+
+  const toggleDarkMode = useCallback(() => {
+    const newDarkMode = !darkMode;
+    setDarkMode(newDarkMode);
+    localStorage.setItem('darkMode', newDarkMode.toString());
+    document.documentElement.classList.toggle('dark', newDarkMode);
+  }, [darkMode]);
 
   // Custom event handler for auth state changes
   const handleAuthChange = useCallback((e: CustomEvent<AuthStateDetail>) => {
@@ -66,20 +84,28 @@ export function UserMenu() {
         const recentSignIn = sessionStorage.getItem('recent-auth-success');
         
         if (stored) {
-          const { access_token, user: storedUser } = JSON.parse(stored);
-          const hasToken = !!access_token;
-          
-          // Only update if there's a meaningful change
-          if (hasToken !== localIsAuthenticated) {
-            console.log('[UserMenu] Polling detected auth change:', hasToken);
-            setLocalIsAuthenticated(hasToken);
-            setLocalUser(storedUser);
+          const parsedData = safeParse(stored, null);
+          if (parsedData && parsedData.access_token !== undefined) {
+            const { access_token, user: storedUser } = parsedData;
+            const hasToken = !!access_token;
             
-            if (hasToken && recentSignIn) {
-              // Clear the recent sign-in flag
-              sessionStorage.removeItem('recent-auth-success');
-              setIsLoading(false);
+            // Only update if there's a meaningful change
+            if (hasToken !== localIsAuthenticated) {
+              console.log('[UserMenu] Polling detected auth change:', hasToken);
+              setLocalIsAuthenticated(hasToken);
+              setLocalUser(storedUser);
+              
+              if (hasToken && recentSignIn) {
+                // Clear the recent sign-in flag
+                sessionStorage.removeItem('recent-auth-success');
+                setIsLoading(false);
+              }
             }
+          } else {
+            console.error('[UserMenu] Failed to parse stored auth data');
+            localStorage.removeItem('describe-it-auth');
+            setLocalIsAuthenticated(false);
+            setLocalUser(null);
           }
         } else if (localIsAuthenticated) {
           // No stored auth but local state says authenticated - clear it
@@ -107,22 +133,21 @@ export function UserMenu() {
         setTimeout(() => {
           const stored = localStorage.getItem('describe-it-auth');
           if (stored) {
-            try {
-              const { access_token, user: storedUser } = JSON.parse(stored);
-              if (access_token) {
-                console.log('[UserMenu] Recent auth success detected, updating UI');
-                setLocalIsAuthenticated(true);
-                setLocalUser(storedUser);
-                setIsLoading(false);
-                sessionStorage.removeItem('recent-auth-success');
-                
-                // Dispatch custom event for other components
-                window.dispatchEvent(new CustomEvent('auth-state-changed', {
-                  detail: { isAuthenticated: true, user: storedUser }
-                }));
-              }
-            } catch (error) {
-              console.error('[UserMenu] Error parsing stored auth:', error);
+            const parsedData = safeParse(stored, null);
+            if (parsedData && parsedData.access_token) {
+              const { access_token, user: storedUser } = parsedData;
+              console.log('[UserMenu] Recent auth success detected, updating UI');
+              setLocalIsAuthenticated(true);
+              setLocalUser(storedUser);
+              setIsLoading(false);
+              sessionStorage.removeItem('recent-auth-success');
+              
+              // Dispatch custom event for other components
+              window.dispatchEvent(new CustomEvent('auth-state-changed', {
+                detail: { isAuthenticated: true, user: storedUser }
+              }));
+            } else {
+              console.error('[UserMenu] Error parsing stored auth');
               setIsLoading(false);
             }
           } else {
@@ -155,11 +180,7 @@ export function UserMenu() {
     const localStorage = window.localStorage.getItem('describe-it-auth');
     let localStorageData = null;
     
-    try {
-      localStorageData = localStorage ? JSON.parse(localStorage) : null;
-    } catch (e) {
-      localStorageData = { error: 'Invalid JSON in localStorage' };
-    }
+    localStorageData = localStorage ? safeParse(localStorage, { error: 'Invalid JSON in localStorage' }) : null;
 
     const stateComparison = {
       authProvider: { isAuthenticated, user: user?.email, profile: !!profile },
@@ -350,7 +371,7 @@ export function UserMenu() {
 
               <button
                 onClick={() => {
-                  // TODO: Open settings modal
+                  setShowSettingsModal(true);
                   setShowDropdown(false);
                 }}
                 className="w-full flex items-center px-3 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
@@ -377,6 +398,15 @@ export function UserMenu() {
         <ApiKeyModal
           isOpen={showApiKeyModal}
           onClose={() => setShowApiKeyModal(false)}
+        />
+      )}
+
+      {showSettingsModal && (
+        <SettingsModal
+          isOpen={showSettingsModal}
+          darkMode={darkMode}
+          onClose={() => setShowSettingsModal(false)}
+          onToggleDarkMode={toggleDarkMode}
         />
       )}
     </div>
@@ -424,8 +454,11 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
       console.log('[ApiKeyModal] Save result:', success);
       
       if (success) {
-        // Also save to localStorage as backup
-        sessionStorage.setItem('api-keys-backup', JSON.stringify(keys));
+        // Also save to sessionStorage as backup
+        const backupString = safeStringify(keys);
+        if (backupString) {
+          sessionStorage.setItem('api-keys-backup', backupString);
+        }
         
         // Update settings manager directly
         const { settingsManager } = await import('@/lib/settings/settingsManager');
@@ -450,9 +483,12 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
     } catch (error: any) {
       console.error('[ApiKeyModal] Failed to save API keys:', error);
       
-      // Fallback: Save to localStorage directly
+      // Fallback: Save to sessionStorage directly
       try {
-        sessionStorage.setItem('api-keys-backup', JSON.stringify(keys));
+        const backupString = safeStringify(keys);
+        if (backupString) {
+          sessionStorage.setItem('api-keys-backup', backupString);
+        }
         const { settingsManager } = await import('@/lib/settings/settingsManager');
         settingsManager.updateSection('apiKeys', {
           unsplash: keys.unsplash,

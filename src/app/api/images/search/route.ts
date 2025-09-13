@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { unsplashService } from "@/lib/api/unsplash";
 import { apiKeyProvider } from "@/lib/api/keyProvider";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
@@ -41,12 +42,12 @@ const searchSchema = z.object({
 
 // Generate cache key
 function getCacheKey(params: z.infer<typeof searchSchema>): string {
-  return JSON.stringify(params);
+  return safeStringify(params);
 }
 
 // Generate ETag
 function generateETag(data: any): string {
-  return Buffer.from(JSON.stringify(data)).toString("base64").slice(0, 16);
+  return Buffer.from(safeStringify(data)).toString("base64").slice(0, 16);
 }
 
 // Clean old cache entries

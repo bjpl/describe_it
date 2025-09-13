@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { authManager, type UserProfile } from '../lib/auth/AuthManager';
 import { settingsManager, type AppSettings } from '../lib/settings/settingsManager';
 import { logger } from '../lib/logger';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 export interface OnboardingStep {
   id: string;
@@ -107,7 +108,7 @@ export function useOnboarding(): OnboardingState & OnboardingActions {
     try {
       const savedProgress = localStorage.getItem(STORAGE_KEY);
       if (savedProgress) {
-        const { currentStep, userData, preferences, completedSteps } = JSON.parse(savedProgress);
+        const { currentStep, userData, preferences, completedSteps } = safeParse(savedProgress);
         
         // Update steps with completion status
         const updatedSteps = ONBOARDING_STEPS.map((step, index) => ({
@@ -144,7 +145,7 @@ export function useOnboarding(): OnboardingState & OnboardingActions {
         timestamp: new Date().toISOString()
       };
       
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(progressData));
+      localStorage.setItem(STORAGE_KEY, safeStringify(progressData));
     } catch (error) {
       logger.error('Failed to save onboarding progress', error as Error);
     }

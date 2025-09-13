@@ -5,6 +5,7 @@
 import { withRetry, RetryConfig } from "../utils/error-retry";
 import { supabaseService } from "../api/supabase";
 import { getEnvironment } from "../../config/env";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 interface UserProgress {
   userId: string;
@@ -417,7 +418,7 @@ export class ProgressService {
     userId: string,
     filter: ProgressFilter = {},
   ): Promise<SessionProgress[]> {
-    const cacheKey = `sessions_${userId}_${this.hashString(JSON.stringify(filter))}`;
+    const cacheKey = `sessions_${userId}_${this.hashString(safeStringify(filter))}`;
     const cached = this.getFromCache(cacheKey);
 
     if (cached) {

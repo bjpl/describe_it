@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { UserSession, UserPreferences, SearchHistoryItem } from "@/types";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 const defaultPreferences: UserPreferences = {
   theme: "light",
@@ -80,7 +81,7 @@ export function useSession() {
       exportedAt: new Date(),
     };
 
-    return new Blob([JSON.stringify(sessionData, null, 2)], {
+    return new Blob([safeStringify(sessionData, null, 2)], {
       type: "application/json",
     });
   }, [session]);

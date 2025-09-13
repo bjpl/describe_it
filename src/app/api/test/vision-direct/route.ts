@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { getServerOpenAIClient, generateVisionDescription } from "@/lib/api/openai-server";
 import { apiKeyProvider } from "@/lib/api/keyProvider";
 import OpenAI from "openai";
@@ -344,7 +345,7 @@ export async function POST(request: NextRequest) {
     // Parse request body
     let body;
     try {
-      body = await request.json();
+      body = safeParse(await request.text(), {});
     } catch (parseError) {
       return NextResponse.json({
         success: false,

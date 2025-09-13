@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useReducer, useMemo } from 'react';
 import { authManager, AuthState } from '@/lib/auth/AuthManager';
 import { User } from '@supabase/supabase-js';
+import { safeParse } from '@/lib/utils/json-safe';
 
 interface AuthContextValue extends AuthState {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -36,21 +37,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedSession = localStorage.getItem('describe-it-auth');
       if (storedSession && !currentState.isAuthenticated) {
         console.log('[AuthProvider] Found session in localStorage but auth not initialized');
-        try {
-          const sessionData = JSON.parse(storedSession);
-          if (sessionData.access_token) {
-            // Initialize auth manager with the stored session
-            await authManager.initialize();
-            const newState = authManager.getAuthState();
-            if (newState.isAuthenticated) {
-              setAuthState(newState);
-              setVersion(v => v + 1);
-              forceUpdate();
-              return;
-            }
+        const sessionData = safeParse(storedSession, null);
+        if (sessionData && sessionData.access_token) {
+          // Initialize auth manager with the stored session
+          await authManager.initialize();
+          const newState = authManager.getAuthState();
+          if (newState.isAuthenticated) {
+            setAuthState(newState);
+            setVersion(v => v + 1);
+            forceUpdate();
+            return;
           }
-        } catch (error) {
-          console.error('[AuthProvider] Failed to restore session from localStorage:', error);
+        } else {
+          console.error('[AuthProvider] Failed to restore session from localStorage: Invalid JSON');
         }
       }
       

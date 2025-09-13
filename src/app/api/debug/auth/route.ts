@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { createClient } from '@supabase/supabase-js';
 
 export async function GET(request: NextRequest) {
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email, password } = safeParse(await request.text(), {});
     
     if (!email || !password) {
       return NextResponse.json({

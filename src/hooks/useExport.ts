@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { ExportOptions } from "@/types";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 export function useExport() {
   const [isExporting, setIsExporting] = useState(false);
@@ -19,7 +20,7 @@ export function useExport() {
           message: "Export functionality would gather data here",
         };
 
-        const content = JSON.stringify(data, null, 2);
+        const content = safeStringify(data, null, 2);
         return new Blob([content], { type: "application/json" });
       } catch (err) {
         const errorMessage =

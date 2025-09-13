@@ -4,6 +4,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { OnboardingWizard } from './index';
 import useOnboarding from '../../hooks/useOnboarding';
 import { authManager } from '../../lib/auth/AuthManager';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface OnboardingProviderProps {
   children: React.ReactNode;

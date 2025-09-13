@@ -5,6 +5,7 @@
 
 import { logger } from '@/lib/logger';
 import { errorHandler } from '@/lib/errorHandler';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 // Performance metric types
 export enum MetricType {

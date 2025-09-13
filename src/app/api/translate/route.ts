@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger, logApiCall, logApiResponse } from "@/lib/logger";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 interface TranslationRequest {
   text: string;
@@ -20,7 +21,15 @@ interface TranslationResponse {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: TranslationRequest = await request.json();
+    const requestText = await request.text();
+    const body: TranslationRequest | undefined = safeParse(requestText);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    }
     const { text, targetLanguage, sourceLanguage, context } = body;
 
     if (!text) {
@@ -158,7 +167,7 @@ async function translateWithOpenAI(
       "Content-Type": "application/json",
       Authorization: `Bearer ${openaiApiKey}`,
     },
-    body: JSON.stringify({
+    body: safeStringify({
       model: "gpt-3.5-turbo",
       messages: [
         {
@@ -172,7 +181,7 @@ async function translateWithOpenAI(
       ],
       max_tokens: 150,
       temperature: 0.3,
-    }),
+    }) || '',
   });
 
   if (!response.ok) {
@@ -181,8 +190,9 @@ async function translateWithOpenAI(
     );
   }
 
-  const data = await response.json();
-  return data.choices[0]?.message?.content?.trim() || text;
+  const responseText = await response.text();
+  const data = safeParse(responseText);
+  return data?.choices[0]?.message?.content?.trim() || text;
 }
 
 /**

@@ -4,6 +4,7 @@
  */
 
 import { logger } from '../logger';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface StorageEntry {
   key: string;
@@ -204,7 +205,7 @@ class LocalStorageManager {
       const metaKey = `__meta_${key}`;
       const meta = localStorage.getItem(metaKey);
       if (meta) {
-        const parsed = JSON.parse(meta);
+        const parsed = safeParse(meta);
         return parsed.lastModified || Date.now();
       }
     } catch {}
@@ -233,7 +234,7 @@ class LocalStorageManager {
       };
       
       localStorage.setItem(key, finalValue);
-      localStorage.setItem(metaKey, JSON.stringify(metadata));
+      localStorage.setItem(metaKey, safeStringify(metadata));
       
       return true;
     } catch (error: any) {
@@ -271,7 +272,7 @@ class LocalStorageManager {
       const metaKey = `__meta_${key}`;
       const meta = localStorage.getItem(metaKey);
       if (meta) {
-        const parsed = JSON.parse(meta);
+        const parsed = safeParse(meta);
         if (parsed.compressed) {
           return this.decompress(value);
         }
@@ -666,10 +667,10 @@ class LocalStorageManager {
    */
   importData(jsonData: string): boolean {
     try {
-      const data = JSON.parse(jsonData);
+      const data = safeParse(jsonData);
       
       for (const [key, value] of Object.entries(data)) {
-        this.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
+        this.setItem(key, typeof value === 'string' ? value : safeStringify(value));
       }
       
       return true;
@@ -696,7 +697,7 @@ export const localStorageManager = LocalStorageManager.getInstance();
 
 // Export convenience functions
 export const safeSaveToStorage = (key: string, value: any, options?: { compress?: boolean; ttl?: number }) => {
-  const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+  const stringValue = typeof value === 'string' ? value : safeStringify(value);
   return localStorageManager.setItem(key, stringValue, options);
 };
 
@@ -705,7 +706,7 @@ export const safeGetFromStorage = <T = any>(key: string): T | null => {
   if (!value) return null;
   
   try {
-    return JSON.parse(value) as T;
+    return safeParse(value) as T;
   } catch {
     return value as any;
   }

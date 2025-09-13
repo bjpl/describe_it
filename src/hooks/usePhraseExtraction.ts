@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { ExtractedPhrase, PhraseExtractionRequest } from "@/types";
 import { logger, devWarn } from "@/lib/logger";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 // Enhanced error types for better error handling
 interface PhraseError {

@@ -17,6 +17,7 @@ import VocabularyStorage, {
   StudySession,
 } from "@/lib/storage/vocabularyStorage";
 import {
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
   VocabularyList,
   VocabularyForm,
   VocabularyActions,
@@ -326,7 +327,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
         linkElement.setAttribute("download", exportFileDefaultName);
         linkElement.click();
       } else {
-        const dataStr = JSON.stringify(set, null, 2);
+        const dataStr = safeStringify(set, null, 2);
         const dataUri =
           "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
         const exportFileDefaultName = `vocabulary-${set.name.toLowerCase().replace(/\s+/g, "-")}.json`;

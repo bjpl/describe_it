@@ -2,6 +2,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { logger } from "@/lib/logger";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 // Performance profiler class
 export class PerformanceProfiler {
@@ -217,7 +218,7 @@ export function useIntersectionObserver(
 export const bundleAnalyzer = {
   logComponentSize: (componentName: string, component: any) => {
     if (process.env.NODE_ENV === "development") {
-      const size = JSON.stringify(component).length;
+      const size = safeStringify(component).length;
       console.log(`Component ${componentName} approximate size: ${size} bytes`);
     }
   },

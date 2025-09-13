@@ -4,6 +4,7 @@ import React, { useEffect, useState, memo } from 'react';
 import { getCLS, getFID, getFCP, getLCP, getTTFB, getINP } from 'web-vitals';
 import { MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
 import { Activity, AlertTriangle, CheckCircle, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface WebVital {
   name: string;
@@ -172,7 +173,7 @@ export const WebVitalsMonitor = memo(() => {
       url: window.location.href,
     };
 
-    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
+    const blob = new Blob([safeStringify(exportData, null, 2)], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);

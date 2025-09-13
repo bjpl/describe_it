@@ -311,7 +311,7 @@ Describe It implements comprehensive security measures to protect user data and 
 - **Subresource Integrity (SRI)** for external scripts
 - **Security Headers** (X-Frame-Options, X-Content-Type-Options, etc.)
 
-For detailed security information, see [Security Documentation](docs/SECURITY.md).
+For detailed security information, see [Security Documentation](docs/security/).
 
 ## 📊 Performance & Monitoring
 
@@ -362,13 +362,13 @@ For comprehensive architecture information, see [Architecture Documentation](doc
 
 ### Quick Start Guides
 - **[Setup Guide](docs/setup/SETUP.md)** - Get started in minutes (works without API keys!)
-- **[Contributing Guide](CONTRIBUTING.md)** - Code standards, workflow, and best practices
+- **[Contributing Guide](docs/guides/CONTRIBUTING.md)** - Code standards, workflow, and best practices
 - **[Troubleshooting](docs/guides/troubleshooting.md)** - Common issues and solutions
 
 ### Developer Resources
 - **[API Documentation](docs/api/api-documentation.md)** - Complete REST API reference
 - **[Architecture Overview](docs/architecture/ARCHITECTURE.md)** - System design and patterns
-- **[Security Guide](docs/setup/SECURITY.md)** - Security measures and compliance
+- **[Security Guide](docs/security/)** - Security measures and compliance
 - **[State Management](docs/architecture/STATE_MANAGEMENT.md)** - State architecture and patterns
 
 ### Operations & Deployment
@@ -387,7 +387,7 @@ For comprehensive architecture information, see [Architecture Documentation](doc
 
 ## 🤝 Contributing
 
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for detailed information on:
+We welcome contributions! Please see our [Contributing Guide](docs/guides/CONTRIBUTING.md) for detailed information on:
 
 ### Getting Started
 - **Development Setup** - Environment configuration and dependencies

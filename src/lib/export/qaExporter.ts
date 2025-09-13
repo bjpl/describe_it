@@ -1,4 +1,5 @@
 import { QAGeneration } from "@/types/api";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface QASessionData {
   sessionId: string;

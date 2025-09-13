@@ -4,6 +4,7 @@
  */
 
 import { useState } from 'react';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 export function useDirectAuth() {
   const [loading, setLoading] = useState(false);
@@ -15,15 +16,15 @@ export function useDirectAuth() {
       const response = await fetch('/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: safeStringify({ email, password })
       });
 
       const data = await response.json();
       
       if (data.success && data.session) {
         // Store session in localStorage
-        localStorage.setItem('auth_session', JSON.stringify(data.session));
-        localStorage.setItem('auth_user', JSON.stringify(data.user));
+        safeSetLocalStorage('auth_session', data.session);
+        safeSetLocalStorage('auth_user', data.user);
         
         // Set auth cookie for server-side
         document.cookie = `auth_token=${data.session.access_token}; path=/; max-age=${data.session.expires_in}`;
@@ -53,7 +54,7 @@ export function useDirectAuth() {
       const response = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, metadata })
+        body: safeStringify({ email, password, metadata })
       });
 
       const data = await response.json();
@@ -61,8 +62,8 @@ export function useDirectAuth() {
       if (data.success) {
         if (data.session) {
           // Auto sign in after signup
-          localStorage.setItem('auth_session', JSON.stringify(data.session));
-          localStorage.setItem('auth_user', JSON.stringify(data.user));
+          safeSetLocalStorage('auth_session', data.session);
+          safeSetLocalStorage('auth_user', data.user);
           document.cookie = `auth_token=${data.session.access_token}; path=/; max-age=${data.session.expires_in}`;
         }
         

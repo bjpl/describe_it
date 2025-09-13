@@ -128,7 +128,7 @@ class TabSyncManager {
     if (!event.key || !event.newValue) return;
     
     try {
-      const newValue = JSON.parse(event.newValue);
+      const newValue = safeParse(event.newValue);
       this.notifyListeners(event.key, newValue);
     } catch (error) {
       console.warn('Failed to parse storage change event', error);
@@ -242,7 +242,7 @@ export const ssrPersist = <T>(
       try {
         const state = get();
         const stateToStore = partialize ? partialize(state) : state;
-        const serialized = JSON.stringify({
+        const serialized = safeStringify({
           state: stateToStore,
           version,
           timestamp: Date.now()
@@ -303,11 +303,11 @@ export const ssrPersist = <T>(
       _exportState: () => {
         const state = get();
         const stateToExport = partialize ? partialize(state) : state;
-        return JSON.stringify({ state: stateToExport, version, timestamp: Date.now() });
+        return safeStringify({ state: stateToExport, version, timestamp: Date.now() });
       },
       _importState: (serializedState: string) => {
         try {
-          const parsed = JSON.parse(serializedState);
+          const parsed = safeParse(serializedState);
           let state = parsed.state;
 
           if (migrate && parsed.version !== undefined && parsed.version !== version) {
@@ -434,3 +434,4 @@ const openDB = (): Promise<IDBDatabase> => {
 };
 
 import React from 'react';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";

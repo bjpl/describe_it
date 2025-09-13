@@ -3,6 +3,10 @@
  * Epsilon-5 Integration Component
  */
 
+import { createLogger } from '@/lib/logging/logger';
+
+const retryLogger = createLogger('ErrorRetry');
+
 export interface RetryConfig {
   maxRetries?: number;
   baseDelay?: number;
@@ -93,10 +97,11 @@ export async function withRetry<T>(
       // Add some jitter to prevent thundering herd
       const jitteredDelay = delay + Math.random() * 1000;
 
-      console.warn(
-        `Attempt ${attempt + 1} failed, retrying in ${jitteredDelay}ms:`,
-        lastError.message,
-      );
+      retryLogger.warn('Retry attempt failed, waiting before retry', {
+        attempt: attempt + 1,
+        delay: jitteredDelay,
+        error: lastError.message
+      });
 
       await new Promise((resolve) => setTimeout(resolve, jitteredDelay));
     }
@@ -142,10 +147,9 @@ export async function apiCallWithRetry<T>(
   }
 
   if (fallbackData !== undefined) {
-    console.warn(
-      "API call failed, using fallback data:",
-      result.error?.message,
-    );
+    retryLogger.warn('API call failed, using fallback data', {
+      error: result.error?.message
+    });
     return fallbackData;
   }
 

@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { CategorizedPhrase, VocabularySet } from "@/types/api";
 import {
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
   sortPhrasesByCategory,
   getDifficultyColor,
   getCategoryColor,
@@ -98,7 +99,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
+          body: safeStringify({
             imageUrl,
             descriptionText: descriptionText,
             style: style,
@@ -221,7 +222,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
+            body: safeStringify({
               text: phrase.phrase,
               fromLanguage: "es",
               toLanguage: "en",
@@ -274,7 +275,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
+          body: safeStringify({
             texts: phrasesToTranslate.map((phrase) => phrase.phrase),
             fromLanguage: "es",
             toLanguage: "en",

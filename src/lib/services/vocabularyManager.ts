@@ -8,6 +8,7 @@ import VocabularyStorage, {
   StoredVocabularyData,
 } from "../storage/vocabularyStorage";
 import { createSortKey } from "../utils/phrase-helpers";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface VocabularyManagerConfig {
   autoSave: boolean;

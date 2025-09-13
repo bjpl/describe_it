@@ -6,6 +6,10 @@ import { withRetry, RetryConfig } from "../utils/error-retry";
 import { openAIService } from "./openaiService";
 import { translationService } from "./translationService";
 import { supabase } from "../supabase";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { createLogger, dbLogger } from "@/lib/logging/logger";
+
+const qaLogger = createLogger('QAService');
 
 interface QAItem {
   id: string;
@@ -153,7 +157,7 @@ export class QAService {
         }
         source = "openai";
       } catch (error) {
-        console.warn("OpenAI Q&A generation failed:", error);
+        qaLogger.warn('OpenAI Q&A generation failed', error);
       }
     }
 
@@ -168,7 +172,7 @@ export class QAService {
       try {
         await this.saveQuestionsToDatabase(questions);
       } catch (error) {
-        console.warn("Failed to save questions to database:", error);
+        dbLogger.warn('Failed to save questions to database', error);
       }
     }
 
@@ -208,7 +212,7 @@ export class QAService {
     try {
       await this.recordAnswerValidation(request, validation);
     } catch (error) {
-      console.warn("Failed to record answer validation:", error);
+      qaLogger.warn('Failed to record answer validation', error);
     }
 
     return validation;
@@ -234,7 +238,7 @@ export class QAService {
       this.setCache(cacheKey, result);
       return result;
     } catch (error) {
-      console.warn("Database query failed:", error);
+      dbLogger.warn('Database query failed', error);
       return { items: [], total: 0, hasMore: false };
     }
   }
@@ -270,7 +274,7 @@ export class QAService {
       this.clearCacheByPattern("qa_");
       return result.success && result.data ? result.data : null;
     } catch (error) {
-      console.warn("Failed to update Q&A item:", error);
+      qaLogger.warn('Failed to update Q&A item', error);
       return null;
     }
   }
@@ -294,7 +298,7 @@ export class QAService {
       this.clearCacheByPattern("qa_");
       return true;
     } catch (error) {
-      console.warn("Failed to delete Q&A item:", error);
+      qaLogger.warn('Failed to delete Q&A item', error);
       return false;
     }
   }
@@ -359,7 +363,7 @@ export class QAService {
       this.setCache(cacheKey, stats, 600000); // 10 minutes
       return stats;
     } catch (error) {
-      console.warn("Failed to calculate Q&A stats:", error);
+      qaLogger.warn('Failed to calculate Q&A stats', error);
       return {
         totalQuestions: 0,
         byDifficulty: {},
@@ -546,7 +550,7 @@ export class QAService {
           ? Math.max(confidence, 0.8)
           : Math.min(confidence, 0.6);
       } catch (error) {
-        console.warn("Semantic matching failed:", error);
+        qaLogger.warn('Semantic matching failed', error);
       }
     }
 
@@ -815,13 +819,13 @@ export class QAService {
         } as never,
       ]);
     } catch (error) {
-      console.warn("Failed to record answer validation:", error);
+      qaLogger.warn('Failed to record answer validation', error);
     }
   }
 
   // Utility methods
   private generateCacheKey(prefix: string, data: any): string {
-    return `${prefix}_${this.hashString(JSON.stringify(data))}`;
+    return `${prefix}_${this.hashString(safeStringify(data))}`;
   }
 
   private getFromCache(key: string): any | null {

@@ -50,7 +50,7 @@ export class StorageManager {
             if (parsed.tempData) delete parsed.tempData;
             if (parsed.cache) delete parsed.cache;
             
-            localStorage.setItem(key, JSON.stringify(parsed));
+            localStorage.setItem(key, safeStringify(parsed));
             console.log(`[StorageManager] Compacted ${key}`);
           }
         } catch (e) {
@@ -92,7 +92,7 @@ export class StorageManager {
    */
   static safeSave(key: string, value: any): boolean {
     try {
-      const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+      const stringValue = typeof value === 'string' ? value : safeStringify(value);
       localStorage.setItem(key, stringValue);
       return true;
     } catch (e) {
@@ -102,7 +102,7 @@ export class StorageManager {
         
         // Try again after cleanup
         try {
-          const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
+          const stringValue = typeof value === 'string' ? value : safeStringify(value);
           localStorage.setItem(key, stringValue);
           return true;
         } catch (e2) {

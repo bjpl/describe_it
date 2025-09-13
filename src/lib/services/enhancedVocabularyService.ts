@@ -9,6 +9,7 @@ import { getEnvironment } from "../../config/env";
 import { translationService } from "./translationService";
 import { openAIService } from "./openaiService";
 import { vocabularyService as baseVocabularyService } from "./vocabularyService";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 interface EnhancedVocabularyItem {
   id: string;
@@ -309,7 +310,7 @@ export class EnhancedVocabularyService {
       return [];
     }
 
-    const cacheKey = `search_${this.hashString(query)}_${JSON.stringify(options)}`;
+    const cacheKey = `search_${this.hashString(query)}_${safeStringify(options)}`;
     const cached = this.getFromCache(cacheKey);
 
     if (cached) {
@@ -731,7 +732,7 @@ export class EnhancedVocabularyService {
 
   // Utility methods
   private generateCacheKey(prefix: string, filter: any): string {
-    return `${prefix}_${this.hashString(JSON.stringify(filter))}`;
+    return `${prefix}_${this.hashString(safeStringify(filter))}`;
   }
 
   private getFromCache(key: string): any | null {

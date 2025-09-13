@@ -1,5 +1,6 @@
 // Raw Data Export Functionality for Session Reports
 import {
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
   SessionReport,
   SessionInteraction,
   SessionSummary,
@@ -238,13 +239,13 @@ export class RawDataExporter {
   private formatData(data: any): string {
     switch (this.options.format) {
       case "json":
-        return JSON.stringify(data, null, 2);
+        return safeStringify(data, null, 2);
       case "csv":
         return this.convertToCSV(data);
       case "xml":
         return this.convertToXML(data);
       default:
-        return JSON.stringify(data, null, 2);
+        return safeStringify(data, null, 2);
     }
   }
 
@@ -345,7 +346,7 @@ export class RawDataExporter {
     xml += "  <summary>\n";
     Object.entries(data.sessionSummary || {}).forEach(([key, value]) => {
       if (typeof value === "object") {
-        xml += `    <${key}>${JSON.stringify(value)}</${key}>\n`;
+        xml += `    <${key}>${safeStringify(value)}</${key}>\n`;
       } else {
         xml += `    <${key}>${escape(String(value))}</${key}>\n`;
       }

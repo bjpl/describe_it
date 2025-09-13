@@ -14,6 +14,7 @@ import type {
   DescriptionInsert,
 } from "../../types/database";
 import { featureFlags, getServiceConfig } from "../../config/environment";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 // Demo/Local storage implementation for when Supabase is not available
 class LocalStorageAdapter {
@@ -43,10 +44,10 @@ class LocalStorageAdapter {
 
       // Update table index
       const indexKey = this.getKey(`${table}_index`);
-      const existingIndex = JSON.parse(localStorage.getItem(indexKey) || "[]");
+      const existingIndex = safeParse(localStorage.getItem(indexKey) || "[]");
       if (!existingIndex.includes(id)) {
         existingIndex.push(id);
-        localStorage.setItem(indexKey, JSON.stringify(existingIndex));
+        localStorage.setItem(indexKey, safeStringify(existingIndex));
       }
 
       return this.mockResponse(itemWithId);
@@ -67,7 +68,7 @@ class LocalStorageAdapter {
           code: "PGRST116",
         });
       }
-      return this.mockResponse(JSON.parse(item));
+      return this.mockResponse(safeParse(item));
     } catch (error) {
       return this.mockResponse(null, {
         message: `Failed to get ${table}`,
@@ -82,12 +83,12 @@ class LocalStorageAdapter {
   ): Promise<{ data: unknown[]; error: unknown }> {
     try {
       const indexKey = this.getKey(`${table}_index`);
-      const index = JSON.parse(localStorage.getItem(indexKey) || "[]");
+      const index = safeParse(localStorage.getItem(indexKey) || "[]");
 
       const items = index
         .map((id: string) => {
           const item = localStorage.getItem(this.getKey(table, id));
-          return item ? JSON.parse(item) : null;
+          return item ? safeParse(item) : null;
         })
         .filter((item: unknown): item is Record<string, unknown> => Boolean(item));
 
@@ -121,13 +122,13 @@ class LocalStorageAdapter {
         return this.mockResponse(null, { message: "Item not found" });
       }
 
-      const item = JSON.parse(existingItem);
+      const item = safeParse(existingItem);
       const updatedItem = {
         ...item,
         ...updates,
         updated_at: new Date().toISOString(),
       };
-      localStorage.setItem(this.getKey(table, id), JSON.stringify(updatedItem));
+      localStorage.setItem(this.getKey(table, id), safeStringify(updatedItem));
 
       return this.mockResponse(updatedItem);
     } catch (error) {
@@ -144,11 +145,11 @@ class LocalStorageAdapter {
 
       // Update table index
       const indexKey = this.getKey(`${table}_index`);
-      const existingIndex = JSON.parse(localStorage.getItem(indexKey) || "[]");
+      const existingIndex = safeParse(localStorage.getItem(indexKey) || "[]");
       const updatedIndex = existingIndex.filter(
         (itemId: string) => itemId !== id,
       );
-      localStorage.setItem(indexKey, JSON.stringify(updatedIndex));
+      localStorage.setItem(indexKey, safeStringify(updatedIndex));
 
       return { error: null };
     } catch (error) {
@@ -161,10 +162,10 @@ class LocalStorageAdapter {
     error: unknown;
   }> {
     try {
-      const imagesIndex = JSON.parse(
+      const imagesIndex = safeParse(
         localStorage.getItem(this.getKey("images_index")) || "[]",
       );
-      const descriptionsIndex = JSON.parse(
+      const descriptionsIndex = safeParse(
         localStorage.getItem(this.getKey("descriptions_index")) || "[]",
       );
 

@@ -10,6 +10,7 @@ import { supabase, DatabaseService } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 import { Search, Heart, Calendar, Image, Filter, Download, Share2 } from "lucide-react";
 import type { DescriptionRecord } from "@/types/database";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface SavedDescriptionsProps {
   className?: string;
@@ -145,7 +146,7 @@ export function SavedDescriptions({
       imageUrl: description.image_url
     };
     
-    const blob = new Blob([JSON.stringify(content, null, 2)], { type: 'application/json' });
+    const blob = new Blob([safeStringify(content, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

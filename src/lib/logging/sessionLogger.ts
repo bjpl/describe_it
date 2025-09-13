@@ -1,5 +1,6 @@
 // Session Logger - Comprehensive user interaction tracking
 import {
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
   SessionInteraction,
   InteractionType,
   InteractionData,
@@ -531,7 +532,7 @@ export class SessionLogger {
 
       localStorage.setItem(
         `session_${this.sessionId}`,
-        JSON.stringify(storage),
+        safeStringify(storage),
       );
     } catch (error) {
       console.warn("Failed to save session to storage:", error);
@@ -544,7 +545,7 @@ export class SessionLogger {
     try {
       const stored = localStorage.getItem(`session_${this.sessionId}`);
       if (stored) {
-        const storage: SessionStorage = JSON.parse(stored);
+        const storage: SessionStorage = safeParse(stored);
         this.interactions = storage.interactions || [];
         this.settings = { ...this.settings, ...storage.settings };
       }
@@ -624,13 +625,13 @@ export class SessionLogger {
 
     switch (format) {
       case "json":
-        return JSON.stringify(report, null, 2);
+        return safeStringify(report, null, 2);
       case "text":
         return this.formatAsText(report);
       case "csv":
         return this.formatAsCSV(report);
       default:
-        return JSON.stringify(report, null, 2);
+        return safeStringify(report, null, 2);
     }
   }
 

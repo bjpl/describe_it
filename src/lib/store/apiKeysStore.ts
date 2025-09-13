@@ -2,6 +2,7 @@ import React from 'react';
 import { create } from 'zustand';
 import { devtools, persist, subscribeWithSelector } from 'zustand/middleware';
 import { createShallowSelector, useCleanupManager } from '../utils/storeUtils';
+import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 
 /**
  * API Keys Store - Secure management of API keys with encryption and persistence
@@ -352,21 +353,27 @@ export const useAPIKeysStore = create<APIKeysState>()(
           
           exportKeys: () => {
             const state = get();
-            return btoa(JSON.stringify({
+            const data = safeStringify({
               keys: state.keys,
               activeKeys: state.activeKeys,
               exportedAt: new Date().toISOString()
-            }));
+            });
+            return data ? btoa(data) : '';
           },
           
           importKeys: async (encryptedData) => {
             try {
-              const data = JSON.parse(atob(encryptedData));
-              set({
-                keys: data.keys || {},
-                activeKeys: data.activeKeys || {},
-                error: null
-              }, false, 'importKeys');
+              const decoded = atob(encryptedData);
+              const data = safeParse(decoded, null);
+              if (data) {
+                set({
+                  keys: data.keys || {},
+                  activeKeys: data.activeKeys || {},
+                  error: null
+                }, false, 'importKeys');
+              } else {
+                throw new Error('Invalid key data format');
+              }
             } catch (error) {
               set({ 
                 error: `Import failed: ${error instanceof Error ? error.message : 'Invalid data'}` 

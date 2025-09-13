@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../providers/AuthProvider';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface AuthDebugPanelProps {
   isVisible?: boolean;
@@ -38,7 +39,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
     let localStorageData = null;
     try {
       const stored = localStorage.getItem('describe-it-auth');
-      localStorageData = stored ? JSON.parse(stored) : null;
+      localStorageData = stored ? safeParse(stored) : null;
     } catch (error) {
       localStorageData = { error: 'Failed to parse localStorage data' };
     }
@@ -57,11 +58,11 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
       discrepancies.push('isAuthenticated mismatch between Context and Zustand');
     }
     
-    if (JSON.stringify(authContext?.user) !== JSON.stringify(zustandState.user)) {
+    if (safeStringify(authContext?.user) !== safeStringify(zustandState.user)) {
       discrepancies.push('user data mismatch between Context and Zustand');
     }
     
-    if (JSON.stringify(authContext?.profile) !== JSON.stringify(zustandState.profile)) {
+    if (safeStringify(authContext?.profile) !== safeStringify(zustandState.profile)) {
       discrepancies.push('profile data mismatch between Context and Zustand');
     }
 
@@ -128,7 +129,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
   }
 
   const formatJson = (obj: any) => {
-    return JSON.stringify(obj, null, 2);
+    return safeStringify(obj, null, 2);
   };
 
   const getStatusColor = (hasDiscrepancies: boolean) => {

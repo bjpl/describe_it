@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Database, Trash2, RefreshCw, HardDrive, Zap } from "lucide-react";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface CacheEntry {
   key: string;
@@ -217,7 +218,7 @@ class AdvancedCacheManager {
 
   private estimateSize(data: any): number {
     try {
-      return new Blob([JSON.stringify(data)]).size;
+      return new Blob([safeStringify(data)]).size;
     } catch {
       return 1024; // Default 1KB if estimation fails
     }

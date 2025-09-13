@@ -6,6 +6,7 @@
 import { logger } from './logger';
 import { metrics } from './metrics';
 import { errorTracker } from './errorTracking';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface MonitoringHooksConfig {
   enableLogging: boolean;
@@ -433,7 +434,7 @@ export class MonitoringHooks {
   } {
     return {
       activeSessions: this.sessionData.size,
-      memoryDataSize: JSON.stringify(Array.from(this.sessionData.values())).length,
+      memoryDataSize: safeStringify(Array.from(this.sessionData.values())).length,
       subscriberCount: this.subscribers.size,
       configLastUpdated: new Date().toISOString(), // Would track actual last update in real implementation
       hooksEnabled: {

@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const requestText = await request.text();
+    const body = safeParse(requestText);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    };
     
     console.log('[Verify Key Route] Full request analysis:', {
       // Check headers (likely stripped by Vercel)

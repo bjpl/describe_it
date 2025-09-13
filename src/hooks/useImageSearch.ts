@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from "react";
 import { UnsplashImage } from "@/types";
 import { logger, logUserAction, devLog } from "@/lib/logger";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 // Enhanced error types for better error handling
 interface SearchError {
@@ -151,7 +152,7 @@ export function useImageSearch() {
         const apiKeysBackupStr = sessionStorage.getItem('api-keys-backup');
         if (apiKeysBackupStr) {
           try {
-            const keys = JSON.parse(apiKeysBackupStr);
+            const keys = safeParse(apiKeysBackupStr);
             apiKey = keys.unsplash;
             if (apiKey) {
               console.log('[useImageSearch] Using API key from backup');
@@ -166,7 +167,7 @@ export function useImageSearch() {
           const settingsStr = localStorage.getItem('app-settings');
           if (settingsStr) {
             try {
-              const settings = JSON.parse(settingsStr);
+              const settings = safeParse(settingsStr);
               apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
               if (apiKey) {
                 console.log('[useImageSearch] Using API key from settings');

@@ -12,7 +12,7 @@ export default function TestAPIKey() {
       // Get API key from localStorage
       const apiKey = localStorage.getItem('openai_api_key') || '';
       
-      console.log('Testing with API key:', apiKey ? apiKey.substring(0, 10) + '...' : 'No key');
+      // Do not log API keys for security reasons
       
       // Test the verify endpoint
       const verifyResponse = await fetch('/api/test/verify-key', {

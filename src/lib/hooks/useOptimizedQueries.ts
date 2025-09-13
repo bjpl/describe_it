@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useCallback } from "react";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 // Optimized query options
 interface OptimizedQueryOptions {

@@ -4,6 +4,7 @@
  */
 
 import { createHash, createHmac, randomBytes, pbkdf2Sync, timingSafeEqual } from 'crypto';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 /**
  * Encryption Configuration
@@ -204,7 +205,7 @@ export class CryptoUtils {
       iat: Date.now()
     };
 
-    const tokenString = Buffer.from(JSON.stringify(tokenData)).toString('base64url');
+    const tokenString = Buffer.from(safeStringify(tokenData)).toString('base64url');
     const signature = this.createHmac(tokenString, secret);
     
     return `${tokenString}.${signature}`;

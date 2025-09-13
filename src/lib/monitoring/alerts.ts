@@ -5,6 +5,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { captureError } from './sentry';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface Alert {
   id?: string;

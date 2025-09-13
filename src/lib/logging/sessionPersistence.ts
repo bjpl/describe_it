@@ -1,5 +1,6 @@
 // Session Persistence - Handle localStorage/sessionStorage for session data
 import { SessionStorage, SessionSummary, SessionReport } from "@/types/session";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export class SessionPersistence {
   private readonly storagePrefix = "describe_it_session_";
@@ -71,7 +72,7 @@ export class SessionPersistence {
         return null;
       }
 
-      const parsed = JSON.parse(stored);
+      const parsed = safeParse(stored);
       const decompressed = this.decompressData(parsed);
 
       console.debug("Session data loaded:", sessionId);
@@ -106,7 +107,7 @@ export class SessionPersistence {
         return [];
       }
 
-      const parsed = JSON.parse(sessionList);
+      const parsed = safeParse(sessionList);
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       console.error("Failed to list sessions:", error);
@@ -122,7 +123,7 @@ export class SessionPersistence {
     try {
       const storage = this.getStorage();
       const key = this.summaryPrefix + sessionId;
-      storage.setItem(key, JSON.stringify(summary));
+      storage.setItem(key, safeStringify(summary));
 
       console.debug("Session summary saved:", sessionId);
     } catch (error) {
@@ -140,7 +141,7 @@ export class SessionPersistence {
         return null;
       }
 
-      return JSON.parse(stored);
+      return safeParse(stored);
     } catch (error) {
       console.error("Failed to load session summary:", error);
       return null;
@@ -203,13 +204,13 @@ export class SessionPersistence {
 
       switch (format) {
         case "json":
-          return JSON.stringify(report, null, 2);
+          return safeStringify(report, null, 2);
         case "text":
           return this.formatAsText(report);
         case "csv":
           return this.formatAsCSV(report);
         default:
-          return JSON.stringify(report, null, 2);
+          return safeStringify(report, null, 2);
       }
     } catch (error) {
       console.error("Failed to export session:", error);
@@ -226,7 +227,7 @@ export class SessionPersistence {
       for (const sessionId of sessionIds) {
         try {
           const reportData = await this.export(sessionId, "json");
-          const report: SessionReport = JSON.parse(reportData);
+          const report: SessionReport = safeParse(reportData);
           allReports.push(report);
         } catch (error) {
           console.warn(`Failed to export session ${sessionId}:`, error);
@@ -235,7 +236,7 @@ export class SessionPersistence {
 
       switch (format) {
         case "json":
-          return JSON.stringify(
+          return safeStringify(
             {
               exportedAt: Date.now(),
               sessionCount: allReports.length,
@@ -249,7 +250,7 @@ export class SessionPersistence {
         case "csv":
           return this.formatAllAsCSV(allReports);
         default:
-          return JSON.stringify(allReports, null, 2);
+          return safeStringify(allReports, null, 2);
       }
     } catch (error) {
       console.error("Failed to export all sessions:", error);
@@ -261,7 +262,7 @@ export class SessionPersistence {
   public async saveSettings(settings: any): Promise<void> {
     try {
       const storage = this.getStorage();
-      storage.setItem(this.settingsKey, JSON.stringify(settings));
+      storage.setItem(this.settingsKey, safeStringify(settings));
     } catch (error) {
       console.error("Failed to save settings:", error);
     }
@@ -276,7 +277,7 @@ export class SessionPersistence {
         return null;
       }
 
-      return JSON.parse(stored);
+      return safeParse(stored);
     } catch (error) {
       console.error("Failed to load settings:", error);
       return null;
@@ -380,7 +381,7 @@ export class SessionPersistence {
       sessionIds.push(sessionId);
 
       const storage = this.getStorage();
-      storage.setItem("session_list", JSON.stringify(sessionIds));
+      storage.setItem("session_list", safeStringify(sessionIds));
     }
   }
 
@@ -389,7 +390,7 @@ export class SessionPersistence {
     const filtered = sessionIds.filter((id) => id !== sessionId);
 
     const storage = this.getStorage();
-    storage.setItem("session_list", JSON.stringify(filtered));
+    storage.setItem("session_list", safeStringify(filtered));
   }
 
   private async clearSummary(sessionId: string): Promise<void> {
@@ -465,7 +466,7 @@ Generated: ${new Date(report.generatedAt).toLocaleString()}
     const rows = report.interactions.map((interaction) => [
       new Date(interaction.timestamp).toISOString(),
       interaction.type,
-      JSON.stringify(interaction.data),
+      safeStringify(interaction.data),
     ]);
 
     return [headers.join(","), ...rows.map((row) => row.join(","))].join("\n");

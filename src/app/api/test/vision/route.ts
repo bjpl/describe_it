@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { generateVisionDescription, getServerOpenAIClient } from "@/lib/api/openai-server";
 import { apiKeyProvider } from "@/lib/api/keyProvider";
 
@@ -143,7 +144,7 @@ export async function POST(request: NextRequest) {
     // Parse and validate request body
     let body;
     try {
-      body = await request.json();
+      body = safeParse(await request.text(), {});
     } catch (parseError) {
       console.error('[Vision Test POST] Failed to parse request body:', parseError);
       return NextResponse.json({

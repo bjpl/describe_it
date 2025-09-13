@@ -182,7 +182,7 @@ export class SettingsManager {
       // Use a Promise to make it properly async
       return await new Promise<boolean>((resolve) => {
         try {
-          localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+          localStorage.setItem(this.STORAGE_KEY, safeStringify(data));
           console.log('[SettingsManager] Settings saved successfully');
           resolve(true);
         } catch (error) {
@@ -209,7 +209,7 @@ export class SettingsManager {
         settings: this.settings,
         timestamp: new Date().toISOString(),
       };
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(this.STORAGE_KEY, safeStringify(data));
     } catch (error) {
       console.error("Failed to save settings to localStorage:", error);
     }
@@ -376,7 +376,7 @@ export class SettingsManager {
         : { unsplash: "", openai: "" },
     };
 
-    return JSON.stringify(
+    return safeStringify(
       {
         version: this.STORAGE_VERSION,
         timestamp: new Date().toISOString(),

@@ -2,6 +2,7 @@ import React from 'react';
 import { create } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
 import { createShallowSelector } from '../utils/storeUtils';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 /**
  * Undo/Redo Store - Universal undo/redo functionality for any store

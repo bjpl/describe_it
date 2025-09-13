@@ -1,4 +1,5 @@
 import { vercelKvCache } from "./vercel-kv";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export enum LogLevel {
   DEBUG = 0,
@@ -135,7 +136,7 @@ class StructuredLogger {
     let output = `[${timestamp}] ${levelName}: ${entry.message}`;
 
     if (entry.context) {
-      output += `\nContext: ${JSON.stringify(entry.context, null, 2)}`;
+      output += `\nContext: ${safeStringify(entry.context, null, 2)}`;
     }
 
     if (entry.request) {

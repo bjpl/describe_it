@@ -4,11 +4,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, newPassword, adminKey } = await request.json();
+    const { email, newPassword, adminKey } = safeParse(await request.text(), {});
     
     // Simple admin key check (CHANGE THIS IN PRODUCTION)
     if (adminKey !== 'describe-admin-2025') {

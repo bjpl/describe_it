@@ -16,6 +16,7 @@ import {
 } from "../../types/database";
 import { UserPreferences } from "../../types";
 import { useStableCallback, useCleanupManager, createShallowSelector } from "../utils/storeUtils";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 // Add missing types for this store
 export type LearningLevel = DifficultyLevel;
@@ -510,12 +511,12 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
               version: "1.0",
             };
 
-            return JSON.stringify(exportData, null, 2);
+            return safeStringify(exportData, null, 2);
           },
 
           importSessionData: (data) => {
             try {
-              const importData = JSON.parse(data);
+              const importData = safeParse(data);
 
               if (!importData.version || !importData.preferences) {
                 throw new Error("Invalid export data format");

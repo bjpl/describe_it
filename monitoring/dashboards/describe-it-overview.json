@@ -1,0 +1,474 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Describe It - API Overview",
+    "tags": ["describe-it", "api", "monitoring"],
+    "style": "dark",
+    "timezone": "browser",
+    "editable": true,
+    "hideControls": false,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-24h",
+      "to": "now"
+    },
+    "timepicker": {
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d", "30d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "instance",
+          "type": "query",
+          "query": "label_values(api_requests_total, instance)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "annotations": {
+      "list": []
+    },
+    "refresh": "30s",
+    "schemaVersion": 30,
+    "version": 1,
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(api_requests_total[$__rate_interval]))",
+            "legendFormat": "Requests/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "decimals": 2,
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "options": {
+          "colorMode": "value",
+          "graphMode": "area",
+          "justifyMode": "center",
+          "orientation": "horizontal"
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Error Rate",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(api_requests_total{status_code=~\"4..|5..\"}[$__rate_interval])) / sum(rate(api_requests_total[$__rate_interval])) * 100",
+            "legendFormat": "Error Rate %"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "decimals": 2,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                },
+                {
+                  "color": "red",
+                  "value": 5
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 6,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Average Response Time",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "avg(api_request_duration_seconds_sum) / avg(api_request_duration_seconds_count) * 1000",
+            "legendFormat": "Avg Response Time"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "decimals": 0,
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 500
+                },
+                {
+                  "color": "red",
+                  "value": 1000
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 4,
+        "title": "OpenAI Token Usage",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(openai_tokens_used_total[$__rate_interval]))",
+            "legendFormat": "Tokens/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "decimals": 0,
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "gridPos": {
+          "h": 4,
+          "w": 6,
+          "x": 18,
+          "y": 0
+        }
+      },
+      {
+        "id": 5,
+        "title": "Request Rate by Endpoint",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (endpoint) (rate(api_requests_total[$__rate_interval]))",
+            "legendFormat": "{{endpoint}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["last", "max"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 4
+        }
+      },
+      {
+        "id": 6,
+        "title": "Response Time Distribution",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(api_request_duration_seconds_bucket[$__rate_interval])) by (le)) * 1000",
+            "legendFormat": "50th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(api_request_duration_seconds_bucket[$__rate_interval])) by (le)) * 1000",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(api_request_duration_seconds_bucket[$__rate_interval])) by (le)) * 1000",
+            "legendFormat": "99th percentile"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "ms",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2
+            }
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 4
+        }
+      },
+      {
+        "id": 7,
+        "title": "API Errors by Type",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (status_code) (rate(api_requests_total{status_code=~\"4..|5..\"}[$__rate_interval]))",
+            "legendFormat": "HTTP {{status_code}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 20
+            },
+            "color": {
+              "mode": "palette-classic"
+            }
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 12
+        }
+      },
+      {
+        "id": 8,
+        "title": "Rate Limit Hits",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (limit_type) (rate(rate_limit_hits_total[$__rate_interval]))",
+            "legendFormat": "{{limit_type}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2
+            }
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 12
+        }
+      },
+      {
+        "id": 9,
+        "title": "OpenAI Cost by Model",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (model) (rate(openai_cost_usd_total[$__rate_interval]))",
+            "legendFormat": "{{model}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "decimals": 4,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 0,
+          "y": 18
+        }
+      },
+      {
+        "id": 10,
+        "title": "Cache Performance",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum(rate(cache_hits_total[$__rate_interval]))",
+            "legendFormat": "Cache Hits/sec"
+          },
+          {
+            "expr": "sum(rate(cache_misses_total[$__rate_interval]))",
+            "legendFormat": "Cache Misses/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2
+            }
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 12,
+          "x": 12,
+          "y": 18
+        }
+      },
+      {
+        "id": 11,
+        "title": "Active Sessions",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "active_sessions_total",
+            "legendFormat": "Active Sessions"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 10
+            }
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 8,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 12,
+        "title": "Image Processing",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (processing_type) (rate(image_processing_total[$__rate_interval]))",
+            "legendFormat": "{{processing_type}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2
+            }
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 8,
+          "x": 8,
+          "y": 24
+        }
+      },
+      {
+        "id": 13,
+        "title": "Suspicious Activity",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (severity) (rate(suspicious_activity_total[$__rate_interval]))",
+            "legendFormat": "{{severity}} severity"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2
+            },
+            "color": {
+              "mode": "thresholds"
+            },
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 0.1
+                },
+                {
+                  "color": "red",
+                  "value": 1
+                }
+              ]
+            }
+          }
+        },
+        "gridPos": {
+          "h": 6,
+          "w": 8,
+          "x": 16,
+          "y": 24
+        }
+      }
+    ]
+  }
+}

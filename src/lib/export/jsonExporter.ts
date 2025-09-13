@@ -5,6 +5,7 @@
 
 import { saveAs } from "file-saver";
 import { ExportData } from "../../types/export";
+import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 
 interface JSONExportOptions {
   pretty?: boolean;
@@ -42,9 +43,15 @@ export class JSONExporter {
       this.validateExportData(exportData);
 
       // Generate JSON string
-      const jsonString = this.options.pretty
-        ? JSON.stringify(exportData, null, 2)
-        : JSON.stringify(exportData);
+      const jsonString = safeStringify(
+        exportData,
+        undefined,
+        this.options.pretty ? 2 : undefined
+      );
+      
+      if (!jsonString) {
+        throw new Error('Failed to serialize export data to JSON');
+      }
 
       // Apply compression if requested
       const finalContent = await this.applyCompression(jsonString);
@@ -276,7 +283,10 @@ export class JSONExporter {
    * Calculate simple checksum for data integrity
    */
   private calculateChecksum(data: ExportData): string {
-    const content = JSON.stringify(data, null, 0);
+    const content = safeStringify(data, undefined, 0);
+    if (!content) {
+      throw new Error('Failed to serialize data for compression');
+    }
     let hash = 0;
 
     for (let i = 0; i < content.length; i++) {
@@ -421,7 +431,10 @@ export function downloadJSON(blob: Blob, filename: string): void {
  */
 export function parseImportedJSON(jsonString: string): ExportData {
   try {
-    const data = JSON.parse(jsonString);
+    const data = safeParse(jsonString, null);
+    if (!data) {
+      throw new Error('Invalid JSON format in import data');
+    }
 
     // Basic validation
     if (!data.metadata) {

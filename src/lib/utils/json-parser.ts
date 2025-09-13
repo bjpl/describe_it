@@ -113,7 +113,7 @@ export class RobustJSONParser {
   private static parseDirectJSON<T>(content: string): ParseResult<T> {
     try {
       const trimmed = content.trim();
-      const parsed = JSON.parse(trimmed);
+      const parsed = safeParse(trimmed);
       return {
         success: true,
         data: parsed,
@@ -150,7 +150,7 @@ export class RobustJSONParser {
         const jsonContent = match[1]?.trim();
         if (jsonContent) {
           try {
-            const parsed = JSON.parse(jsonContent);
+            const parsed = safeParse(jsonContent);
             return {
               success: true,
               data: parsed,
@@ -185,7 +185,7 @@ export class RobustJSONParser {
       const objectMatch = content.match(this.JSON_OBJECT_REGEX);
       if (objectMatch) {
         try {
-          const parsed = JSON.parse(objectMatch[0]);
+          const parsed = safeParse(objectMatch[0]);
           return {
             success: true,
             data: parsed,
@@ -200,7 +200,7 @@ export class RobustJSONParser {
       const arrayMatch = content.match(this.JSON_ARRAY_REGEX);
       if (arrayMatch) {
         try {
-          const parsed = JSON.parse(arrayMatch[0]);
+          const parsed = safeParse(arrayMatch[0]);
           return {
             success: true,
             data: parsed,
@@ -303,7 +303,7 @@ export class RobustJSONParser {
       aggressive = this.fixCommonJSONIssues(aggressive);
       aggressive = this.repairJSON(aggressive);
 
-      const parsed = JSON.parse(aggressive);
+      const parsed = safeParse(aggressive);
       return {
         success: true,
         data: parsed,

@@ -6,6 +6,7 @@
 import { supabase, DatabaseService } from '../supabase';
 import { localStorageManager } from './LocalStorageManager';
 import { logger } from '../logger';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface StorageStrategy {
   type: 'local' | 'supabase' | 'hybrid';

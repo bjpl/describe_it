@@ -5,6 +5,7 @@
 
 import { supabase } from '@/lib/supabase';
 import { AnalyticsEvent, validateEvent, serializeEvent } from './events';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 interface TrackerConfig {
   batchSize: number;
@@ -104,7 +105,7 @@ class AnalyticsTracker {
       if (data.length > 1024 * 1024) {
         console.warn('[Analytics] Event queue too large, truncating');
         const truncatedEvents = eventsToStore.slice(0, Math.floor(eventsToStore.length / 2));
-        localStorage.setItem('analytics_events', JSON.stringify(truncatedEvents));
+        localStorage.setItem('analytics_events', safeStringify(truncatedEvents));
       } else {
         localStorage.setItem('analytics_events', data);
       }
@@ -116,7 +117,7 @@ class AnalyticsTracker {
           localStorage.removeItem('analytics_events');
           // Try to store only the most recent 10 events
           const recentEvents = this.eventQueue.slice(-10);
-          localStorage.setItem('analytics_events', JSON.stringify(recentEvents));
+          safeSetLocalStorage('analytics_events', recentEvents);
         } catch {
           // If still failing, give up on localStorage
           console.warn('[Analytics] Cannot use localStorage for analytics');

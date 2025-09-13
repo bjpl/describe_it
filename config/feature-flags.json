@@ -1,0 +1,47 @@
+{
+  "development": {
+    "analytics": true,
+    "metrics": true,
+    "debugMode": true,
+    "hotReload": true,
+    "performanceMonitoring": true,
+    "errorReporting": false,
+    "cacheEnabled": true,
+    "compressionEnabled": false,
+    "bundleAnalyzer": false,
+    "sourceMaps": true,
+    "reactStrictMode": true,
+    "testingEnabled": true,
+    "mocksEnabled": true
+  },
+  "staging": {
+    "analytics": true,
+    "metrics": true,
+    "debugMode": true,
+    "hotReload": false,
+    "performanceMonitoring": true,
+    "errorReporting": true,
+    "cacheEnabled": true,
+    "compressionEnabled": true,
+    "bundleAnalyzer": false,
+    "sourceMaps": true,
+    "reactStrictMode": true,
+    "testingEnabled": true,
+    "mocksEnabled": false
+  },
+  "production": {
+    "analytics": true,
+    "metrics": true,
+    "debugMode": false,
+    "hotReload": false,
+    "performanceMonitoring": true,
+    "errorReporting": true,
+    "cacheEnabled": true,
+    "compressionEnabled": true,
+    "bundleAnalyzer": false,
+    "sourceMaps": false,
+    "reactStrictMode": false,
+    "testingEnabled": false,
+    "mocksEnabled": false
+  }
+}

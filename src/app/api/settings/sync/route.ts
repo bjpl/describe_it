@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 /**
  * Sync API keys from client settings
@@ -6,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest) {
   try {
-    const { apiKeys } = await request.json();
+    const { apiKeys } = safeParse(await request.text(), {});
     
     // For now, just return success
     // Cookie handling can be added once build is stable

@@ -6,6 +6,7 @@ import { performanceMonitor, getPerformanceSummary } from '@/lib/monitoring/perf
 import { logger } from '@/lib/logger';
 import { ErrorCategory, ErrorSeverity } from '@/lib/errorHandler';
 import {
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
   AlertTriangle,
   TrendingUp,
   Clock,
@@ -174,7 +175,7 @@ const ErrorDashboard: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       config,
     };
 
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([safeStringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

@@ -11,6 +11,7 @@ import {
 } from "../../types/api";
 import { vercelKvCache } from "./vercel-kv";
 import { apiKeyProvider } from "./keyProvider";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 class OpenAIService {
   private client: OpenAI | null = null;

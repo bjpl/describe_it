@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
+import jwt from 'jsonwebtoken';
 
 export interface AuthResult {
   authenticated: boolean;
@@ -151,48 +152,29 @@ export class SecurityAuthenticator {
     }
 
     try {
-      // In a real implementation, use a proper JWT library like 'jsonwebtoken'
-      // This is a simplified version for demonstration
-      const [header, payload, signature] = token.split('.');
-      if (!header || !payload || !signature) {
-        return {
-          authenticated: false,
-          reason: 'Malformed JWT token'
-        };
-      }
+      // Use the proper jsonwebtoken library for secure JWT verification
+      const decodedPayload = jwt.verify(token, this.jwtSecret) as any;
 
-      // Verify signature
-      const expectedSignature = createHmac('sha256', this.jwtSecret)
-        .update(`${header}.${payload}`)
-        .digest('base64url');
-
-      if (signature !== expectedSignature) {
-        return {
-          authenticated: false,
-          reason: 'Invalid JWT signature'
-        };
-      }
-
-      // Decode payload
-      const decodedPayload = JSON.parse(Buffer.from(payload, 'base64url').toString());
-
-      // Check expiration
-      if (decodedPayload.exp && Date.now() >= decodedPayload.exp * 1000) {
-        return {
-          authenticated: false,
-          reason: 'JWT token expired'
-        };
-      }
-
+      // Token is valid if we reach here (verify throws on invalid/expired tokens)
       return {
         authenticated: true,
         userId: decodedPayload.sub || decodedPayload.userId,
         permissions: decodedPayload.permissions || []
       };
     } catch (error) {
+      let reason = 'JWT token verification failed';
+      
+      if (error instanceof jwt.TokenExpiredError) {
+        reason = 'JWT token expired';
+      } else if (error instanceof jwt.JsonWebTokenError) {
+        reason = 'Invalid JWT token';
+      } else if (error instanceof jwt.NotBeforeError) {
+        reason = 'JWT token not yet valid';
+      }
+      
       return {
         authenticated: false,
-        reason: 'JWT token verification failed'
+        reason
       };
     }
   }

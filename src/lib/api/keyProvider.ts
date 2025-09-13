@@ -1,4 +1,8 @@
 import { settingsManager } from '../settings/settingsManager';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { securityLogger, createLogger } from "@/lib/logging/logger";
+
+const keyProviderLogger = createLogger('KeyProvider');
 
 /**
  * Supported API service types
@@ -63,38 +67,29 @@ export class ApiKeyProvider {
    * Initialize keys from all sources with enhanced error handling
    */
   private initializeKeys(): void {
-    console.log('[Vision Debug] Initializing API keys from all sources:', {
+    keyProviderLogger.debug('Initializing API keys from all sources', {
       step: 'key_init_start',
-      environment: typeof window === 'undefined' ? 'server' : 'client',
-      timestamp: new Date().toISOString()
+      environment: typeof window === 'undefined' ? 'server' : 'client'
     });
     
     let settings = null;
     try {
       // Try to get settings with timeout to prevent blocking
       settings = this.getSettingsWithTimeout();
-      console.log('[Vision Debug] Settings retrieved during initialization:', {
+      keyProviderLogger.debug('Settings retrieved during initialization', {
         step: 'settings_retrieved',
         hasSettings: !!settings,
         hasApiKeys: !!settings?.apiKeys,
-        hasOpenAIKey: !!settings?.apiKeys?.openai,
-        openaiKeyLength: settings?.apiKeys?.openai?.length || 0,
-        timestamp: new Date().toISOString()
+        hasOpenAIKey: !!settings?.apiKeys?.openai
       });
     } catch (error) {
-      console.warn('[Vision Debug] Failed to get settings during initialization:', {
-        step: 'settings_error',
-        error: error instanceof Error ? error.message : String(error),
-        timestamp: new Date().toISOString()
-      });
+      keyProviderLogger.warn('Failed to get settings during initialization', error);
     }
 
     try {
-      console.log('[Vision Debug] Resolving keys from all sources:', {
+      keyProviderLogger.debug('Resolving keys from all sources', {
         step: 'key_resolution_start',
-        settingsOpenAIKey: settings?.apiKeys?.openai?.substring(0, 10) + '...' || 'none',
-        settingsOpenAILength: settings?.apiKeys?.openai?.length || 0,
-        timestamp: new Date().toISOString()
+        hasSettingsOpenAIKey: !!settings?.apiKeys?.openai
       });
       
       this.cachedKeys = {
@@ -102,34 +97,30 @@ export class ApiKeyProvider {
         unsplash: this.resolveKey('unsplash', settings?.apiKeys?.unsplash || ''),
       };
       
-      console.log('[Vision Debug] Keys initialized successfully with comprehensive details:', {
+      securityLogger.info('Keys initialized successfully', {
         step: 'keys_initialized',
         openai: {
           hasKey: !!this.cachedKeys.openai,
-          keyLength: this.cachedKeys.openai?.length || 0,
-          keyPrefix: this.cachedKeys.openai ? this.cachedKeys.openai.substring(0, 6) + '...' : 'none',
           source: this.getKeySource('openai'),
           isValid: this.validateKey('openai', this.cachedKeys.openai),
           keyType: this.cachedKeys.openai?.startsWith('sk-proj-') ? 'project' : this.cachedKeys.openai?.startsWith('sk-') ? 'standard' : 'unknown'
         },
         unsplash: {
           hasKey: !!this.cachedKeys.unsplash,
-          keyLength: this.cachedKeys.unsplash?.length || 0,
           source: this.getKeySource('unsplash')
-        },
-        timestamp: new Date().toISOString()
+        }
       });
     } catch (error) {
-      console.error('[ApiKeyProvider] Critical error during key initialization:', error);
+      keyProviderLogger.error('Critical error during key initialization', error);
       // Fallback to environment-only keys
       try {
         this.cachedKeys = {
           openai: this.getEnvironmentKey('openai'),
           unsplash: this.getEnvironmentKey('unsplash'),
         };
-        console.log('[ApiKeyProvider] Fallback to environment-only keys completed');
+        keyProviderLogger.info('Fallback to environment-only keys completed');
       } catch (fallbackError) {
-        console.error('[ApiKeyProvider] Fallback initialization also failed:', fallbackError);
+        keyProviderLogger.error('Fallback initialization also failed', fallbackError);
         // Ultimate fallback to empty keys
         this.cachedKeys = {
           openai: '',
@@ -143,27 +134,25 @@ export class ApiKeyProvider {
    * Get settings with enhanced error handling and backup retrieval
    */
   private getSettingsWithTimeout(timeoutMs = 50): any {
-    console.log('[Vision Debug] Getting settings with comprehensive logging:', {
+    keyProviderLogger.debug('Getting settings with timeout', {
       step: 'get_settings_start',
       environment: typeof window === 'undefined' ? 'server' : 'client',
-      timeoutMs: timeoutMs,
-      timestamp: new Date().toISOString()
+      timeoutMs: timeoutMs
     });
     
     try {
       // Server-side check
       if (typeof window === 'undefined') {
-        console.log('[Vision Debug] Skipping settings retrieval on server-side:', {
+        keyProviderLogger.debug('Skipping settings retrieval on server-side', {
           step: 'server_side_skip',
-          environment: 'server',
-          timestamp: new Date().toISOString()
+          environment: 'server'
         });
         return null;
       }
       
       // Check if settingsManager is available
       if (!settingsManager) {
-        console.log('[ApiKeyProvider] SettingsManager not available, checking localStorage backup');
+        keyProviderLogger.debug('SettingsManager not available, checking localStorage backup');
         return this.getLocalStorageBackup();
       }
       
@@ -171,7 +160,7 @@ export class ApiKeyProvider {
       try {
         settings = settingsManager.getSettings();
       } catch (settingsError) {
-        console.warn('[ApiKeyProvider] Failed to get settings from settingsManager:', settingsError);
+        keyProviderLogger.warn('Failed to get settings from settingsManager', settingsError);
         return this.getLocalStorageBackup();
       }
       
@@ -191,7 +180,7 @@ export class ApiKeyProvider {
       
       return settings;
     } catch (error) {
-      console.warn('[ApiKeyProvider] Error getting settings with timeout:', error);
+      keyProviderLogger.warn('Error getting settings with timeout', error);
       return this.getLocalStorageBackup();
     }
   }
@@ -210,18 +199,17 @@ export class ApiKeyProvider {
         return null;
       }
       
-      const backupKeys = JSON.parse(apiKeysBackup);
+      const backupKeys = safeParse(apiKeysBackup);
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[ApiKeyProvider] Retrieved keys from localStorage backup:', {
+        keyProviderLogger.debug('Retrieved keys from localStorage backup', {
           hasOpenAI: !!backupKeys.openai,
-          hasUnsplash: !!backupKeys.unsplash,
-          openaiKeyLength: backupKeys.openai?.length || 0
+          hasUnsplash: !!backupKeys.unsplash
         });
       }
       
       return { apiKeys: backupKeys };
     } catch (error) {
-      console.warn('[ApiKeyProvider] Failed to parse localStorage backup:', error);
+      keyProviderLogger.warn('Failed to parse localStorage backup', error);
       return null;
     }
   }
@@ -233,7 +221,7 @@ export class ApiKeyProvider {
     try {
       // Only setup listener in browser environment
       if (typeof window === 'undefined' || !settingsManager) {
-        console.log('[ApiKeyProvider] Skipping settings listener setup in server environment');
+        keyProviderLogger.debug('Skipping settings listener setup in server environment');
         return;
       }
       
@@ -254,7 +242,7 @@ export class ApiKeyProvider {
         }
       });
     } catch (error) {
-      console.warn('[ApiKeyProvider] Failed to setup settings listener:', error);
+      keyProviderLogger.warn('Failed to setup settings listener', error);
     }
   }
 
@@ -277,13 +265,13 @@ export class ApiKeyProvider {
   private getEnvironmentKey(service: ServiceType): string {
     // Check if we're in a server environment
     if (typeof process === 'undefined' || !process.env) {
-      console.log('[ApiKeyProvider] Environment variables not available (client-side or unsupported runtime)');
+      keyProviderLogger.debug('Environment variables not available (client-side or unsupported runtime)');
       return '';
     }
 
     const envKeys = ENV_KEY_MAP[service];
     if (!envKeys || envKeys.length === 0) {
-      console.warn(`[ApiKeyProvider] No environment key mapping found for service: ${service}`);
+      keyProviderLogger.warn(`No environment key mapping found for service: ${service}`);
       return '';
     }
 
@@ -293,20 +281,19 @@ export class ApiKeyProvider {
         if (value && typeof value === 'string' && value.trim()) {
           const trimmedValue = value.trim();
           if (process.env.NODE_ENV !== 'production') {
-            console.log(`[ApiKeyProvider] Found environment key for ${service}:`, {
+            securityLogger.debug(`Found environment key for ${service}`, {
               envKey,
-              keyLength: trimmedValue.length,
-              keyPrefix: 'sk-***' // Never log actual key prefix
+              hasKey: true
             });
           }
           return trimmedValue;
         }
       } catch (error) {
-        console.warn(`[ApiKeyProvider] Error reading environment variable ${envKey}:`, error);
+        keyProviderLogger.warn(`Error reading environment variable ${envKey}`, error);
       }
     }
     
-    console.log(`[ApiKeyProvider] No valid environment keys found for ${service}`, {
+    keyProviderLogger.debug(`No valid environment keys found for ${service}`, {
       checkedKeys: envKeys,
       processEnvAvailable: !!process.env
     });
@@ -318,7 +305,7 @@ export class ApiKeyProvider {
    */
   public validateKey(service: ServiceType, key: string): boolean {
     if (!key || typeof key !== 'string') {
-      console.warn(`[ApiKeyProvider] Key validation failed for ${service}: missing or invalid type`, {
+      keyProviderLogger.warn(`Key validation failed for ${service}: missing or invalid type`, {
         hasKey: !!key,
         type: typeof key
       });
@@ -339,9 +326,8 @@ export class ApiKeyProvider {
     // Basic format validation
     if (!pattern.test(key)) {
       if (process.env.NODE_ENV !== 'production') {
-        console.warn(`[ApiKeyProvider] Key validation failed for ${service}: pattern mismatch`, {
-          keyLength: key.length,
-          keyPrefix: 'sk-***' // Never log actual key prefix
+        keyProviderLogger.warn(`Key validation failed for ${service}: pattern mismatch`, {
+          hasKey: !!key
         });
       }
       return false;
@@ -354,13 +340,13 @@ export class ApiKeyProvider {
 
     const lowerKey = key.toLowerCase();
     if (placeholders.some(placeholder => lowerKey.includes(placeholder))) {
-      console.warn(`[ApiKeyProvider] Key validation failed for ${service}: placeholder detected`);
+      keyProviderLogger.warn(`Key validation failed for ${service}: placeholder detected`);
       return false;
     }
 
     // Additional security checks
     if (/[<>"'`\\]/.test(key)) {
-      console.warn(`[ApiKeyProvider] Key validation failed for ${service}: suspicious characters`);
+      securityLogger.warn(`Key validation failed for ${service}: suspicious characters detected`);
       return false;
     }
 
@@ -374,7 +360,7 @@ export class ApiKeyProvider {
     try {
       // Basic type check
       if (!key || typeof key !== 'string') {
-        console.warn('[ApiKeyProvider] OpenAI key validation failed: invalid type', {
+        keyProviderLogger.warn('OpenAI key validation failed: invalid type', {
           hasKey: !!key,
           type: typeof key
         });
@@ -383,16 +369,14 @@ export class ApiKeyProvider {
 
       const trimmedKey = key.trim();
       if (!trimmedKey) {
-        console.warn('[ApiKeyProvider] OpenAI key validation failed: empty after trim');
+        keyProviderLogger.warn('OpenAI key validation failed: empty after trim');
         return false;
       }
 
       // Check if key starts with correct prefix
       if (!trimmedKey.startsWith('sk-')) {
-        console.warn('[ApiKeyProvider] OpenAI key validation failed: invalid prefix', {
-          actualPrefix: trimmedKey.substring(0, 5),
-          expectedPrefix: 'sk-',
-          keyLength: trimmedKey.length
+        keyProviderLogger.warn('OpenAI key validation failed: invalid prefix', {
+          expectedPrefix: 'sk-'
         });
         return false;
       }
@@ -402,8 +386,7 @@ export class ApiKeyProvider {
       const minLength = 20;
       
       if (trimmedKey.length < minLength) {
-        console.warn('[ApiKeyProvider] OpenAI key validation failed: too short', {
-          keyLength: trimmedKey.length,
+        keyProviderLogger.warn('OpenAI key validation failed: too short', {
           expectedMinLength: minLength
         });
         return false;
@@ -428,9 +411,8 @@ export class ApiKeyProvider {
       
       if (foundPlaceholder) {
         if (process.env.NODE_ENV !== 'production') {
-          console.warn('[ApiKeyProvider] OpenAI key validation failed: placeholder detected', {
-            foundPlaceholder,
-            keyPrefix: 'sk-***' // Never log actual key prefix
+          keyProviderLogger.warn('OpenAI key validation failed: placeholder detected', {
+            foundPlaceholder
           });
         }
         return false;
@@ -439,7 +421,7 @@ export class ApiKeyProvider {
       // Additional character validation for security
       const suspiciousChars = /[<>"'`\\]/;
       if (suspiciousChars.test(trimmedKey)) {
-        console.warn('[ApiKeyProvider] OpenAI key validation failed: suspicious characters detected');
+        securityLogger.warn('OpenAI key validation failed: suspicious characters detected');
         return false;
       }
 
@@ -447,17 +429,15 @@ export class ApiKeyProvider {
       const keyType = trimmedKey.startsWith('sk-proj-') ? 'project' : 'standard';
       
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[ApiKeyProvider] OpenAI key validation passed', {
+        securityLogger.debug('OpenAI key validation passed', {
           keyType,
-          keyLength: trimmedKey.length,
-          keyPrefix: keyType === 'project' ? 'sk-proj-***' : 'sk-***', // Never log actual key prefix
           isModernKey: trimmedKey.length > 51
         });
       }
 
       return true;
     } catch (error) {
-      console.error('[ApiKeyProvider] Error during OpenAI key validation:', error);
+      keyProviderLogger.error('Error during OpenAI key validation', error);
       return false;
     }
   }
@@ -477,12 +457,10 @@ export class ApiKeyProvider {
    * Get complete configuration for a service with enhanced validation
    */
   public getServiceConfig(service: ServiceType): ApiKeyConfig {
-    console.log(`[Vision Debug] Getting service config for ${service}:`, {
+    keyProviderLogger.debug(`Getting service config for ${service}`, {
       step: 'get_service_config_start',
       service: service,
-      cachedKeyExists: !!this.cachedKeys[service],
-      cachedKeyLength: this.cachedKeys[service]?.length || 0,
-      timestamp: new Date().toISOString()
+      cachedKeyExists: !!this.cachedKeys[service]
     });
     
     let apiKey = '';
@@ -491,74 +469,57 @@ export class ApiKeyProvider {
     
     try {
       apiKey = this.getKey(service);
-      console.log(`[Vision Debug] Retrieved key for ${service}:`, {
+      keyProviderLogger.debug(`Retrieved key for ${service}`, {
         step: 'key_retrieved',
         hasApiKey: !!apiKey,
-        keyLength: apiKey?.length || 0,
-        keyPrefix: apiKey ? apiKey.substring(0, 6) + '...' : 'none',
         keyType: service === 'openai' && apiKey ? 
           (apiKey.startsWith('sk-proj-') ? 'project' : 
-           apiKey.startsWith('sk-') ? 'standard' : 'unknown') : 'n/a',
-        timestamp: new Date().toISOString()
+           apiKey.startsWith('sk-') ? 'standard' : 'unknown') : 'n/a'
       });
       
       source = this.getKeySource(service);
-      console.log(`[Vision Debug] Key source determined for ${service}:`, {
+      keyProviderLogger.debug(`Key source determined for ${service}`, {
         step: 'source_determined',
-        source: source,
-        timestamp: new Date().toISOString()
+        source: source
       });
       
       if (apiKey) {
         try {
           isValid = this.validateKey(service, apiKey);
-          console.log(`[Vision Debug] Key validation result for ${service}:`, {
+          keyProviderLogger.debug(`Key validation result for ${service}`, {
             step: 'key_validated',
-            isValid: isValid,
-            keyLength: apiKey.length,
-            validationPattern: KEY_PATTERNS[service]?.source,
-            timestamp: new Date().toISOString()
+            isValid: isValid
           });
         } catch (validationError) {
-          console.error(`[Vision Debug] Key validation error for ${service}:`, {
-            step: 'validation_error',
-            error: validationError instanceof Error ? validationError.message : String(validationError),
-            keyLength: apiKey?.length,
-            timestamp: new Date().toISOString()
+          keyProviderLogger.error(`Key validation error for ${service}`, validationError, {
+            step: 'validation_error'
           });
           isValid = false;
         }
       } else {
-        console.warn(`[Vision Debug] No API key available for ${service}:`, {
+        keyProviderLogger.warn(`No API key available for ${service}`, {
           step: 'no_key_available',
-          cachedKeyExists: !!this.cachedKeys[service],
-          timestamp: new Date().toISOString()
+          cachedKeyExists: !!this.cachedKeys[service]
         });
       }
     } catch (configError) {
-      console.error(`[Vision Debug] Critical error getting service config for ${service}:`, {
-        step: 'config_error',
-        error: configError instanceof Error ? configError.message : String(configError),
-        stack: configError instanceof Error ? configError.stack : undefined,
-        timestamp: new Date().toISOString()
+      keyProviderLogger.error(`Critical error getting service config for ${service}`, configError, {
+        step: 'config_error'
       });
     }
     
     const isDemo = !isValid || !apiKey;
 
-    console.log(`[Vision Debug] Final service config for ${service}:`, {
+    securityLogger.debug(`Final service config for ${service}`, {
       step: 'final_config',
       hasApiKey: !!apiKey,
-      keyLength: apiKey?.length || 0,
-      keyPrefix: apiKey ? apiKey.substring(0, 6) + '...' : 'none',
       isValid: isValid,
       source: source,
       isDemo: isDemo,
       keyType: service === 'openai' && apiKey ? 
         (apiKey.startsWith('sk-proj-') ? 'project' : 
          apiKey.startsWith('sk-') ? 'standard' : 'unknown') : 'n/a',
-      environment: typeof window === 'undefined' ? 'server' : 'client',
-      timestamp: new Date().toISOString()
+      environment: typeof window === 'undefined' ? 'server' : 'client'
     });
 
     return {
@@ -631,7 +592,7 @@ export class ApiKeyProvider {
       try {
         listener(keys);
       } catch (error) {
-        console.error('[ApiKeyProvider] Listener error:', error);
+        keyProviderLogger.error('Listener error', error);
       }
     });
   }

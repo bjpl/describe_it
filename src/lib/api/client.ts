@@ -6,6 +6,7 @@
  */
 
 import {
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
   ApiResponse,
   ErrorResponse,
   ValidationErrorResponse,

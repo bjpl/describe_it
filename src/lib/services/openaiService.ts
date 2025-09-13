@@ -2,6 +2,10 @@ import OpenAI from "openai";
 import { APIError } from "../../types/api";
 import { withRetry, RetryResult, RetryConfig } from "../utils/error-retry";
 import { getEnvironment } from "../../config/env";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { apiLogger, createLogger } from "@/lib/logging/logger";
+
+const serviceLogger = createLogger('OpenAIService');
 
 interface StreamingOptions {
   onChunk?: (chunk: string) => void;
@@ -55,7 +59,7 @@ export class OpenAIService {
         });
       }
     } catch (error) {
-      console.warn("OpenAI client initialization failed:", error);
+      serviceLogger.warn('OpenAI client initialization failed', error);
       this.client = null;
     }
   }
@@ -138,7 +142,7 @@ export class OpenAIService {
         return description;
       }
     } catch (error) {
-      console.warn("OpenAI description generation failed:", error);
+      serviceLogger.warn('OpenAI description generation failed', error);
     }
 
     return this.getDemoDescription(params);
@@ -259,14 +263,14 @@ export class OpenAIService {
       if (result.success && result.data) {
         const content =
           result.data.choices[0]?.message?.content || '{"questions":[]}';
-        const parsed = JSON.parse(content);
+        const parsed = safeParse(content);
         const qaData = parsed.questions || [];
 
         this.setCache(cacheKey, qaData);
         return qaData;
       }
     } catch (error) {
-      console.warn("OpenAI Q&A generation failed:", error);
+      serviceLogger.warn('OpenAI Q&A generation failed', error);
     }
 
     return this.getDemoQA(description, language, count);
@@ -313,7 +317,7 @@ export class OpenAIService {
 
       if (result.success && result.data) {
         const content = result.data.choices[0]?.message?.content || "{}";
-        const phrases = JSON.parse(content);
+        const phrases = safeParse(content);
 
         const defaultPhrases = {
           objetos: [],
@@ -329,7 +333,7 @@ export class OpenAIService {
         return processedResult;
       }
     } catch (error) {
-      console.warn("OpenAI phrase extraction failed:", error);
+      serviceLogger.warn('OpenAI phrase extraction failed', error);
     }
 
     return this.getDemoPhrases(language);
@@ -381,7 +385,7 @@ export class OpenAIService {
         return translation;
       }
     } catch (error) {
-      console.warn("OpenAI translation failed:", error);
+      serviceLogger.warn('OpenAI translation failed', error);
     }
 
     return `${params.text} [translation not available]`;

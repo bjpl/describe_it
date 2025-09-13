@@ -5,6 +5,10 @@
 
 import { logger, type ErrorContext } from './logger';
 import { metrics } from './metrics';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { createLogger } from '@/lib/logging/logger';
+
+const errorTrackingLogger = createLogger('ErrorTracking');
 
 export interface ErrorReport {
   id: string;
@@ -148,7 +152,7 @@ export class ErrorTracker {
    */
   registerIntegration(name: string, handler: (error: ErrorReport) => Promise<void>) {
     this.integrations.set(name, handler);
-    console.log(`Error tracking integration '${name}' registered`);
+    errorTrackingLogger.info(`Error tracking integration '${name}' registered`);
   }
 
   /**
@@ -318,12 +322,12 @@ export class ErrorTracker {
     // Console integration for development
     if (process.env.NODE_ENV === 'development') {
       this.registerIntegration('console', async (error: ErrorReport) => {
-        console.error(`🚨 Error Tracked [${error.id}]:`, {
+        errorTrackingLogger.error(`Error tracked [${error.id}]`, {
           endpoint: error.endpoint,
-          error: error.error.message,
+          errorMessage: error.error.message,
           category: error.error.category,
           severity: error.error.severity,
-          user: error.userId
+          hasUserId: !!error.userId
         });
       });
     }
@@ -338,7 +342,7 @@ export class ErrorTracker {
             body: JSON.stringify(error)
           });
         } catch (err) {
-          console.error('Failed to send error to webhook:', err);
+          errorTrackingLogger.error('Failed to send error to webhook', err);
         }
       });
     }
@@ -349,9 +353,9 @@ export class ErrorTracker {
         try {
           // This would integrate with @sentry/nextjs
           // Sentry.captureException(error);
-          console.log('Sentry integration would capture:', error.id);
+          errorTrackingLogger.debug('Sentry integration would capture error', { errorId: error.id });
         } catch (err) {
-          console.error('Failed to send error to Sentry:', err);
+          errorTrackingLogger.error('Failed to send error to Sentry', err);
         }
       });
     }
@@ -378,7 +382,7 @@ export class ErrorTracker {
       try {
         await handler(error);
       } catch (err) {
-        console.error(`Error in integration '${name}':`, err);
+        errorTrackingLogger.error(`Error in integration '${name}'`, err);
       }
     });
 

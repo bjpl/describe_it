@@ -1,5 +1,6 @@
 import { useState, useCallback, useRef } from "react";
 import { QuestionAnswerPair, QARequest } from "@/types";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 // Enhanced error types for better error handling
 interface QAError {

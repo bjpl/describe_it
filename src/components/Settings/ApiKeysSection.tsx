@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { settingsManager } from '@/lib/settings/settingsManager';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface ApiKeyConfig {
   id: string;
@@ -88,7 +89,7 @@ export function ApiKeysSection() {
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ apiKey })
+        body: safeStringify({ apiKey })
       });
 
       const result = await response.json();
@@ -165,7 +166,7 @@ export function ApiKeysSection() {
       try {
         const authUser = localStorage.getItem('auth_user');
         if (authUser) {
-          const user = JSON.parse(authUser);
+          const user = safeParse(authUser);
           if (user?.id) {
             console.log('[ApiKeysSection] Attempting cloud save for user:', user.email);
             
@@ -176,7 +177,7 @@ export function ApiKeysSection() {
             const cloudPromise = fetch('/api/settings/apikeys', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
+              body: safeStringify({
                 userId: user.id,
                 settings: { apiKeys: settings.apiKeys }
               })

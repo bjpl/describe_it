@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Describe-It Directory Guide - Complete Project Architecture</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #2563eb;
+            --secondary: #7c3aed;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --dark: #1f2937;
+            --light: #f9fafb;
+            --border: #e5e7eb;
+            --code-bg: #f3f4f6;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--dark);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+        
+        .subtitle {
+            font-size: 1.2em;
+            opacity: 0.95;
+        }
+        
+        .search-container {
+            margin: 20px 0;
+        }
+        
+        #search {
+            width: 100%;
+            max-width: 500px;
+            padding: 12px 20px;
+            border-radius: 30px;
+            border: none;
+            font-size: 16px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        nav {
+            background: var(--light);
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav-btn {
+            padding: 8px 16px;
+            background: white;
+            border: 2px solid var(--primary);
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .nav-btn:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .nav-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        main {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .folder-group {
+            background: var(--light);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .folder-item {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s;
+        }
+        
+        .folder-item:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .folder-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+        }
+        
+        .folder-icon {
+            font-size: 1.5em;
+        }
+        
+        .folder-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--dark);
+            font-family: 'Courier New', monospace;
+        }
+        
+        .folder-purpose {
+            color: #6b7280;
+            margin-bottom: 10px;
+        }
+        
+        .folder-details {
+            display: none;
+            padding-top: 15px;
+            border-top: 1px solid var(--border);
+            margin-top: 15px;
+        }
+        
+        .folder-details.open {
+            display: block;
+        }
+        
+        .detail-section {
+            margin-bottom: 15px;
+        }
+        
+        .detail-title {
+            font-weight: bold;
+            color: var(--secondary);
+            margin-bottom: 5px;
+        }
+        
+        .detail-content {
+            padding-left: 20px;
+        }
+        
+        .code-block {
+            background: var(--code-bg);
+            border-left: 4px solid var(--primary);
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+        
+        .insight-box {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border-left: 4px solid var(--warning);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .insight-box::before {
+            content: "💡 ";
+            font-size: 1.2em;
+        }
+        
+        .warning-box {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            border-left: 4px solid var(--danger);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .warning-box::before {
+            content: "⚠️ ";
+            font-size: 1.2em;
+        }
+        
+        .best-practice {
+            background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+            border-left: 4px solid var(--success);
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 4px;
+        }
+        
+        .best-practice::before {
+            content: "✅ ";
+            font-size: 1.2em;
+        }
+        
+        .tree-view {
+            background: var(--code-bg);
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        
+        footer {
+            background: var(--dark);
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8em;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        
+        .badge-ai { background: var(--secondary); color: white; }
+        .badge-config { background: var(--warning); color: white; }
+        .badge-code { background: var(--success); color: white; }
+        .badge-infra { background: var(--danger); color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📁 Describe-It Directory Guide</h1>
+            <p class="subtitle">Complete Project Architecture & Learning Resource</p>
+            <div class="search-container">
+                <input type="text" id="search" placeholder="🔍 Search for a folder or concept..." onkeyup="searchFolders()">
+            </div>
+        </header>
+        
+        <nav>
+            <button class="nav-btn active" onclick="showSection('overview')">📊 Overview</button>
+            <button class="nav-btn" onclick="showSection('root')">🏠 Root Files</button>
+            <button class="nav-btn" onclick="showSection('source')">💻 Source Code</button>
+            <button class="nav-btn" onclick="showSection('config')">⚙️ Configuration</button>
+            <button class="nav-btn" onclick="showSection('ai')">🤖 AI Systems</button>
+            <button class="nav-btn" onclick="showSection('infra')">🏗️ Infrastructure</button>
+            <button class="nav-btn" onclick="showSection('testing')">🧪 Testing</button>
+            <button class="nav-btn" onclick="showSection('docs')">📚 Documentation</button>
+            <button class="nav-btn" onclick="showSection('build')">📦 Build & Deploy</button>
+        </nav>
+        
+        <main>
+            <!-- Overview Section -->
+            <section id="overview" class="section active">
+                <h2>📊 Architecture Overview</h2>
+                
+                <div class="insight-box">
+                    <strong>Learning Objective:</strong> This project implements a modern, AI-enhanced Next.js application with enterprise-grade architecture patterns. It showcases microservices design, event-driven architecture, and cutting-edge AI agent orchestration.
+                </div>
+                
+                <div class="folder-group">
+                    <h3>Directory Structure</h3>
+                    <div class="tree-view">describe_it/
+├── 🤖 AI & Automation
+│   ├── .claude/          # Claude AI configurations
+│   ├── .claude-flow/     # Flow orchestration
+│   ├── .hive-mind/       # Collective intelligence
+│   └── .swarm/           # Swarm coordination
+│
+├── 💻 Source Code
+│   ├── src/              # Application source
+│   ├── public/           # Static assets
+│   └── tests/            # Test suites
+│
+├── ⚙️ Configuration
+│   ├── config/           # Centralized configs
+│   ├── .env files        # Environment variables
+│   └── *.config.js       # Tool configurations
+│
+├── 🏗️ Infrastructure
+│   ├── k8s/              # Kubernetes
+│   ├── terraform/        # Infrastructure as Code
+│   ├── monitoring/       # Observability
+│   └── supabase/         # Backend services
+│
+├── 📦 Build & Deploy
+│   ├── .next/            # Next.js build
+│   ├── .vercel/          # Vercel deployment
+│   └── node_modules/     # Dependencies
+│
+└── 📚 Documentation
+    ├── docs/             # Project documentation
+    └── README.md         # Main readme</div>
+                </div>
+                
+                <div class="best-practice">
+                    <strong>Best Practice:</strong> This structure follows Domain-Driven Design (DDD) principles, separating concerns by functionality rather than file type. This makes the codebase more maintainable and scalable.
+                </div>
+            </section>
+            
+            <!-- Root Files Section -->
+            <section id="root" class="section">
+                <h2>🏠 Root Configuration Files</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">📄</span>
+                            <span class="folder-name">package.json</span>
+                            <span class="badge badge-config">NPM</span>
+                        </div>
+                        <div class="folder-purpose">Project dependencies and scripts configuration</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Defines the project's metadata, dependencies, and executable scripts. This is the heart of any Node.js project.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">📚 Learning Insight:</div>
+                                <div class="detail-content">
+                                    The package.json implements the "Convention over Configuration" principle. Scripts like "dev", "build", and "test" are industry standards that developers expect.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">⚙️ Key Contents:</div>
+                                <div class="code-block">{
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "test": "vitest"
+  },
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  }
+}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">⚙️</span>
+                            <span class="folder-name">tsconfig.json</span>
+                            <span class="badge badge-config">TypeScript</span>
+                        </div>
+                        <div class="folder-purpose">TypeScript compiler configuration</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Configures TypeScript compilation rules, path mappings, and type checking strictness. Enables type safety across the entire codebase.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🏗️ Architecture Pattern:</div>
+                                <div class="detail-content">
+                                    Uses path aliases (@/components, @/lib) to avoid relative import hell and make refactoring easier.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Source Code Section -->
+            <section id="source" class="section">
+                <h2>💻 Source Code Structure</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">📁</span>
+                            <span class="folder-name">src/</span>
+                            <span class="badge badge-code">Core</span>
+                        </div>
+                        <div class="folder-purpose">Main application source code</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Contains all application source code following Next.js 13+ App Router structure. Implements a layered architecture with clear separation of concerns.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">📂 Subdirectories:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>app/</strong> - Next.js App Router pages and API routes</li>
+                                        <li><strong>components/</strong> - Reusable React components</li>
+                                        <li><strong>lib/</strong> - Business logic and utilities</li>
+                                        <li><strong>hooks/</strong> - Custom React hooks</li>
+                                        <li><strong>types/</strong> - TypeScript type definitions</li>
+                                        <li><strong>styles/</strong> - Global styles and themes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="insight-box">
+                                <strong>Learning Insight:</strong> The App Router represents a paradigm shift in React applications, moving from client-side routing to server-first architecture with React Server Components.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">🎨</span>
+                            <span class="folder-name">src/components/</span>
+                            <span class="badge badge-code">UI</span>
+                        </div>
+                        <div class="folder-purpose">Reusable React components</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🏗️ Architecture Pattern:</div>
+                                <div class="detail-content">
+                                    Implements Atomic Design methodology:
+                                    <ul>
+                                        <li><strong>Atoms</strong> - Basic building blocks (Button, Input)</li>
+                                        <li><strong>Molecules</strong> - Simple component groups (FormField)</li>
+                                        <li><strong>Organisms</strong> - Complex components (Header, Dashboard)</li>
+                                        <li><strong>Templates</strong> - Page layouts</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="best-practice">
+                                <strong>Best Practice:</strong> Each component has its own folder with the component file, styles, tests, and stories colocated for better maintainability.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- AI Systems Section -->
+            <section id="ai" class="section">
+                <h2>🤖 AI & Automation Systems</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">🧠</span>
+                            <span class="folder-name">.claude/</span>
+                            <span class="badge badge-ai">AI</span>
+                        </div>
+                        <div class="folder-purpose">Claude AI agent configurations</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Contains configurations for 12+ specialized AI agents that assist with development tasks, from code review to architecture design.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🤖 Agent Types:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>code-analyzer</strong> - Static code analysis</li>
+                                        <li><strong>security-manager</strong> - Security vulnerability detection</li>
+                                        <li><strong>performance-benchmarker</strong> - Performance optimization</li>
+                                        <li><strong>test-orchestrator</strong> - Test generation and execution</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="insight-box">
+                                <strong>Revolutionary Concept:</strong> This represents the future of development - AI agents working alongside humans, each specialized in different aspects of software engineering.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">🐝</span>
+                            <span class="folder-name">.swarm/</span>
+                            <span class="badge badge-ai">Orchestration</span>
+                        </div>
+                        <div class="folder-purpose">Multi-agent swarm coordination</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Implements swarm intelligence where multiple AI agents work together on complex tasks, coordinating through message passing and shared memory.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🏗️ Architecture Pattern:</div>
+                                <div class="detail-content">
+                                    Uses the Actor Model for concurrent computation, where each agent is an independent actor that can:
+                                    <ul>
+                                        <li>Send messages to other agents</li>
+                                        <li>Create new agents</li>
+                                        <li>Determine behavior for next message</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Infrastructure Section -->
+            <section id="infra" class="section">
+                <h2>🏗️ Infrastructure & DevOps</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">☸️</span>
+                            <span class="folder-name">k8s/</span>
+                            <span class="badge badge-infra">Kubernetes</span>
+                        </div>
+                        <div class="folder-purpose">Kubernetes deployment configurations</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Defines Kubernetes resources for container orchestration, enabling horizontal scaling, self-healing, and zero-downtime deployments.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">📄 Key Files:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>deployment.yaml</strong> - Application deployment specs</li>
+                                        <li><strong>service.yaml</strong> - Service discovery and load balancing</li>
+                                        <li><strong>ingress.yaml</strong> - External traffic routing</li>
+                                        <li><strong>configmap.yaml</strong> - Configuration management</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="best-practice">
+                                <strong>Best Practice:</strong> Uses GitOps principles - all infrastructure changes are version controlled and deployed through Git commits.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">🔧</span>
+                            <span class="folder-name">terraform/</span>
+                            <span class="badge badge-infra">IaC</span>
+                        </div>
+                        <div class="folder-purpose">Infrastructure as Code definitions</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Declaratively defines cloud infrastructure, enabling reproducible, version-controlled infrastructure deployments across multiple environments.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">💡 Learning Insight:</div>
+                                <div class="detail-content">
+                                    Infrastructure as Code (IaC) solves the "works on my machine" problem at the infrastructure level. Every server, database, and network configuration is defined in code.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Testing Section -->
+            <section id="testing" class="section">
+                <h2>🧪 Testing & Quality Assurance</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">🧪</span>
+                            <span class="folder-name">tests/</span>
+                            <span class="badge badge-code">Testing</span>
+                        </div>
+                        <div class="folder-purpose">Test suites and specifications</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Testing Strategy:</div>
+                                <div class="detail-content">
+                                    Implements the Testing Pyramid:
+                                    <ul>
+                                        <li><strong>Unit Tests</strong> - Fast, isolated component tests</li>
+                                        <li><strong>Integration Tests</strong> - API and service interaction tests</li>
+                                        <li><strong>E2E Tests</strong> - Full user journey tests with Playwright</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="insight-box">
+                                <strong>Industry Standard:</strong> Aims for 80% code coverage with a focus on critical business logic. Uses snapshot testing for UI consistency.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">📊</span>
+                            <span class="folder-name">coverage/</span>
+                            <span class="badge badge-code">Metrics</span>
+                        </div>
+                        <div class="folder-purpose">Code coverage reports</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Contains detailed HTML reports showing which lines of code are covered by tests, helping identify untested code paths.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Documentation Section -->
+            <section id="docs" class="section">
+                <h2>📚 Documentation</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">📚</span>
+                            <span class="folder-name">docs/</span>
+                        </div>
+                        <div class="folder-purpose">Project documentation hub</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">📂 Structure:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>reports/</strong> - Technical analysis and audits</li>
+                                        <li><strong>guides/</strong> - How-to and development guides</li>
+                                        <li><strong>security/</strong> - Security documentation</li>
+                                        <li><strong>archive/</strong> - Historical documentation</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="best-practice">
+                                <strong>Best Practice:</strong> Documentation lives close to code, making it easier to keep synchronized. Uses Markdown for version control friendliness.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Build & Deploy Section -->
+            <section id="build" class="section">
+                <h2>📦 Build & Deployment</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">⚡</span>
+                            <span class="folder-name">.next/</span>
+                            <span class="badge badge-code">Build</span>
+                        </div>
+                        <div class="folder-purpose">Next.js build output</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Contains the optimized production build including:
+                                    <ul>
+                                        <li>Server-side rendered pages</li>
+                                        <li>Client-side JavaScript bundles</li>
+                                        <li>Optimized images and assets</li>
+                                        <li>Route manifests</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="warning-box">
+                                <strong>Important:</strong> This folder should never be committed to Git. It's auto-generated and can be very large.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">📦</span>
+                            <span class="folder-name">node_modules/</span>
+                        </div>
+                        <div class="folder-purpose">NPM package dependencies</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">💡 Learning Insight:</div>
+                                <div class="detail-content">
+                                    Modern JavaScript's biggest strength and weakness - the vast ecosystem. This project uses 1000+ packages, showcasing both the power of code reuse and the complexity of dependency management.
+                                </div>
+                            </div>
+                            <div class="warning-box">
+                                <strong>Never commit this folder!</strong> Use package-lock.json to ensure reproducible installs.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+        
+        <footer>
+            <p>📚 Describe-It Directory Guide | Generated by Flow Nexus Documentation Swarm</p>
+            <p>Last Updated: September 2025 | Version 1.0.0</p>
+        </footer>
+    </div>
+    
+    <script>
+        function toggleDetails(header) {
+            const details = header.parentElement.querySelector('.folder-details');
+            details.classList.toggle('open');
+        }
+        
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Update nav buttons
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+        
+        function searchFolders() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const folderItems = document.querySelectorAll('.folder-item');
+            
+            folderItems.forEach(item => {
+                const text = item.textContent.toLowerCase();
+                if (text.includes(searchTerm)) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+            
+            // Show all sections when searching
+            if (searchTerm) {
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.add('active');
+                });
+            }
+        }
+    </script>
+</body>
+</html>

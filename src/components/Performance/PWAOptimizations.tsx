@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Wifi, WifiOff, Download, Check, X } from "lucide-react";
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface PWAOptimizationsProps {
   enabled?: boolean;

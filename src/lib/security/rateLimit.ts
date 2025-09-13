@@ -116,7 +116,7 @@ class RedisRateLimitStore implements RateLimitStore {
   async get(key: string): Promise<{ count: number; resetTime: number } | null> {
     try {
       const data = await this.client.get(key);
-      return data ? JSON.parse(data) : null;
+      return data ? safeParse(data) : null;
     } catch (error) {
       console.error('Redis rate limit get error:', error);
       return null;
@@ -125,7 +125,7 @@ class RedisRateLimitStore implements RateLimitStore {
 
   async set(key: string, value: { count: number; resetTime: number }, ttl: number): Promise<void> {
     try {
-      await this.client.setex(key, Math.ceil(ttl / 1000), JSON.stringify(value));
+      await this.client.setex(key, Math.ceil(ttl / 1000), safeStringify(value));
     } catch (error) {
       console.error('Redis rate limit set error:', error);
     }

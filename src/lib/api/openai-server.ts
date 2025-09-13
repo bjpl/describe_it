@@ -5,6 +5,7 @@
 
 import OpenAI from "openai";
 import { apiKeyProvider } from "./keyProvider";
+import { apiLogger, securityLogger, performanceLogger } from "@/lib/logging/logger";
 import type { 
   DescriptionStyle, 
   DescriptionRequest, 
@@ -31,24 +32,21 @@ function getConfigHash(apiKey: string): string {
 export function getServerOpenAIClient(userApiKey?: string): OpenAI | null {
   // This function should only run on the server
   if (typeof window !== 'undefined') {
-    console.error('[OpenAI Server] This function can only be called server-side');
+    apiLogger.error('This function can only be called server-side');
     throw new Error('[OpenAI Server] This function can only be called server-side');
   }
 
   let apiKey: string | undefined;
   
   // First, try to use the user-provided API key
-  console.log('[OpenAI Server] Checking for user API key:', {
+  securityLogger.debug('Checking for user API key', {
     hasUserKey: !!userApiKey,
-    userKeyLength: userApiKey?.length,
     startsWithSk: userApiKey?.startsWith('sk-')
   });
   
   if (userApiKey && userApiKey.startsWith('sk-')) {
     apiKey = userApiKey;
-    console.log('[OpenAI Server] Using user-provided API key', {
-      keyLength: apiKey.length,
-      keyPrefix: apiKey.substring(0, 6) + '...',
+    securityLogger.info('Using user-provided API key', {
       source: 'user-header'
     });
   } else {
@@ -57,21 +55,19 @@ export function getServerOpenAIClient(userApiKey?: string): OpenAI | null {
     try {
       config = apiKeyProvider.getServiceConfig('openai');
     } catch (configError) {
-      console.error('[OpenAI Server] Failed to get service config:', configError);
+      apiLogger.error('Failed to get service config', configError);
     }
     
     if (config && config.apiKey && config.isValid) {
       apiKey = config.apiKey;
-      console.log('[OpenAI Server] Using server config API key', {
-        keyLength: apiKey.length,
-        keyPrefix: apiKey.substring(0, 6) + '...',
+      securityLogger.info('Using server config API key', {
         source: config.source
       });
     }
   }
   
   if (!apiKey) {
-    console.warn('[OpenAI Server] No valid API key available from user or server');
+    apiLogger.warn('No valid API key available from user or server');
     return null;
   }
 
@@ -80,9 +76,7 @@ export function getServerOpenAIClient(userApiKey?: string): OpenAI | null {
     
     // Return cached client if configuration hasn't changed
     if (openAIClientInstance && lastConfigHash === currentConfigHash) {
-      console.log('[OpenAI Server] Reusing cached client instance', {
-        keyLength: apiKey.length,
-        keyPrefix: apiKey.substring(0, 6) + '...',
+      apiLogger.debug('Reusing cached client instance', {
         cached: true
       });
       return openAIClientInstance;
@@ -99,7 +93,7 @@ export function getServerOpenAIClient(userApiKey?: string): OpenAI | null {
 
     // Validate the client was created properly
     if (!client) {
-      console.error('[OpenAI Server] Client creation returned null/undefined');
+      apiLogger.error('Client creation returned null/undefined');
       return null;
     }
 
@@ -107,9 +101,7 @@ export function getServerOpenAIClient(userApiKey?: string): OpenAI | null {
     openAIClientInstance = client;
     lastConfigHash = currentConfigHash;
 
-    console.log('[OpenAI Server] Client created successfully', {
-      keyLength: apiKey.length,
-      keyPrefix: apiKey.substring(0, 6) + '...',
+    apiLogger.info('OpenAI client created successfully', {
       source: userApiKey ? 'user-header' : 'server-config',
       keyType: apiKey.startsWith('sk-proj-') ? 'project' : 'standard',
       cached: false
@@ -117,12 +109,7 @@ export function getServerOpenAIClient(userApiKey?: string): OpenAI | null {
 
     return client;
   } catch (error) {
-    console.error('[OpenAI Server] Failed to create client:', {
-      error: error instanceof Error ? error.message : error,
-      stack: error instanceof Error ? error.stack : undefined,
-      keyLength: apiKey?.length || 0,
-      keyPrefix: apiKey ? apiKey.substring(0, 6) + '...' : 'none'
-    });
+    apiLogger.error('Failed to create OpenAI client', error);
     return null;
   }
 }
@@ -210,7 +197,7 @@ export async function generateVisionDescription(
 ): Promise<GeneratedDescription> {
   // Comprehensive input validation
   if (!request) {
-    console.error('[OpenAI Server] Request parameter is required');
+    apiLogger.error('Request parameter is required');
     throw new Error('[OpenAI Server] Request parameter is required');
   }
 
@@ -218,10 +205,9 @@ export async function generateVisionDescription(
   
   // Validate imageUrl - critical validation to prevent API failures
   if (!imageUrl || typeof imageUrl !== 'string') {
-    console.error('[OpenAI Server] Invalid imageUrl provided - this is required for vision API', {
+    apiLogger.error('Invalid imageUrl provided - this is required for vision API', {
       hasImageUrl: !!imageUrl,
-      imageUrlType: typeof imageUrl,
-      imageUrlLength: imageUrl?.length
+      imageUrlType: typeof imageUrl
     });
     throw new Error('[OpenAI Server] Invalid imageUrl provided - imageUrl is required for vision API');
   }
@@ -229,9 +215,8 @@ export async function generateVisionDescription(
   // Validate and optimize image data with size limits
   const imageValidation = validateAndOptimizeImageData(imageUrl);
   if (!imageValidation.valid) {
-    console.error('[OpenAI Server] Image validation failed - cannot proceed with vision API', {
-      error: imageValidation.error,
-      imageUrlLength: imageUrl?.length
+    apiLogger.error('Image validation failed - cannot proceed with vision API', {
+      error: imageValidation.error
     });
     throw new Error(`[OpenAI Server] Image validation failed: ${imageValidation.error}`);
   }
@@ -245,10 +230,9 @@ export async function generateVisionDescription(
   const validatedCustomPrompt = (typeof customPrompt === 'string' && customPrompt.length <= 500) ? customPrompt : undefined;
   
   if (process.env.NODE_ENV !== 'production') {
-    console.log('[OpenAI Server] Generating vision description with validated parameters:', {
+    apiLogger.debug('Generating vision description with validated parameters', {
       hasImageUrl: !!optimizedImageUrl,
       imageUrlType: optimizedImageUrl?.startsWith('data:') ? 'base64' : 'url',
-      imageUrlLength: optimizedImageUrl?.length,
       validatedStyle,
       validatedLanguage,
       validatedMaxLength,
@@ -260,7 +244,7 @@ export async function generateVisionDescription(
   try {
     client = getServerOpenAIClient(userApiKey);
   } catch (clientError) {
-    console.error('[OpenAI Server] Failed to get OpenAI client:', clientError);
+    apiLogger.error('Failed to get OpenAI client', clientError);
     // Check if we have a valid API key - if so, this is a configuration error
     if (userApiKey && userApiKey.startsWith('sk-')) {
       throw new Error(`[OpenAI Server] Client initialization failed despite valid user API key: ${clientError}`);
@@ -269,7 +253,7 @@ export async function generateVisionDescription(
   }
   
   if (!client) {
-    console.warn('[OpenAI Server] No client available, checking if API key exists');
+    apiLogger.warn('No client available, checking if API key exists');
     // Check if we have a valid API key - if so, this indicates a problem
     if (userApiKey && userApiKey.startsWith('sk-')) {
       throw new Error('[OpenAI Server] OpenAI client is null despite valid user API key - configuration issue');
@@ -288,22 +272,20 @@ export async function generateVisionDescription(
       : `${stylePrompt} ${lengthInstruction}`;
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[OpenAI Server] Calling GPT-4 Vision API:', {
+      apiLogger.debug('Calling GPT-4 Vision API', {
         model: 'gpt-4o-mini',
         validatedStyle,
         validatedLanguage,
         validatedMaxLength,
-        hasCustomPrompt: !!validatedCustomPrompt,
-        systemPromptPreview: systemPrompt.substring(0, 100) + '...'
+        hasCustomPrompt: !!validatedCustomPrompt
       });
     }
 
     // Validate image URL format - must use optimizedImageUrl at this point
     if (!optimizedImageUrl || (!optimizedImageUrl.startsWith('data:') && !optimizedImageUrl.startsWith('http'))) {
-      console.error('[OpenAI Server] Invalid or missing processed image URL format', {
+      apiLogger.error('Invalid or missing processed image URL format', {
         hasOptimizedUrl: !!optimizedImageUrl,
-        optimizedUrlType: optimizedImageUrl ? (optimizedImageUrl.startsWith('data:') ? 'base64' : 'url') : 'none',
-        optimizedUrlLength: optimizedImageUrl?.length || 0
+        optimizedUrlType: optimizedImageUrl ? (optimizedImageUrl.startsWith('data:') ? 'base64' : 'url') : 'none'
       });
       throw new Error('[OpenAI Server] Invalid or missing processed image URL format');
     }
@@ -346,12 +328,12 @@ export async function generateVisionDescription(
     const description = response.choices[0]?.message?.content || "";
     
     if (!description.trim()) {
-      console.error('[OpenAI Server] Empty description returned from API - this should not happen with valid API key');
+      apiLogger.error('Empty description returned from API - this should not happen with valid API key');
       throw new Error('[OpenAI Server] Empty description returned from OpenAI Vision API');
     }
     
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[OpenAI Server] Vision description generated successfully:', {
+      performanceLogger.info('Vision description generated successfully', {
         descriptionLength: description.length,
         wordCount: description.split(/\s+/).length,
         model: response.model,
@@ -379,16 +361,11 @@ export async function generateVisionDescription(
     return result;
   } catch (error) {
     // Enhanced error logging
-    console.error('[OpenAI Server] Vision API error:', {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      code: (error instanceof Error && 'code' in error) ? (error as any).code : undefined,
-      status: (error instanceof Error && 'status' in error) ? (error as any).status : undefined,
+    apiLogger.error('Vision API error', error, {
       requestDetails: {
         validatedStyle,
         validatedLanguage,
         validatedMaxLength,
-        imageUrlLength: optimizedImageUrl?.length,
         imageUrlType: optimizedImageUrl?.startsWith('data:') ? 'base64' : 'url'
       }
     });
@@ -407,7 +384,7 @@ function generateDemoDescription(
   language: string
 ): GeneratedDescription {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('[OpenAI Server] Generating demo description for fallback:', {
+    apiLogger.debug('Generating demo description for fallback', {
       style,
       language,
       hasImageUrl: !!imageUrl,
@@ -443,7 +420,7 @@ function generateDemoDescription(
   const text = styleDescriptions[language as 'es' | 'en'] || styleDescriptions.es;
 
   if (!text) {
-    console.warn('[OpenAI Server] No demo description found for style/language combination');
+    apiLogger.warn('No demo description found for style/language combination');
     const fallbackText = language === 'es' 
       ? 'Esta imagen presenta elementos visuales interesantes que capturan la atención del espectador.'
       : 'This image presents interesting visual elements that capture the viewer\'s attention.';

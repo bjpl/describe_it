@@ -14,6 +14,7 @@ import {
 import { StyleSelector } from "./StyleSelector";
 import { LanguageToggles } from "./LanguageToggles";
 import {
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
   performanceProfiler,
   useRenderCount,
   shallowCompare,
@@ -108,7 +109,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
           fetch("/api/descriptions/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: safeStringify({
               imageUrl: image.urls?.regular || image.urls.small,
               style,
               language: "en",
@@ -118,7 +119,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
           fetch("/api/descriptions/generate", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
+            body: safeStringify({
               imageUrl: image.urls?.regular || image.urls.small,
               style,
               language: "es",

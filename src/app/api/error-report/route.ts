@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/lib/security/rateLimiter';
 import { inputValidator } from '@/lib/security/inputValidation';
 import { authenticator } from '@/lib/security/authentication';
+import { safeParse } from '@/lib/utils/json-safe';
+import { 
+  errorReportSchema,
+  validateSecurityHeaders,
+  createErrorResponse,
+  createSuccessResponse
+} from '@/lib/schemas/api-validation';
+import { z } from 'zod';
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
@@ -87,7 +95,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      errorData = JSON.parse(text);
+      errorData = safeParse(text);
     } catch (parseError) {
       console.warn(`[SECURITY] Invalid JSON from ${identifier}:`, parseError);
       return NextResponse.json(
@@ -100,10 +108,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate and sanitize error data
+    // Enhanced validation using Zod schema
+    let validatedData;
+    try {
+      validatedData = errorReportSchema.parse(errorData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        console.warn(`[SECURITY] Zod validation failed from ${identifier}:`, error.errors);
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Invalid error report format',
+            details: error.errors.map(err => ({
+              field: err.path.join('.'),
+              message: err.message,
+            })),
+            requestId
+          },
+          { status: 400, headers: securityHeaders }
+        );
+      }
+      throw error;
+    }
+
+    // Fallback to existing validation for compatibility
     const validation = inputValidator.validateErrorReport(errorData);
     if (!validation.success) {
-      console.warn(`[SECURITY] Invalid error report from ${identifier}: ${validation.error}`);
+      console.warn(`[SECURITY] Legacy validation failed from ${identifier}: ${validation.error}`);
       return NextResponse.json(
         { 
           success: false, 
@@ -114,7 +145,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const sanitizedData = validation.sanitizedData!;
+    // Use validated data from Zod schema
+    const sanitizedData = { ...validatedData, ...validation.sanitizedData };
     
     // Additional security checks
     if (sanitizedData.url) {

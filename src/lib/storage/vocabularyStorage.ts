@@ -5,6 +5,7 @@
 
 import { VocabularySet, SavedPhrase } from "@/types/api";
 import { ReviewItem, StudyStatistics } from "../algorithms/spacedRepetition";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface StoredVocabularyData {
   vocabularySets: VocabularySet[];
@@ -89,7 +90,7 @@ export class VocabularyStorage {
         version: this.VERSION,
       };
 
-      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(dataToSave));
+      localStorage.setItem(this.STORAGE_KEY, safeStringify(dataToSave));
       return true;
     } catch (error) {
       console.error("Error saving vocabulary data:", error);

@@ -5,6 +5,7 @@
 
 import { z } from 'zod';
 import DOMPurify from 'isomorphic-dompurify';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface ValidationResult<T = any> {
   success: boolean;

@@ -4,12 +4,21 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 
 export async function POST(request: NextRequest) {
   console.log('[SimpleSignup] Endpoint called');
   
   try {
-    const body = await request.json();
+    const requestText = await request.text();
+    const body = safeParse(requestText);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    };
     console.log('[SimpleSignup] Request body:', { email: body.email, hasPassword: !!body.password });
     
     const { email, password } = body;
@@ -50,13 +59,13 @@ export async function POST(request: NextRequest) {
         'apikey': supabaseKey,
         'Authorization': `Bearer ${supabaseKey}`
       },
-      body: JSON.stringify({
+      body: safeStringify({
         email,
         password,
         options: {
           emailRedirectTo: 'https://describe-it-lovat.vercel.app/auth/callback'
         }
-      })
+      }, '{}', 'simple-signup-request')
     });
     
     const responseText = await response.text();
@@ -68,7 +77,7 @@ export async function POST(request: NextRequest) {
     
     let result;
     try {
-      result = JSON.parse(responseText);
+      result = safeParse(responseText, {}, 'simple-signup-response') || {};
     } catch {
       result = { message: responseText };
     }

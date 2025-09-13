@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 
 interface WebVitalData {
   name: string;
@@ -14,7 +15,15 @@ interface WebVitalData {
 
 export async function POST(request: NextRequest) {
   try {
-    const data: WebVitalData = await request.json();
+    const requestText = await request.text();
+    const data = safeParse(requestText);
+    
+    if (!data) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    };
 
     // Validate required fields
     if (!data.name || typeof data.value !== 'number' || !data.id) {
@@ -79,7 +88,7 @@ async function sendToGoogleAnalytics(data: WebVitalData) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
+        body: safeStringify({
           client_id: data.id,
           events: [
             {
@@ -93,7 +102,7 @@ async function sendToGoogleAnalytics(data: WebVitalData) {
               },
             },
           ],
-        }),
+        }, '{}', 'google-analytics-payload'),
       }
     );
 
@@ -116,10 +125,10 @@ async function sendToCustomAnalytics(data: WebVitalData) {
       const { kv } = await import('@vercel/kv');
       
       const key = `web-vitals:${new Date().toISOString().split('T')[0]}:${data.name}`;
-      await kv.lpush(key, JSON.stringify({
+      await kv.lpush(key, safeStringify({
         ...data,
         timestamp: Date.now(),
-      }));
+      }, '{}', `web-vitals-storage-${key}`));
       
       // Set expiration to 30 days
       await kv.expire(key, 30 * 24 * 60 * 60);
@@ -187,7 +196,11 @@ async function retrieveAnalyticsData(metric?: string | null, days: number = 7) {
       for (const key of keys) {
         try {
           const values = await kv.lrange(key, 0, -1);
-          results.push(...values.map((v: string) => JSON.parse(v)));
+          results.push(
+            ...values
+              .map((v: string) => safeParse(v, null, `web-vitals-retrieval-${key}`))
+              .filter(Boolean)
+          );
         } catch (error) {
           console.warn(`Error retrieving key ${key}:`, error);
         }

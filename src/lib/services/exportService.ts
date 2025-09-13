@@ -3,6 +3,7 @@
  */
 
 import { withRetry, RetryConfig } from "../utils/error-retry";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 interface ExportOptions {
   format: "csv" | "json" | "pdf";
@@ -370,7 +371,7 @@ export class ExportService {
       data: processedData,
     };
 
-    const jsonContent = JSON.stringify(exportObject, null, 2);
+    const jsonContent = safeStringify(exportObject, null, 2);
     const blob = new Blob([jsonContent], { type: "application/json" });
     const filename = this.generateFilename("json", options);
     const downloadUrl = URL.createObjectURL(blob);

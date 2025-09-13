@@ -1,11 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { openAIService } from "@/lib/api/openai";
 import { QAGeneration } from "@/types/api";
 import { logger } from "@/lib/logger";
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const requestText = await request.text();
+    const body = safeParse(requestText);
+    
+    if (!body) {
+      return NextResponse.json(
+        { error: "Invalid JSON in request body" },
+        { status: 400 }
+      );
+    };
     const { description, language = "es", count = 5 } = body;
 
     // Validate required fields

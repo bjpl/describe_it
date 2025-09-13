@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { logger, type LogContext, type PerformanceMetrics, type ErrorContext } from './logger';
 import { metrics } from './metrics';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface MonitoringConfig {
   enableRequestLogging?: boolean;

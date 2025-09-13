@@ -3,11 +3,12 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import axios from 'axios';
 
 export async function POST(request: NextRequest) {
   try {
-    const { apiKey } = await request.json();
+    const { apiKey } = safeParse(await request.text(), {});
     
     if (!apiKey) {
       return NextResponse.json({ 

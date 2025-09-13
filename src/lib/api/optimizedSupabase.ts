@@ -1,5 +1,6 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../supabase/client";
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 // Simple server-side cache
 const serverCache = new Map<string, { data: any; timestamp: number }>();
@@ -381,7 +382,7 @@ class OptimizedSupabaseClient {
   ): Promise<{ data: T | null; error: any; metrics: QueryMetrics }> {
     const {
       cacheable = false,
-      cacheKey = `rpc:${functionName}:${JSON.stringify(params)}`,
+      cacheKey = `rpc:${functionName}:${safeStringify(params)}`,
       cacheTTL = 5 * 60 * 1000,
       timeout = 15000,
     } = config;
@@ -515,7 +516,7 @@ class OptimizedSupabaseClient {
 
   private estimateSize(data: any): number {
     try {
-      return JSON.stringify(data).length;
+      return safeStringify(data).length;
     } catch {
       return 0;
     }

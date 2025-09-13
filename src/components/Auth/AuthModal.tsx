@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { useDirectAuth } from './useDirectAuth';
 import { X, Mail, Lock, User, KeyRound, Github, Chrome } from 'lucide-react';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 
 interface AuthModalProps {
   isOpen: boolean;

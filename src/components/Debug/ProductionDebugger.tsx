@@ -1,6 +1,10 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { createLogger } from '@/lib/logging/logger';
+
+const debugLogger = createLogger('ProductionDebugger');
 
 interface DebugInfo {
   timestamp: string;
@@ -38,7 +42,7 @@ export const ProductionDebugger: React.FC = () => {
   const [errors, setErrors] = useState<DebugInfo['errors']>([]);
 
   useEffect(() => {
-    console.log('[PRODUCTION DEBUGGER] Initializing...');
+    debugLogger.info('Production debugger initializing');
 
     // Collect comprehensive debug information
     const collectDebugInfo = (): DebugInfo => {
@@ -81,7 +85,7 @@ export const ProductionDebugger: React.FC = () => {
         source: `${event.filename}:${event.lineno}:${event.colno}`,
       };
 
-      console.error('[PRODUCTION DEBUGGER] JavaScript Error:', errorInfo);
+      debugLogger.error('JavaScript error detected', errorInfo);
       setErrors(prev => [...prev.slice(-9), errorInfo]);
     };
 
@@ -92,7 +96,7 @@ export const ProductionDebugger: React.FC = () => {
         source: 'Promise',
       };
 
-      console.error('[PRODUCTION DEBUGGER] Unhandled Promise Rejection:', errorInfo);
+      debugLogger.error('Unhandled promise rejection detected', errorInfo);
       setErrors(prev => [...prev.slice(-9), errorInfo]);
     };
 
@@ -108,11 +112,13 @@ export const ProductionDebugger: React.FC = () => {
 
     // Log comprehensive debug information
     console.group('[PRODUCTION DEBUGGER] Environment Information');
-    console.log('Timestamp:', info.timestamp);
-    console.log('Environment:', info.environment);
-    console.log('URLs:', info.urls);
-    console.log('User Agent:', info.userAgent);
-    console.log('Screen:', info.screen);
+    debugLogger.debug('Debug information collected', {
+      timestamp: info.timestamp,
+      hasEnvironment: !!info.environment,
+      hasUrls: !!info.urls,
+      hasUserAgent: !!info.userAgent,
+      hasScreen: !!info.screen
+    });
     console.groupEnd();
 
     // Update debug info periodically
@@ -202,7 +208,7 @@ export const ProductionDebugger: React.FC = () => {
 // Export a function to manually trigger debug info logging
 export const logProductionDebugInfo = () => {
   if (typeof window === 'undefined') {
-    console.log('[PRODUCTION DEBUG] Running in server environment');
+    debugLogger.debug('Running in server environment');
     return;
   }
 
@@ -229,7 +235,7 @@ export const logProductionDebugInfo = () => {
     },
     errors: (() => {
       try {
-        return JSON.parse(localStorage.getItem('react-error-boundary-logs') || '[]');
+        return safeParseLocalStorage('react-error-boundary-logs', '[]');
       } catch {
         return [];
       }
@@ -237,7 +243,7 @@ export const logProductionDebugInfo = () => {
   };
 
   console.group('[PRODUCTION DEBUG] Manual Debug Report');
-  console.log(JSON.stringify(debugInfo, null, 2));
+  debugLogger.debug('Debug info', { hasDebugInfo: !!debugInfo });
   console.groupEnd();
 
   return debugInfo;
