@@ -1,5 +1,5 @@
 import { randomBytes, createHash, timingSafeEqual } from 'crypto';
-import { SymmetricEncryption, EncryptedData } from './encryption';
+import CryptoUtils from './encryption';
 import { getAuditLogger } from './audit-logger';
 import { Redis } from 'ioredis';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
@@ -65,7 +65,7 @@ const DEFAULT_CONFIG: Required<Omit<SessionConfig, 'secret' | 'domain' | 'redis'
 
 export class SessionManager {
   private config: SessionConfig;
-  private encryption?: SymmetricEncryption;
+  private encryptionKey?: string;
   private redis?: Redis;
   private sessions: Map<string, SessionData> = new Map();
 
@@ -73,9 +73,7 @@ export class SessionManager {
     this.config = { ...DEFAULT_CONFIG, ...config };
     
     if (this.config.encryption?.enabled) {
-      this.encryption = new SymmetricEncryption({
-        algorithm: this.config.encryption.algorithm || 'AES-GCM',
-      });
+      this.encryptionKey = this.config.encryption.key || randomBytes(32).toString('hex');
     }
 
     if (this.config.redis) {
@@ -329,8 +327,8 @@ export class SessionManager {
 
     const token = Buffer.from(safeStringify(payload)).toString('base64');
     
-    if (this.encryption) {
-      const encrypted = this.encryption.encrypt(token, this.config.secret);
+    if (this.encryptionKey) {
+      const encrypted = CryptoUtils.encrypt(token, this.encryptionKey!);
       return typeof encrypted === 'string' ? encrypted : safeStringify(encrypted);
     }
 
@@ -341,14 +339,14 @@ export class SessionManager {
     try {
       let decodedToken = token;
 
-      if (this.encryption) {
+      if (this.encryptionKey) {
         if (token.startsWith('{')) {
           // Encrypted data object
-          const encrypted = JSON.parse(token) as EncryptedData;
-          decodedToken = this.encryption.decrypt(encrypted, this.config.secret);
+          const encrypted = JSON.parse(token);
+          decodedToken = CryptoUtils.decrypt(encrypted, this.encryptionKey!);
         } else {
           // Plain encrypted string
-          decodedToken = this.encryption.decrypt(token as any, this.config.secret);
+          decodedToken = CryptoUtils.decrypt(token as any, this.encryptionKey!);
         }
       }
 

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createSecretsManager, SecretManagerConfig } from './secrets-manager';
 import { createSessionManager, SessionManager } from './session-manager';
 import { getAuditLogger } from './audit-logger';
-import { generateSecureRandom, HashUtility } from './encryption';
+import CryptoUtils from './encryption';
 import { defaultSecurityConfig, type SecurityConfig, type SecureRequest, type SecurityMiddlewareOptions, type ApiKeyValidation, type ZeroTrustRequest, type ZeroTrustValidation } from './index';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
@@ -25,7 +25,7 @@ async function initializeSecurityManagers(config: SecurityConfig = defaultSecuri
       } : undefined,
       encryption: {
         enabled: config.encryption?.enabled || true,
-        key: process.env.ENCRYPTION_KEY || generateSecureRandom(32),
+        key: process.env.ENCRYPTION_KEY || CryptoUtils.generateRandomString(32),
       },
       cache: {
         enabled: true,
@@ -40,7 +40,7 @@ async function initializeSecurityManagers(config: SecurityConfig = defaultSecuri
 
   if (!sessionManager) {
     sessionManager = new SessionManager({
-      secret: process.env.SESSION_SECRET || generateSecureRandom(64),
+      secret: process.env.SESSION_SECRET || CryptoUtils.generateRandomString(64),
       maxAge: config.sessions?.maxAge || 24 * 60 * 60 * 1000,
       secure: config.sessions?.secure || process.env.NODE_ENV === 'production',
       httpOnly: true,
@@ -284,7 +284,7 @@ export async function checkRateLimit(
     
     // For demo purposes, always allow but log the attempt
     logger.securityEvent('RATE_LIMIT_CHECK', {
-      identifier: HashUtility.hash(identifier), // Hash for privacy
+      identifier: CryptoUtils.hash(identifier, { algorithm: 'sha256' }), // Hash for privacy
       limit,
       windowMs,
       allowed: true,
@@ -297,7 +297,7 @@ export async function checkRateLimit(
     };
   } catch (error) {
     logger.securityEvent('RATE_LIMIT_ERROR', {
-      identifier: HashUtility.hash(identifier),
+      identifier: CryptoUtils.hash(identifier, { algorithm: 'sha256' }),
       error: error.message,
     }, false);
     
@@ -376,7 +376,7 @@ export function withSecurity(
         if (!rateLimit.allowed) {
           logger.securityEvent('RATE_LIMIT_EXCEEDED', {
             requestId,
-            identifier: HashUtility.hash(identifier),
+            identifier: CryptoUtils.hash(identifier, { algorithm: 'sha256' }),
           }, false);
 
           return NextResponse.json(
@@ -491,7 +491,7 @@ export function generateClientFingerprint(request: NextRequest): string {
     request.ip || request.headers.get('x-forwarded-for') || '',
   ];
   
-  return HashUtility.hash(components.join('|'));
+  return CryptoUtils.hash(components.join('|'), { algorithm: 'sha256' });
 }
 
 /**

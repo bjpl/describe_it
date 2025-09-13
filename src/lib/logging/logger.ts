@@ -64,8 +64,8 @@ if (process.env.NODE_ENV !== 'test') {
   );
 }
 
-// File transport for production
-if (process.env.NODE_ENV === 'production') {
+// File transport for production (server-side only)
+if (process.env.NODE_ENV === 'production' && typeof window === 'undefined') {
   transports.push(
     new winston.transports.File({
       filename: 'logs/error.log',
