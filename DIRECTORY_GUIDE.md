@@ -42,35 +42,63 @@ This project implements a modern, AI-enhanced Next.js application with enterpris
 ```
 describe_it/
 ├── 🤖 AI & Automation
-│   ├── .claude/          # Claude AI configurations
-│   ├── .claude-flow/     # Flow orchestration
-│   ├── .hive-mind/       # Collective intelligence
-│   └── .swarm/           # Swarm coordination
+│   ├── .claude/          # Claude AI configurations & agents
+│   ├── .claude-flow/     # Flow orchestration settings
+│   ├── .hive-mind/       # Collective intelligence system
+│   ├── .swarm/           # Swarm coordination configs
+│   ├── coordination/     # Service coordination logic
+│   └── memory/           # Persistent AI memory storage
 │
 ├── 💻 Source Code
-│   ├── src/              # Application source
+│   ├── src/              # Application source code
+│   │   ├── app/          # Next.js app router
+│   │   ├── components/   # React components
+│   │   ├── lib/          # Utilities & services
+│   │   ├── hooks/        # Custom React hooks
+│   │   └── types/        # TypeScript definitions
 │   ├── public/           # Static assets
-│   └── tests/            # Test suites
+│   └── scripts/          # Utility & deployment scripts
 │
 ├── ⚙️ Configuration
-│   ├── config/           # Centralized configs
+│   ├── config/           # Centralized configurations
+│   │   ├── docker/       # Docker compose files
+│   │   ├── env-examples/ # Environment templates
+│   │   └── *.config.ts   # Tool configurations
 │   ├── .env files        # Environment variables
-│   └── *.config.js       # Tool configurations
+│   └── *.config.js       # Root config files
 │
 ├── 🏗️ Infrastructure
-│   ├── k8s/              # Kubernetes
+│   ├── k8s/              # Kubernetes manifests
 │   ├── terraform/        # Infrastructure as Code
-│   ├── monitoring/       # Observability
+│   ├── monitoring/       # Observability configs
 │   └── supabase/         # Backend services
 │
-├── 📦 Build & Deploy
-│   ├── .next/            # Next.js build
-│   ├── .vercel/          # Vercel deployment
-│   └── node_modules/     # Dependencies
+├── 🧪 Testing & Quality
+│   ├── tests/            # Test suites
+│   ├── test-results/     # Test execution results
+│   ├── coverage/         # Code coverage reports
+│   └── playwright-report/# E2E test reports
 │
-└── 📚 Documentation
-    ├── docs/             # Project documentation
-    └── README.md         # Main readme
+├── 📦 Build & Deploy
+│   ├── .next/            # Next.js build output
+│   ├── .vercel/          # Vercel deployment cache
+│   ├── node_modules/     # NPM dependencies
+│   └── logs/             # Application logs
+│
+├── 📚 Documentation
+│   ├── docs/             # Comprehensive documentation
+│   │   ├── api/          # API documentation
+│   │   ├── architecture/ # System design docs
+│   │   ├── deployment/   # Deployment guides
+│   │   ├── development/  # Dev guidelines
+│   │   ├── security/     # Security documentation
+│   │   └── archive/      # Historical docs
+│   └── README.md         # Main project readme
+│
+└── 🔧 Development Tools
+    ├── .github/          # GitHub workflows & configs
+    ├── .husky/           # Git hooks
+    └── .git/             # Git repository
 ```
 
 ---
@@ -116,14 +144,37 @@ describe_it/
 - Responsive breakpoints
 - Component variants
 
-### 📦 **next.config.js**
+### 📦 **next.config.mjs**
 **Purpose**: Next.js framework configuration
 
 **Performance Optimizations**:
-- Image optimization
+- Image optimization with AVIF/WebP
 - Bundle splitting
-- Internationalization
-- Environment variables
+- Standalone output for Vercel
+- Package import optimizations
+
+### 📁 **config/**
+**Purpose**: Centralized configuration directory
+
+**Contents**:
+- `docker/` - Docker configurations
+  - `docker-compose.yml` - Development setup
+  - `docker-compose.production.yml` - Production setup
+  - `Dockerfile.production` - Optimized production image
+- `env-examples/` - Environment variable templates
+  - `.env.local.example` - Local development
+  - `.env.security.example` - Security configs
+- Test Configurations:
+  - `vitest.config.ts` - Unit test configuration
+  - `playwright.config.ts` - E2E test configuration
+  - `jest.config.js` - Legacy Jest configuration
+- Monitoring:
+  - `sentry.*.config.ts` - Error tracking
+  - `prometheus.yml` - Metrics configuration
+- Infrastructure:
+  - `nginx.conf` - Web server configuration
+  - `redis.conf` - Cache configuration
+  - `vault.hcl` - Secret management
 
 ---
 
@@ -294,6 +345,85 @@ terraform/
 ### 🎭 **playwright-report/**
 **Purpose**: E2E test results and screenshots
 
+### 📊 **test-results/**
+**Purpose**: Aggregated test execution results from all test suites
+
+**Contents**:
+- JSON test reports
+- JUnit XML reports for CI/CD
+- Performance benchmarks
+- Failed test artifacts
+
+---
+
+## AI & Automation Systems - Extended
+
+### 🧠 **coordination/**
+**Purpose**: Service coordination and orchestration logic
+
+**Architecture Pattern**: Mediator Pattern for service communication
+- Decouples services from direct communication
+- Centralized coordination logic
+- Event-driven service orchestration
+
+**Key Components**:
+- `serviceRegistry.ts` - Service discovery
+- `eventBus.ts` - Inter-service messaging
+- `orchestrator.ts` - Workflow coordination
+
+### 💾 **memory/**
+**Purpose**: Persistent storage for AI agent memory and learning
+
+**Capabilities**:
+- Long-term memory persistence
+- Cross-session knowledge retention
+- Pattern recognition storage
+- Learning optimization data
+
+**Storage Structure**:
+```
+memory/
+├── agents/         # Per-agent memory
+├── patterns/       # Recognized patterns
+├── sessions/       # Session history
+└── knowledge/      # Accumulated knowledge base
+```
+
+### 📝 **logs/**
+**Purpose**: Centralized application logging
+
+**Log Categories**:
+- `error.log` - Error tracking
+- `access.log` - API access logs
+- `performance.log` - Performance metrics
+- `security.log` - Security events
+- `debug.log` - Development debugging
+
+**Best Practice**: Implement log rotation to prevent disk space issues
+
+---
+
+## Utility Scripts
+
+### 🛠️ **scripts/**
+**Purpose**: Automation and utility scripts
+
+**Categories**:
+| Script Type | Purpose | Examples |
+|------------|---------|----------|
+| Deployment | Deploy to environments | `deploy-production.sh` |
+| Testing | Run test suites | `test-api-key.js` |
+| Performance | Monitor performance | `performance-audit.js` |
+| Build | Optimize builds | `build-optimize.js` |
+| Migration | Data/schema migrations | `migrate-*.js` |
+| Utilities | Helper scripts | `validate-env.cjs` |
+
+**Key Scripts**:
+- `deploy-local.sh/bat` - Local deployment
+- `performance-monitor.js` - Real-time performance monitoring
+- `flow-nexus-login.js` - Flow Nexus authentication
+- `fix-motion-*.js` - Framer Motion import fixes
+
 ---
 
 ## Documentation
@@ -303,12 +433,24 @@ terraform/
 
 ```
 docs/
-├── reports/        # Technical audits
+├── api/            # API documentation & specs
+├── architecture/   # System design documents
+├── deployment/     # Deployment guides & procedures
+├── development/    # Development guidelines
+├── security/       # Security documentation
+├── reports/        # Technical audits & analyses
 ├── guides/         # How-to documents
-├── security/       # Security docs
-├── performance/    # Performance analysis
-└── archive/        # Historical docs
+├── archive/        # Historical & deprecated docs
+└── *.md           # Various documentation files
 ```
+
+**Key Documents**:
+- `API.md` - Complete API reference
+- `ARCHITECTURE.md` - System architecture overview
+- `DEPLOYMENT.md` - Deployment procedures
+- `DOCUMENTATION_INDEX.md` - Doc navigation guide
+- `API_KEY_GUIDE.md` - API key management
+- `BUILD_VERIFICATION_REPORT.md` - Build status
 
 **Best Practice**: Documentation as Code
 - Version controlled
@@ -482,5 +624,5 @@ The project serves as both a **functional application** and an **educational res
 ---
 
 *Generated by Flow Nexus Documentation Swarm*  
-*Last Updated: September 2025*  
-*Version: 1.0.0*
+*Last Updated: September 12, 2025*  
+*Version: 2.0.0 - Post Technical Debt Cleanup*

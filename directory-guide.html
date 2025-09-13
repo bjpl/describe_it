@@ -303,6 +303,7 @@
             <button class="nav-btn" onclick="showSection('root')">🏠 Root Files</button>
             <button class="nav-btn" onclick="showSection('source')">💻 Source Code</button>
             <button class="nav-btn" onclick="showSection('config')">⚙️ Configuration</button>
+            <button class="nav-btn" onclick="showSection('scripts')">🛠️ Scripts</button>
             <button class="nav-btn" onclick="showSection('ai')">🤖 AI Systems</button>
             <button class="nav-btn" onclick="showSection('infra')">🏗️ Infrastructure</button>
             <button class="nav-btn" onclick="showSection('testing')">🧪 Testing</button>
@@ -323,35 +324,63 @@
                     <h3>Directory Structure</h3>
                     <div class="tree-view">describe_it/
 ├── 🤖 AI & Automation
-│   ├── .claude/          # Claude AI configurations
-│   ├── .claude-flow/     # Flow orchestration
-│   ├── .hive-mind/       # Collective intelligence
-│   └── .swarm/           # Swarm coordination
+│   ├── .claude/          # Claude AI configurations & agents
+│   ├── .claude-flow/     # Flow orchestration settings
+│   ├── .hive-mind/       # Collective intelligence system
+│   ├── .swarm/           # Swarm coordination configs
+│   ├── coordination/     # Service coordination logic
+│   └── memory/           # Persistent AI memory storage
 │
 ├── 💻 Source Code
-│   ├── src/              # Application source
+│   ├── src/              # Application source code
+│   │   ├── app/          # Next.js app router
+│   │   ├── components/   # React components
+│   │   ├── lib/          # Utilities & services
+│   │   ├── hooks/        # Custom React hooks
+│   │   └── types/        # TypeScript definitions
 │   ├── public/           # Static assets
-│   └── tests/            # Test suites
+│   └── scripts/          # Utility & deployment scripts
 │
 ├── ⚙️ Configuration
-│   ├── config/           # Centralized configs
+│   ├── config/           # Centralized configurations
+│   │   ├── docker/       # Docker compose files
+│   │   ├── env-examples/ # Environment templates
+│   │   └── *.config.ts   # Tool configurations
 │   ├── .env files        # Environment variables
-│   └── *.config.js       # Tool configurations
+│   └── *.config.js       # Root config files
 │
 ├── 🏗️ Infrastructure
-│   ├── k8s/              # Kubernetes
+│   ├── k8s/              # Kubernetes manifests
 │   ├── terraform/        # Infrastructure as Code
-│   ├── monitoring/       # Observability
+│   ├── monitoring/       # Observability configs
 │   └── supabase/         # Backend services
 │
-├── 📦 Build & Deploy
-│   ├── .next/            # Next.js build
-│   ├── .vercel/          # Vercel deployment
-│   └── node_modules/     # Dependencies
+├── 🧪 Testing & Quality
+│   ├── tests/            # Test suites
+│   ├── test-results/     # Test execution results
+│   ├── coverage/         # Code coverage reports
+│   └── playwright-report/# E2E test reports
 │
-└── 📚 Documentation
-    ├── docs/             # Project documentation
-    └── README.md         # Main readme</div>
+├── 📦 Build & Deploy
+│   ├── .next/            # Next.js build output
+│   ├── .vercel/          # Vercel deployment cache
+│   ├── node_modules/     # NPM dependencies
+│   └── logs/             # Application logs
+│
+├── 📚 Documentation
+│   ├── docs/             # Comprehensive documentation
+│   │   ├── api/          # API documentation
+│   │   ├── architecture/ # System design docs
+│   │   ├── deployment/   # Deployment guides
+│   │   ├── development/  # Dev guidelines
+│   │   ├── security/     # Security documentation
+│   │   └── archive/      # Historical docs
+│   └── README.md         # Main project readme
+│
+└── 🔧 Development Tools
+    ├── .github/          # GitHub workflows & configs
+    ├── .husky/           # Git hooks
+    └── .git/             # Git repository</div>
                 </div>
                 
                 <div class="best-practice">
@@ -492,6 +521,151 @@
                 </div>
             </section>
             
+            <!-- Configuration Section -->
+            <section id="config" class="section">
+                <h2>⚙️ Configuration Management</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">📁</span>
+                            <span class="folder-name">config/</span>
+                            <span class="badge badge-config">Centralized</span>
+                        </div>
+                        <div class="folder-purpose">Centralized configuration directory</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Houses all configuration files moved from root for better organization. Includes Docker configs, test configs, and environment templates.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">📂 Subdirectories:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>docker/</strong> - Docker compose files and Dockerfiles</li>
+                                        <li><strong>env-examples/</strong> - Environment variable templates</li>
+                                        <li><strong>*.config.ts</strong> - Test and tool configurations</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🔧 Key Files:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>vitest.config.ts</strong> - Unit test configuration</li>
+                                        <li><strong>playwright.config.ts</strong> - E2E test configuration</li>
+                                        <li><strong>sentry.*.config.ts</strong> - Error tracking configs</li>
+                                        <li><strong>nginx.conf</strong> - Web server configuration</li>
+                                        <li><strong>redis.conf</strong> - Cache configuration</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Scripts Section -->
+            <section id="scripts" class="section">
+                <h2>🛠️ Utility Scripts</h2>
+                
+                <div class="folder-group">
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">📜</span>
+                            <span class="folder-name">scripts/</span>
+                            <span class="badge badge-utility">Automation</span>
+                        </div>
+                        <div class="folder-purpose">Automation and utility scripts</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Contains all utility scripts for deployment, testing, performance monitoring, and build optimization. Organized from root directory during cleanup.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">📝 Script Categories:</div>
+                                <div class="detail-content">
+                                    <table style="width: 100%; border-collapse: collapse;">
+                                        <tr style="background: var(--light);">
+                                            <th style="padding: 8px; text-align: left;">Type</th>
+                                            <th style="padding: 8px; text-align: left;">Purpose</th>
+                                            <th style="padding: 8px; text-align: left;">Examples</th>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px;">Deployment</td>
+                                            <td style="padding: 8px;">Deploy to environments</td>
+                                            <td style="padding: 8px;"><code>deploy-production.sh</code></td>
+                                        </tr>
+                                        <tr style="background: var(--light);">
+                                            <td style="padding: 8px;">Testing</td>
+                                            <td style="padding: 8px;">Run test suites</td>
+                                            <td style="padding: 8px;"><code>test-api-key.js</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px;">Performance</td>
+                                            <td style="padding: 8px;">Monitor performance</td>
+                                            <td style="padding: 8px;"><code>performance-audit.js</code></td>
+                                        </tr>
+                                        <tr style="background: var(--light);">
+                                            <td style="padding: 8px;">Build</td>
+                                            <td style="padding: 8px;">Optimize builds</td>
+                                            <td style="padding: 8px;"><code>build-optimize.js</code></td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🔑 Key Scripts:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>deploy-local.sh/bat</strong> - Local deployment scripts</li>
+                                        <li><strong>performance-monitor.js</strong> - Real-time performance monitoring</li>
+                                        <li><strong>flow-nexus-login.js</strong> - Flow Nexus authentication</li>
+                                        <li><strong>validate-env.cjs</strong> - Environment validation</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">📝</span>
+                            <span class="folder-name">logs/</span>
+                            <span class="badge badge-monitoring">Logging</span>
+                        </div>
+                        <div class="folder-purpose">Centralized application logging</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Stores all application logs including error tracking, API access logs, performance metrics, and security events.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">📊 Log Categories:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>error.log</strong> - Application errors and stack traces</li>
+                                        <li><strong>access.log</strong> - API endpoint access logs</li>
+                                        <li><strong>performance.log</strong> - Performance metrics and timings</li>
+                                        <li><strong>security.log</strong> - Security events and auth failures</li>
+                                        <li><strong>debug.log</strong> - Development debugging information</li>
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="best-practice">
+                                <strong>Best Practice:</strong> Implement log rotation to prevent disk space issues. Use structured logging (JSON) for easier parsing and analysis.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
             <!-- AI Systems Section -->
             <section id="ai" class="section">
                 <h2>🤖 AI & Automation Systems</h2>
@@ -550,6 +724,61 @@
                                         <li>Send messages to other agents</li>
                                         <li>Create new agents</li>
                                         <li>Determine behavior for next message</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">🔄</span>
+                            <span class="folder-name">coordination/</span>
+                            <span class="badge badge-ai">Service Orchestration</span>
+                        </div>
+                        <div class="folder-purpose">Service coordination and orchestration logic</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Implements the Mediator Pattern for service communication, decoupling services from direct communication and providing centralized coordination logic.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">🔧 Key Components:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>serviceRegistry.ts</strong> - Service discovery and registration</li>
+                                        <li><strong>eventBus.ts</strong> - Inter-service messaging</li>
+                                        <li><strong>orchestrator.ts</strong> - Workflow coordination</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="folder-item">
+                        <div class="folder-header" onclick="toggleDetails(this)">
+                            <span class="folder-icon">💾</span>
+                            <span class="folder-name">memory/</span>
+                            <span class="badge badge-ai">AI Memory</span>
+                        </div>
+                        <div class="folder-purpose">Persistent storage for AI agent memory and learning</div>
+                        <div class="folder-details">
+                            <div class="detail-section">
+                                <div class="detail-title">🎯 Purpose:</div>
+                                <div class="detail-content">
+                                    Provides long-term memory persistence for AI agents, enabling cross-session knowledge retention, pattern recognition storage, and learning optimization.
+                                </div>
+                            </div>
+                            <div class="detail-section">
+                                <div class="detail-title">📁 Storage Structure:</div>
+                                <div class="detail-content">
+                                    <ul>
+                                        <li><strong>agents/</strong> - Per-agent memory storage</li>
+                                        <li><strong>patterns/</strong> - Recognized patterns database</li>
+                                        <li><strong>sessions/</strong> - Session history logs</li>
+                                        <li><strong>knowledge/</strong> - Accumulated knowledge base</li>
                                     </ul>
                                 </div>
                             </div>
@@ -754,7 +983,7 @@
         
         <footer>
             <p>📚 Describe-It Directory Guide | Generated by Flow Nexus Documentation Swarm</p>
-            <p>Last Updated: September 2025 | Version 1.0.0</p>
+            <p>Last Updated: September 12, 2025 | Version 2.0.0 - Post Technical Debt Cleanup</p>
         </footer>
     </div>
     
