@@ -1,0 +1,181 @@
+name: Performance Monitoring
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 */6 * * *" # Every 6 hours
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lighthouse-performance:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application
+        run: npm start &
+        env:
+          NODE_ENV: production
+
+      - name: Wait for application
+        run: npx wait-on http://localhost:3000
+
+      - name: Run Lighthouse CI
+        uses: treosh/lighthouse-ci-action@v10
+        with:
+          configPath: "./lighthouserc.js"
+          temporaryPublicStorage: true
+          uploadArtifacts: true
+          runs: 3
+
+      - name: Comment PR with Lighthouse results
+        uses: treosh/lighthouse-ci-action@v10
+        if: github.event_name == 'pull_request'
+        with:
+          configPath: "./lighthouserc.js"
+          temporaryPublicStorage: true
+          uploadArtifacts: true
+          runs: 3
+          commentUrl: "https://api.github.com/repos/${{ github.repository }}/pulls/${{ github.event.number }}/comments"
+
+  bundle-size-check:
+    name: Bundle Size Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and analyze bundle
+        run: npm run build
+
+      - name: Analyze bundle size
+        uses: nextjs-bundle-analysis/bundle-analysis@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          workflow-id: performance.yml
+          base-branch: main
+
+  web-vitals:
+    name: Web Vitals Monitoring
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
+      - name: Start application
+        run: npm start &
+
+      - name: Wait for application
+        run: npx wait-on http://localhost:3000
+
+      - name: Run Web Vitals tests
+        run: npm run test:vitals
+
+      - name: Upload Web Vitals to Vercel Analytics
+        run: |
+          curl -X POST \
+            -H "Authorization: Bearer ${{ secrets.VERCEL_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            -d @web-vitals.json \
+            https://vercel.com/api/v1/web-vitals
+
+  performance-regression:
+    name: Performance Regression Tests
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build current version
+        run: npm run build
+
+      - name: Run performance benchmarks
+        run: npm run test:perf
+
+      - name: Compare with baseline
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: Performance Benchmarks
+          tool: "customSmallerIsBetter"
+          output-file-path: performance-results.json
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          auto-push: false
+          comment-on-alert: true
+          alert-threshold: "110%"
+          fail-on-alert: true
+
+      - name: Comment performance results
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const results = JSON.parse(fs.readFileSync('performance-results.json', 'utf8'));
+
+            const comment = `## Performance Report 📊
+
+            | Metric | Current | Baseline | Change |
+            |--------|---------|----------|---------|
+            ${results.map(r => `| ${r.name} | ${r.value} | ${r.baseline || 'N/A'} | ${r.change || 'N/A'} |`).join('\n')}
+
+            ${results.some(r => r.alert) ? '⚠️ Performance regression detected!' : '✅ No performance regressions detected.'}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });

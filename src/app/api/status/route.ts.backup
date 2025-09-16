@@ -1,0 +1,215 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { featureFlags, getEnvironmentInfo, env } from '../../../config/environment';
+
+interface ServiceStatus {
+  name: string;
+  enabled: boolean;
+  configured: boolean;
+  healthy: boolean;
+  demoMode: boolean;
+  reason?: string;
+}
+
+// Cache the status for 30 seconds to avoid excessive health checks
+const cache = new Map<string, { data: any; timestamp: number }>();
+const CACHE_DURATION = 30 * 1000; // 30 seconds
+
+async function getServiceStatus(): Promise<{
+  services: ServiceStatus[];
+  environment: any;
+  features: any;
+  demo: boolean;
+  timestamp: string;
+}> {
+  const cacheKey = 'service_status';
+  const now = Date.now();
+  
+  const cached = cache.get(cacheKey);
+  if (cached && (now - cached.timestamp) < CACHE_DURATION) {
+    return cached.data;
+  }
+
+  // Create service status without complex health checks for now
+  const services: ServiceStatus[] = [
+    {
+      name: 'Unsplash API',
+      enabled: featureFlags.unsplashService,
+      configured: Boolean(env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY && env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY !== 'your_unsplash_access_key_here'),
+      healthy: featureFlags.unsplashService,
+      demoMode: !featureFlags.unsplashService,
+      reason: !featureFlags.unsplashService ? 'API key not configured - using curated demo images' : undefined
+    },
+    {
+      name: 'OpenAI API',
+      enabled: featureFlags.openaiService,
+      configured: Boolean(env.OPENAI_API_KEY && env.OPENAI_API_KEY !== 'your_openai_api_key_here'),
+      healthy: featureFlags.openaiService,
+      demoMode: !featureFlags.openaiService,
+      reason: !featureFlags.openaiService ? 'API key not configured - using pre-generated content' : undefined
+    },
+    {
+      name: 'Supabase Database',
+      enabled: featureFlags.supabaseService,
+      configured: Boolean(
+        env.NEXT_PUBLIC_SUPABASE_URL && 
+        env.NEXT_PUBLIC_SUPABASE_ANON_KEY &&
+        env.NEXT_PUBLIC_SUPABASE_URL !== 'https://placeholder.supabase.co' &&
+        env.NEXT_PUBLIC_SUPABASE_ANON_KEY !== 'placeholder_anon_key'
+      ),
+      healthy: featureFlags.supabaseService,
+      demoMode: !featureFlags.supabaseService,
+      reason: !featureFlags.supabaseService ? 'Database not configured - using localStorage' : undefined
+    },
+    {
+      name: 'Vercel Storage',
+      enabled: featureFlags.vercelStorage,
+      configured: Boolean(env.KV_REST_API_URL && env.KV_REST_API_TOKEN && env.BLOB_READ_WRITE_TOKEN),
+      healthy: featureFlags.vercelStorage,
+      demoMode: !featureFlags.vercelStorage,
+      reason: !featureFlags.vercelStorage ? 'Storage not configured - using memory cache' : undefined
+    },
+    {
+      name: 'Error Monitoring',
+      enabled: featureFlags.monitoring,
+      configured: Boolean(env.SENTRY_DSN),
+      healthy: featureFlags.monitoring,
+      demoMode: false,
+      reason: !featureFlags.monitoring ? 'Sentry not configured - error tracking disabled' : undefined
+    },
+    {
+      name: 'Analytics',
+      enabled: featureFlags.analytics,
+      configured: Boolean(env.LHCI_GITHUB_APP_TOKEN),
+      healthy: featureFlags.analytics,
+      demoMode: false,
+      reason: !featureFlags.analytics ? 'Analytics not configured' : undefined
+    },
+    {
+      name: 'Notifications',
+      enabled: featureFlags.notifications,
+      configured: Boolean(env.SLACK_WEBHOOK_URL),
+      healthy: featureFlags.notifications,
+      demoMode: false,
+      reason: !featureFlags.notifications ? 'Notifications not configured' : undefined
+    }
+  ];
+
+  const result = {
+    services,
+    environment: getEnvironmentInfo(),
+    features: featureFlags,
+    demo: featureFlags.demoMode,
+    timestamp: new Date().toISOString()
+  };
+
+  // Cache the result
+  cache.set(cacheKey, { data: result, timestamp: now });
+
+  return result;
+}
+
+export async function GET(request: NextRequest) {
+  const startTime = performance.now();
+
+  try {
+    const status = await getServiceStatus();
+    const responseTime = performance.now() - startTime;
+
+    // Determine overall health
+    const coreServices = status.services.filter(s => 
+      ['Unsplash API', 'OpenAI API', 'Supabase Database'].includes(s.name)
+    );
+    
+    const healthyServices = coreServices.filter(s => s.healthy || s.demoMode).length;
+    const totalServices = coreServices.length;
+    const overallHealth = healthyServices >= totalServices ? 'healthy' : 'degraded';
+
+    const response = {
+      status: 'ok',
+      health: overallHealth,
+      demo: status.demo,
+      version: process.env.npm_package_version || '1.0.0',
+      ...status,
+      performance: {
+        responseTime: `${responseTime.toFixed(2)}ms`,
+        servicesChecked: status.services.length,
+        cacheHit: responseTime < 50 // Likely a cache hit if very fast
+      }
+    };
+
+    // Add appropriate headers
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        'Cache-Control': 'public, max-age=30, stale-while-revalidate=60',
+        'Content-Type': 'application/json',
+        'X-Response-Time': `${responseTime.toFixed(2)}ms`,
+        'X-Demo-Mode': status.demo ? 'true' : 'false',
+        'X-Service-Health': overallHealth
+      }
+    });
+
+  } catch (error) {
+    const responseTime = performance.now() - startTime;
+    console.error('Status endpoint error:', error);
+
+    return NextResponse.json({
+      status: 'error',
+      health: 'unhealthy',
+      demo: true, // Assume demo mode on error
+      error: {
+        message: 'Failed to check service status',
+        timestamp: new Date().toISOString()
+      },
+      performance: {
+        responseTime: `${responseTime.toFixed(2)}ms`,
+        error: true
+      }
+    }, {
+      status: 500,
+      headers: {
+        'X-Response-Time': `${responseTime.toFixed(2)}ms`,
+        'X-Error': 'true'
+      }
+    });
+  }
+}
+
+// Add a HEAD endpoint for quick health checks
+export async function HEAD(request: NextRequest) {
+  try {
+    const isHealthy = featureFlags.demoMode || 
+                     featureFlags.unsplashService || 
+                     featureFlags.openaiService;
+    
+    return new NextResponse(null, {
+      status: isHealthy ? 200 : 503,
+      headers: {
+        'X-Service-Health': isHealthy ? 'healthy' : 'degraded',
+        'X-Demo-Mode': featureFlags.demoMode ? 'true' : 'false',
+        'Cache-Control': 'public, max-age=30'
+      }
+    });
+  } catch {
+    return new NextResponse(null, {
+      status: 503,
+      headers: {
+        'X-Service-Health': 'unhealthy',
+        'X-Demo-Mode': 'true'
+      }
+    });
+  }
+}
+
+// Add an OPTIONS endpoint for CORS
+export async function OPTIONS(request: NextRequest) {
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET, HEAD, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Max-Age': '86400'
+    }
+  });
+}

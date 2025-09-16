@@ -1,0 +1,117 @@
+# Dependency directories
+node_modules
+npm-debug.log*
+.npm
+
+# Local env files
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Next.js build output
+.next/
+out/
+build/
+dist/
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Temporary folders
+tmp/
+temp/
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*.yml
+
+# Misc
+README.md
+*.md
+.eslintrc.json
+.prettierrc
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+tests/
+test/
+__tests__/
+playwright-report/
+test-results/
+
+# Documentation and reports
+docs/
+*.md
+*.txt
+api-test-report.json
+direct-services-test-report.json
+integration-test-results.json
+web-vitals.json
+build.log
+
+# Deployment files
+vercel.json
+netlify.toml
+.vercel
+.netlify
+
+# Cache
+.swc/
+.turbo/
+.cache/
+.parcel-cache/
+
+# Development files
+.env.example
+.env.sample
+
+# Playwright
+playwright.config.ts
+playwright-staging.config.ts
+
+# Jest
+jest.config.js
+
+# Lighthouse
+lighthouserc.js

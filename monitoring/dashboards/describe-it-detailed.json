@@ -1,0 +1,504 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Describe It - Detailed Analytics",
+    "tags": ["describe-it", "detailed", "analytics"],
+    "style": "dark",
+    "timezone": "browser",
+    "editable": true,
+    "hideControls": false,
+    "graphTooltip": 1,
+    "time": {
+      "from": "now-6h",
+      "to": "now"
+    },
+    "timepicker": {
+      "time_options": ["5m", "15m", "1h", "6h", "12h", "24h", "2d", "7d"]
+    },
+    "templating": {
+      "list": [
+        {
+          "name": "api_key",
+          "type": "query",
+          "query": "label_values(api_requests_total, api_key_hash)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true,
+          "current": {
+            "selected": false,
+            "text": "All",
+            "value": "$__all"
+          }
+        },
+        {
+          "name": "endpoint",
+          "type": "query",
+          "query": "label_values(api_requests_total, endpoint)",
+          "refresh": 1,
+          "includeAll": true,
+          "multi": true
+        }
+      ]
+    },
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Request Volume by API Key",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "topk(10, sum by (api_key_hash) (rate(api_requests_total{api_key_hash=~\"$api_key\"}[$__rate_interval])))",
+            "legendFormat": "{{api_key_hash}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                },
+                {
+                  "color": "red",
+                  "value": 10
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Error Rate by API Key",
+        "type": "bargauge",
+        "targets": [
+          {
+            "expr": "topk(10, sum by (api_key_hash) (rate(api_requests_total{status_code=~\"4..|5..\",api_key_hash=~\"$api_key\"}[$__rate_interval])) / sum by (api_key_hash) (rate(api_requests_total{api_key_hash=~\"$api_key\"}[$__rate_interval])) * 100)",
+            "legendFormat": "{{api_key_hash}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "percent",
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 1
+                },
+                {
+                  "color": "red",
+                  "value": 5
+                }
+              ]
+            }
+          }
+        },
+        "options": {
+          "orientation": "horizontal",
+          "displayMode": "gradient"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "OpenAI Token Usage by Model",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (model) (rate(openai_tokens_used_total[$__rate_interval]))",
+            "legendFormat": "{{model}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "short",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 20,
+              "stacking": {
+                "mode": "normal"
+              }
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom",
+            "values": ["last", "max", "mean"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Response Time Heatmap",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "sum(rate(api_request_duration_seconds_bucket{endpoint=~\"$endpoint\"}[$__rate_interval])) by (le)",
+            "format": "heatmap",
+            "legendFormat": "{{le}}"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              },
+              "scaleDistribution": {
+                "type": "linear"
+              }
+            }
+          }
+        },
+        "options": {
+          "calculate": false,
+          "cellGap": 2,
+          "cellValues": {
+            "unit": "short"
+          },
+          "color": {
+            "exponent": 0.5,
+            "fill": "dark-orange",
+            "mode": "spectrum",
+            "reverse": false,
+            "scale": "exponential",
+            "scheme": "Oranges",
+            "steps": 64
+          },
+          "exemplars": {
+            "color": "rgba(255,0,255,0.7)"
+          },
+          "filterValues": {
+            "le": 1e-9
+          },
+          "legend": {
+            "show": false
+          },
+          "rowsFrame": {
+            "layout": "auto"
+          },
+          "tooltip": {
+            "show": true,
+            "yHistogram": false
+          },
+          "yAxis": {
+            "axisPlacement": "left",
+            "reverse": false,
+            "unit": "s"
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 5,
+        "title": "Rate Limiting Status",
+        "type": "table",
+        "targets": [
+          {
+            "expr": "sort_desc(sum by (api_key_hash, limit_type) (rate_limit_remaining))",
+            "format": "table",
+            "instant": true
+          },
+          {
+            "expr": "sum by (api_key_hash, limit_type) (rate(rate_limit_hits_total[$__rate_interval]))",
+            "format": "table",
+            "instant": true
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "custom": {
+              "align": "auto",
+              "displayMode": "auto",
+              "filterable": true
+            },
+            "mappings": [],
+            "thresholds": {
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "yellow",
+                  "value": 10
+                },
+                {
+                  "color": "red",
+                  "value": 1
+                }
+              ]
+            }
+          },
+          "overrides": [
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Value #A"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Remaining"
+                },
+                {
+                  "id": "custom.displayMode",
+                  "value": "color-background"
+                }
+              ]
+            },
+            {
+              "matcher": {
+                "id": "byName",
+                "options": "Value #B"
+              },
+              "properties": [
+                {
+                  "id": "displayName",
+                  "value": "Hits/sec"
+                },
+                {
+                  "id": "unit",
+                  "value": "short"
+                }
+              ]
+            }
+          ]
+        },
+        "options": {
+          "showHeader": true,
+          "sortBy": [
+            {
+              "desc": true,
+              "displayName": "Hits/sec"
+            }
+          ]
+        },
+        "pluginVersion": "8.0.0",
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 6,
+        "title": "Cache Hit Rate by Type",
+        "type": "piechart",
+        "targets": [
+          {
+            "expr": "sum by (cache_type) (rate(cache_hits_total[$__rate_interval]))",
+            "legendFormat": "{{cache_type}} hits"
+          },
+          {
+            "expr": "sum by (cache_type) (rate(cache_misses_total[$__rate_interval]))",
+            "legendFormat": "{{cache_type}} misses"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "palette-classic"
+            },
+            "custom": {
+              "hideFrom": {
+                "legend": false,
+                "tooltip": false,
+                "vis": false
+              }
+            },
+            "mappings": []
+          }
+        },
+        "options": {
+          "reduceOptions": {
+            "values": false,
+            "calcs": [
+              "lastNotNull"
+            ],
+            "fields": ""
+          },
+          "pieType": "pie",
+          "tooltip": {
+            "mode": "single",
+            "sort": "none"
+          },
+          "legend": {
+            "displayMode": "visible",
+            "placement": "bottom"
+          },
+          "displayLabels": [
+            "name",
+            "percent"
+          ]
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
+        }
+      },
+      {
+        "id": 7,
+        "title": "Top Error Messages",
+        "type": "logs",
+        "targets": [
+          {
+            "expr": "{job=\"describe-it\"} |= \"ERROR\" | json | line_format \"{{.timestamp}} [{{.level}}] {{.message}}\"",
+            "legendFormat": ""
+          }
+        ],
+        "options": {
+          "showTime": true,
+          "showLabels": false,
+          "showCommonLabels": true,
+          "wrapLogMessage": true,
+          "prettifyLogMessage": false,
+          "enableLogDetails": true,
+          "dedupStrategy": "none",
+          "sortOrder": "Descending"
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 24,
+          "x": 0,
+          "y": 32
+        }
+      },
+      {
+        "id": 8,
+        "title": "API Key Performance Comparison",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (api_key_hash) (rate(api_requests_total{api_key_hash=~\"$api_key\"}[$__rate_interval]))",
+            "legendFormat": "{{api_key_hash}} requests/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "reqps",
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 1,
+              "fillOpacity": 5
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["last", "max", "mean"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 40
+        }
+      },
+      {
+        "id": 9,
+        "title": "Cost Analysis by API Key",
+        "type": "timeseries",
+        "targets": [
+          {
+            "expr": "sum by (api_key_hash) (rate(openai_cost_usd_total{api_key_hash=~\"$api_key\"}[$__rate_interval]))",
+            "legendFormat": "{{api_key_hash}} $/sec"
+          }
+        ],
+        "fieldConfig": {
+          "defaults": {
+            "unit": "currencyUSD",
+            "decimals": 4,
+            "custom": {
+              "drawStyle": "line",
+              "lineInterpolation": "smooth",
+              "lineWidth": 2,
+              "fillOpacity": 10,
+              "stacking": {
+                "mode": "normal"
+              }
+            }
+          }
+        },
+        "options": {
+          "tooltip": {
+            "mode": "multi",
+            "sort": "desc"
+          },
+          "legend": {
+            "displayMode": "table",
+            "placement": "right",
+            "values": ["last", "max", "mean"]
+          }
+        },
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 40
+        }
+      }
+    ]
+  }
+}

@@ -50,7 +50,7 @@ const log = {
 class EnvironmentSetup {
   constructor() {
     this.envPath = path.join(process.cwd(), '.env.local');
-    this.templatePath = path.join(process.cwd(), '.env.local.example');
+    this.templatePath = path.join(process.cwd(), 'docs/setup/.env.local.example');
     this.config = {};
   }
 
@@ -140,7 +140,7 @@ class EnvironmentSetup {
 
   copyTemplate() {
     if (!fs.existsSync(this.templatePath)) {
-      log.error('Template file .env.local.example not found');
+      log.error('Template file docs/setup/.env.local.example not found');
       process.exit(1);
     }
 

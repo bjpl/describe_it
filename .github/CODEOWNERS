@@ -1,0 +1,37 @@
+# Global owners
+* @your-username @team-lead
+
+# CI/CD and Infrastructure
+/.github/ @your-username @devops-team
+/vercel.json @your-username @devops-team
+/docker* @your-username @devops-team
+/scripts/ @your-username @devops-team
+
+# Security configurations
+sentry*.config.ts @your-username @security-team
+/.github/workflows/security.yml @your-username @security-team
+
+# Documentation
+/docs/ @your-username @tech-writers
+*.md @your-username @tech-writers
+
+# Database and API
+/src/app/api/ @your-username @backend-team
+/src/lib/api/ @your-username @backend-team
+/database/ @your-username @backend-team
+
+# Frontend components
+/src/components/ @your-username @frontend-team
+/src/styles/ @your-username @frontend-team
+
+# Tests
+/tests/ @your-username @qa-team
+*.test.ts @your-username @qa-team
+*.spec.ts @your-username @qa-team
+
+# Configuration files
+package.json @your-username @team-lead
+tsconfig.json @your-username @team-lead
+next.config.js @your-username @team-lead
+tailwind.config.js @your-username @frontend-team
+playwright.config.ts @your-username @qa-team

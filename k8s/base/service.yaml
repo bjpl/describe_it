@@ -1,0 +1,37 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: describe-it-service
+  namespace: describe-it
+  labels:
+    app: describe-it
+    component: app
+spec:
+  type: ClusterIP
+  ports:
+  - port: 3000
+    targetPort: 3000
+    protocol: TCP
+    name: http
+  selector:
+    app: describe-it
+    component: app
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: describe-it
+  labels:
+    app: describe-it
+    component: redis
+spec:
+  type: ClusterIP
+  ports:
+  - port: 6379
+    targetPort: 6379
+    protocol: TCP
+    name: redis
+  selector:
+    app: describe-it
+    component: redis

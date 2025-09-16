@@ -1,0 +1,335 @@
+name: Deploy to Vercel
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened, ready_for_review]
+  release:
+    types: [published]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+  checks: write
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  NODE_OPTIONS: '--max-old-space-size=4096'
+
+jobs:
+  # Pre-deployment checks
+  pre-deploy-checks:
+    name: Pre-deployment Checks
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    outputs:
+      should-deploy: ${{ steps.check.outputs.should-deploy }}
+      environment: ${{ steps.check.outputs.environment }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Determine deployment strategy
+        id: check
+        run: |
+          if [[ "${{ github.event_name }}" == "release" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "environment=production" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/main" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "environment=production" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "environment=preview" >> $GITHUB_OUTPUT
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "environment=none" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Node.js
+        if: steps.check.outputs.should-deploy == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          check-latest: true
+
+      - name: Install dependencies
+        if: steps.check.outputs.should-deploy == 'true'
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run linting
+        if: steps.check.outputs.should-deploy == 'true'
+        run: npm run lint
+
+      - name: Run type checking
+        if: steps.check.outputs.should-deploy == 'true'
+        run: npm run typecheck
+
+      - name: Run tests
+        if: steps.check.outputs.should-deploy == 'true'
+        run: npm run test:run
+        env:
+          NODE_ENV: test
+
+  # Deploy Preview (PR only)
+  deploy-preview:
+    name: Deploy Preview
+    runs-on: ubuntu-latest
+    needs: pre-deploy-checks
+    if: |
+      needs.pre-deploy-checks.outputs.should-deploy == 'true' && 
+      needs.pre-deploy-checks.outputs.environment == 'preview'
+    environment:
+      name: preview
+      url: ${{ steps.deploy.outputs.preview-url }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          check-latest: true
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          # Preview environment variables
+          NEXT_PUBLIC_APP_URL: https://preview-describe-it.vercel.app
+          NODE_ENV: production
+
+      - name: Deploy to Vercel Preview
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "preview-url=$url" >> $GITHUB_OUTPUT
+          echo "Preview URL: $url"
+
+      - name: Wait for deployment to be ready
+        run: |
+          url="${{ steps.deploy.outputs.preview-url }}"
+          echo "Waiting for $url to be ready..."
+          npx wait-on "$url" --timeout 300000 --interval 5000
+
+      - name: Run smoke tests on preview
+        run: npm run test:smoke
+        env:
+          TEST_URL: ${{ steps.deploy.outputs.preview-url }}
+        continue-on-error: true
+
+      - name: Comment PR with preview URL
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const url = '${{ steps.deploy.outputs.preview-url }}';
+            const comment = `🚀 **Preview Deployment Ready**
+            
+            📱 **Preview URL:** ${url}
+            🔍 **Environment:** Preview
+            📊 **Build:** ${{ github.sha }}
+            
+            ### Quick Links:
+            - 🌐 [Open Preview](${url})
+            - 📝 [View Logs](https://vercel.com/${{ secrets.VERCEL_ORG_ID }}/${{ secrets.VERCEL_PROJECT_ID }})
+            - 🔧 [Vercel Dashboard](https://vercel.com/dashboard)
+            
+            > Preview deployments are temporary and will be automatically cleaned up.`;
+            
+            // Find existing preview comment and update it
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            
+            const existingComment = comments.find(comment => 
+              comment.body.includes('🚀 **Preview Deployment Ready**')
+            );
+            
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: comment
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: comment
+              });
+            }
+
+  # Deploy to Production
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: pre-deploy-checks
+    if: |
+      needs.pre-deploy-checks.outputs.should-deploy == 'true' && 
+      needs.pre-deploy-checks.outputs.environment == 'production'
+    environment:
+      name: production
+      url: https://describe-it.vercel.app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          check-latest: true
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit
+
+      - name: Run full test suite
+        run: |
+          npm run test:run
+          npm run test:integration
+        env:
+          NODE_ENV: test
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel Environment Information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NODE_ENV: production
+          # Production environment variables are set in Vercel dashboard
+
+      - name: Deploy to Vercel Production
+        id: deploy
+        run: |
+          url=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "production-url=$url" >> $GITHUB_OUTPUT
+          echo "Production URL: $url"
+
+      - name: Wait for production deployment
+        run: |
+          url="${{ steps.deploy.outputs.production-url }}"
+          echo "Waiting for $url to be ready..."
+          npx wait-on "$url" --timeout 300000 --interval 10000
+
+      - name: Run production smoke tests
+        run: npm run test:smoke
+        env:
+          TEST_URL: ${{ steps.deploy.outputs.production-url }}
+
+      - name: Run Lighthouse audit on production
+        run: |
+          npm install -g @lhci/cli@latest
+          lhci autorun --config=lighthouserc.js
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+          LHCI_BUILD_CONTEXT__COMMIT_TIME: ${{ github.event.head_commit.timestamp }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        continue-on-error: true
+
+      - name: Create GitHub deployment status
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: context.payload.deployment?.id,
+              state: 'success',
+              environment_url: '${{ steps.deploy.outputs.production-url }}',
+              description: 'Successfully deployed to production'
+            });
+
+      - name: Notify deployment success
+        if: success()
+        run: |
+          echo "✅ Successfully deployed to production!"
+          echo "🌐 Production URL: ${{ steps.deploy.outputs.production-url }}"
+          echo "📊 Build SHA: ${{ github.sha }}"
+          echo "🚀 Deployment completed at $(date)"
+
+  # Security scan post-deployment
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: [deploy-production]
+    if: needs.deploy-production.result == 'success'
+    steps:
+      - name: Run OWASP ZAP security scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: 'https://describe-it.vercel.app'
+          fail-action: false
+          allow-return-codes: '1,2,3'
+        continue-on-error: true
+
+      - name: Upload ZAP scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: zap-scan-results
+          path: report_html.html
+          retention-days: 30
+
+  # Cleanup old preview deployments
+  cleanup:
+    name: Cleanup
+    runs-on: ubuntu-latest
+    needs: [deploy-preview, deploy-production]
+    if: always()
+    steps:
+      - name: Cleanup old preview deployments
+        if: github.event_name == 'pull_request' && github.event.action == 'closed'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            // Find and cleanup preview deployments for closed PRs
+            const { data: deployments } = await github.rest.repos.listDeployments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              environment: 'preview',
+              per_page: 100
+            });
+            
+            // Keep only the 5 most recent preview deployments
+            const deploymentsToInactivate = deployments.slice(5);
+            
+            for (const deployment of deploymentsToInactivate) {
+              await github.rest.repos.createDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                deployment_id: deployment.id,
+                state: 'inactive',
+                description: 'Cleaned up old preview deployment'
+              });
+            }
+            
+            console.log(`Cleaned up ${deploymentsToInactivate.length} old deployments`);

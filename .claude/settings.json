@@ -1,0 +1,77 @@
+{
+  "env": {
+    "CLAUDE_FLOW_AUTO_COMMIT": "false",
+    "CLAUDE_FLOW_AUTO_PUSH": "false",
+    "CLAUDE_FLOW_HOOKS_ENABLED": "false",
+    "CLAUDE_FLOW_TELEMETRY_ENABLED": "true",
+    "CLAUDE_FLOW_REMOTE_EXECUTION": "true",
+    "CLAUDE_FLOW_GITHUB_INTEGRATION": "true",
+    "CLAUDE_FLOW_CHECKPOINTS_ENABLED": "false",
+    "CREATE_GH_RELEASE": "false"
+  },
+  "permissions": {
+    "allow": [
+      "Bash(npx claude-flow *)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:*)",
+      "Bash(npm test *)",
+      "Bash(git status)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git push)",
+      "Bash(git config *)",
+      "Bash(git tag *)",
+      "Bash(git branch *)",
+      "Bash(git checkout *)",
+      "Bash(git stash *)",
+      "Bash(git reset *)",
+      "Bash(git rev-parse *)",
+      "Bash(git ls-files *)",
+      "Bash(gh *)",
+      "Bash(node *)",
+      "Bash(which *)",
+      "Bash(pwd)",
+      "Bash(ls *)",
+      "Bash(dir *)",
+      "Bash(echo *)",
+      "Bash(npx claude-flow@alpha *)",
+      "Bash(claude-flow.cmd *)",
+      "Bash(.claude\\helpers\\*)"
+    ],
+    "deny": [
+      "Bash(rm -rf /)",
+      "Bash(del /s /q C:\\*)",
+      "Bash(format *)",
+      "Bash(curl * | bash)",
+      "Bash(wget * | sh)",
+      "Bash(eval *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [],
+    "PostToolUse": [],
+    "UserPromptSubmit": [],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo Session completed successfully"
+          }
+        ]
+      }
+    ],
+    "PreCompact": []
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "echo Claude Code"
+  },
+  "includeCoAuthoredBy": true,
+  "enabledMcpjsonServers": [
+    "claude-flow",
+    "ruv-swarm"
+  ]
+}

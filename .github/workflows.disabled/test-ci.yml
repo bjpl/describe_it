@@ -1,0 +1,371 @@
+name: Test CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+
+env:
+  NODE_VERSION: '20.11.0'
+  FORCE_COLOR: '1'
+
+jobs:
+  # Job 1: Lint and TypeScript Check
+  lint-and-type-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript check
+        run: npm run typecheck
+
+      - name: Check formatting
+        run: npm run format:check
+
+  # Job 2: Unit Tests with Coverage
+  unit-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint-and-type-check
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run unit tests with coverage
+        run: npm run test:coverage
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v4
+        if: success()
+        with:
+          file: ./coverage/lcov.info
+          flags: unit-tests
+          name: unit-test-coverage
+
+      - name: Archive test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: |
+            coverage/
+            test-results/
+          retention-days: 7
+
+  # Job 3: Integration Tests
+  integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint-and-type-check
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run integration tests
+        run: npm run test:integration
+        env:
+          NODE_ENV: test
+          CI: true
+          # Mock API keys for testing
+          OPENAI_API_KEY: sk-test1234567890abcdef1234567890abcdef1234567890abcdef
+          UNSPLASH_ACCESS_KEY: test-unsplash-key-1234567890abcdef
+
+      - name: Archive integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: test-results/integration/
+          retention-days: 7
+
+  # Job 4: Security Tests
+  security-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: lint-and-type-check
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit
+        run: npm run security:audit
+        continue-on-error: true
+
+      - name: Run security tests
+        run: npx vitest run tests/security/ --reporter=json --outputFile=security-test-results.json
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: Upload security test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-test-results
+          path: security-test-results.json
+          retention-days: 30
+
+      - name: Security audit summary
+        run: |
+          echo "## Security Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Security tests completed. Check artifacts for detailed results." >> $GITHUB_STEP_SUMMARY
+
+  # Job 5: End-to-End Tests
+  e2e-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: [unit-tests, integration-tests]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+          # Use test environment variables for build
+          OPENAI_API_KEY: sk-test1234567890abcdef1234567890abcdef1234567890abcdef
+          UNSPLASH_ACCESS_KEY: test-unsplash-key-1234567890abcdef
+          NEXT_PUBLIC_SUPABASE_URL: https://test.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: test-anon-key
+
+      - name: Run Playwright tests
+        run: npm run test:e2e
+        env:
+          CI: true
+          NODE_ENV: test
+
+      - name: Upload Playwright report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload test videos
+        uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-videos
+          path: test-results/
+          retention-days: 7
+
+  # Job 6: Performance Tests
+  performance-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: unit-tests
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run performance tests
+        run: npm run test:perf
+        env:
+          NODE_ENV: test
+          CI: true
+
+      - name: Archive performance results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: performance-test-results
+          path: performance-results/
+          retention-days: 30
+
+      - name: Performance summary
+        run: |
+          echo "## Performance Test Summary" >> $GITHUB_STEP_SUMMARY
+          echo "Performance benchmarks completed." >> $GITHUB_STEP_SUMMARY
+          cat performance-results/summary.md >> $GITHUB_STEP_SUMMARY || echo "No performance summary available" >> $GITHUB_STEP_SUMMARY
+
+  # Job 7: Build and Deploy Check
+  build-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [unit-tests, integration-tests]
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate environment configuration
+        run: npm run validate:env
+        env:
+          NODE_ENV: production
+
+      - name: Build for production
+        run: npm run build
+        env:
+          NODE_ENV: production
+          SKIP_ENV_VALIDATION: true
+          OPENAI_API_KEY: sk-placeholder
+          UNSPLASH_ACCESS_KEY: placeholder
+
+      - name: Check bundle size
+        run: |
+          npm run analyze
+          echo "## Bundle Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "Build completed successfully. Bundle size analysis available in artifacts." >> $GITHUB_STEP_SUMMARY
+
+      - name: Archive build artifacts
+        uses: actions/upload-artifact@v4
+        if: success()
+        with:
+          name: build-artifacts
+          path: |
+            .next/
+            analyze/
+          retention-days: 3
+
+  # Job 8: Test Summary and Notification
+  test-summary:
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [lint-and-type-check, unit-tests, integration-tests, security-tests, e2e-tests, performance-tests, build-check]
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        continue-on-error: true
+
+      - name: Generate test summary
+        run: |
+          echo "# 🧪 Test Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          echo "## Test Results Overview" >> $GITHUB_STEP_SUMMARY
+          echo "| Test Suite | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|---------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint & TypeScript | ${{ needs.lint-and-type-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Unit Tests | ${{ needs.unit-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Integration Tests | ${{ needs.integration-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Security Tests | ${{ needs.security-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| E2E Tests | ${{ needs.e2e-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Performance Tests | ${{ needs.performance-tests.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build Check | ${{ needs.build-check.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          # Overall status
+          if [[ "${{ needs.unit-tests.result }}" == "success" && "${{ needs.integration-tests.result }}" == "success" && "${{ needs.build-check.result }}" == "success" ]]; then
+            echo "✅ **All critical tests passed!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Some tests failed. Please review the results.**" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "## Artifacts Generated" >> $GITHUB_STEP_SUMMARY
+          echo "- Unit test coverage reports" >> $GITHUB_STEP_SUMMARY
+          echo "- Integration test results" >> $GITHUB_STEP_SUMMARY
+          echo "- Security test analysis" >> $GITHUB_STEP_SUMMARY
+          echo "- E2E test videos (on failure)" >> $GITHUB_STEP_SUMMARY
+          echo "- Performance benchmarks" >> $GITHUB_STEP_SUMMARY
+          echo "- Build artifacts" >> $GITHUB_STEP_SUMMARY
+
+      - name: Set final status
+        run: |
+          if [[ "${{ needs.unit-tests.result }}" != "success" || "${{ needs.integration-tests.result }}" != "success" || "${{ needs.build-check.result }}" != "success" ]]; then
+            echo "Critical tests failed"
+            exit 1
+          fi
+          echo "All critical tests passed"
+
+# Workflow notifications and status checks
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+  actions: read
+  checks: write

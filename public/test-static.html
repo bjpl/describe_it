@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Static Test - Describe It</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        padding: 20px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .container {
+        max-width: 800px;
+        margin: 0 auto;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 30px;
+        border-radius: 10px;
+        backdrop-filter: blur(10px);
+      }
+      h1 {
+        color: #fff;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      }
+      .status {
+        background: rgba(255, 255, 255, 0.2);
+        padding: 15px;
+        border-radius: 5px;
+        margin: 20px 0;
+      }
+      button {
+        background: #ff6b6b;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background 0.3s;
+      }
+      button:hover {
+        background: #ff5252;
+      }
+      .checklist {
+        background: rgba(76, 175, 80, 0.2);
+        padding: 15px;
+        border-radius: 5px;
+      }
+      .checklist li {
+        margin: 5px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🚀 Describe It - Static Test Page</h1>
+
+      <div class="status">
+        <h2>Emergency Status Check</h2>
+        <p id="timestamp">Loading... (JavaScript should update this)</p>
+        <button onclick="testInteractivity()">Test JavaScript</button>
+      </div>
+
+      <div class="checklist">
+        <h3>✅ System Status:</h3>
+        <ul>
+          <li>✅ Static HTML serving</li>
+          <li>✅ CSS styling loaded</li>
+          <li id="js-status">⏳ JavaScript execution (testing...)</li>
+          <li id="next-status">⏳ Next.js status (check main app)</li>
+          <li>✅ File structure accessible</li>
+        </ul>
+      </div>
+
+      <div class="status">
+        <h3>🔗 Quick Links:</h3>
+        <p>
+          <a href="/" style="color: #fff; text-decoration: underline"
+            >Main App (Next.js)</a
+          >
+        </p>
+        <p>
+          <a
+            href="/emergency-page"
+            style="color: #fff; text-decoration: underline"
+            >Emergency React Page</a
+          >
+        </p>
+      </div>
+    </div>
+
+    <script>
+      // Test JavaScript execution
+      document.getElementById("timestamp").textContent =
+        "Page loaded at: " + new Date().toLocaleString();
+      document.getElementById("js-status").innerHTML =
+        "✅ JavaScript execution working";
+
+      function testInteractivity() {
+        alert("JavaScript is working! 🎉");
+        document.getElementById("js-status").innerHTML =
+          "✅ JavaScript interaction confirmed";
+      }
+
+      // Try to detect if Next.js is running
+      fetch("/")
+        .then((response) => {
+          if (response.ok) {
+            document.getElementById("next-status").innerHTML =
+              "✅ Next.js app responding";
+          } else {
+            document.getElementById("next-status").innerHTML =
+              "❌ Next.js app not responding";
+          }
+        })
+        .catch(() => {
+          document.getElementById("next-status").innerHTML =
+            "❌ Next.js app connection failed";
+        });
+    </script>
+  </body>
+</html>

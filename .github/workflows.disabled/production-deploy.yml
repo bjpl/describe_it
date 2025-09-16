@@ -1,0 +1,325 @@
+name: Production Deployment
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+          - staging
+      skip_tests:
+        description: 'Skip test suite'
+        required: false
+        default: false
+        type: boolean
+      force_deploy:
+        description: 'Force deployment even if checks fail'
+        required: false
+        default: false
+        type: boolean
+
+concurrency:
+  group: production-deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  deployments: write
+  pull-requests: write
+  checks: write
+  actions: read
+  security-events: write
+
+env:
+  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+  NODE_OPTIONS: '--max-old-space-size=4096'
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # Pre-deployment validation
+  pre-deploy-validation:
+    name: Pre-deployment Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    outputs:
+      should-deploy: ${{ steps.validation.outputs.should-deploy }}
+      deployment-id: ${{ steps.validation.outputs.deployment-id }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          check-latest: true
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            .next/cache
+            node_modules
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+            ${{ runner.os }}-nextjs-
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --legacy-peer-deps
+
+      - name: Environment validation
+        run: npm run validate:env:prod
+
+      - name: Lint code
+        run: npm run lint
+
+      - name: Type checking
+        run: npm run typecheck
+
+      - name: Run test suite
+        if: ${{ !inputs.skip_tests }}
+        run: |
+          npm run test:run
+          npm run test:integration
+        env:
+          NODE_ENV: test
+
+      - name: Security audit
+        run: npm audit --audit-level=moderate
+        continue-on-error: true
+
+      - name: Build check
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      - name: Validation decision
+        id: validation
+        run: |
+          DEPLOYMENT_ID="deploy-$(date +%Y%m%d-%H%M%S)-${{ github.sha }}"
+          echo "deployment-id=$DEPLOYMENT_ID" >> $GITHUB_OUTPUT
+          
+          if [[ "${{ inputs.force_deploy }}" == "true" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "✅ Force deployment enabled - proceeding"
+          elif [[ "${{ job.status }}" == "success" ]]; then
+            echo "should-deploy=true" >> $GITHUB_OUTPUT
+            echo "✅ All validations passed - proceeding with deployment"
+          else
+            echo "should-deploy=false" >> $GITHUB_OUTPUT
+            echo "❌ Validation failed - deployment blocked"
+          fi
+
+  # Production deployment
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: pre-deploy-validation
+    if: needs.pre-deploy-validation.outputs.should-deploy == 'true'
+    timeout-minutes: 20
+    environment:
+      name: production
+      url: https://describe-it-lovat.vercel.app
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+          check-latest: true
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --legacy-peer-deps
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Create deployment backup
+        run: |
+          mkdir -p deployment-backups
+          echo "Previous deployment backup for: ${{ needs.pre-deploy-validation.outputs.deployment-id }}" > deployment-backups/backup-$(date +%Y%m%d-%H%M%S).txt
+          echo "Git SHA: ${{ github.sha }}" >> deployment-backups/backup-$(date +%Y%m%d-%H%M%S).txt
+          echo "Timestamp: $(date -u +%Y-%m-%dT%H:%M:%S.%3NZ)" >> deployment-backups/backup-$(date +%Y%m%d-%H%M%S).txt
+
+      - name: Pull Vercel Environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build Project Artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        env:
+          NODE_ENV: production
+
+      - name: Deploy to Vercel Production
+        id: deploy
+        run: |
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment-url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          echo "🚀 Deployed to: $DEPLOYMENT_URL"
+
+      - name: Wait for deployment readiness
+        run: |
+          echo "Waiting for deployment to be ready..."
+          npx wait-on "${{ steps.deploy.outputs.deployment-url }}" --timeout 300000 --interval 10000
+
+      - name: Post-deployment validation
+        run: |
+          if [[ -f "./scripts/validate-deployment.sh" ]]; then
+            chmod +x ./scripts/validate-deployment.sh
+            ./scripts/validate-deployment.sh "${{ steps.deploy.outputs.deployment-url }}"
+          else
+            echo "⚠️ Validation script not found, running basic health check"
+            curl -f "${{ steps.deploy.outputs.deployment-url }}/api/health"
+          fi
+
+      - name: Update deployment status
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const deploymentUrl = '${{ steps.deploy.outputs.deployment-url }}';
+            const sha = '${{ github.sha }}';
+            
+            // Create deployment record
+            const { data: deployment } = await github.rest.repos.createDeployment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: sha,
+              environment: 'production',
+              description: 'Production deployment via GitHub Actions',
+              auto_merge: false,
+              required_contexts: []
+            });
+            
+            // Update deployment status
+            await github.rest.repos.createDeploymentStatus({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              deployment_id: deployment.id,
+              state: 'success',
+              environment_url: deploymentUrl,
+              description: 'Successfully deployed to production'
+            });
+
+  # Post-deployment testing
+  post-deploy-tests:
+    name: Post-deployment Tests
+    runs-on: ubuntu-latest
+    needs: [pre-deploy-validation, deploy-production]
+    if: needs.deploy-production.result == 'success'
+    timeout-minutes: 10
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --prefer-offline --no-audit --legacy-peer-deps
+
+      - name: Run smoke tests
+        run: npm run test:smoke
+        env:
+          TEST_URL: https://describe-it-lovat.vercel.app
+
+      - name: Performance audit
+        run: npm run test:vitals
+        env:
+          TEST_URL: https://describe-it-lovat.vercel.app
+        continue-on-error: true
+
+      - name: Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@latest
+          lhci autorun --config=.lighthouserc.js
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_HASH: ${{ github.sha }}
+          LHCI_BUILD_CONTEXT__COMMIT_TIME: ${{ github.event.head_commit.timestamp }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+        continue-on-error: true
+
+  # Security scanning
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: deploy-production
+    if: needs.deploy-production.result == 'success'
+    timeout-minutes: 15
+    steps:
+      - name: OWASP ZAP Security Scan
+        uses: zaproxy/action-full-scan@v0.10.0
+        with:
+          target: 'https://describe-it-lovat.vercel.app'
+          fail-action: false
+          allow-return-codes: '1,2,3'
+        continue-on-error: true
+
+      - name: Upload security scan results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: security-scan-results
+          path: report_html.html
+          retention-days: 30
+
+  # Notification and cleanup
+  notify-and-cleanup:
+    name: Notify and Cleanup
+    runs-on: ubuntu-latest
+    needs: [pre-deploy-validation, deploy-production, post-deploy-tests, security-scan]
+    if: always()
+    steps:
+      - name: Determine overall status
+        id: status
+        run: |
+          if [[ "${{ needs.deploy-production.result }}" == "success" ]]; then
+            echo "status=success" >> $GITHUB_OUTPUT
+            echo "message=✅ Production deployment completed successfully" >> $GITHUB_OUTPUT
+          elif [[ "${{ needs.pre-deploy-validation.result }}" == "failure" ]]; then
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ Pre-deployment validation failed" >> $GITHUB_OUTPUT
+          else
+            echo "status=failure" >> $GITHUB_OUTPUT
+            echo "message=❌ Production deployment failed" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Production Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.status.outputs.status }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Message:** ${{ steps.status.outputs.message }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Deployment ID:** ${{ needs.pre-deploy-validation.outputs.deployment-id }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔗 Links" >> $GITHUB_STEP_SUMMARY
+          echo "- [🌐 Production URL](https://describe-it-lovat.vercel.app)" >> $GITHUB_STEP_SUMMARY
+          echo "- [📊 Vercel Dashboard](https://vercel.com/dashboard)" >> $GITHUB_STEP_SUMMARY
+          echo "- [📝 Deployment Logs](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})" >> $GITHUB_STEP_SUMMARY
+
+      - name: Cleanup old artifacts
+        run: |
+          echo "🧹 Cleanup would run here to remove old deployment artifacts"
+          echo "This could include removing old preview deployments, cleaning caches, etc."

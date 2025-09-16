@@ -1,0 +1,193 @@
+{
+  "name": "Describe It - Spanish Learning with Images",
+  "short_name": "Describe It",
+  "description": "Learn Spanish through visual descriptions, Q&A, and vocabulary extraction with AI-powered learning tools",
+  "version": "1.0.0",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "dir": "ltr",
+
+  "icons": [
+    {
+      "src": "/icons/icon-72x72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-96x96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-128x128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-152x152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-384x384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+
+  "shortcuts": [
+    {
+      "name": "Search Images",
+      "short_name": "Search",
+      "description": "Search for images to describe in Spanish",
+      "url": "/?action=search",
+      "icons": [
+        {
+          "src": "/icons/shortcut-search.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Study Mode",
+      "short_name": "Study",
+      "description": "Review vocabulary and practice Spanish",
+      "url": "/?action=study",
+      "icons": [
+        {
+          "src": "/icons/shortcut-study.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    },
+    {
+      "name": "Progress",
+      "short_name": "Progress",
+      "description": "View your learning progress and statistics",
+      "url": "/?action=progress",
+      "icons": [
+        {
+          "src": "/icons/shortcut-progress.png",
+          "sizes": "96x96",
+          "type": "image/png"
+        }
+      ]
+    }
+  ],
+
+  "categories": ["education", "language", "learning", "productivity"],
+
+  "screenshots": [
+    {
+      "src": "/screenshots/desktop-home.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Home screen with image search"
+    },
+    {
+      "src": "/screenshots/mobile-search.png",
+      "sizes": "375x812",
+      "type": "image/png",
+      "platform": "narrow",
+      "label": "Mobile image search interface"
+    },
+    {
+      "src": "/screenshots/learning-mode.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "platform": "wide",
+      "label": "Interactive Spanish learning mode"
+    }
+  ],
+
+  "features": [
+    {
+      "name": "offline",
+      "description": "Works offline with cached content"
+    },
+    {
+      "name": "push-notifications",
+      "description": "Daily learning reminders"
+    },
+    {
+      "name": "background-sync",
+      "description": "Sync progress when connection returns"
+    }
+  ],
+
+  "prefer_related_applications": false,
+
+  "edge_side_panel": {
+    "preferred_width": 400
+  },
+
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+
+  "protocol_handlers": [
+    {
+      "protocol": "web+describeit",
+      "url": "/?url=%s"
+    }
+  ],
+
+  "share_target": {
+    "action": "/share",
+    "method": "POST",
+    "enctype": "multipart/form-data",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url",
+      "files": [
+        {
+          "name": "image",
+          "accept": ["image/*"]
+        }
+      ]
+    }
+  },
+
+  "file_handlers": [
+    {
+      "action": "/handle-image",
+      "accept": {
+        "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp"]
+      }
+    }
+  ],
+
+  "handle_links": "preferred"
+}
