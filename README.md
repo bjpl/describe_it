@@ -56,7 +56,7 @@ npm install
 3. Copy environment variables:
 
 ```bash
-cp .env.local.example .env.local
+cp docs/setup/.env.local.example .env.local
 ```
 
 4. Configure environment variables in `.env.local`:
@@ -105,8 +105,8 @@ node -e "console.log('SESSION_SECRET=' + require('crypto').randomBytes(16).toStr
 Create your `.env.local` file with the following structure:
 
 ```bash
-# Copy from .env.local.example
-cp .env.local.example .env.local
+# Copy from docs/setup/.env.local.example
+cp docs/setup/.env.local.example .env.local
 ```
 
 Then edit `.env.local` with your actual values:
@@ -134,7 +134,7 @@ KV_REST_API_TOKEN=your-kv-token
 
 The project uses multiple environment files for different purposes:
 
-- **`.env.local.example`** - Template with all variables and documentation
+- **`docs/setup/.env.local.example`** - Template with all variables and documentation
 - **`.env.local`** - Your local development configuration (not committed)
 - **`.env.production`** - Production configuration (not committed)
 - **`.env.example`** - Comprehensive template with all options

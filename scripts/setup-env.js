@@ -15,10 +15,10 @@
  *   npm run setup:env --test   # Test connections only
  */
 
-const fs = require('fs');
-const path = require('path');
-const crypto = require('crypto');
-const readline = require('readline');
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
+import readline from 'readline';
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -68,7 +68,7 @@ class EnvironmentSetup {
     }
 
     if (args.includes('--validate')) {
-      return this.validateEnvironment();
+      return await this.validateEnvironment();
     }
 
     // Interactive setup
@@ -223,8 +223,9 @@ class EnvironmentSetup {
   async testConnections() {
     log.title('🧪 Testing API Connections');
 
-    // Load environment
-    require('dotenv').config({ path: this.envPath });
+    // Load environment - dynamic import for ES modules
+    const { default: dotenv } = await import('dotenv');
+    dotenv.config({ path: this.envPath });
 
     const tests = [
       { name: 'Supabase', test: this.testSupabase },
@@ -295,10 +296,11 @@ class EnvironmentSetup {
     }
   }
 
-  validateEnvironment() {
+  async validateEnvironment() {
     log.title('✅ Environment Validation');
 
-    require('dotenv').config({ path: this.envPath });
+    const { default: dotenv } = await import('dotenv');
+    dotenv.config({ path: this.envPath });
 
     const requiredVars = [
       'NEXT_PUBLIC_SUPABASE_URL',

@@ -162,7 +162,7 @@ describe_it/
   - `docker-compose.production.yml` - Production setup
   - `Dockerfile.production` - Optimized production image
 - `env-examples/` - Environment variable templates
-  - `.env.local.example` - Local development
+  - `.env.local.example` - Local development template
   - `.env.security.example` - Security configs
 - Test Configurations:
   - `vitest.config.ts` - Unit test configuration
