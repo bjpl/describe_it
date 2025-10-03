@@ -10,6 +10,7 @@ import {
   isProduction,
 } from "@/config/env";
 import { logger } from "@/lib/logger";
+import { logger } from '@/lib/logger';
 
 /**
  * Performs comprehensive startup validation
@@ -59,24 +60,24 @@ export function performStartupValidation(): void {
 function logEnvironmentInfo(
   envInfo: ReturnType<typeof getEnvironmentInfo>,
 ): void {
-  console.log("📋 Environment Information:");
-  console.log(`   • Environment: ${envInfo.nodeEnv}`);
-  console.log(`   • App URL: ${envInfo.appUrl}`);
-  console.log(
+  logger.info("📋 Environment Information:");
+  logger.info(`   • Environment: ${envInfo.nodeEnv}`);
+  logger.info(`   • App URL: ${envInfo.appUrl}`);
+  logger.info(
     `   • Demo Mode: ${envInfo.demoMode ? "✅ Enabled" : "❌ Disabled"}`,
   );
-  console.log(
+  logger.info(
     `   • Maintenance Mode: ${envInfo.maintenanceMode ? "🚧 Enabled" : "❌ Disabled"}`,
   );
 
   if (envInfo.buildId) {
-    console.log(`   • Build ID: ${envInfo.buildId}`);
+    logger.info(`   • Build ID: ${envInfo.buildId}`);
   }
 
-  console.log(`   • Timestamp: ${envInfo.timestamp}`);
+  logger.info(`   • Timestamp: ${envInfo.timestamp}`);
 
   // Log service statuses
-  console.log("\n🔧 Service Status:");
+  logger.info("\n🔧 Service Status:");
   const servicesByCategory = envInfo.services.reduce(
     (acc, service) => {
       if (!acc[service.category]) acc[service.category] = [];
@@ -88,26 +89,26 @@ function logEnvironmentInfo(
 
   Object.entries(servicesByCategory).forEach(([category, services]) => {
     const categoryName = category.charAt(0).toUpperCase() + category.slice(1);
-    console.log(`\n   ${categoryName} Services:`);
+    logger.info(`\n   ${categoryName} Services:`);
 
     services.forEach((service) => {
       const status = service.enabled ? "✅" : service.demoMode ? "🎭" : "❌";
       const requiredIndicator = service.required ? " (Required)" : "";
-      console.log(`     ${status} ${service.name}${requiredIndicator}`);
+      logger.info(`     ${status} ${service.name}${requiredIndicator}`);
 
       if (service.reason) {
-        console.log(`       └─ ${service.reason}`);
+        logger.info(`       └─ ${service.reason}`);
       }
     });
   });
 
   // Log demo mode details if enabled
   if (envInfo.demoMode) {
-    console.log("\n🎭 Demo Mode Active:");
-    console.log("     • Using mock data for external APIs");
-    console.log("     • All features available with demo content");
-    console.log("     • No API keys required");
-    console.log("     • Add real API keys to .env.local to disable demo mode");
+    logger.info("\n🎭 Demo Mode Active:");
+    logger.info("     • Using mock data for external APIs");
+    logger.info("     • All features available with demo content");
+    logger.info("     • No API keys required");
+    logger.info("     • Add real API keys to .env.local to disable demo mode");
   }
 }
 
@@ -120,7 +121,7 @@ function performStartupChecks(): void {
   const majorVersion = parseInt(nodeVersion.slice(1).split(".")[0]);
 
   if (majorVersion < 18) {
-    console.warn(
+    logger.warn(
       `⚠️  Node.js version ${nodeVersion} is below recommended (18.0.0)`,
     );
   }
@@ -130,20 +131,20 @@ function performStartupChecks(): void {
   const memoryMB = Math.round(memoryUsage.rss / 1024 / 1024);
 
   if (memoryMB > 512) {
-    console.warn(`⚠️  High memory usage at startup: ${memoryMB}MB`);
+    logger.warn(`⚠️  High memory usage at startup: ${memoryMB}MB`);
   }
 
   // Check demo mode recommendations
   if (isDemoMode() && isProduction()) {
-    console.warn("⚠️  Demo mode is active in production environment");
-    console.warn("     Consider configuring real API keys for production use");
+    logger.warn("⚠️  Demo mode is active in production environment");
+    logger.warn("     Consider configuring real API keys for production use");
   }
 
-  console.log(`\n📊 Runtime Information:`);
-  console.log(`   • Node.js: ${nodeVersion}`);
-  console.log(`   • Platform: ${process.platform}`);
-  console.log(`   • Architecture: ${process.arch}`);
-  console.log(`   • Memory Usage: ${memoryMB}MB`);
+  logger.info(`\n📊 Runtime Information:`);
+  logger.info(`   • Node.js: ${nodeVersion}`);
+  logger.info(`   • Platform: ${process.platform}`);
+  logger.info(`   • Architecture: ${process.arch}`);
+  logger.info(`   • Memory Usage: ${memoryMB}MB`);
 }
 
 /**

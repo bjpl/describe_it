@@ -10,6 +10,7 @@ import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { createClient } from '@supabase/supabase-js';
 import { RateLimitMiddleware, checkRateLimitStatus } from '@/lib/rate-limiting';
 import { getAuditLogger } from '@/lib/security/audit-logger';
+import { apiLogger } from '@/lib/logger';
 
 // Initialize audit logger
 const logger = getAuditLogger('auth-signin');
@@ -48,7 +49,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
                   request.headers.get('x-real-ip') || 
                   'unknown';
   
-  console.log('[Signin] Endpoint called:', {
+  apiLogger.info('[Signin] Endpoint called:', {
     requestId,
     clientIP,
     userAgent: request.headers.get('user-agent'),
@@ -137,7 +138,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('[Signin] Missing Supabase configuration');
+      apiLogger.error('[Signin] Missing Supabase configuration');
       logger.logEvent({
         action: 'signin_config_error',
         details: {
@@ -165,7 +166,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
       }
     });
     
-    console.log('[Signin] Authenticating user:', email);
+    apiLogger.info('[Signin] Authenticating user:', email);
     
     // Special handling for admin account during development
     if (email === 'brandon.lambert87@gmail.com' && password === 'Test123') {
@@ -177,7 +178,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
       
       // If rate limited, return a valid mock session for admin
       if (error && (error.message?.includes('quota') || error.message?.includes('exceeded'))) {
-        console.log('[Signin] Admin account rate limited, using enhanced mock');
+        apiLogger.info('[Signin] Admin account rate limited, using enhanced mock');
         
         logger.logEvent({
           action: 'signin_admin_bypass',
@@ -219,7 +220,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
       
       // If successful, continue normally
       if (!error && data) {
-        console.log('[Signin] Admin signin successful');
+        apiLogger.info('[Signin] Admin signin successful');
         
         logger.logEvent({
           action: 'signin_success',
@@ -259,7 +260,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
     });
     
     if (error) {
-      console.error('[Signin] Auth error:', error);
+      apiLogger.error('[Signin] Auth error:', error);
       
       // Log failed authentication attempt
       logger.logEvent({
@@ -278,7 +279,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
           error.message?.includes('rate') || 
           error.message?.includes('exceeded') ||
           error.status === 429) {
-        console.log('[Signin] Rate limited, using mock auth');
+        apiLogger.info('[Signin] Rate limited, using mock auth');
         
         logger.logEvent({
           action: 'signin_mock_fallback',
@@ -346,7 +347,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
       );
     }
     
-    console.log('[Signin] Success:', { userId: data.user?.id });
+    apiLogger.info('[Signin] Success:', { userId: data.user?.id });
     
     // Log successful authentication
     logger.logEvent({
@@ -378,7 +379,7 @@ async function handleSignin(request: NextRequest): Promise<NextResponse> {
     }, { headers: corsHeaders });
     
   } catch (error: any) {
-    console.error('[Signin] Unexpected error:', error);
+    apiLogger.error('[Signin] Unexpected error:', error);
     
     // Log unexpected error
     logger.logEvent({

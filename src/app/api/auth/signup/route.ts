@@ -6,7 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { createClient } from '@supabase/supabase-js';
-import { 
+import {
   authSignupSchema,
   authSigninSchema,
   validateSecurityHeaders,
@@ -15,8 +15,12 @@ import {
   createSuccessResponse
 } from '@/lib/schemas/api-validation';
 import { z } from 'zod';
+import { authLogger, createRequestLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
+  const logger = createRequestLogger('auth-signup', request);
+  logger.auth('Sign-up endpoint called', true);
+
   try {
     // Security validation
     const securityCheck = validateSecurityHeaders(request.headers);
@@ -63,7 +67,10 @@ export async function POST(request: NextRequest) {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing Supabase credentials');
+      logger.error('Missing Supabase credentials', undefined, {
+        category: 'system',
+        severity: 'critical'
+      });
       return createErrorResponse('Server configuration error', 500);
     }
 
@@ -91,8 +98,12 @@ export async function POST(request: NextRequest) {
       });
 
       if (error) {
-        console.error('Supabase signup error:', error);
-        
+        logger.error('Supabase signup failed', error as Error, {
+          email,
+          category: 'authentication',
+          severity: 'high'
+        });
+
         // Handle specific error cases
         if (error.message?.includes('already registered')) {
           return createErrorResponse('This email is already registered. Please sign in instead.', 400);
@@ -106,15 +117,15 @@ export async function POST(request: NextRequest) {
       
       // If we reach here but have no data, something went wrong
       if (!data || !data.user) {
-        console.error('No user data returned from Supabase');
+        apiLogger.error('No user data returned from Supabase');
         return createErrorResponse('Failed to create account - no user data returned', 500);
       }
     } catch (fetchError: any) {
-      console.error('Network error calling Supabase:', fetchError);
+      apiLogger.error('Network error calling Supabase:', fetchError);
       
       // For now, fall back to mock auth when Supabase is unreachable
       // This allows the app to work while we fix Supabase configuration
-      console.log('Falling back to mock authentication');
+      apiLogger.info('Falling back to mock authentication');
       
       const mockUser = {
         id: 'mock-' + Date.now(),
@@ -169,7 +180,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Server error during signup:', error);
+    apiLogger.error('Server error during signup:', error);
     return createErrorResponse(
       'Internal server error',
       500,

@@ -5,6 +5,7 @@
 
 import { NextRequest } from "next/server";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface LogContext {
   requestId: string;
@@ -258,7 +259,7 @@ export class StructuredLogger {
     };
 
     if (this.enableConsole) {
-      console.log(JSON.stringify(logEntry, null, 2));
+      logger.info(JSON.stringify(logEntry, null, 2));
     }
 
     // Store in memory for analytics (could be extended to write to file/database)
@@ -302,7 +303,7 @@ export class StructuredLogger {
       }
     } catch (error) {
       // Don't let logging errors break the application
-      console.error('Failed to send to external tracking:', error);
+      logger.error('Failed to send to external tracking:', error);
     }
   }
 

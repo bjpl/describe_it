@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * Rate Limiting Module
  * 
@@ -162,7 +164,7 @@ export const DevUtils = {
   logStats: async () => {
     const rateLimiter = getRateLimiter();
     const stats = await rateLimiter.getStats();
-    console.log('[Rate Limit] Statistics:', stats);
+    logger.info('[Rate Limit] Statistics:', stats);
     return stats;
   },
 } as const;

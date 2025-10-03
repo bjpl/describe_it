@@ -3,6 +3,7 @@ import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Wifi, WifiOff, Download, Check, X } from "lucide-react";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { performanceLogger } from '@/lib/logger';
 
 interface PWAOptimizationsProps {
   enabled?: boolean;
@@ -99,7 +100,7 @@ export const PWAOptimizations: React.FC<PWAOptimizationsProps> = ({
             registration.active.postMessage({ type: "GET_CACHE_STATUS" });
           }
         } catch (error) {
-          console.error("SW registration failed:", error);
+          performanceLogger.error("SW registration failed:", error);
         }
       }
     };

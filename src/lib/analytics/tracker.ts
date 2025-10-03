@@ -6,6 +6,7 @@
 import { supabase } from '@/lib/supabase';
 import { AnalyticsEvent, validateEvent, serializeEvent } from './events';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface TrackerConfig {
   batchSize: number;
@@ -83,7 +84,7 @@ class AnalyticsTracker {
         localStorage.removeItem('analytics_events');
       }
     } catch (error) {
-      console.warn('Failed to load stored analytics events:', error);
+      logger.warn('Failed to load stored analytics events:', error);
       // Clear corrupted data
       try {
         localStorage.removeItem('analytics_events');
@@ -103,7 +104,7 @@ class AnalyticsTracker {
       
       // Check if data size is reasonable (< 1MB)
       if (data.length > 1024 * 1024) {
-        console.warn('[Analytics] Event queue too large, truncating');
+        logger.warn('[Analytics] Event queue too large, truncating');
         const truncatedEvents = eventsToStore.slice(0, Math.floor(eventsToStore.length / 2));
         localStorage.setItem('analytics_events', safeStringify(truncatedEvents));
       } else {
@@ -112,7 +113,7 @@ class AnalyticsTracker {
     } catch (error) {
       // Handle quota exceeded error
       if (error instanceof DOMException && error.name === 'QuotaExceededError') {
-        console.warn('[Analytics] localStorage quota exceeded, clearing old events');
+        logger.warn('[Analytics] localStorage quota exceeded, clearing old events');
         try {
           localStorage.removeItem('analytics_events');
           // Try to store only the most recent 10 events
@@ -120,10 +121,10 @@ class AnalyticsTracker {
           safeSetLocalStorage('analytics_events', recentEvents);
         } catch {
           // If still failing, give up on localStorage
-          console.warn('[Analytics] Cannot use localStorage for analytics');
+          logger.warn('[Analytics] Cannot use localStorage for analytics');
         }
       } else {
-        console.warn('[Analytics] Failed to store events:', error);
+        logger.warn('[Analytics] Failed to store events:', error);
       }
     }
   }
@@ -156,7 +157,7 @@ class AnalyticsTracker {
 
     // Check queue size limit
     if (this.eventQueue.length >= this.config.maxQueueSize) {
-      console.warn('[Analytics] Event queue full, dropping oldest events');
+      logger.warn('[Analytics] Event queue full, dropping oldest events');
       // Remove oldest events to make room
       this.eventQueue = this.eventQueue.slice(-Math.floor(this.config.maxQueueSize / 2));
     }
@@ -169,14 +170,14 @@ class AnalyticsTracker {
     };
 
     if (!validateEvent(fullEvent)) {
-      console.warn('Invalid analytics event:', fullEvent);
+      logger.warn('Invalid analytics event:', fullEvent);
       return;
     }
 
     this.eventQueue.push(fullEvent);
 
     if (this.config.enableConsoleLogging) {
-      console.log('Analytics Event:', fullEvent);
+      logger.info('Analytics Event:', fullEvent);
     }
 
     // Auto-flush if batch size reached
@@ -206,7 +207,7 @@ class AnalyticsTracker {
     try {
       await this.sendEvents(eventsToSend);
     } catch (error) {
-      console.error('Failed to send analytics events:', error);
+      logger.error('Failed to send analytics events:', error);
       
       // Re-queue failed events for retry
       this.eventQueue.unshift(...eventsToSend);
@@ -233,7 +234,7 @@ class AnalyticsTracker {
       if (result.success) {
         // Events were processed successfully (even if not persisted)
         if (result.storage === 'fallback' || result.storage === 'rate-limited') {
-          console.info('[Analytics] Events processed with fallback storage');
+          logger.info('[Analytics] Events processed with fallback storage');
         }
         return; // Don't retry on success
       }
@@ -252,7 +253,7 @@ class AnalyticsTracker {
         }, delay);
       } else {
         // Don't throw for analytics failures - they shouldn't break the app
-        console.warn('[Analytics] Failed to send events after retries:', error);
+        logger.warn('[Analytics] Failed to send events after retries:', error);
       }
     }
   }

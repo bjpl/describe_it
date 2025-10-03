@@ -1,5 +1,6 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
+import { dbLogger } from '@/lib/logger';
 
 /**
  * Middleware to handle Supabase authentication and session management
@@ -10,7 +11,7 @@ export async function updateSession(request: NextRequest) {
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
   if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Missing Supabase environment variables')
+    dbLogger.error('Missing Supabase environment variables')
     return NextResponse.next()
   }
 
@@ -148,7 +149,7 @@ export async function getUserFromRequest(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
     return user
   } catch (error) {
-    console.error('Error getting user in middleware:', error)
+    dbLogger.error('Error getting user in middleware:', error)
     return null
   }
 }

@@ -1,3 +1,5 @@
+import { performanceLogger } from '@/lib/logger';
+
 // Performance Optimization Library
 // Central exports for all performance-related modules
 
@@ -94,25 +96,25 @@ export class PerformanceOptimizer {
           enableSystemMetrics: true,
           reportingIntervalMs: 60000,
         });
-        console.log('Performance monitoring initialized');
+        performanceLogger.info('Performance monitoring initialized');
       }
 
       // Initialize cache if Redis config provided
       if (config.redis) {
         const cache = getCache(config.redis);
-        console.log('Redis cache initialized');
+        performanceLogger.info('Redis cache initialized');
       }
 
       // Initialize connection pools if OpenAI config provided
       if (config.openai?.apiKey) {
         const pool = poolManager.getPool(config.openai.apiKey, config.openai.baseURL);
         await pool.warmUp();
-        console.log('OpenAI connection pool initialized');
+        performanceLogger.info('OpenAI connection pool initialized');
       }
 
-      console.log('All performance optimizations initialized successfully');
+      performanceLogger.info('All performance optimizations initialized successfully');
     } catch (error) {
-      console.error('Failed to initialize performance optimizations:', error);
+      performanceLogger.error('Failed to initialize performance optimizations:', error);
       throw error;
     }
   }
@@ -217,9 +219,9 @@ export class PerformanceOptimizer {
       const monitor = getPerformanceMonitor();
       monitor.destroy();
       
-      console.log('Performance optimizations cleaned up successfully');
+      performanceLogger.info('Performance optimizations cleaned up successfully');
     } catch (error) {
-      console.error('Error during performance cleanup:', error);
+      performanceLogger.error('Error during performance cleanup:', error);
     }
   }
 }

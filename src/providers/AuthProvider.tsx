@@ -4,6 +4,7 @@ import React, { createContext, useContext, useEffect, useState, useReducer, useM
 import { authManager, AuthState } from '@/lib/auth/AuthManager';
 import { User } from '@supabase/supabase-js';
 import { safeParse } from '@/lib/utils/json-safe';
+import { authLogger } from '@/lib/logger';
 
 interface AuthContextValue extends AuthState {
   signIn: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
@@ -28,7 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Check for existing session on mount
     const checkSession = async () => {
       const currentState = authManager.getAuthState();
-      console.log('[AuthProvider] Initial auth check:', {
+      authLogger.info('[AuthProvider] Initial auth check:', {
         isAuthenticated: currentState.isAuthenticated,
         hasUser: !!currentState.user
       });
@@ -36,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check localStorage directly for session
       const storedSession = localStorage.getItem('describe-it-auth');
       if (storedSession && !currentState.isAuthenticated) {
-        console.log('[AuthProvider] Found session in localStorage but auth not initialized');
+        authLogger.info('[AuthProvider] Found session in localStorage but auth not initialized');
         const sessionData = safeParse(storedSession, null);
         if (sessionData && sessionData.access_token) {
           // Initialize auth manager with the stored session
@@ -49,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             return;
           }
         } else {
-          console.error('[AuthProvider] Failed to restore session from localStorage: Invalid JSON');
+          authLogger.error('[AuthProvider] Failed to restore session from localStorage: Invalid JSON');
         }
       }
       
@@ -61,7 +62,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { authHelpers } = await import('@/lib/supabase/client');
       const session = await authHelpers.getCurrentSession();
       if (session && !currentState.isAuthenticated) {
-        console.log('[AuthProvider] Found session but auth state not updated, forcing update');
+        authLogger.info('[AuthProvider] Found session but auth state not updated, forcing update');
         // Force auth manager to recognize the session
         await authManager.initialize();
         const updatedState = authManager.getAuthState();
@@ -75,7 +76,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Subscribe to auth state changes
     const unsubscribe = authManager.subscribe((state) => {
-      console.log('[AuthProvider] Auth state changed:', {
+      authLogger.info('[AuthProvider] Auth state changed:', {
         isAuthenticated: state.isAuthenticated,
         userEmail: state.user?.email,
         hasProfile: !!state.profile
@@ -89,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Also listen for custom auth events
     const handleAuthChange = (event: Event) => {
       const customEvent = event as CustomEvent;
-      console.log('[AuthProvider] Custom auth event received:', customEvent.detail);
+      authLogger.info('[AuthProvider] Custom auth event received:', customEvent.detail);
       // Force a re-fetch of auth state
       setAuthState(authManager.getAuthState());
       setVersion(v => v + 1);
@@ -101,7 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Listen for storage changes (cross-tab auth changes)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'describe-it-auth' || e.key?.startsWith('supabase.auth.token')) {
-        console.log('[AuthProvider] Storage change detected, forcing auth state sync');
+        authLogger.info('[AuthProvider] Storage change detected, forcing auth state sync');
         setTimeout(() => {
           const currentState = authManager.getAuthState();
           setAuthState(currentState);
@@ -128,7 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Check if there's a mismatch between our state and the auth manager's state
       if (currentState.isAuthenticated !== authState.isAuthenticated ||
           currentState.user?.id !== authState.user?.id) {
-        console.log('[AuthProvider] Detected state mismatch, forcing sync:', {
+        authLogger.info('[AuthProvider] Detected state mismatch, forcing sync:', {
           current: { isAuth: currentState.isAuthenticated, userId: currentState.user?.id },
           local: { isAuth: authState.isAuthenticated, userId: authState.user?.id }
         });
@@ -147,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const contextValue: AuthContextValue = useMemo(() => {
     const refreshKey = Date.now(); // Force new object reference every time
     
-    console.log('[AuthProvider] Creating new context value:', {
+    authLogger.info('[AuthProvider] Creating new context value:', {
       isAuthenticated: authState.isAuthenticated,
       userEmail: authState.user?.email,
       refreshKey,
@@ -184,7 +185,7 @@ export function useAuth() {
   
   // Debug logging for state changes
   React.useEffect(() => {
-    console.log('[useAuth] Hook triggered with context:', {
+    authLogger.info('[useAuth] Hook triggered with context:', {
       isAuthenticated: context.isAuthenticated,
       userEmail: context.user?.email,
       refreshKey: context.refreshKey,
@@ -207,7 +208,7 @@ export function useIsAuthenticated(): boolean {
   
   // Debug logging for authentication state changes
   React.useEffect(() => {
-    console.log('[useIsAuthenticated] Authentication state:', {
+    authLogger.info('[useIsAuthenticated] Authentication state:', {
       isAuthenticated,
       refreshKey,
       version,
@@ -229,7 +230,7 @@ export function useApiKeys() {
       setKeys(apiKeys);
       setLoading(false);
     }).catch(error => {
-      console.error('Failed to get API keys:', error);
+      authLogger.error('Failed to get API keys:', error);
       setLoading(false);
     });
   }, [getApiKeys]);

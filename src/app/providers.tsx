@@ -4,6 +4,7 @@ import { ReactQueryProvider } from "@/providers/ReactQueryProvider";
 import { ErrorBoundary } from "@/providers/ErrorBoundary";
 import { AuthProvider } from "@/providers/AuthProvider";
 import { useEffect } from 'react';
+import { logger } from '@/lib/logger';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   useEffect(() => {
@@ -15,7 +16,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           initializeAnalytics();
         });
       } catch (error) {
-        console.error('Failed to initialize analytics:', error);
+        logger.error('Failed to initialize analytics:', error);
       }
     }
   }, []);

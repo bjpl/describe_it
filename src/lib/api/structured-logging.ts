@@ -1,5 +1,6 @@
 import { vercelKvCache } from "./vercel-kv";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { apiLogger } from '@/lib/logger';
 
 export enum LogLevel {
   DEBUG = 0,
@@ -177,7 +178,7 @@ class StructuredLogger {
         }
       }
     } catch (error) {
-      console.error("Failed to store log entry:", error);
+      apiLogger.error("Failed to store log entry:", error);
     }
   }
 
@@ -195,7 +196,7 @@ class StructuredLogger {
 
       this.metricsBuffer = [];
     } catch (error) {
-      console.error("Failed to flush metrics:", error);
+      apiLogger.error("Failed to flush metrics:", error);
     }
   }
 
@@ -338,17 +339,17 @@ class StructuredLogger {
 
       switch (level) {
         case LogLevel.DEBUG:
-          console.debug(formattedMessage);
+          apiLogger.debug(formattedMessage);
           break;
         case LogLevel.INFO:
-          console.info(formattedMessage);
+          apiLogger.info(formattedMessage);
           break;
         case LogLevel.WARN:
-          console.warn(formattedMessage);
+          apiLogger.warn(formattedMessage);
           break;
         case LogLevel.ERROR:
         case LogLevel.FATAL:
-          console.error(formattedMessage);
+          apiLogger.error(formattedMessage);
           break;
       }
     }
@@ -538,7 +539,7 @@ class StructuredLogger {
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime(),
       );
     } catch (error) {
-      console.error("Failed to search logs:", error);
+      apiLogger.error("Failed to search logs:", error);
       return [];
     }
   }
@@ -566,7 +567,7 @@ class StructuredLogger {
       // For now, return the latest metrics
       return filteredMetrics[filteredMetrics.length - 1] || null;
     } catch (error) {
-      console.error("Failed to get metrics:", error);
+      apiLogger.error("Failed to get metrics:", error);
       return null;
     }
   }
@@ -579,7 +580,7 @@ class StructuredLogger {
       await this.debug("Logging system health check");
       return true;
     } catch (error) {
-      console.error("Logging system health check failed:", error);
+      apiLogger.error("Logging system health check failed:", error);
       return false;
     }
   }
@@ -609,7 +610,7 @@ class StructuredLogger {
 
       return deletedCount;
     } catch (error) {
-      console.error("Failed to cleanup logs:", error);
+      apiLogger.error("Failed to cleanup logs:", error);
       return 0;
     }
   }

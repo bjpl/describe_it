@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Redis from 'ioredis';
 import { recordApiRequest } from '@/lib/monitoring/prometheus';
 import { safeParse, safeStringify } from '@/lib/utils/json-safe';
+import { apiLogger } from '@/lib/logger';
 
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
@@ -54,7 +55,7 @@ export async function GET(request: NextRequest) {
       });
     }
   } catch (error) {
-    console.error('Analytics export error:', error);
+    apiLogger.error('Analytics export error:', error);
     
     const duration = (Date.now() - startTime) / 1000;
     recordApiRequest('GET', '/api/analytics/export', 500, duration);
@@ -121,7 +122,7 @@ async function getDetailedMetrics(startTime: number, endTime: number) {
 
     return metrics;
   } catch (error) {
-    console.error('Error fetching detailed metrics:', error);
+    apiLogger.error('Error fetching detailed metrics:', error);
     return [];
   }
 }
@@ -161,13 +162,13 @@ async function getDetailedApiKeysData(startTime: number, endTime: number) {
             : 0,
         });
       } catch (error) {
-        console.error(`Error processing API key data for ${key}:`, error);
+        apiLogger.error(`Error processing API key data for ${key}:`, error);
       }
     }
 
     return apiKeysData.sort((a, b) => b.totalRequests - a.totalRequests);
   } catch (error) {
-    console.error('Error fetching detailed API keys data:', error);
+    apiLogger.error('Error fetching detailed API keys data:', error);
     return [];
   }
 }
@@ -195,13 +196,13 @@ async function getDetailedAlertsData(startTime: number, endTime: number) {
           }
         }
       } catch (error) {
-        console.error(`Error processing alerts for ${key}:`, error);
+        apiLogger.error(`Error processing alerts for ${key}:`, error);
       }
     }
 
     return allAlerts.sort((a, b) => b.timestamp - a.timestamp);
   } catch (error) {
-    console.error('Error fetching detailed alerts data:', error);
+    apiLogger.error('Error fetching detailed alerts data:', error);
     return [];
   }
 }
@@ -234,7 +235,7 @@ async function getErrorAnalysis(startTime: number, endTime: number) {
       },
     ];
   } catch (error) {
-    console.error('Error generating error analysis:', error);
+    apiLogger.error('Error generating error analysis:', error);
     return [];
   }
 }
@@ -257,13 +258,13 @@ async function getRateLimitAnalysis(startTime: number, endTime: number) {
           avgHitsPerHour: parseInt(hits) / ((endTime - startTime) / (60 * 60 * 1000)),
         });
       } catch (error) {
-        console.error(`Error processing rate limit data for ${key}:`, error);
+        apiLogger.error(`Error processing rate limit data for ${key}:`, error);
       }
     }
 
     return analysis.sort((a, b) => b.totalHits - a.totalHits);
   } catch (error) {
-    console.error('Error fetching rate limit analysis:', error);
+    apiLogger.error('Error fetching rate limit analysis:', error);
     return [];
   }
 }

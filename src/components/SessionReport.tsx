@@ -43,6 +43,7 @@ import {
 } from "@/types/session";
 import { PDFExporter } from "@/lib/export/pdfExporter";
 import { RawDataExporter } from "@/lib/export/rawDataExporter";
+import { logger } from '@/lib/logger';
 
 interface SessionReportProps {
   sessionLogger?: SessionLogger;
@@ -79,7 +80,7 @@ export function SessionReport({
       setReportData(report);
       setVisualData(visual);
     } catch (error) {
-      console.error("Failed to generate session report:", error);
+      logger.error("Failed to generate session report:", error);
     } finally {
       setIsGenerating(false);
     }
@@ -141,7 +142,7 @@ export function SessionReport({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error) {
-      console.error("Export failed:", error);
+      logger.error("Export failed:", error);
       alert(
         `Export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );

@@ -6,6 +6,7 @@
 import { NextRequest } from 'next/server';
 import { createHmac, timingSafeEqual } from 'crypto';
 import jwt from 'jsonwebtoken';
+import { authLogger } from '@/lib/logger';
 
 export interface AuthResult {
   authenticated: boolean;
@@ -21,7 +22,7 @@ export class SecurityAuthenticator {
   
   constructor() {
     if (process.env.NODE_ENV === 'production' && !this.prodSecret) {
-      console.warn('[SECURITY] Production API secret not configured - this is a security risk');
+      authLogger.warn('[SECURITY] Production API secret not configured - this is a security risk');
     }
   }
 

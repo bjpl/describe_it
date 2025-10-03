@@ -15,6 +15,7 @@ import {
   type Tab,
 } from "./Settings";
 import { ApiKeysSection } from "./Settings/ApiKeysSection";
+import { logger } from '@/lib/logger';
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -79,7 +80,7 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
       const results = await settingsManager.validateAPIKeys();
       setApiKeyValidation(results);
     } catch (error) {
-      console.error("API validation failed:", error);
+      logger.error("API validation failed:", error);
       setApiKeyValidation({ unsplash: false, openai: false });
     } finally {
       setValidating(false);

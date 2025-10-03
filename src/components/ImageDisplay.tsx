@@ -3,6 +3,7 @@
 import { memo, useCallback } from "react";
 import { Clock, User, CheckCircle } from "lucide-react";
 import { imageTracker } from "@/lib/tracking/imageTracker";
+import { logger } from '@/lib/logger';
 
 interface ImageDisplayProps {
   selectedImage: any;
@@ -86,8 +87,8 @@ export const ImageGrid = memo<ImageGridProps>(function ImageGrid({
                 }`}
                 loading="lazy"
                 decoding="async"
-                onLoad={() => console.debug("Image loaded:", image.id)}
-                onError={() => console.warn("Image failed to load:", image.id)}
+                onLoad={() => logger.debug("Image loaded:", image.id)}
+                onError={() => logger.warn("Image failed to load:", image.id)}
               />
 
               {/* Usage indicator overlay */}

@@ -6,6 +6,7 @@
 import Redis from 'ioredis';
 import { recordSuspiciousActivity, recordBlockedRequest } from './prometheus';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface AnomalyPattern {
   id: string;
@@ -141,7 +142,7 @@ export class AnomalyDetector {
       // Trigger anomaly detection
       await this.detectAnomalies(identifier);
     } catch (error) {
-      console.error('Failed to record usage metrics:', error);
+      logger.error('Failed to record usage metrics:', error);
     }
   }
 
@@ -192,7 +193,7 @@ export class AnomalyDetector {
         }
       }
     } catch (error) {
-      console.error('Anomaly detection failed:', error);
+      logger.error('Anomaly detection failed:', error);
     }
 
     return alerts;
@@ -408,17 +409,17 @@ export class AnomalyDetector {
         try {
           callback(alert);
         } catch (error) {
-          console.error('Alert callback failed:', error);
+          logger.error('Alert callback failed:', error);
         }
       });
 
-      console.log(`Anomaly detected: ${alert.message}`, {
+      logger.info(`Anomaly detected: ${alert.message}`, {
         identifier: alert.identifier,
         severity: alert.severity,
         score: alert.score
       });
     } catch (error) {
-      console.error('Failed to handle alert:', error);
+      logger.error('Failed to handle alert:', error);
     }
   }
 
@@ -430,7 +431,7 @@ export class AnomalyDetector {
       const blockKey = `anomaly:blocked:${identifier}`;
       await this.redis.setex(blockKey, Math.ceil(durationMs / 1000), '1');
     } catch (error) {
-      console.error('Failed to block identifier:', error);
+      logger.error('Failed to block identifier:', error);
     }
   }
 
@@ -443,7 +444,7 @@ export class AnomalyDetector {
       const blocked = await this.redis.get(blockKey);
       return blocked === '1';
     } catch (error) {
-      console.error('Failed to check block status:', error);
+      logger.error('Failed to check block status:', error);
       return false;
     }
   }
@@ -457,7 +458,7 @@ export class AnomalyDetector {
       const data = await this.redis.lrange(key, 0, limit - 1);
       return data.map(item => JSON.parse(item)).reverse(); // Reverse to get chronological order
     } catch (error) {
-      console.error('Failed to get recent metrics:', error);
+      logger.error('Failed to get recent metrics:', error);
       return [];
     }
   }
@@ -471,7 +472,7 @@ export class AnomalyDetector {
       const data = await this.redis.lrange(key, 0, limit - 1);
       return data.map(item => JSON.parse(item));
     } catch (error) {
-      console.error('Failed to get recent alerts:', error);
+      logger.error('Failed to get recent alerts:', error);
       return [];
     }
   }

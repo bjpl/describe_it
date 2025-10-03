@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import { Search, Heart, Calendar, Image, Filter, Download, Share2 } from "lucide-react";
 import type { DescriptionRecord } from "@/types/database";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface SavedDescriptionsProps {
   className?: string;
@@ -71,7 +72,7 @@ export function SavedDescriptions({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch descriptions";
       setError(errorMessage);
-      console.error("Error fetching descriptions:", err);
+      logger.error("Error fetching descriptions:", err);
     } finally {
       setLoading(false);
     }
@@ -132,7 +133,7 @@ export function SavedDescriptions({
           : desc
       ));
     } catch (err) {
-      console.error("Error toggling favorite:", err);
+      logger.error("Error toggling favorite:", err);
     }
   };
 

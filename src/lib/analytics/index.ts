@@ -23,6 +23,7 @@ export type {
 import { useEffect, useRef } from 'react';
 import { trackEvent, getSessionId } from './tracker';
 import { EventBuilders } from './events';
+import { logger } from '@/lib/logger';
 
 /**
  * React hook for tracking component lifecycle events
@@ -173,5 +174,5 @@ export function initializeAnalytics(config?: {
 }) {
   // Analytics is initialized automatically when tracker is imported
   // This function is provided for explicit initialization with custom config
-  console.log('Analytics system initialized', config);
+  logger.info('Analytics system initialized', config);
 }

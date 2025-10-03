@@ -1,5 +1,6 @@
 import { withRetry, RetryConfig } from "../utils/error-retry";
 import { openAIService } from "./openaiService";
+import { logger } from '@/lib/logger';
 
 interface CachedTranslation {
   translation: string;
@@ -138,7 +139,7 @@ export class TranslationService {
 
         return response;
       } catch (error) {
-        console.warn("OpenAI translation failed, using fallback:", error);
+        logger.warn("OpenAI translation failed, using fallback:", error);
       }
     }
 
@@ -246,7 +247,7 @@ export class TranslationService {
           return { language: detected, confidence: 0.9 };
         }
       } catch (error) {
-        console.warn("Language detection failed:", error);
+        logger.warn("Language detection failed:", error);
       }
     }
 

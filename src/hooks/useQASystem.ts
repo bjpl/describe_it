@@ -1,4 +1,5 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
+import { logger } from '@/lib/logger';
 
 export interface QAQuestion {
   id: string;
@@ -182,7 +183,7 @@ export default function useQASystem({
       };
     } catch (err) {
       setError("Failed to generate questions. Please try again.");
-      console.error("Question generation error:", err);
+      logger.error("Question generation error:", err);
     } finally {
       setIsLoading(false);
     }

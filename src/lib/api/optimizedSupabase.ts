@@ -1,6 +1,7 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from "../supabase/client";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { apiLogger } from '@/lib/logger';
 
 // Simple server-side cache
 const serverCache = new Map<string, { data: any; timestamp: number }>();
@@ -72,7 +73,7 @@ class OptimizedSupabaseClient {
     this.client = supabase;
 
     if (!this.client) {
-      console.warn('Supabase client not available. Some features will use demo mode.');
+      apiLogger.warn('Supabase client not available. Some features will use demo mode.');
       return;
     }
 
@@ -94,7 +95,7 @@ class OptimizedSupabaseClient {
       // Simple query to establish connection
       await this.client.from("user_preferences").select("count").limit(1);
     } catch (error) {
-      console.debug("Connection warming failed:", error);
+      apiLogger.debug("Connection warming failed:", error);
     }
   }
 
@@ -105,10 +106,10 @@ class OptimizedSupabaseClient {
       const latency = performance.now() - start;
 
       if (latency > 2000) {
-        console.warn("High database latency detected:", latency, "ms");
+        apiLogger.warn("High database latency detected:", latency, "ms");
       }
     } catch (error) {
-      console.error("Database health check failed:", error);
+      apiLogger.error("Database health check failed:", error);
     }
   }
 

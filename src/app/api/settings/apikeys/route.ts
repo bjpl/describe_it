@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { apiLogger } from '@/lib/logger';
 
 export async function POST(req: NextRequest) {
   try {
     const { userId, settings } = await req.json();
     
-    console.log('[API Keys Settings] Save request for user:', userId);
-    console.log('[API Keys Settings] Saving API keys:', {
+    apiLogger.info('[API Keys Settings] Save request for user:', userId);
+    apiLogger.info('[API Keys Settings] Saving API keys:', {
       unsplash: settings?.apiKeys?.unsplash ? 'provided' : 'not provided',
       openai: settings?.apiKeys?.openai ? 'provided' : 'not provided'
     });
@@ -22,7 +23,7 @@ export async function POST(req: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (error: any) {
-    console.error('[API Keys Settings] Error saving settings:', error);
+    apiLogger.error('[API Keys Settings] Error saving settings:', error);
     return NextResponse.json(
       { 
         success: false, 
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get('userId');
     
-    console.log('[API Keys Settings] Get request for user:', userId);
+    apiLogger.info('[API Keys Settings] Get request for user:', userId);
     
     // For now, return empty settings
     // In production, this would fetch from a database
@@ -53,7 +54,7 @@ export async function GET(req: NextRequest) {
       timestamp: new Date().toISOString()
     });
   } catch (error: any) {
-    console.error('[API Keys Settings] Error fetching settings:', error);
+    apiLogger.error('[API Keys Settings] Error fetching settings:', error);
     return NextResponse.json(
       { 
         success: false, 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import { kv } from "@vercel/kv";
+import { apiLogger } from '@/lib/logger';
 
 // Rate limiting configuration
 const RATE_LIMITS = {
@@ -70,7 +71,7 @@ export async function withAuth(
 
       return handler(authenticatedReq);
     } catch (error) {
-      console.error("Authentication error:", error);
+      apiLogger.error("Authentication error:", error);
       return NextResponse.json(
         { error: "Authentication failed" },
         { status: 500 },
@@ -138,7 +139,7 @@ export function withRateLimit(
 
       return response;
     } catch (error) {
-      console.error("Rate limiting error:", error);
+      apiLogger.error("Rate limiting error:", error);
       // If rate limiting fails, continue with the request
       return handler(req);
     }
@@ -197,7 +198,7 @@ export function withCache(
 
       return response;
     } catch (error) {
-      console.error("Caching error:", error);
+      apiLogger.error("Caching error:", error);
       return handler(req);
     }
   };
@@ -213,7 +214,7 @@ export function withErrorHandler(
     try {
       return await handler(req);
     } catch (error) {
-      console.error("API Error:", error);
+      apiLogger.error("API Error:", error);
 
       if (error instanceof Error) {
         // Handle specific error types
@@ -314,7 +315,7 @@ export function withValidation<T>(
       const validData = schema.parse(data);
       return handler(req, validData);
     } catch (error) {
-      console.error("Validation error:", error);
+      apiLogger.error("Validation error:", error);
       return NextResponse.json(
         {
           error: "Validation failed",

@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 // Cloudflare Worker for CDN edge caching and optimization
 // Deploy this to Cloudflare Workers for global edge caching
 
@@ -191,7 +193,7 @@ export const imageOptimizationWorker = {
       return optimizedResponse;
 
     } catch (error) {
-      console.error('Image optimization error:', error);
+      logger.error('Image optimization error:', error);
       return new Response('Optimization failed', { status: 500 });
     }
   },
@@ -249,7 +251,7 @@ export const geoRoutingWorker = {
       return modifiedResponse;
 
     } catch (error) {
-      console.error('Routing error:', error);
+      logger.error('Routing error:', error);
       
       // Fallback to default endpoint
       if (targetEndpoint !== env.DEFAULT_API_ENDPOINT) {

@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useVocabulary } from "@/hooks/useVocabulary";
 import { VocabularyItem } from "@/types/database";
+import { dbLogger } from '@/lib/logger';
 
 interface VocabularyManagerProps {
   className?: string;
@@ -143,7 +144,7 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
       switch (action) {
         case "study":
           // Implement study session with selected items
-          console.log(
+          dbLogger.info(
             "Starting study session with",
             selectedItems.length,
             "items",
@@ -151,12 +152,12 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
           break;
         case "export":
           // Implement export functionality for selected items
-          console.log("Exporting", selectedItems.length, "items");
+          dbLogger.info("Exporting", selectedItems.length, "items");
           break;
         case "delete":
           // Implement delete functionality for selected items
           if (confirm(`Delete ${selectedItems.length} selected items?`)) {
-            console.log("Deleting", selectedItems.length, "items");
+            dbLogger.info("Deleting", selectedItems.length, "items");
             setSelectedItems([]);
           }
           break;

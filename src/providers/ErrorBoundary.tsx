@@ -1,6 +1,7 @@
 "use client";
 
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { logger } from '@/lib/logger';
 
 // SSR-safe check for browser environment
 const isBrowser = typeof window !== 'undefined';
@@ -49,12 +50,12 @@ class ErrorBoundaryClass extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.group("🔥 React Error Boundary - PRODUCTION DEBUG");
-    console.error("[PRODUCTION ERROR] Error:", error);
-    console.error("[PRODUCTION ERROR] Error Message:", error.message);
-    console.error("[PRODUCTION ERROR] Error Stack:", error.stack);
-    console.error("[PRODUCTION ERROR] Error Info:", errorInfo);
-    console.error("[PRODUCTION ERROR] Component Stack:", errorInfo.componentStack);
-    console.error("[PRODUCTION ERROR] Environment:", {
+    logger.error("[PRODUCTION ERROR] Error:", error);
+    logger.error("[PRODUCTION ERROR] Error Message:", error.message);
+    logger.error("[PRODUCTION ERROR] Error Stack:", error.stack);
+    logger.error("[PRODUCTION ERROR] Error Info:", errorInfo);
+    logger.error("[PRODUCTION ERROR] Component Stack:", errorInfo.componentStack);
+    logger.error("[PRODUCTION ERROR] Environment:", {
       NODE_ENV: process.env.NODE_ENV,
       isClient: isBrowser,
       userAgent: isBrowser ? navigator.userAgent : 'N/A',
@@ -124,7 +125,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
         errorCount: this.state.errorCount + 1
       };
 
-      console.error("[ERROR BOUNDARY REPORT]", JSON.stringify(errorData, null, 2));
+      logger.error("[ERROR BOUNDARY REPORT]", JSON.stringify(errorData, null, 2));
 
       // Store error in local storage for debugging (SSR safe)
       if (isBrowser && typeof localStorage !== 'undefined') {
@@ -145,11 +146,11 @@ class ErrorBoundaryClass extends Component<Props, State> {
             JSON.stringify(existingErrors),
           );
         } catch (storageError) {
-          console.warn('[ERROR BOUNDARY] Failed to store error in localStorage:', storageError);
+          logger.warn('[ERROR BOUNDARY] Failed to store error in localStorage:', storageError);
         }
       }
     } catch (reportingError) {
-      console.error("[ERROR BOUNDARY] Failed to report error:", reportingError);
+      logger.error("[ERROR BOUNDARY] Failed to report error:", reportingError);
     }
   };
 
@@ -167,11 +168,11 @@ class ErrorBoundaryClass extends Component<Props, State> {
   };
 
   handleRetry = () => {
-    console.log('[ERROR BOUNDARY] Retry attempt initiated');
+    logger.info('[ERROR BOUNDARY] Retry attempt initiated');
 
     // Add delay to prevent rapid retries (SSR safe)
     this.resetTimeoutId = (isBrowser ? window.setTimeout : global.setTimeout)(() => {
-      console.log('[ERROR BOUNDARY] Resetting error state');
+      logger.info('[ERROR BOUNDARY] Resetting error state');
       this.resetError();
     }, 1000) as unknown as number;
   };
@@ -240,12 +241,12 @@ ${errorInfo?.componentStack}
         await navigator.clipboard.writeText(errorText);
         alert("Error details copied to clipboard");
       } else {
-        console.log('[ERROR BOUNDARY] Error details (clipboard not available):', errorText);
+        logger.info('[ERROR BOUNDARY] Error details (clipboard not available):', errorText);
         alert("Error details logged to console (clipboard not available)");
       }
     } catch (err) {
-      console.error("[ERROR BOUNDARY] Failed to copy error details:", err);
-      console.log('[ERROR BOUNDARY] Error details:', errorText);
+      logger.error("[ERROR BOUNDARY] Failed to copy error details:", err);
+      logger.info('[ERROR BOUNDARY] Error details:', errorText);
     }
   };
 
@@ -326,7 +327,7 @@ ${errorInfo?.componentStack}
           </button>
           <button
             onClick={() => {
-              console.log('[ERROR BOUNDARY] Refresh page clicked');
+              logger.info('[ERROR BOUNDARY] Refresh page clicked');
               if (isBrowser) {
                 window.location.reload();
               }
@@ -372,7 +373,7 @@ export const withErrorBoundary = <P extends object>(
 export const useErrorHandler = () => {
   const reportError = React.useCallback((error: Error | string) => {
     const errorMessage = typeof error === "string" ? error : error.message;
-    console.error("Manual error report:", errorMessage);
+    logger.error("Manual error report:", errorMessage);
   }, []);
 
   return { reportError };

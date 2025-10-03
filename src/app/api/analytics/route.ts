@@ -16,13 +16,14 @@ import {
   createSuccessResponse
 } from '@/lib/schemas/api-validation';
 import { z } from 'zod';
+import { apiLogger } from '@/lib/logger';
 
 interface AnalyticsRequestBody {
   events: AnalyticsEvent[];
 }
 
 export async function POST(request: NextRequest) {
-  console.log('[Analytics] Endpoint called');
+  apiLogger.info('[Analytics] Endpoint called');
   
   try {
     // Security validation
@@ -112,10 +113,10 @@ export async function POST(request: NextRequest) {
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseKey) {
-      console.warn('[Analytics] Supabase not configured, using in-memory storage');
+      apiLogger.warn('[Analytics] Supabase not configured, using in-memory storage');
       // Log events to console in development mode
       if (process.env.NODE_ENV === 'development') {
-        console.log('[Analytics] Events received:', validEvents);
+        apiLogger.info('[Analytics] Events received:', validEvents);
       }
       
       return createSuccessResponse({
@@ -154,11 +155,11 @@ export async function POST(request: NextRequest) {
       if (dbError) {
         // Check if it's a table not found error
         if (dbError.message?.includes('relation') && dbError.message?.includes('does not exist')) {
-          console.warn('[Analytics] Table analytics_events does not exist, using fallback');
+          apiLogger.warn('[Analytics] Table analytics_events does not exist, using fallback');
           
           // Log to console in development
           if (process.env.NODE_ENV === 'development') {
-            console.log('[Analytics] Events that would be stored:', eventsToStore);
+            apiLogger.info('[Analytics] Events that would be stored:', eventsToStore);
           }
           
           return createSuccessResponse({
@@ -172,7 +173,7 @@ export async function POST(request: NextRequest) {
         
         // Check for rate limiting
         if (dbError.message?.includes('quota') || dbError.message?.includes('rate')) {
-          console.warn('[Analytics] Rate limited, using fallback');
+          apiLogger.warn('[Analytics] Rate limited, using fallback');
           
           return createSuccessResponse({
             processed: validEvents.length,
@@ -183,7 +184,7 @@ export async function POST(request: NextRequest) {
         }
         
         // Other database errors
-        console.error('[Analytics] Database error:', dbError);
+        apiLogger.error('[Analytics] Database error:', dbError);
         
         return createSuccessResponse({
           processed: validEvents.length,
@@ -194,7 +195,7 @@ export async function POST(request: NextRequest) {
         });
       }
     } catch (fetchError: any) {
-      console.error('[Analytics] Network error:', fetchError);
+      apiLogger.error('[Analytics] Network error:', fetchError);
       
       // Return success to prevent client from accumulating events
       return createSuccessResponse({
@@ -217,7 +218,7 @@ export async function POST(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Analytics API error:', error);
+    apiLogger.error('Analytics API error:', error);
     captureError(error as Error, {
       endpoint: '/api/analytics',
       method: 'POST',
@@ -321,7 +322,7 @@ async function checkApiErrorRate(errorEvent: AnalyticsEvent) {
       }
     }
   } catch (error) {
-    console.error('Error checking API error rate:', error);
+    apiLogger.error('Error checking API error rate:', error);
   }
 }
 
@@ -358,16 +359,16 @@ async function triggerAlert(alert: {
         });
 
       if (error) {
-        console.error('Failed to store alert:', error);
+        apiLogger.error('Failed to store alert:', error);
       }
     }
 
     // In production, you would also send notifications here
     // e.g., email, Slack, PagerDuty, etc.
-    console.warn(`ALERT [${alert.type}]: ${alert.message}`);
+    apiLogger.warn(`ALERT [${alert.type}]: ${alert.message}`);
 
   } catch (error) {
-    console.error('Failed to trigger alert:', error);
+    apiLogger.error('Failed to trigger alert:', error);
   }
 }
 

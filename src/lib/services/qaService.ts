@@ -8,6 +8,7 @@ import { translationService } from "./translationService";
 import { supabase } from "../supabase";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { createLogger, dbLogger } from "@/lib/logging/logger";
+import { logger } from '@/lib/logger';
 
 const qaLogger = createLogger('QAService');
 
@@ -794,7 +795,7 @@ export class QAService {
     const { error } = await supabase.from("qa_items").upsert(questions as any);
 
     if (error) {
-      console.warn("Failed to save questions to database:", error);
+      logger.warn("Failed to save questions to database:", error);
     }
   }
 

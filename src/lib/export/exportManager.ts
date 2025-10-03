@@ -30,6 +30,7 @@ import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } 
 import { exportToAnki } from "./ankiExporter";
 import { exportToJSON } from "./jsonExporter";
 import { exportToEnhancedCSV } from "./csvExporter";
+import { logger } from '@/lib/logger';
 
 interface DataSources {
   getVocabulary: (filters?: any) => Promise<VocabularyExportItem[]>;
@@ -663,7 +664,7 @@ export class ExportManager implements IExportManager {
       const templates = Array.from(this.templates.values());
       safeSetLocalStorage("describe-it-export-templates", templates);
     } catch (error) {
-      console.warn("Failed to save templates to storage:", error);
+      logger.warn("Failed to save templates to storage:", error);
     }
   }
 
@@ -676,7 +677,7 @@ export class ExportManager implements IExportManager {
         });
       }
     } catch (error) {
-      console.warn("Failed to load templates from storage:", error);
+      logger.warn("Failed to load templates from storage:", error);
     }
   }
 
@@ -685,7 +686,7 @@ export class ExportManager implements IExportManager {
       const scheduled = Array.from(this.scheduledExports.values());
       safeSetLocalStorage("describe-it-scheduled-exports", scheduled);
     } catch (error) {
-      console.warn("Failed to save scheduled exports to storage:", error);
+      logger.warn("Failed to save scheduled exports to storage:", error);
     }
   }
 
@@ -698,7 +699,7 @@ export class ExportManager implements IExportManager {
         });
       }
     } catch (error) {
-      console.warn("Failed to load scheduled exports from storage:", error);
+      logger.warn("Failed to load scheduled exports from storage:", error);
     }
   }
 
@@ -706,7 +707,7 @@ export class ExportManager implements IExportManager {
     try {
       safeSetLocalStorage("describe-it-export-history", this.exportHistory);
     } catch (error) {
-      console.warn("Failed to save export history to storage:", error);
+      logger.warn("Failed to save export history to storage:", error);
     }
   }
 
@@ -717,7 +718,7 @@ export class ExportManager implements IExportManager {
         this.exportHistory = stored;
       }
     } catch (error) {
-      console.warn("Failed to load export history from storage:", error);
+      logger.warn("Failed to load export history from storage:", error);
     }
   }
 

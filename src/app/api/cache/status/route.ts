@@ -10,6 +10,7 @@ import {
 import { vercelKvCache } from "@/lib/api/vercel-kv";
 import { memoryCache } from "@/lib/cache/memory-cache";
 import { redisCache } from "@/lib/api/redis-adapter";
+import { apiLogger } from '@/lib/logger';
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -61,7 +62,7 @@ export async function GET(request: NextRequest) {
     try {
       kvStats = await vercelKvCache.getStats();
     } catch (error) {
-      console.warn("Could not get KV stats:", error);
+      apiLogger.warn("Could not get KV stats:", error);
     }
 
     // Get Redis stats if available
@@ -73,7 +74,7 @@ export async function GET(request: NextRequest) {
         redisStats = await redisCache.getStats();
       }
     } catch (error) {
-      console.warn("Could not get Redis stats:", error);
+      apiLogger.warn("Could not get Redis stats:", error);
     }
 
     const response = {
@@ -135,7 +136,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Cache status error:", error);
+    apiLogger.error("Cache status error:", error);
 
     return NextResponse.json(
       {
@@ -210,7 +211,7 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    console.error("Cache operation error:", error);
+    apiLogger.error("Cache operation error:", error);
 
     return NextResponse.json(
       {
@@ -294,14 +295,14 @@ async function performHealthCheck(): Promise<any> {
   try {
     kvHealth = await vercelKvCache.healthCheck();
   } catch (error) {
-    console.warn("KV health check failed:", error);
+    apiLogger.warn("KV health check failed:", error);
   }
 
   let redisHealth = false;
   try {
     redisHealth = await redisCache.healthCheck();
   } catch (error) {
-    console.warn("Redis health check failed:", error);
+    apiLogger.warn("Redis health check failed:", error);
   }
 
   return {

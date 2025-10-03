@@ -6,6 +6,7 @@
 import Redis from 'ioredis';
 import { recordSuspiciousActivity, recordBlockedRequest } from './prometheus';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface FraudRule {
   id: string;
@@ -228,7 +229,7 @@ export class FraudDetector {
         }
       }
     } catch (error) {
-      console.error('Fraud analysis failed:', error);
+      logger.error('Fraud analysis failed:', error);
     }
 
     return events;
@@ -594,7 +595,7 @@ export class FraudDetector {
         riskScore: parseFloat(data.riskScore),
       };
     } catch (error) {
-      console.error('Error getting user profile:', error);
+      logger.error('Error getting user profile:', error);
       return null;
     }
   }
@@ -654,11 +655,11 @@ export class FraudDetector {
       try {
         callback(event);
       } catch (error) {
-        console.error('Fraud alert callback failed:', error);
+        logger.error('Fraud alert callback failed:', error);
       }
     });
 
-    console.log(`Fraud detected: ${rule?.name}`, {
+    logger.info(`Fraud detected: ${rule?.name}`, {
       identifier: event.identifier,
       score: event.score,
       blocked: event.blocked

@@ -1,22 +1,23 @@
 import { z } from "zod";
+import { logger } from '@/lib/logger';
 // Structured logging import removed for production build optimization
 
 // Simple development logging functions
 const devError = (message: string) => {
   if (process.env.NODE_ENV === 'development') {
-    console.error(message);
+    logger.error(message);
   }
 };
 
 const devWarn = (message: string) => {
   if (process.env.NODE_ENV === 'development') {
-    console.warn(message);
+    logger.warn(message);
   }
 };
 
 const devLog = (message: string) => {
   if (process.env.NODE_ENV === 'development') {
-    console.log(message);
+    logger.info(message);
   }
 };
 

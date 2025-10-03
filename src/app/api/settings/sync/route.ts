@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { apiLogger } from '@/lib/logger';
 
 /**
  * Sync API keys from client settings
@@ -17,7 +18,7 @@ export async function POST(request: NextRequest) {
       message: 'API keys received'
     });
   } catch (error) {
-    console.error('Settings sync error:', error);
+    apiLogger.error('Settings sync error:', error);
     return NextResponse.json(
       { error: 'Failed to sync settings' },
       { status: 500 }

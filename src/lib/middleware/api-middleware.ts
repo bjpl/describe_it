@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 import {
   RateLimiter,
   RATE_LIMITS,
@@ -175,7 +176,7 @@ export class APIMiddleware {
 
       return processedResponse;
     } catch (error: any) {
-      console.error(`API middleware error for ${endpoint}:`, error);
+      logger.error(`API middleware error for ${endpoint}:`, error);
 
       await monitor.recordMetrics(endpoint, request.method, 500, {
         error: error.message,

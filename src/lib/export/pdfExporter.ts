@@ -13,6 +13,7 @@ import {
 
 // Export data interface for compatibility with exportManager
 import { ExportData, PDFExportOptions } from "../../types/export";
+import { logger } from '@/lib/logger';
 
 export class PDFExporter {
   private pdf: jsPDF;
@@ -93,7 +94,7 @@ export class PDFExporter {
 
       return new Blob([this.pdf.output("blob")], { type: "application/pdf" });
     } catch (error) {
-      console.error("PDF generation failed:", error);
+      logger.error("PDF generation failed:", error);
       throw new Error("Failed to generate PDF report");
     }
   }
@@ -651,7 +652,7 @@ export async function exportToPDF(
 
     return new Blob([pdf.output("blob")], { type: "application/pdf" });
   } catch (error) {
-    console.error("PDF export failed:", error);
+    logger.error("PDF export failed:", error);
     throw new Error("Failed to export PDF");
   }
 }
@@ -733,7 +734,7 @@ export async function exportStudySheet(
 
     return new Blob([pdf.output("blob")], { type: "application/pdf" });
   } catch (error) {
-    console.error("Study sheet export failed:", error);
+    logger.error("Study sheet export failed:", error);
     throw new Error("Failed to export study sheet");
   }
 }

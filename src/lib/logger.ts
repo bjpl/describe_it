@@ -1,440 +1,671 @@
 /**
- * Centralized logging utility for production-safe logging
- * Replaces console statements with structured logging
- * Enhanced with error categorization and performance monitoring
+ * Unified Structured Logging Infrastructure
+ * Replaces all console statements with Winston-based structured logging
+ * Supports environment-specific configuration and external monitoring integration
  */
 
-export type LogLevel = "debug" | "info" | "warn" | "error";
+import { NextRequest } from 'next/server';
+import { safeParse, safeStringify } from './utils/json-safe';
+
+export type LogLevel = 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly';
 
 export interface LogContext {
   [key: string]: any;
   userId?: string;
   sessionId?: string;
+  requestId?: string;
+  traceId?: string;
+  correlationId?: string;
   component?: string;
   function?: string;
   timestamp?: string;
   errorId?: string;
   category?: string;
   severity?: string;
-  recovery?: string;
   operation?: string;
   duration?: number;
-  traceId?: string;
-  correlationId?: string;
+  method?: string;
+  url?: string;
+  statusCode?: number;
+  ip?: string;
+  userAgent?: string;
 }
 
-class Logger {
-  private isDevelopment = process.env.NODE_ENV === "development";
-  private isClient = typeof window !== "undefined";
+export interface ErrorCategory {
+  category: 'authentication' | 'validation' | 'external_api' | 'database' | 'system' | 'business_logic' | 'network' | 'security';
+  severity: 'low' | 'medium' | 'high' | 'critical';
+  recoverable?: boolean;
+  code?: string;
+  stack?: string;
+}
 
-  private formatMessage(
-    level: LogLevel,
-    message: string,
-    context?: LogContext,
-  ): string {
-    const timestamp = new Date().toISOString();
-    const contextStr = context ? safeStringify(context) : "";
-    return `[${timestamp}] ${level.toUpperCase()}: ${message} ${contextStr}`;
+// Winston logger instance (server-side only)
+let winstonLogger: any = null;
+
+// Initialize Winston on server-side
+if (typeof window === 'undefined') {
+  try {
+    const winston = require('winston');
+    const { format, transports } = winston;
+
+    // Custom format for development (pretty console output)
+    const devFormat = format.combine(
+      format.colorize({ all: true }),
+      format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+      format.errors({ stack: true }),
+      format.printf((info: any) => {
+        const { timestamp, level, message, context, error, ...meta } = info;
+        let log = `${timestamp} [${level}]`;
+
+        if (context) log += ` [${context}]`;
+        log += `: ${message}`;
+
+        if (error) {
+          log += `\n  Error: ${error.message}`;
+          if (error.stack) log += `\n  Stack: ${error.stack}`;
+        }
+
+        if (Object.keys(meta).length > 0) {
+          log += `\n  Meta: ${JSON.stringify(meta, null, 2)}`;
+        }
+
+        return log;
+      })
+    );
+
+    // Custom format for production (JSON structured logs)
+    const prodFormat = format.combine(
+      format.timestamp(),
+      format.errors({ stack: true }),
+      format.json()
+    );
+
+    // Create transports based on environment
+    const logTransports: any[] = [];
+
+    // Console transport (all environments except test)
+    if (process.env.NODE_ENV !== 'test') {
+      logTransports.push(
+        new transports.Console({
+          format: process.env.NODE_ENV === 'production' ? prodFormat : devFormat,
+          level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+        })
+      );
+    }
+
+    // File transports for production
+    if (process.env.NODE_ENV === 'production') {
+      // Error log file
+      logTransports.push(
+        new transports.File({
+          filename: 'logs/error.log',
+          level: 'error',
+          format: prodFormat,
+          maxsize: 10485760, // 10MB
+          maxFiles: 10,
+          tailable: true,
+        })
+      );
+
+      // Combined log file
+      logTransports.push(
+        new transports.File({
+          filename: 'logs/combined.log',
+          format: prodFormat,
+          maxsize: 10485760, // 10MB
+          maxFiles: 5,
+          tailable: true,
+        })
+      );
+
+      // HTTP requests log file
+      logTransports.push(
+        new transports.File({
+          filename: 'logs/http.log',
+          level: 'http',
+          format: prodFormat,
+          maxsize: 10485760, // 10MB
+          maxFiles: 3,
+          tailable: true,
+        })
+      );
+    }
+
+    // Create Winston logger
+    winstonLogger = winston.createLogger({
+      level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
+      levels: {
+        error: 0,
+        warn: 1,
+        info: 2,
+        http: 3,
+        verbose: 4,
+        debug: 5,
+        silly: 6,
+      },
+      transports: logTransports,
+      exitOnError: false,
+    });
+
+    // Add custom colors
+    winston.addColors({
+      error: 'red',
+      warn: 'yellow',
+      info: 'green',
+      http: 'magenta',
+      verbose: 'cyan',
+      debug: 'white',
+      silly: 'grey',
+    });
+  } catch (error) {
+    console.error('Failed to initialize Winston logger:', error);
+  }
+}
+
+/**
+ * Unified Logger class
+ */
+class Logger {
+  private context: string;
+  private isClient = typeof window !== 'undefined';
+  private isDevelopment = process.env.NODE_ENV === 'development';
+  private isProduction = process.env.NODE_ENV === 'production';
+  private requestMeta: LogContext = {};
+
+  constructor(context: string = 'app') {
+    this.context = context;
   }
 
-  private logToConsole(level: LogLevel, message: string, context?: LogContext) {
-    if (!this.isDevelopment) return;
+  /**
+   * Set request-specific metadata for all subsequent logs
+   */
+  setRequest(meta: LogContext): this {
+    this.requestMeta = meta;
+    return this;
+  }
 
-    const formattedMessage = this.formatMessage(level, message, context);
+  /**
+   * Clear request metadata
+   */
+  clearRequest(): this {
+    this.requestMeta = {};
+    return this;
+  }
+
+  /**
+   * Generate a unique request ID
+   */
+  generateRequestId(): string {
+    return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  /**
+   * Extract request context from NextRequest
+   */
+  extractRequestContext(request: NextRequest, requestId?: string): LogContext {
+    const url = new URL(request.url);
+    return {
+      requestId: requestId || this.generateRequestId(),
+      method: request.method,
+      url: url.pathname,
+      query: Object.fromEntries(url.searchParams),
+      userAgent: request.headers.get('user-agent') || undefined,
+      ip: this.getClientIP(request),
+      timestamp: new Date().toISOString(),
+    };
+  }
+
+  /**
+   * Get client IP from request
+   */
+  private getClientIP(request: NextRequest): string | undefined {
+    const forwarded = request.headers.get('x-forwarded-for');
+    if (forwarded) return forwarded.split(',')[0].trim();
+    return request.headers.get('x-real-ip') || undefined;
+  }
+
+  /**
+   * Format log data for Winston or console
+   */
+  private formatLogData(message: string, context?: LogContext): any {
+    return {
+      message,
+      context: this.context,
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV,
+      service: 'describe-it',
+      ...this.requestMeta,
+      ...context,
+    };
+  }
+
+  /**
+   * Write log using Winston (server) or console (client)
+   */
+  private writeLog(level: LogLevel, message: string, context?: LogContext): void {
+    const logData = this.formatLogData(message, context);
+
+    if (winstonLogger && !this.isClient) {
+      // Server-side: Use Winston
+      winstonLogger.log(level, message, logData);
+    } else {
+      // Client-side: Use console with formatting
+      this.writeToConsole(level, message, logData);
+    }
+
+    // Store errors in localStorage for client-side debugging
+    if (level === 'error' && this.isClient) {
+      this.storeError(message, logData);
+    }
+
+    // Send to external monitoring in production
+    if (this.isProduction && (level === 'error' || level === 'warn')) {
+      this.sendToExternalMonitoring(level, message, logData);
+    }
+  }
+
+  /**
+   * Write to console with proper formatting
+   */
+  private writeToConsole(level: LogLevel, message: string, data: any): void {
+    if (process.env.NODE_ENV === 'test') return;
+
+    const timestamp = new Date().toISOString();
+    const prefix = `[${timestamp}] [${level.toUpperCase()}] [${this.context}]`;
+    const formattedMessage = `${prefix}: ${message}`;
 
     switch (level) {
-      case "debug":
-        console.log(formattedMessage);
+      case 'error':
+        console.error(formattedMessage, data);
         break;
-      case "info":
-        console.info(formattedMessage);
+      case 'warn':
+        console.warn(formattedMessage, data);
         break;
-      case "warn":
-        console.warn(formattedMessage);
+      case 'info':
+        console.info(formattedMessage, data);
         break;
-      case "error":
-        console.error(formattedMessage);
+      case 'http':
+      case 'verbose':
+      case 'debug':
+      case 'silly':
+        if (this.isDevelopment) {
+          console.log(formattedMessage, data);
+        }
         break;
+      default:
+        console.log(formattedMessage, data);
     }
   }
 
-  private logToService(level: LogLevel, message: string, context?: LogContext) {
-    // In production, send to logging service (Sentry, LogRocket, etc.)
-    if (this.isDevelopment) return;
-
-    // Enhanced error storage with categorization
-    if (level === "error" && this.isClient) {
-      try {
-        const errorData = {
-          level,
-          message,
-          context,
-          timestamp: new Date().toISOString(),
-          category: context?.category || 'unknown',
-          severity: context?.severity || 'medium',
-          errorId: context?.errorId || `log_${Date.now()}`,
-          userAgent: navigator.userAgent,
-          url: window.location.href,
-          sessionId: this.getSessionId(),
-        };
-        
-        localStorage.setItem(
-          `app-error-${errorData.errorId}`,
-          JSON.stringify(errorData)
-        );
-
-        // Also send to external service if available
-        this.sendToExternalService(errorData);
-      } catch (storageError) {
-        // Silent fail if localStorage is not available
-        console.error('Failed to store error:', storageError);
-      }
-    }
-
-    // Store performance logs
-    if (context?.duration && this.isClient) {
-      this.storePerformanceMetric(message, context);
-    }
-  }
-
-  private sendToExternalService(errorData: any) {
-    // Placeholder for external service integration (Sentry, LogRocket, etc.)
-    // This could be implemented to send to actual monitoring services
-    if (typeof window !== 'undefined' && 'fetch' in window) {
-      // Example: Send to monitoring service
-      // fetch('/api/errors', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(errorData)
-      // }).catch(() => {});
-    }
-  }
-
-  private storePerformanceMetric(message: string, context: LogContext) {
+  /**
+   * Store error in localStorage for debugging
+   */
+  private storeError(message: string, data: any): void {
     try {
-      const performanceData = {
+      const errorData = {
         message,
-        duration: context.duration,
-        operation: context.operation,
-        timestamp: new Date().toISOString(),
-        component: context.component,
-        url: window.location.href,
+        ...data,
+        storedAt: Date.now(),
       };
-      
-      localStorage.setItem(
-        `perf-${Date.now()}`,
-        JSON.stringify(performanceData)
-      );
+      const errorId = data.errorId || `error_${Date.now()}`;
+      localStorage.setItem(`app-error-${errorId}`, JSON.stringify(errorData));
+
+      // Clean old errors (keep last 7 days)
+      this.cleanOldErrors(7);
+    } catch (error) {
+      // Silent fail if localStorage unavailable
+    }
+  }
+
+  /**
+   * Send to external monitoring service (Sentry, DataDog, etc.)
+   */
+  private async sendToExternalMonitoring(level: string, message: string, data: any): Promise<void> {
+    try {
+      // Sentry integration
+      if (process.env.NEXT_PUBLIC_SENTRY_DSN && this.isClient) {
+        // Client-side Sentry would be initialized separately
+        // This is a placeholder for the integration
+      }
+
+      // Custom webhook integration
+      if (process.env.LOGGING_WEBHOOK_URL) {
+        await fetch(process.env.LOGGING_WEBHOOK_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ level, message, data, timestamp: Date.now() }),
+        }).catch(() => {
+          // Silent fail - don't let logging break the app
+        });
+      }
     } catch (error) {
       // Silent fail
     }
   }
 
-  private getSessionId(): string {
-    if (!this.isClient) return 'server-session';
-    
-    let sessionId = sessionStorage.getItem('app-session-id');
-    if (!sessionId) {
-      sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      sessionStorage.setItem('app-session-id', sessionId);
+  /**
+   * Clean old errors from localStorage
+   */
+  private cleanOldErrors(daysToKeep: number = 7): void {
+    if (!this.isClient) return;
+
+    const cutoffTime = Date.now() - (daysToKeep * 24 * 60 * 60 * 1000);
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('app-error-')) {
+          const item = localStorage.getItem(key);
+          if (item) {
+            const data = safeParse(item);
+            if (data.storedAt && data.storedAt < cutoffTime) {
+              localStorage.removeItem(key);
+            }
+          }
+        }
+      }
+    } catch (error) {
+      // Silent fail
     }
-    return sessionId;
   }
 
-  debug(message: string, context?: LogContext) {
-    this.logToConsole("debug", message, { ...context, level: "debug" });
-  }
+  // =====================
+  // Public Logging Methods
+  // =====================
 
-  info(message: string, context?: LogContext) {
-    this.logToConsole("info", message, { ...context, level: "info" });
-    this.logToService("info", message, context);
-  }
-
-  warn(message: string, context?: LogContext) {
-    this.logToConsole("warn", message, { ...context, level: "warn" });
-    this.logToService("warn", message, context);
-  }
-
-  error(message: string, error?: Error, context?: LogContext) {
+  error(message: string, error?: Error | any, context?: LogContext): void {
     const errorContext = {
       ...context,
-      level: "error",
-      error: error
-        ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-          }
-        : undefined,
+      error: error ? {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        code: error.code,
+      } : undefined,
     };
-
-    this.logToConsole("error", message, errorContext);
-    this.logToService("error", message, errorContext);
+    this.writeLog('error', message, errorContext);
   }
 
-  // Utility methods for common patterns
-  apiCall(method: string, url: string, context?: LogContext) {
-    this.debug(`API ${method.toUpperCase()}: ${url}`, {
-      ...context,
-      type: "api-call",
+  warn(message: string, context?: LogContext): void {
+    this.writeLog('warn', message, context);
+  }
+
+  info(message: string, context?: LogContext): void {
+    this.writeLog('info', message, context);
+  }
+
+  http(message: string, context?: LogContext): void {
+    this.writeLog('http', message, context);
+  }
+
+  debug(message: string, context?: LogContext): void {
+    this.writeLog('debug', message, context);
+  }
+
+  verbose(message: string, context?: LogContext): void {
+    this.writeLog('verbose', message, context);
+  }
+
+  // =====================
+  // Specialized Logging Methods
+  // =====================
+
+  /**
+   * Log API request
+   */
+  apiRequest(method: string, url: string, context?: LogContext): void {
+    this.http(`API Request: ${method} ${url}`, {
+      type: 'api-request',
       method,
       url,
+      ...context,
     });
   }
 
-  apiResponse(
-    method: string,
-    url: string,
-    status: number,
-    context?: LogContext,
-  ) {
-    const level = status >= 400 ? "error" : status >= 300 ? "warn" : "info";
-    const responseContext = {
-      ...context,
-      type: "api-response",
+  /**
+   * Log API response
+   */
+  apiResponse(method: string, url: string, statusCode: number, duration?: number, context?: LogContext): void {
+    const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
+    this[level](`API Response: ${method} ${url} - ${statusCode}`, {
+      type: 'api-response',
       method,
       url,
-      status,
-    };
-    
-    if (level === "error") {
-      this.error(`API ${method.toUpperCase()} ${status}: ${url}`, undefined, responseContext);
-    } else if (level === "warn") {
-      this.warn(`API ${method.toUpperCase()} ${status}: ${url}`, responseContext);
-    } else {
-      this.info(`API ${method.toUpperCase()} ${status}: ${url}`, responseContext);
-    }
-  }
-
-  componentMount(componentName: string, context?: LogContext) {
-    this.debug(`Component mounted: ${componentName}`, {
+      statusCode,
+      duration,
       ...context,
-      type: "component-lifecycle",
-      component: componentName,
-      action: "mount",
     });
   }
 
-  componentUnmount(componentName: string, context?: LogContext) {
-    this.debug(`Component unmounted: ${componentName}`, {
+  /**
+   * Log security event
+   */
+  security(event: string, severity: 'low' | 'medium' | 'high' | 'critical', context?: LogContext): void {
+    const level = severity === 'critical' || severity === 'high' ? 'error' : 'warn';
+    this[level](`SECURITY: ${event}`, {
+      type: 'security-event',
+      category: 'security',
+      severity,
       ...context,
-      type: "component-lifecycle",
-      component: componentName,
-      action: "unmount",
     });
   }
 
-  userAction(action: string, context?: LogContext) {
-    this.info(`User action: ${action}`, {
+  /**
+   * Log authentication event
+   */
+  auth(event: string, success: boolean, context?: LogContext): void {
+    const level = success ? 'info' : 'warn';
+    this[level](`AUTH: ${event}`, {
+      type: 'auth-event',
+      category: 'authentication',
+      success,
       ...context,
-      type: "user-action",
-      action,
     });
   }
 
-  performance(operation: string, duration: number, context?: LogContext) {
-    const level = duration > 1000 ? "warn" : "debug";
-    this[level](`Performance: ${operation} took ${duration}ms`, {
-      ...context,
-      type: "performance",
+  /**
+   * Log database operation
+   */
+  database(operation: string, duration?: number, context?: LogContext): void {
+    const level = duration && duration > 1000 ? 'warn' : 'debug';
+    this[level](`DB: ${operation}`, {
+      type: 'database-operation',
+      category: 'database',
       operation,
       duration,
-    });
-  }
-
-  // Enhanced error logging with categorization
-  errorWithCategory(
-    message: string,
-    error: Error,
-    category: string,
-    severity: string,
-    context?: LogContext
-  ) {
-    this.error(message, error, {
       ...context,
-      category,
-      severity,
     });
   }
 
-  // Security-related logging
-  security(message: string, context?: LogContext) {
-    this.error(`SECURITY: ${message}`, undefined, {
+  /**
+   * Log performance metric
+   */
+  performance(operation: string, duration: number, context?: LogContext): void {
+    const level = duration > 1000 ? 'warn' : 'debug';
+    this[level](`PERF: ${operation} took ${duration}ms`, {
+      type: 'performance',
+      operation,
+      duration,
+      slow: duration > 1000,
       ...context,
-      category: 'security',
-      severity: 'critical',
-      type: 'security-event',
     });
   }
 
-  // Network error logging
-  networkError(message: string, error?: Error, context?: LogContext) {
+  /**
+   * Log user action
+   */
+  userAction(action: string, context?: LogContext): void {
+    this.info(`USER ACTION: ${action}`, {
+      type: 'user-action',
+      action,
+      ...context,
+    });
+  }
+
+  /**
+   * Log component lifecycle event
+   */
+  componentLifecycle(component: string, event: 'mount' | 'unmount' | 'render', context?: LogContext): void {
+    this.debug(`COMPONENT: ${component} ${event}`, {
+      type: 'component-lifecycle',
+      component,
+      event,
+      ...context,
+    });
+  }
+
+  /**
+   * Log network error
+   */
+  networkError(message: string, error?: Error, context?: LogContext): void {
     this.error(`NETWORK: ${message}`, error, {
-      ...context,
       category: 'network',
       severity: 'medium',
-      type: 'network-error',
-    });
-  }
-
-  // Database error logging
-  databaseError(message: string, error?: Error, context?: LogContext) {
-    this.error(`DATABASE: ${message}`, error, {
       ...context,
-      category: 'database',
-      severity: 'high',
-      type: 'database-error',
     });
   }
 
-  // Authentication error logging
-  authError(message: string, context?: LogContext) {
-    this.error(`AUTH: ${message}`, undefined, {
-      ...context,
-      category: 'authentication',
-      severity: 'high',
-      type: 'auth-error',
-    });
-  }
-
-  // Validation error logging
-  validationError(message: string, context?: LogContext) {
+  /**
+   * Log validation error
+   */
+  validationError(message: string, context?: LogContext): void {
     this.warn(`VALIDATION: ${message}`, {
-      ...context,
       category: 'validation',
       severity: 'low',
-      type: 'validation-error',
+      ...context,
     });
   }
 
-  // Business logic error logging
-  businessError(message: string, context?: LogContext) {
+  /**
+   * Log business logic error
+   */
+  businessError(message: string, context?: LogContext): void {
     this.error(`BUSINESS: ${message}`, undefined, {
-      ...context,
       category: 'business_logic',
       severity: 'medium',
-      type: 'business-error',
+      ...context,
     });
   }
 
-  // System error logging
-  systemError(message: string, error?: Error, context?: LogContext) {
+  /**
+   * Log system error
+   */
+  systemError(message: string, error?: Error, context?: LogContext): void {
     this.error(`SYSTEM: ${message}`, error, {
-      ...context,
       category: 'system',
       severity: 'critical',
-      type: 'system-error',
+      ...context,
     });
   }
 
-  // Get stored errors for analysis
+  // =====================
+  // Utility Methods
+  // =====================
+
+  /**
+   * Get stored errors from localStorage
+   */
   getStoredErrors(): any[] {
     if (!this.isClient) return [];
-    
+
     const errors: any[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('app-error-')) {
-        try {
-          const errorData = safeParse(localStorage.getItem(key) || '{}');
-          errors.push(errorData);
-        } catch {
-          // Skip invalid JSON
-        }
-      }
-    }
-    return errors.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }
-
-  // Get stored performance metrics
-  getStoredPerformanceMetrics(): any[] {
-    if (!this.isClient) return [];
-    
-    const metrics: any[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('perf-')) {
-        try {
-          const perfData = safeParse(localStorage.getItem(key) || '{}');
-          metrics.push(perfData);
-        } catch {
-          // Skip invalid JSON
-        }
-      }
-    }
-    return metrics.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-  }
-
-  // Clear old stored data
-  clearOldLogs(daysToKeep: number = 7) {
-    if (!this.isClient) return;
-    
-    const cutoffTime = Date.now() - (daysToKeep * 24 * 60 * 60 * 1000);
-    const keysToRemove: string[] = [];
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key?.startsWith('app-error-') || key?.startsWith('perf-')) {
-        try {
-          const data = safeParse(localStorage.getItem(key) || '{}');
-          if (new Date(data.timestamp).getTime() < cutoffTime) {
-            keysToRemove.push(key);
+    try {
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('app-error-')) {
+          const item = localStorage.getItem(key);
+          if (item) {
+            errors.push(safeParse(item));
           }
-        } catch {
-          // Remove invalid entries
+        }
+      }
+    } catch (error) {
+      // Silent fail
+    }
+
+    return errors.sort((a, b) => b.storedAt - a.storedAt);
+  }
+
+  /**
+   * Clear all stored errors
+   */
+  clearStoredErrors(): void {
+    if (!this.isClient) return;
+
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key?.startsWith('app-error-')) {
           keysToRemove.push(key);
         }
       }
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch (error) {
+      // Silent fail
     }
-    
-    keysToRemove.forEach(key => localStorage.removeItem(key));
   }
 }
 
-// Export singleton instance
-export const logger = new Logger();
+// =====================
+// Factory Functions
+// =====================
 
-// Convenience functions for common patterns
+/**
+ * Create a logger instance for a specific context
+ */
+export function createLogger(context: string): Logger {
+  return new Logger(context);
+}
+
+/**
+ * Create a logger with request context
+ */
+export function createRequestLogger(context: string, request?: NextRequest): Logger {
+  const logger = new Logger(context);
+  if (request) {
+    logger.setRequest(logger.extractRequestContext(request));
+  }
+  return logger;
+}
+
+// =====================
+// Specialized Logger Instances
+// =====================
+
+export const logger = createLogger('app');
+export const apiLogger = createLogger('api');
+export const authLogger = createLogger('auth');
+export const dbLogger = createLogger('database');
+export const securityLogger = createLogger('security');
+export const performanceLogger = createLogger('performance');
+
+// =====================
+// Convenience Export Functions
+// =====================
+
+export const logError = (message: string, error?: Error, context?: LogContext) =>
+  logger.error(message, error, context);
+
+export const logWarn = (message: string, context?: LogContext) =>
+  logger.warn(message, context);
+
+export const logInfo = (message: string, context?: LogContext) =>
+  logger.info(message, context);
+
+export const logDebug = (message: string, context?: LogContext) =>
+  logger.debug(message, context);
+
 export const logApiCall = (method: string, url: string, context?: LogContext) =>
-  logger.apiCall(method, url, context);
+  apiLogger.apiRequest(method, url, context);
 
-export const logApiResponse = (
-  method: string,
-  url: string,
-  status: number,
-  context?: LogContext,
-) => logger.apiResponse(method, url, status, context);
+export const logApiResponse = (method: string, url: string, status: number, duration?: number, context?: LogContext) =>
+  apiLogger.apiResponse(method, url, status, duration, context);
 
-export const logError = (
-  message: string,
-  error?: Error,
-  context?: LogContext,
-) => logger.error(message, error, context);
+export const logPerformance = (operation: string, duration: number, context?: LogContext) =>
+  performanceLogger.performance(operation, duration, context);
 
 export const logUserAction = (action: string, context?: LogContext) =>
   logger.userAction(action, context);
 
-export const logPerformance = (
-  operation: string,
-  duration: number,
-  context?: LogContext,
-) => logger.performance(operation, duration, context);
-
-// Development-only logging functions
-export const devLog = (message: string, ...args: any[]) => {
-  if (process.env.NODE_ENV === "development") {
-    console.log(`[DEV] ${message}`, ...args);
-  }
-};
-
-export const devWarn = (message: string, ...args: any[]) => {
-  if (process.env.NODE_ENV === "development") {
-    console.warn(`[DEV] ${message}`, ...args);
-  }
-};
-
-export const devError = (message: string, ...args: any[]) => {
-  if (process.env.NODE_ENV === "development") {
-    console.error(`[DEV] ${message}`, ...args);
-  }
-};
+// Default export
+export default logger;

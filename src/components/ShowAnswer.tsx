@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton } from "@/components/ui/MotionComponents";
+import { logger } from '@/lib/logger';
 import {
   Eye,
   EyeOff,
@@ -51,7 +52,7 @@ export function ShowAnswer({
       setCopiedAnswer(true);
       setTimeout(() => setCopiedAnswer(false), 2000);
     } catch (error) {
-      console.error("Failed to copy answer:", error);
+      logger.error("Failed to copy answer:", error);
     }
   };
 

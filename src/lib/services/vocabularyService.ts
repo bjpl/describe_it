@@ -1,4 +1,5 @@
 import { VocabularyItem, VocabularyList } from "../../types/database";
+import { logger } from '@/lib/logger';
 
 // Sample vocabulary data for development/fallback
 const sampleVocabularyItems: VocabularyItem[] = [
@@ -91,7 +92,7 @@ class VocabularyService {
       this.isConnectedToDatabase = false; // Set to false for demo
       return this.isConnectedToDatabase;
     } catch (error) {
-      console.error("Database connection failed:", error);
+      logger.error("Database connection failed:", error);
       return false;
     }
   }
@@ -109,7 +110,7 @@ class VocabularyService {
         return sampleVocabularyItems;
       }
     } catch (error) {
-      console.error("Error fetching vocabulary items:", error);
+      logger.error("Error fetching vocabulary items:", error);
       // Return sample data on error
       return sampleVocabularyItems;
     }
@@ -133,7 +134,7 @@ class VocabularyService {
         );
       }
     } catch (error) {
-      console.error("Error fetching vocabulary items for list:", error);
+      logger.error("Error fetching vocabulary items for list:", error);
       return sampleVocabularyItems;
     }
   }
@@ -150,7 +151,7 @@ class VocabularyService {
         return sampleVocabularyLists;
       }
     } catch (error) {
-      console.error("Error fetching vocabulary lists:", error);
+      logger.error("Error fetching vocabulary lists:", error);
       return sampleVocabularyLists;
     }
   }
@@ -176,7 +177,7 @@ class VocabularyService {
         );
       }
     } catch (error) {
-      console.error("Error searching vocabulary:", error);
+      logger.error("Error searching vocabulary:", error);
       return sampleVocabularyItems;
     }
   }
@@ -205,7 +206,7 @@ class VocabularyService {
         return newItem;
       }
     } catch (error) {
-      console.error("Error adding vocabulary item:", error);
+      logger.error("Error adding vocabulary item:", error);
       return null;
     }
   }
@@ -239,7 +240,7 @@ class VocabularyService {
         return newList;
       }
     } catch (error) {
-      console.error("Error creating vocabulary list:", error);
+      logger.error("Error creating vocabulary list:", error);
       return null;
     }
   }
@@ -265,7 +266,7 @@ class VocabularyService {
         return null;
       }
     } catch (error) {
-      console.error("Error updating vocabulary item:", error);
+      logger.error("Error updating vocabulary item:", error);
       return null;
     }
   }
@@ -286,7 +287,7 @@ class VocabularyService {
         return false;
       }
     } catch (error) {
-      console.error("Error deleting vocabulary item:", error);
+      logger.error("Error deleting vocabulary item:", error);
       return false;
     }
   }

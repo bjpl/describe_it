@@ -6,6 +6,7 @@ import { withBasicAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 import { z } from "zod";
 import { getCorsHeaders, createCorsPreflightResponse, validateCorsRequest } from "@/lib/utils/cors";
+import { apiLogger } from '@/lib/logger';
 
 // Enhanced security configuration
 const ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS'] as const;
@@ -92,7 +93,7 @@ export async function OPTIONS(request: NextRequest) {
   const requestedHeaders = request.headers.get('access-control-request-headers');
   
   // Enhanced security logging for CORS preflight
-  console.log('[SECURITY] CORS preflight request:', {
+  apiLogger.info('[SECURITY] CORS preflight request:', {
     origin,
     requestedMethod,
     requestedHeaders,
@@ -105,7 +106,7 @@ export async function OPTIONS(request: NextRequest) {
   const { isValid, headers } = validateCorsRequest(request);
   
   if (!isValid && origin) {
-    console.warn('[SECURITY] CORS preflight rejected:', {
+    apiLogger.warn('[SECURITY] CORS preflight rejected:', {
       origin,
       reason: 'Origin not allowed',
       timestamp: new Date().toISOString()
@@ -187,14 +188,14 @@ async function handleImageSearch(request: AuthenticatedRequest) {
   const userId = request.user?.id;
   const userTier = request.user?.subscription_status || 'free';
 
-  console.log("[API] Image search endpoint called at", new Date().toISOString(), { userId, userTier });
+  apiLogger.info("[API] Image search endpoint called at", new Date().toISOString(), { userId, userTier });
   
   // Check if user provided an API key in the request
   const userProvidedKey = request.nextUrl.searchParams.get('api_key');
   
   // If user provided a key, temporarily set it for this request
   if (userProvidedKey) {
-    console.log("[API] User provided API key:", {
+    apiLogger.info("[API] User provided API key:", {
       keyLength: userProvidedKey.length,
       keyPrefix: userProvidedKey.substring(0, 6) + '...',
       timestamp: new Date().toISOString(),
@@ -203,7 +204,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     // Temporarily override the service with user's key
     unsplashService.useTemporaryKey(userProvidedKey);
   } else {
-    console.log("[API] No user API key provided in request query params");
+    apiLogger.info("[API] No user API key provided in request query params");
   }
   
   // Use the key provider to check API key status (with timeout to prevent blocking)
@@ -227,7 +228,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     
     unsplashConfig = await configPromise;
   } catch (error) {
-    console.warn("[API] Key provider failed, using fallback:", error);
+    apiLogger.warn("[API] Key provider failed, using fallback:", error);
     // Fallback to basic config
     unsplashConfig = {
       apiKey: userProvidedKey || '',
@@ -237,7 +238,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     };
   }
   
-  console.log("[API] Key provider check:", {
+  apiLogger.info("[API] Key provider check:", {
     hasKey: !!unsplashConfig.apiKey || !!userProvidedKey,
     isValid: unsplashConfig.isValid || !!userProvidedKey,
     source: userProvidedKey ? 'user-settings' : unsplashConfig.source,
@@ -254,7 +255,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
     // Remove the api_key from params before parsing
     delete searchParams.api_key;
-    console.log("[API] Search params:", searchParams);
+    apiLogger.info("[API] Search params:", searchParams);
     const params = searchSchema.parse(searchParams);
 
     const cacheKey = getCacheKey(params);
@@ -300,7 +301,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     }
 
     // Fetch data (unsplashService handles demo mode internally)
-    console.log("[API] Calling unsplashService.searchImages with params:", params);
+    apiLogger.info("[API] Calling unsplashService.searchImages with params:", params);
     
     // Add timeout for Vercel serverless (reduced for Vercel's 5s limit on hobby plan)
     const searchPromise = unsplashService.searchImages(params);
@@ -312,7 +313,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     try {
       results = await Promise.race([searchPromise, timeoutPromise]);
     } catch (timeoutError) {
-      console.warn('[API] Search timed out, generating demo results');
+      apiLogger.warn('[API] Search timed out, generating demo results');
       // Generate demo results directly for immediate response
       results = {
         images: [
@@ -350,7 +351,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
         hasNextPage: params.page < 3
       };
     }
-    console.log("[API] Results from unsplashService:", {
+    apiLogger.info("[API] Results from unsplashService:", {
       hasImages: !!(results.images && results.images.length > 0),
       imageCount: results.images?.length || 0,
       totalPages: results.totalPages,
@@ -415,7 +416,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
       );
     }
 
-    console.error("Image search error:", error);
+    apiLogger.error("Image search error:", error);
 
     // Return cached data if available during error
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);

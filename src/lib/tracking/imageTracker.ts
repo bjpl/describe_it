@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * Image Tracker - Prevents duplicate image usage
  * Tracks used images with timestamps and provides filtering functionality
@@ -63,7 +65,7 @@ class ImageTracker {
 
       return imageMap;
     } catch (error) {
-      console.warn("Failed to load tracked images:", error);
+      logger.warn("Failed to load tracked images:", error);
       return new Map();
     }
   }
@@ -85,7 +87,7 @@ class ImageTracker {
 
       localStorage.setItem(STORAGE_KEY, safeStringify(imageArray));
     } catch (error) {
-      console.error("Failed to save tracked images:", error);
+      logger.error("Failed to save tracked images:", error);
       // If storage is full, try to clear old entries and retry
       this.clearExpiredImages();
       try {
@@ -96,7 +98,7 @@ class ImageTracker {
           localStorage.setItem(STORAGE_KEY, safeStringify(imageArray));
         }
       } catch (retryError) {
-        console.error(
+        logger.error(
           "Failed to save tracked images after cleanup:",
           retryError,
         );
@@ -244,7 +246,7 @@ class ImageTracker {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error("Failed to clear image history:", error);
+      logger.error("Failed to clear image history:", error);
     }
   }
 

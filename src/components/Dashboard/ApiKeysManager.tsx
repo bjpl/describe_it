@@ -15,6 +15,7 @@ import {
   useAPIKeyValidation
 } from "@/lib/store/apiKeysStore";
 import { cn } from "@/lib/utils";
+import { logger } from '@/lib/logger';
 import {
   Key,
   Plus,
@@ -96,7 +97,7 @@ function AddKeyModal({ isOpen, onClose, onAdd }: AddKeyModalProps) {
       setFormData({ name: "", provider: "openai", key: "", expiresAt: "" });
       onClose();
     } catch (error) {
-      console.error("Failed to add API key:", error);
+      logger.error("Failed to add API key:", error);
     } finally {
       setIsSubmitting(false);
     }
@@ -388,7 +389,7 @@ export function ApiKeysManager({ className }: ApiKeysManagerProps) {
         setActiveKey(keyData.provider, keyId);
       }
     } catch (error) {
-      console.error("Failed to add API key:", error);
+      logger.error("Failed to add API key:", error);
       throw error;
     }
   };
@@ -400,7 +401,7 @@ export function ApiKeysManager({ className }: ApiKeysManagerProps) {
       setImportData("");
       setShowImportModal(false);
     } catch (error) {
-      console.error("Failed to import keys:", error);
+      logger.error("Failed to import keys:", error);
     }
   };
 

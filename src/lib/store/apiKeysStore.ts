@@ -3,6 +3,7 @@ import { create } from 'zustand';
 import { devtools, persist, subscribeWithSelector } from 'zustand/middleware';
 import { createShallowSelector, useCleanupManager } from '../utils/storeUtils';
 import { safeParse, safeStringify } from '@/lib/utils/json-safe';
+import { logger } from '@/lib/logger';
 
 /**
  * API Keys Store - Secure management of API keys with encryption and persistence
@@ -452,7 +453,7 @@ export const useAPIKeyValidation = () => {
         try {
           await validateKey(keyId);
         } catch (error) {
-          console.warn(`Failed to validate key ${keyId}:`, error);
+          logger.warn(`Failed to validate key ${keyId}:`, error);
         }
       }
     };

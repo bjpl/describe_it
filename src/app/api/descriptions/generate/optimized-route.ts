@@ -3,6 +3,9 @@ import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import OpenAI from 'openai';
 import { z } from 'zod';
 
+// Import logger
+import { apiLogger } from '@/lib/logger';
+
 // Import our performance optimizations
 import {
   poolManager,
@@ -239,7 +242,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     monitor.incrementCounter('api.requests.completed');
     monitor.endTimer(timerId);
     
-    console.error('API Error:', {
+    apiLogger.error('API Error:', {
       requestId,
       error: error.message,
       stack: error.stack,

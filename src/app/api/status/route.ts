@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { apiLogger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -93,7 +94,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("Status endpoint error:", error);
+    apiLogger.error("Status endpoint error:", error);
 
     return NextResponse.json(
       {

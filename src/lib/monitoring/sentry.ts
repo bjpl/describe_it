@@ -4,6 +4,7 @@
  */
 
 import * as Sentry from '@sentry/nextjs';
+import { logger } from '@/lib/logger';
 
 // Environment-specific configuration
 const ENVIRONMENT = process.env.NODE_ENV || 'development';
@@ -16,7 +17,7 @@ const SENTRY_RELEASE = process.env.SENTRY_RELEASE || '1.0.0';
  */
 export function initSentry() {
   if (!SENTRY_DSN) {
-    console.warn('Sentry DSN not configured - error tracking disabled');
+    logger.warn('Sentry DSN not configured - error tracking disabled');
     return;
   }
 

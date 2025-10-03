@@ -57,6 +57,7 @@ import {
 } from "@/lib/utils/phrase-helpers";
 import GammaVocabularyExtractor from "./GammaVocabularyExtractor";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface GammaVocabularyManagerProps {
   selectedImage: UnsplashImage | null;
@@ -157,7 +158,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
         // setVocabularySets(sets);
         setVocabularySets([]);
       } catch (error) {
-        console.error("Error loading vocabulary data:", error);
+        logger.error("Error loading vocabulary data:", error);
       }
     };
 
@@ -271,7 +272,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
 
         alert("Vocabulary exported successfully!");
       } catch (error) {
-        console.error("Export error:", error);
+        logger.error("Export error:", error);
         alert("Error exporting vocabulary. Please try again.");
       } finally {
         setState((prev) => ({ ...prev, isExporting: false }));
@@ -326,7 +327,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
 
         alert(`Vocabulary set "${name}" created successfully!`);
       } catch (error) {
-        console.error("Error creating vocabulary set:", error);
+        logger.error("Error creating vocabulary set:", error);
         alert("Error creating vocabulary set. Please try again.");
       } finally {
         setState((prev) => ({ ...prev, isCreatingSet: false }));
@@ -364,7 +365,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
           alert("Failed to delete vocabulary set.");
         }
       } catch (error) {
-        console.error("Error deleting vocabulary set:", error);
+        logger.error("Error deleting vocabulary set:", error);
         alert("Error deleting vocabulary set. Please try again.");
       }
     },

@@ -2,6 +2,7 @@ import React, { useEffect, useState, memo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Activity, Zap, Clock, Database } from "lucide-react";
+import { performanceLogger } from '@/lib/logger';
 
 interface PerformanceMetrics {
   fps: number;
@@ -347,7 +348,7 @@ export const useAPIPerformanceMonitor = () => {
 
       // Log slow requests
       if (latency > 2000) {
-        console.warn(`Slow API call to ${url}: ${Math.round(latency)}ms`);
+        performanceLogger.warn(`Slow API call to ${url}: ${Math.round(latency)}ms`);
       }
 
       return latency;

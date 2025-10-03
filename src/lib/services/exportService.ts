@@ -4,6 +4,7 @@
 
 import { withRetry, RetryConfig } from "../utils/error-retry";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface ExportOptions {
   format: "csv" | "json" | "pdf";
@@ -673,7 +674,7 @@ export class ExportService {
 
   private async htmlToPDF(html: string): Promise<string> {
     // This is a placeholder - would need a real PDF library
-    console.warn("PDF generation not fully implemented");
+    logger.warn("PDF generation not fully implemented");
     return html; // Return HTML as fallback
   }
 }

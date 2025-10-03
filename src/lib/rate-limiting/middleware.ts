@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimiter, RateLimitConfig, RateLimitConfigs, ExponentialBackoff } from './rate-limiter';
+import { logger } from '@/lib/logger';
 
 /**
  * Rate limiting middleware options
@@ -52,7 +53,7 @@ export function withRateLimit(
 
       // Check for admin bypass
       if (options.bypassAdmin && isAdminRequest(req)) {
-        console.log('[Rate Limit] Admin bypass detected, skipping rate limit');
+        logger.info('[Rate Limit] Admin bypass detected, skipping rate limit');
         return handler(req);
       }
 
@@ -100,7 +101,7 @@ export function withRateLimit(
         }
 
         // Log rate limit violation
-        console.warn('[Rate Limit] Rate limit exceeded:', {
+        logger.warn('[Rate Limit] Rate limit exceeded:', {
           identifier: getRequestIdentifier(req),
           url: req.url,
           method: req.method,
@@ -114,10 +115,10 @@ export function withRateLimit(
       return response;
 
     } catch (error) {
-      console.error('[Rate Limit] Middleware error:', error);
+      logger.error('[Rate Limit] Middleware error:', error);
       
       // On error, allow request to proceed but log the issue
-      console.warn('[Rate Limit] Allowing request due to middleware error');
+      logger.warn('[Rate Limit] Allowing request due to middleware error');
       return handler(req);
     }
   };
@@ -247,7 +248,7 @@ function extractUserFromAuth(req: NextRequest): string | null {
       return username;
     }
   } catch (error) {
-    console.warn('[Rate Limit] Error extracting user from auth header:', error);
+    logger.warn('[Rate Limit] Error extracting user from auth header:', error);
   }
 
   return null;
@@ -279,7 +280,7 @@ export const RateLimitMiddleware = {
       message: 'Too many authentication attempts. Please try again later.',
       enableExpBackoff: true,
       onLimitExceeded: (req) => {
-        console.warn(`[Security] Potential brute force attack from ${getRequestIdentifier(req)}`);
+        logger.warn(`[Security] Potential brute force attack from ${getRequestIdentifier(req)}`);
       }
     }),
 
@@ -357,7 +358,7 @@ export function withRateLimitStatus(
 
       return response;
     } catch (error) {
-      console.error('[Rate Limit Status] Error:', error);
+      logger.error('[Rate Limit Status] Error:', error);
       return handler(req);
     }
   };
@@ -387,7 +388,7 @@ export async function checkRateLimitStatus(
       resetTime: result.resetTime,
     };
   } catch (error) {
-    console.error('[Rate Limit Check] Error:', error);
+    logger.error('[Rate Limit Check] Error:', error);
     return {
       limited: false,
       limit: 100,

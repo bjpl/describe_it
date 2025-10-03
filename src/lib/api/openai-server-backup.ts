@@ -5,10 +5,11 @@
 
 import OpenAI from "openai";
 import { apiKeyProvider } from "./keyProvider";
-import type { 
-  DescriptionStyle, 
-  DescriptionRequest, 
-  GeneratedDescription 
+import { apiLogger } from '@/lib/logger';
+import type {
+  DescriptionStyle,
+  DescriptionRequest,
+  GeneratedDescription
 } from "../../types/api";
 
 // Singleton OpenAI client instance for memory optimization
@@ -30,7 +31,7 @@ function getConfigHash(apiKey: string): string {
 export function getServerOpenAIClient(): OpenAI | null {
   // This function should only run on the server
   if (typeof window !== 'undefined') {
-    console.error('[OpenAI Server] This function can only be called server-side');
+    apiLogger.error('[OpenAI Server] This function can only be called server-side');
     throw new Error('[OpenAI Server] This function can only be called server-side');
   }
 
@@ -38,7 +39,7 @@ export function getServerOpenAIClient(): OpenAI | null {
   let config;
   try {
     config = apiKeyProvider.getServiceConfig('openai');
-    console.log('[OpenAI Server] Service config retrieved:', {
+    apiLogger.info('[OpenAI Server] Service config retrieved:', {
       step: 'config_retrieved',
       hasConfig: !!config,
       hasApiKey: !!config?.apiKey,
@@ -50,7 +51,7 @@ export function getServerOpenAIClient(): OpenAI | null {
       timestamp: new Date().toISOString()
     });
   } catch (configError) {
-    console.error('[OpenAI Server] Failed to get service config:', {
+    apiLogger.error('[OpenAI Server] Failed to get service config:', {
       step: 'config_error',
       error: configError instanceof Error ? configError.message : String(configError),
       stack: configError instanceof Error ? configError.stack : undefined,
@@ -60,7 +61,7 @@ export function getServerOpenAIClient(): OpenAI | null {
   }
   
   if (!config || !config.apiKey || !config.isValid) {
-    console.warn('[OpenAI Server] No valid API key available - will return null client:', {
+    apiLogger.warn('[OpenAI Server] No valid API key available - will return null client:', {
       step: 'no_valid_key',
       hasConfig: !!config,
       hasKey: !!config?.apiKey,
@@ -79,7 +80,7 @@ export function getServerOpenAIClient(): OpenAI | null {
     
     // Return cached client if configuration hasn't changed
     if (openAIClientInstance && lastConfigHash === currentConfigHash) {
-      console.log('[OpenAI Server] Reusing cached client instance', {
+      apiLogger.info('[OpenAI Server] Reusing cached client instance', {
         keyLength: config.apiKey.length,
         keyPrefix: config.apiKey.substring(0, 6) + '...',
         cached: true
@@ -98,7 +99,7 @@ export function getServerOpenAIClient(): OpenAI | null {
 
     // Validate the client was created properly
     if (!client) {
-      console.error('[OpenAI Server] Client creation returned null/undefined');
+      apiLogger.error('[OpenAI Server] Client creation returned null/undefined');
       return null;
     }
 
@@ -106,7 +107,7 @@ export function getServerOpenAIClient(): OpenAI | null {
     openAIClientInstance = client;
     lastConfigHash = currentConfigHash;
 
-    console.log('[OpenAI Server] OpenAI client created successfully:', {
+    apiLogger.info('[OpenAI Server] OpenAI client created successfully:', {
       step: 'client_created',
       keyLength: config.apiKey.length,
       keyPrefix: config.apiKey.substring(0, 6) + '...',
@@ -120,7 +121,7 @@ export function getServerOpenAIClient(): OpenAI | null {
 
     return client;
   } catch (error) {
-    console.error('[OpenAI Server] Failed to create client:', {
+    apiLogger.error('[OpenAI Server] Failed to create client:', {
       error: error instanceof Error ? error.message : error,
       stack: error instanceof Error ? error.stack : undefined,
       keyLength: config.apiKey?.length || 0,
@@ -210,7 +211,7 @@ function validateAndOptimizeImageData(imageUrl: string): { valid: boolean; optim
 export async function generateVisionDescription(
   request: DescriptionRequest
 ): Promise<GeneratedDescription> {
-  console.log('[OpenAI Server] generateVisionDescription called with comprehensive logging:', {
+  apiLogger.info('[OpenAI Server] generateVisionDescription called with comprehensive logging:', {
     step: 'function_entry',
     hasRequest: !!request,
     requestKeys: request ? Object.keys(request) : [],
@@ -226,13 +227,13 @@ export async function generateVisionDescription(
   
   // Comprehensive input validation
   if (!request) {
-    console.error('[OpenAI Server] Request parameter is required - critical error');
+    apiLogger.error('[OpenAI Server] Request parameter is required - critical error');
     throw new Error('[OpenAI Server] Request parameter is required');
   }
 
   const { imageUrl, style, language = "es", maxLength = 300, customPrompt } = request;
   
-  console.log('[OpenAI Server] Request parameters extracted:', {
+  apiLogger.info('[OpenAI Server] Request parameters extracted:', {
     step: 'params_extracted',
     hasImageUrl: !!imageUrl,
     imageUrlLength: imageUrl?.length,
@@ -247,7 +248,7 @@ export async function generateVisionDescription(
   
   // Validate imageUrl - critical validation to prevent API failures
   if (!imageUrl || typeof imageUrl !== 'string') {
-    console.error('[OpenAI Server] Invalid imageUrl provided - this is required for vision API', {
+    apiLogger.error('[OpenAI Server] Invalid imageUrl provided - this is required for vision API', {
       hasImageUrl: !!imageUrl,
       imageUrlType: typeof imageUrl,
       imageUrlLength: imageUrl?.length
@@ -258,7 +259,7 @@ export async function generateVisionDescription(
   // Validate and optimize image data with size limits
   const imageValidation = validateAndOptimizeImageData(imageUrl);
   if (!imageValidation.valid) {
-    console.error('[OpenAI Server] Image validation failed - cannot proceed with vision API', {
+    apiLogger.error('[OpenAI Server] Image validation failed - cannot proceed with vision API', {
       error: imageValidation.error,
       imageUrlLength: imageUrl?.length
     });
@@ -269,7 +270,7 @@ export async function generateVisionDescription(
 
   // Validate style parameter
   if (!style || typeof style !== 'string') {
-    console.warn('[OpenAI Server] Invalid style parameter, using default', {
+    apiLogger.warn('[OpenAI Server] Invalid style parameter, using default', {
       hasStyle: !!style,
       styleType: typeof style,
       styleValue: style
@@ -278,7 +279,7 @@ export async function generateVisionDescription(
 
   const validStyles: DescriptionStyle[] = ['narrativo', 'poetico', 'academico', 'conversacional', 'infantil'];
   if (style && !validStyles.includes(style)) {
-    console.warn('[OpenAI Server] Invalid style value, using default', {
+    apiLogger.warn('[OpenAI Server] Invalid style value, using default', {
       providedStyle: style,
       validStyles
     });
@@ -287,7 +288,7 @@ export async function generateVisionDescription(
   // Validate language parameter
   const validLanguages = ['es', 'en'];
   if (language && !validLanguages.includes(language)) {
-    console.warn('[OpenAI Server] Invalid language parameter, using default', {
+    apiLogger.warn('[OpenAI Server] Invalid language parameter, using default', {
       providedLanguage: language,
       validLanguages,
       usingDefault: 'es'
@@ -296,7 +297,7 @@ export async function generateVisionDescription(
 
   // Validate maxLength parameter
   if (maxLength && (typeof maxLength !== 'number' || maxLength < 50 || maxLength > 1000)) {
-    console.warn('[OpenAI Server] Invalid maxLength parameter, using default', {
+    apiLogger.warn('[OpenAI Server] Invalid maxLength parameter, using default', {
       providedMaxLength: maxLength,
       maxLengthType: typeof maxLength,
       usingDefault: 300
@@ -305,7 +306,7 @@ export async function generateVisionDescription(
 
   // Validate customPrompt if provided
   if (customPrompt && (typeof customPrompt !== 'string' || customPrompt.length > 500)) {
-    console.warn('[OpenAI Server] Invalid customPrompt parameter', {
+    apiLogger.warn('[OpenAI Server] Invalid customPrompt parameter', {
       hasCustomPrompt: !!customPrompt,
       customPromptType: typeof customPrompt,
       customPromptLength: customPrompt?.length
@@ -319,7 +320,7 @@ export async function generateVisionDescription(
   const validatedCustomPrompt = (typeof customPrompt === 'string' && customPrompt.length <= 500) ? customPrompt : undefined;
   
   if (process.env.NODE_ENV !== 'production') {
-    console.log('[OpenAI Server] Generating vision description with validated parameters:', {
+    apiLogger.info('[OpenAI Server] Generating vision description with validated parameters:', {
       hasImageUrl: !!optimizedImageUrl,
       imageUrlType: optimizedImageUrl?.startsWith('data:') ? 'base64' : 'url',
       imageUrlLength: optimizedImageUrl?.length,
@@ -333,7 +334,7 @@ export async function generateVisionDescription(
     });
   }
 
-  console.log('[OpenAI Server] About to get OpenAI client:', {
+  apiLogger.info('[OpenAI Server] About to get OpenAI client:', {
     step: 'getting_client',
     validatedStyle: validatedStyle,
     validatedLanguage: validatedLanguage,
@@ -344,7 +345,7 @@ export async function generateVisionDescription(
   let client;
   try {
     client = getServerOpenAIClient();
-    console.log('[OpenAI Server] Client retrieval result:', {
+    apiLogger.info('[OpenAI Server] Client retrieval result:', {
       step: 'client_retrieved',
       hasClient: !!client,
       clientType: typeof client,
@@ -352,7 +353,7 @@ export async function generateVisionDescription(
       timestamp: new Date().toISOString()
     });
   } catch (clientError) {
-    console.error('[OpenAI Server] Failed to get OpenAI client:', clientError);
+    apiLogger.error('[OpenAI Server] Failed to get OpenAI client:', clientError);
     // Check if we have a valid API key - if so, this is a configuration error
     try {
       const config = apiKeyProvider.getServiceConfig('openai');
@@ -366,7 +367,7 @@ export async function generateVisionDescription(
   }
   
   if (!client) {
-    console.warn('[OpenAI Server] No client available, checking if API key exists');
+    apiLogger.warn('[OpenAI Server] No client available, checking if API key exists');
     // Check if we have a valid API key - if so, this indicates a problem
     try {
       const config = apiKeyProvider.getServiceConfig('openai');
@@ -389,7 +390,7 @@ export async function generateVisionDescription(
       ? `${validatedCustomPrompt} ${lengthInstruction}`
       : `${stylePrompt} ${lengthInstruction}`;
 
-    console.log('[OpenAI Server] About to call GPT-4 Vision API with full details:', {
+    apiLogger.info('[OpenAI Server] About to call GPT-4 Vision API with full details:', {
       step: 'api_call_start',
       model: 'gpt-4o',
       validatedStyle: validatedStyle,
@@ -406,7 +407,7 @@ export async function generateVisionDescription(
 
     // Validate image URL format - must use optimizedImageUrl at this point
     if (!optimizedImageUrl || (!optimizedImageUrl.startsWith('data:') && !optimizedImageUrl.startsWith('http'))) {
-      console.error('[OpenAI Server] Invalid or missing processed image URL format', {
+      apiLogger.error('[OpenAI Server] Invalid or missing processed image URL format', {
         hasOptimizedUrl: !!optimizedImageUrl,
         optimizedUrlType: optimizedImageUrl ? (optimizedImageUrl.startsWith('data:') ? 'base64' : 'url') : 'none',
         optimizedUrlLength: optimizedImageUrl?.length || 0
@@ -444,7 +445,7 @@ export async function generateVisionDescription(
       temperature: validatedStyle === "poetico" ? 0.9 : validatedStyle === "academico" ? 0.3 : 0.7,
     });
     
-    console.log('[OpenAI Server] GPT-4 Vision API response received:', {
+    apiLogger.info('[OpenAI Server] GPT-4 Vision API response received:', {
       step: 'api_response',
       hasResponse: !!response,
       hasChoices: !!response?.choices,
@@ -461,7 +462,7 @@ export async function generateVisionDescription(
 
     // Validate response
     if (!response || !response.choices || response.choices.length === 0) {
-      console.error('[OpenAI Server] Invalid API response structure:', {
+      apiLogger.error('[OpenAI Server] Invalid API response structure:', {
         step: 'invalid_response',
         hasResponse: !!response,
         hasChoices: !!response?.choices,
@@ -474,7 +475,7 @@ export async function generateVisionDescription(
 
     const description = response.choices[0]?.message?.content || "";
     
-    console.log('[OpenAI Server] Description extracted from response:', {
+    apiLogger.info('[OpenAI Server] Description extracted from response:', {
       step: 'description_extracted',
       hasDescription: !!description,
       descriptionLength: description?.length,
@@ -484,7 +485,7 @@ export async function generateVisionDescription(
     });
     
     if (!description.trim()) {
-      console.warn('[OpenAI Server] Empty description returned from API - using demo fallback:', {
+      apiLogger.warn('[OpenAI Server] Empty description returned from API - using demo fallback:', {
         step: 'empty_description_fallback',
         descriptionLength: description?.length,
         descriptionValue: description,
@@ -494,7 +495,7 @@ export async function generateVisionDescription(
     }
     
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[OpenAI Server] Vision description generated successfully:', {
+      apiLogger.info('[OpenAI Server] Vision description generated successfully:', {
         descriptionLength: description.length,
         wordCount: description.split(/\s+/).length,
         model: response.model,
@@ -522,7 +523,7 @@ export async function generateVisionDescription(
     return result;
   } catch (error) {
     // Enhanced error logging
-    console.error('[OpenAI Server] Vision API error:', {
+    apiLogger.error('[OpenAI Server] Vision API error:', {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
       code: (error instanceof Error && 'code' in error) ? (error as any).code : undefined,
@@ -553,7 +554,7 @@ function generateDemoDescription(
   language: string
 ): GeneratedDescription {
   if (process.env.NODE_ENV !== 'production') {
-    console.log('[OpenAI Server] Generating demo description for fallback:', {
+    apiLogger.info('[OpenAI Server] Generating demo description for fallback:', {
       style,
       language,
       hasImageUrl: !!imageUrl,
@@ -589,7 +590,7 @@ function generateDemoDescription(
   const text = styleDescriptions[language as 'es' | 'en'] || styleDescriptions.es;
 
   if (!text) {
-    console.warn('[OpenAI Server] No demo description found for style/language combination');
+    apiLogger.warn('[OpenAI Server] No demo description found for style/language combination');
     const fallbackText = language === 'es' 
       ? 'Esta imagen presenta elementos visuales interesantes que capturan la atención del espectador.'
       : 'This image presents interesting visual elements that capture the viewer\'s attention.';

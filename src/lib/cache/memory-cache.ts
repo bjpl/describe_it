@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * High-performance in-memory cache with LRU eviction
  * Supports TTL, automatic cleanup, and memory management
@@ -384,7 +386,7 @@ export class MemoryCache<T = any> {
     this.stats.cleanups++;
 
     if (keysToDelete.length > 0) {
-      console.log(
+      logger.info(
         `Memory cache cleanup: removed ${keysToDelete.length} expired entries`,
       );
     }

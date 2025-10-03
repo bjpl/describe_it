@@ -1,6 +1,7 @@
 import { openAIService } from "./openai";
 import { vercelKvCache } from "./vercel-kv";
 import { APIError } from "../../types/api";
+import { apiLogger } from '@/lib/logger';
 
 export interface TranslationRequest {
   text: string;
@@ -306,7 +307,7 @@ class TranslatorService {
         // Clean up the response (remove quotes if AI added them)
         translatedText = translatedText.replace(/^["']|["']$/g, "").trim();
       } catch (openAIError) {
-        console.warn(
+        apiLogger.warn(
           "OpenAI translation failed, trying fallback:",
           openAIError,
         );

@@ -23,6 +23,7 @@ import {
   ExportResult,
   BatchExportRequest,
 } from "../types/export";
+import { logger } from '@/lib/logger';
 import {
   ExportManager,
   createExportManager,
@@ -324,7 +325,7 @@ export default function ExportModal({
         alert(`Export failed: ${result.error}`);
       }
     } catch (error) {
-      console.error("Export error:", error);
+      logger.error("Export error:", error);
       alert(
         `Export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
       );

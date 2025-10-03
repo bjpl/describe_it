@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { healthCheckService } from '@/lib/api/healthCheck';
+import { apiLogger } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
@@ -45,7 +46,7 @@ export async function GET(request: NextRequest) {
     }
 
   } catch (error) {
-    console.error('Health check endpoint error:', error);
+    apiLogger.error('Health check endpoint error:', error);
     
     return NextResponse.json({
       status: 'error',

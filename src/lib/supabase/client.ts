@@ -1,6 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 import { createClient } from '@supabase/supabase-js'
 import type { Database } from './types'
+import { dbLogger } from '@/lib/logger';
 
 // Environment variables validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -14,7 +15,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 function createSupabaseClient() {
   if (typeof window !== 'undefined') {
     // Browser client with persistent sessions
-    console.log('[Supabase] Creating browser client instance');
+    dbLogger.info('[Supabase] Creating browser client instance');
     return createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
@@ -31,7 +32,7 @@ function createSupabaseClient() {
     });
   } else {
     // Server-side client (SSR) without persistent sessions
-    console.log('[Supabase] Creating server-side client instance');
+    dbLogger.info('[Supabase] Creating server-side client instance');
     return createClient<Database>(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: false,
@@ -59,7 +60,7 @@ export const authHelpers = {
       if (error) throw error
       return user
     } catch (error) {
-      console.error('Error getting current user:', error)
+      dbLogger.error('Error getting current user:', error)
       return null
     }
   },
@@ -73,7 +74,7 @@ export const authHelpers = {
       if (error) throw error
       return session
     } catch (error) {
-      console.error('Error getting current session:', error)
+      dbLogger.error('Error getting current session:', error)
       return null
     }
   },
@@ -90,7 +91,7 @@ export const authHelpers = {
       if (error) throw error
       return { user: data.user, session: data.session }
     } catch (error) {
-      console.error('Error signing in:', error)
+      dbLogger.error('Error signing in:', error)
       throw error
     }
   },
@@ -110,7 +111,7 @@ export const authHelpers = {
       if (error) throw error
       return { user: data.user, session: data.session }
     } catch (error) {
-      console.error('Error signing up:', error)
+      dbLogger.error('Error signing up:', error)
       throw error
     }
   },
@@ -123,7 +124,7 @@ export const authHelpers = {
       const { error } = await supabase.auth.signOut()
       if (error) throw error
     } catch (error) {
-      console.error('Error signing out:', error)
+      dbLogger.error('Error signing out:', error)
       throw error
     }
   },
@@ -138,7 +139,7 @@ export const authHelpers = {
       })
       if (error) throw error
     } catch (error) {
-      console.error('Error resetting password:', error)
+      dbLogger.error('Error resetting password:', error)
       throw error
     }
   },
@@ -151,7 +152,7 @@ export const authHelpers = {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
     } catch (error) {
-      console.error('Error updating password:', error)
+      dbLogger.error('Error updating password:', error)
       throw error
     }
   },
@@ -185,7 +186,7 @@ export const realtimeHelpers = {
           filter,
         },
         (payload) => {
-          console.log(`${table} change received:`, payload)
+          dbLogger.info(`${table} change received:`, payload)
           callback?.(payload)
         }
       )
@@ -249,7 +250,7 @@ export const dbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error getting user profile:', error)
+      dbLogger.error('Error getting user profile:', error)
       throw error
     }
   },
@@ -274,7 +275,7 @@ export const dbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error getting user descriptions:', error)
+      dbLogger.error('Error getting user descriptions:', error)
       throw error
     }
   },
@@ -293,7 +294,7 @@ export const dbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error getting user progress:', error)
+      dbLogger.error('Error getting user progress:', error)
       throw error
     }
   },
@@ -315,7 +316,7 @@ export const dbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error updating user API keys:', error)
+      dbLogger.error('Error updating user API keys:', error)
       throw error
     }
   },
@@ -341,7 +342,7 @@ export const dbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error creating description:', error)
+      dbLogger.error('Error creating description:', error)
       throw error
     }
   },
@@ -364,7 +365,7 @@ export const dbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error updating description:', error)
+      dbLogger.error('Error updating description:', error)
       throw error
     }
   },
@@ -381,7 +382,7 @@ export const dbHelpers = {
 
       if (error) throw error
     } catch (error) {
-      console.error('Error deleting description:', error)
+      dbLogger.error('Error deleting description:', error)
       throw error
     }
   },
@@ -395,7 +396,7 @@ export const withErrorHandling = <T extends any[], R>(
     try {
       return await fn(...args)
     } catch (error) {
-      console.error('Supabase operation failed:', error)
+      dbLogger.error('Supabase operation failed:', error)
       return null
     }
   }

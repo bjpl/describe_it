@@ -4,6 +4,7 @@
  */
 
 import { NextResponse } from 'next/server';
+import { apiLogger } from '@/lib/logger';
 
 export async function GET() {
   return NextResponse.json({
@@ -12,7 +13,7 @@ export async function GET() {
     script: `
 // Copy and paste this in your browser console:
 (() => {
-  console.log('Starting storage cleanup...');
+  apiLogger.info('Starting storage cleanup...');
   
   // Get current usage
   const getStorageSize = () => {
@@ -25,7 +26,7 @@ export async function GET() {
     return (total / 1024).toFixed(2) + ' KB';
   };
   
-  console.log('Current localStorage usage:', getStorageSize());
+  apiLogger.info('Current localStorage usage:', getStorageSize());
   
   // Clear analytics and error data
   const keysToRemove = [];
@@ -39,7 +40,7 @@ export async function GET() {
     }
   }
   
-  console.log('Removing', keysToRemove.length, 'analytics/error keys');
+  apiLogger.info('Removing', keysToRemove.length, 'analytics/error keys');
   keysToRemove.forEach(key => localStorage.removeItem(key));
   
   // Clear old session data
@@ -51,14 +52,14 @@ export async function GET() {
         const parsed = JSON.parse(value);
         if (parsed.timestamp && parsed.timestamp < oneWeekAgo) {
           localStorage.removeItem(key);
-          console.log('Removed old key:', key);
+          apiLogger.info('Removed old key:', key);
         }
       }
     } catch {}
   }
   
-  console.log('Storage after cleanup:', getStorageSize());
-  console.log('Cleanup complete! Refreshing page...');
+  apiLogger.info('Storage after cleanup:', getStorageSize());
+  apiLogger.info('Cleanup complete! Refreshing page...');
   
   setTimeout(() => location.reload(), 1000);
 })();

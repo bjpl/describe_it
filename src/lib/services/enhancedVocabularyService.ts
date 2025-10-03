@@ -10,6 +10,7 @@ import { translationService } from "./translationService";
 import { openAIService } from "./openaiService";
 import { vocabularyService as baseVocabularyService } from "./vocabularyService";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface EnhancedVocabularyItem {
   id: string;
@@ -109,7 +110,7 @@ export class EnhancedVocabularyService {
       this.setCache(cacheKey, result);
       return result;
     } catch (error) {
-      console.warn("Database query failed, using fallback:", error);
+      logger.warn("Database query failed, using fallback:", error);
       return await this.getFallbackVocabulary(filter);
     }
   }
@@ -131,7 +132,7 @@ export class EnhancedVocabularyService {
         });
         item.english_translation = translation.translation;
       } catch (error) {
-        console.warn("Auto-translation failed:", error);
+        logger.warn("Auto-translation failed:", error);
       }
     }
 
@@ -142,7 +143,7 @@ export class EnhancedVocabularyService {
           item.spanish_text,
         );
       } catch (error) {
-        console.warn("Context generation failed:", error);
+        logger.warn("Context generation failed:", error);
       }
     }
 
@@ -361,7 +362,7 @@ export class EnhancedVocabularyService {
       this.setCache(cacheKey, items);
       return items;
     } catch (error) {
-      console.warn("Search failed:", error);
+      logger.warn("Search failed:", error);
       return [];
     }
   }
@@ -437,7 +438,7 @@ export class EnhancedVocabularyService {
       this.setCache(cacheKey, stats, 600000); // 10 minutes
       return stats;
     } catch (error) {
-      console.warn("Stats calculation failed:", error);
+      logger.warn("Stats calculation failed:", error);
       return {
         totalItems: 0,
         byDifficulty: {},
@@ -511,7 +512,7 @@ export class EnhancedVocabularyService {
         });
       }
     } catch (error) {
-      console.warn("Failed to update vocabulary stats:", error);
+      logger.warn("Failed to update vocabulary stats:", error);
     }
   }
 
@@ -654,7 +655,7 @@ export class EnhancedVocabularyService {
         return data;
       }
     } catch (error) {
-      console.warn("Failed to get vocabulary by ID:", error);
+      logger.warn("Failed to get vocabulary by ID:", error);
     }
     return null;
   }

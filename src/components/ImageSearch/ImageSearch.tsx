@@ -10,6 +10,7 @@ import { PaginationControls } from "./PaginationControls";
 import { LoadingSpinner } from "@/components/Loading/LoadingSpinner";
 import { SearchFilters } from "./SearchFilters";
 import { UnsplashImage } from "@/types";
+import { logger } from '@/lib/logger';
 import {
   performanceProfiler,
   useRenderCount,
@@ -74,12 +75,12 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
 
   // Trigger search when debounced query changes and apply filters
   React.useEffect(() => {
-    console.log("[ImageSearch] useEffect triggered - debouncedQuery:", debouncedQuery, "filters:", filters);
+    logger.info("[ImageSearch] useEffect triggered - debouncedQuery:", debouncedQuery, "filters:", filters);
     if (debouncedQuery.trim()) {
-      console.log("[ImageSearch] Calling searchImages with:", debouncedQuery);
+      logger.info("[ImageSearch] Calling searchImages with:", debouncedQuery);
       searchImages(debouncedQuery, 1, filters);
     } else {
-      console.log("[ImageSearch] No query, clearing results");
+      logger.info("[ImageSearch] No query, clearing results");
       clearResults();
     }
   }, [debouncedQuery, filters]); // Removed searchImages and clearResults from deps to prevent infinite loop

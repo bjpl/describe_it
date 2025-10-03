@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { captureError } from '@/lib/monitoring/sentry';
+import { apiLogger } from '@/lib/logger';
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    console.error('Admin analytics API error:', error);
+    apiLogger.error('Admin analytics API error:', error);
     captureError(error as Error, {
       endpoint: '/api/admin/analytics',
       method: 'GET',
@@ -111,7 +112,7 @@ async function getAnalyticsData() {
     };
 
   } catch (error) {
-    console.error('Failed to get analytics data:', error);
+    apiLogger.error('Failed to get analytics data:', error);
     return {
       totalUsers: 0,
       activeUsers: 0,
@@ -174,7 +175,7 @@ async function getErrorData() {
     };
 
   } catch (error) {
-    console.error('Failed to get error data:', error);
+    apiLogger.error('Failed to get error data:', error);
     return {
       totalErrors: 0,
       criticalErrors: 0,
@@ -216,7 +217,7 @@ async function getErrorTrends() {
     return trends;
 
   } catch (error) {
-    console.error('Failed to get error trends:', error);
+    apiLogger.error('Failed to get error trends:', error);
     return [];
   }
 }
@@ -275,7 +276,7 @@ async function getPerformanceData() {
     };
 
   } catch (error) {
-    console.error('Failed to get performance data:', error);
+    apiLogger.error('Failed to get performance data:', error);
     return {
       avgResponseTime: 0,
       apiSuccess: 100,
@@ -307,7 +308,7 @@ async function getSystemData() {
     return systemData;
 
   } catch (error) {
-    console.error('Failed to get system data:', error);
+    apiLogger.error('Failed to get system data:', error);
     return {
       serverHealth: 'warning' as const,
       databaseHealth: 'warning' as const,

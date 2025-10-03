@@ -1,3 +1,5 @@
+import { apiLogger } from '@/lib/logger';
+
 // Client-safe logger that doesn't import any server-side modules
 export enum LogLevel {
   DEBUG = 0,
@@ -49,19 +51,19 @@ class ClientLogger {
 
   debug(message: string, context?: any): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
-      console.debug(this.formatMessage(LogLevel.DEBUG, message), context);
+      apiLogger.debug(this.formatMessage(LogLevel.DEBUG, message), context);
     }
   }
 
   info(message: string, context?: any): void {
     if (this.shouldLog(LogLevel.INFO)) {
-      console.info(this.formatMessage(LogLevel.INFO, message), context);
+      apiLogger.info(this.formatMessage(LogLevel.INFO, message), context);
     }
   }
 
   warn(message: string, context?: any): void {
     if (this.shouldLog(LogLevel.WARN)) {
-      console.warn(this.formatMessage(LogLevel.WARN, message), context);
+      apiLogger.warn(this.formatMessage(LogLevel.WARN, message), context);
     }
   }
 
@@ -75,7 +77,7 @@ class ClientLogger {
           }
         : undefined;
 
-      console.error(this.formatMessage(LogLevel.ERROR, message), {
+      apiLogger.error(this.formatMessage(LogLevel.ERROR, message), {
         error: errorInfo,
         context,
       });
@@ -92,7 +94,7 @@ class ClientLogger {
           }
         : undefined;
 
-      console.error(this.formatMessage(LogLevel.FATAL, message), {
+      apiLogger.error(this.formatMessage(LogLevel.FATAL, message), {
         error: errorInfo,
         context,
       });

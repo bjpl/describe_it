@@ -15,6 +15,7 @@ import {
 } from 'chart.js';
 import { Line, Bar, Doughnut } from 'react-chartjs-2';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 ChartJS.register(
   CategoryScale,
@@ -71,7 +72,7 @@ export default function UsageDashboard() {
 
       wsRef.current.onopen = () => {
         setIsConnected(true);
-        console.log('Analytics WebSocket connected');
+        logger.info('Analytics WebSocket connected');
       };
 
       wsRef.current.onmessage = (event) => {
@@ -90,19 +91,19 @@ export default function UsageDashboard() {
               break;
           }
         } catch (error) {
-          console.error('Error parsing WebSocket message:', error);
+          logger.error('Error parsing WebSocket message:', error);
         }
       };
 
       wsRef.current.onclose = () => {
         setIsConnected(false);
-        console.log('Analytics WebSocket disconnected');
+        logger.info('Analytics WebSocket disconnected');
         // Attempt to reconnect after 5 seconds
         setTimeout(initWebSocket, 5000);
       };
 
       wsRef.current.onerror = (error) => {
-        console.error('WebSocket error:', error);
+        logger.error('WebSocket error:', error);
       };
     };
 
@@ -130,7 +131,7 @@ export default function UsageDashboard() {
       setApiKeys(data.apiKeys || []);
       setAlerts(data.alerts || []);
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      logger.error('Error fetching dashboard data:', error);
     }
   };
 
@@ -149,7 +150,7 @@ export default function UsageDashboard() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(a);
     } catch (error) {
-      console.error('Error exporting data:', error);
+      logger.error('Error exporting data:', error);
     }
   };
 

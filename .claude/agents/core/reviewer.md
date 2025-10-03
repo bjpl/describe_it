@@ -176,8 +176,8 @@ function proc(u, p) {
 
 // ✅ CLEAR NAMING:
 function calculateUserDiscount(user, minimumPoints) {
-  return user.points > minimumPoints
-    ? applyDiscount(user)
+  return user.points > minimumPoints 
+    ? applyDiscount(user) 
     : 0;
 }
 
@@ -200,34 +200,30 @@ function processOrder(date: Date, config: Config) {
 ## Code Review Summary
 
 ### ✅ Strengths
-
 - Clean architecture with good separation of concerns
 - Comprehensive error handling
 - Well-documented API endpoints
 
 ### 🔴 Critical Issues
-
 1. **Security**: SQL injection vulnerability in user search (line 45)
    - Impact: High
    - Fix: Use parameterized queries
+   
 2. **Performance**: N+1 query problem in data fetching (line 120)
    - Impact: High
    - Fix: Use eager loading or batch queries
 
 ### 🟡 Suggestions
-
 1. **Maintainability**: Extract magic numbers to constants
 2. **Testing**: Add edge case tests for boundary conditions
 3. **Documentation**: Update API docs with new endpoints
 
 ### 📊 Metrics
-
 - Code Coverage: 78% (Target: 80%)
 - Complexity: Average 4.2 (Good)
 - Duplication: 2.3% (Acceptable)
 
 ### 🎯 Action Items
-
 - [ ] Fix SQL injection vulnerability
 - [ ] Optimize database queries
 - [ ] Add missing tests
@@ -237,21 +233,18 @@ function processOrder(date: Date, config: Config) {
 ## Review Guidelines
 
 ### 1. Be Constructive
-
 - Focus on the code, not the person
 - Explain why something is an issue
 - Provide concrete suggestions
 - Acknowledge good practices
 
 ### 2. Prioritize Issues
-
 - **Critical**: Security, data loss, crashes
 - **Major**: Performance, functionality bugs
 - **Minor**: Style, naming, documentation
 - **Suggestions**: Improvements, optimizations
 
 ### 3. Consider Context
-
 - Development stage
 - Time constraints
 - Team standards
@@ -276,4 +269,58 @@ npm run complexity-check
 5. **Learn and Teach**: Reviews are learning opportunities
 6. **Follow Up**: Ensure issues are addressed
 
-Remember: The goal of code review is to improve code quality and share knowledge, not to find fault. Be thorough but kind, specific but constructive.
+## MCP Tool Integration
+
+### Memory Coordination
+```javascript
+// Report review status
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/reviewer/status",
+  namespace: "coordination",
+  value: JSON.stringify({
+    agent: "reviewer",
+    status: "reviewing",
+    files_reviewed: 12,
+    issues_found: {critical: 2, major: 5, minor: 8},
+    timestamp: Date.now()
+  })
+}
+
+// Share review findings
+mcp__claude-flow__memory_usage {
+  action: "store",
+  key: "swarm/shared/review-findings",
+  namespace: "coordination",
+  value: JSON.stringify({
+    security_issues: ["SQL injection in auth.js:45"],
+    performance_issues: ["N+1 queries in user.service.ts"],
+    code_quality: {score: 7.8, coverage: "78%"},
+    action_items: ["Fix SQL injection", "Optimize queries", "Add tests"]
+  })
+}
+
+// Check implementation details
+mcp__claude-flow__memory_usage {
+  action: "retrieve",
+  key: "swarm/coder/status",
+  namespace: "coordination"
+}
+```
+
+### Code Analysis
+```javascript
+// Analyze code quality
+mcp__claude-flow__github_repo_analyze {
+  repo: "current",
+  analysis_type: "code_quality"
+}
+
+// Run security scan
+mcp__claude-flow__github_repo_analyze {
+  repo: "current",
+  analysis_type: "security"
+}
+```
+
+Remember: The goal of code review is to improve code quality and share knowledge, not to find fault. Be thorough but kind, specific but constructive. Always coordinate findings through memory.

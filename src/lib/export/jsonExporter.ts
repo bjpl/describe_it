@@ -6,6 +6,7 @@
 import { saveAs } from "file-saver";
 import { ExportData } from "../../types/export";
 import { safeParse, safeStringify } from '@/lib/utils/json-safe';
+import { logger } from '@/lib/logger';
 
 interface JSONExportOptions {
   pretty?: boolean;
@@ -60,7 +61,7 @@ export class JSONExporter {
         type: "application/json;charset=utf-8",
       });
     } catch (error) {
-      console.error("Error generating JSON export:", error);
+      logger.error("Error generating JSON export:", error);
       throw new Error("Failed to generate JSON export");
     }
   }

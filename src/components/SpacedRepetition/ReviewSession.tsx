@@ -28,6 +28,7 @@ import {
 } from "../../hooks/useVocabulary";
 import { LoadingSpinner } from "../Shared/LoadingStates";
 import { SpacedRepetitionUtils } from "../../lib/algorithms/spaced-repetition";
+import { logger } from '@/lib/logger';
 
 interface ReviewSessionProps {
   onComplete: (results: ReviewSessionResults) => void;
@@ -103,7 +104,7 @@ export const ReviewSession: React.FC<ReviewSessionProps> = ({
           response_time_seconds: responseTime,
         });
       } catch (error) {
-        console.error("Failed to process response:", error);
+        logger.error("Failed to process response:", error);
       }
 
       // Move to next card or complete session

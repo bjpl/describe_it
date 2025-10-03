@@ -27,6 +27,7 @@ import {
   Eye
 } from "lucide-react";
 import type { StudySession, UserProgress } from "@/types/database";
+import { logger } from '@/lib/logger';
 
 interface RecentActivityProps {
   className?: string;
@@ -129,7 +130,7 @@ export function RecentActivity({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch activities";
       setError(errorMessage);
-      console.error("Error fetching activities:", err);
+      logger.error("Error fetching activities:", err);
     } finally {
       setLoading(false);
       setIsRefreshing(false);

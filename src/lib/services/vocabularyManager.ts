@@ -9,6 +9,7 @@ import VocabularyStorage, {
 } from "../storage/vocabularyStorage";
 import { createSortKey } from "../utils/phrase-helpers";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface VocabularyManagerConfig {
   autoSave: boolean;
@@ -126,7 +127,7 @@ export class VocabularyManager {
         const savedPhrase = await this.addPhraseWithClick(phrase, options);
         savedPhrases.push(savedPhrase);
       } catch (error) {
-        console.error(`Error adding phrase "${phrase.phrase}":`, error);
+        logger.error(`Error adding phrase "${phrase.phrase}":`, error);
       }
     }
 
@@ -432,7 +433,7 @@ export class VocabularyManager {
         this.currentPhrases.set(phrase.id, phrase);
       });
     } catch (error) {
-      console.error("Error loading current phrases:", error);
+      logger.error("Error loading current phrases:", error);
     }
   }
 
@@ -524,7 +525,7 @@ export class VocabularyManager {
         return data.translation;
       }
     } catch (error) {
-      console.error("Translation error:", error);
+      logger.error("Translation error:", error);
     }
 
     return undefined;
@@ -546,7 +547,7 @@ export class VocabularyManager {
       try {
         listener(event);
       } catch (error) {
-        console.error("Error in vocabulary event listener:", error);
+        logger.error("Error in vocabulary event listener:", error);
       }
     });
   }

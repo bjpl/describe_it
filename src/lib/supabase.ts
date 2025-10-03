@@ -12,6 +12,7 @@ import type {
 import type { VocabularyItem } from "../types/unified";
 // Import the singleton client from our client module
 import { supabase as singletonClient } from "./supabase/client";
+import { dbLogger } from '@/lib/logger';
 
 // Environment variables with fallbacks
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -20,7 +21,7 @@ const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Validate required environment variables
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.warn(
+  dbLogger.warn(
     "Missing Supabase environment variables. Some features may not work correctly.",
   );
 }
@@ -119,7 +120,7 @@ export class DatabaseService {
     try {
       return await databaseService.testConnection();
     } catch (error) {
-      console.error("Database connection test failed:", error);
+      dbLogger.error("Database connection test failed:", error);
       return false;
     }
   }

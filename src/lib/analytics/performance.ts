@@ -5,6 +5,7 @@
 
 import { trackEvent } from './tracker';
 import { EventBuilders } from './events';
+import { performanceLogger } from '@/lib/logger';
 
 interface PerformanceMetrics {
   navigation?: PerformanceNavigationTiming;
@@ -60,7 +61,7 @@ class PerformanceMonitor {
       paintObserver.observe({ entryTypes: ['paint'] });
       this.observers.push(paintObserver);
     } catch (error) {
-      console.warn('FCP observation not supported:', error);
+      performanceLogger.warn('FCP observation not supported:', error);
     }
 
     // Largest Contentful Paint
@@ -74,7 +75,7 @@ class PerformanceMonitor {
       lcpObserver.observe({ entryTypes: ['largest-contentful-paint'] });
       this.observers.push(lcpObserver);
     } catch (error) {
-      console.warn('LCP observation not supported:', error);
+      performanceLogger.warn('LCP observation not supported:', error);
     }
 
     // First Input Delay
@@ -89,7 +90,7 @@ class PerformanceMonitor {
       fidObserver.observe({ entryTypes: ['first-input'] });
       this.observers.push(fidObserver);
     } catch (error) {
-      console.warn('FID observation not supported:', error);
+      performanceLogger.warn('FID observation not supported:', error);
     }
 
     // Cumulative Layout Shift
@@ -107,7 +108,7 @@ class PerformanceMonitor {
       clsObserver.observe({ entryTypes: ['layout-shift'] });
       this.observers.push(clsObserver);
     } catch (error) {
-      console.warn('CLS observation not supported:', error);
+      performanceLogger.warn('CLS observation not supported:', error);
     }
   }
 
@@ -135,7 +136,7 @@ class PerformanceMonitor {
       resourceObserver.observe({ entryTypes: ['resource'] });
       this.observers.push(resourceObserver);
     } catch (error) {
-      console.warn('Resource timing observation not supported:', error);
+      performanceLogger.warn('Resource timing observation not supported:', error);
     }
   }
 
@@ -157,7 +158,7 @@ class PerformanceMonitor {
       longTaskObserver.observe({ entryTypes: ['longtask'] });
       this.observers.push(longTaskObserver);
     } catch (error) {
-      console.warn('Long task observation not supported:', error);
+      performanceLogger.warn('Long task observation not supported:', error);
     }
   }
 

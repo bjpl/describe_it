@@ -180,4 +180,427 @@ const defaultUIState = {
   layout: 'default' as const,
   headerVisible: true,
   footerVisible: true
-};\n\nexport const useUIStore = create<UIState>()(  \n  devtools(\n    subscribeWithSelector(\n      ssrPersist(\n        (set, get) => ({\n          ...defaultUIState,\n          \n          // Modal management\n          openModal: (modalData) => {\n            const id = `modal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;\n            const modal: Modal = {\n              ...modalData,\n              id,\n              priority: modalData.priority || 0\n            };\n            \n            set((state) => ({\n              modals: [...state.modals, modal].sort((a, b) => b.priority - a.priority),\n              modalHistory: [...state.modalHistory, id]\n            }), false, 'openModal');\n            \n            return id;\n          },\n          \n          closeModal: (id) => {\n            set((state) => ({\n              modals: state.modals.filter(modal => modal.id !== id),\n              modalHistory: state.modalHistory.filter(modalId => modalId !== id)\n            }), false, 'closeModal');\n          },\n          \n          closeAllModals: () => {\n            set({ modals: [], modalHistory: [] }, false, 'closeAllModals');\n          },\n          \n          closeTopModal: () => {\n            set((state) => {\n              if (state.modals.length === 0) return state;\n              \n              const topModal = state.modals[0];\n              if (topModal.persistent) return state;\n              \n              return {\n                modals: state.modals.slice(1),\n                modalHistory: state.modalHistory.filter(id => id !== topModal.id)\n              };\n            }, false, 'closeTopModal');\n          },\n          \n          updateModal: (id, updates) => {\n            set((state) => ({\n              modals: state.modals.map(modal => \n                modal.id === id ? { ...modal, ...updates } : modal\n              )\n            }), false, 'updateModal');\n          },\n          \n          // Navigation\n          setSidebarOpen: (open) => {\n            set({ sidebarOpen: open }, false, 'setSidebarOpen');\n          },\n          \n          toggleSidebar: () => {\n            set((state) => ({ sidebarOpen: !state.sidebarOpen }), false, 'toggleSidebar');\n          },\n          \n          setSidebarCollapsed: (collapsed) => {\n            set({ sidebarCollapsed: collapsed }, false, 'setSidebarCollapsed');\n          },\n          \n          setBreadcrumbs: (breadcrumbs) => {\n            set({ breadcrumbs }, false, 'setBreadcrumbs');\n          },\n          \n          addBreadcrumb: (item) => {\n            set((state) => ({\n              breadcrumbs: [...state.breadcrumbs, item]\n            }), false, 'addBreadcrumb');\n          },\n          \n          setCurrentRoute: (route) => {\n            set({ currentRoute: route }, false, 'setCurrentRoute');\n          },\n          \n          // Theme\n          setTheme: (theme) => {\n            set({ theme }, false, 'setTheme');\n            \n            // Apply theme to document\n            if (typeof window !== 'undefined') {\n              const root = document.documentElement;\n              root.setAttribute('data-theme', theme);\n              \n              if (theme === 'auto') {\n                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;\n                root.classList.toggle('dark', prefersDark);\n              } else {\n                root.classList.toggle('dark', theme === 'dark');\n              }\n            }\n          },\n          \n          setColorScheme: (scheme) => {\n            set({ colorScheme: scheme }, false, 'setColorScheme');\n            \n            if (typeof window !== 'undefined') {\n              document.documentElement.setAttribute('data-color-scheme', scheme);\n            }\n          },\n          \n          setFontSize: (size) => {\n            set({ fontSize: size }, false, 'setFontSize');\n            \n            if (typeof window !== 'undefined') {\n              document.documentElement.setAttribute('data-font-size', size);\n            }\n          },\n          \n          toggleReduceMotion: () => {\n            set((state) => {\n              const newValue = !state.reduceMotion;\n              \n              if (typeof window !== 'undefined') {\n                document.documentElement.setAttribute('data-reduce-motion', String(newValue));\n              }\n              \n              return { reduceMotion: newValue };\n            }, false, 'toggleReduceMotion');\n          },\n          \n          toggleHighContrast: () => {\n            set((state) => {\n              const newValue = !state.highContrast;\n              \n              if (typeof window !== 'undefined') {\n                document.documentElement.setAttribute('data-high-contrast', String(newValue));\n              }\n              \n              return { highContrast: newValue };\n            }, false, 'toggleHighContrast');\n          },\n          \n          // Panels\n          openRightPanel: (content, props) => {\n            set({ \n              rightPanelOpen: true, \n              rightPanelContent: content,\n              rightPanelProps: props \n            }, false, 'openRightPanel');\n          },\n          \n          closeRightPanel: () => {\n            set({ \n              rightPanelOpen: false, \n              rightPanelContent: null,\n              rightPanelProps: undefined \n            }, false, 'closeRightPanel');\n          },\n          \n          toggleRightPanel: () => {\n            set((state) => ({ rightPanelOpen: !state.rightPanelOpen }), false, 'toggleRightPanel');\n          },\n          \n          openBottomPanel: (content, props) => {\n            set({ \n              bottomPanelOpen: true, \n              bottomPanelContent: content,\n              bottomPanelProps: props \n            }, false, 'openBottomPanel');\n          },\n          \n          closeBottomPanel: () => {\n            set({ \n              bottomPanelOpen: false, \n              bottomPanelContent: null,\n              bottomPanelProps: undefined \n            }, false, 'closeBottomPanel');\n          },\n          \n          toggleBottomPanel: () => {\n            set((state) => ({ bottomPanelOpen: !state.bottomPanelOpen }), false, 'toggleBottomPanel');\n          },\n          \n          // Loading\n          setGlobalLoading: (loading) => {\n            set({ globalLoading: loading }, false, 'setGlobalLoading');\n          },\n          \n          setLoadingState: (key, loading, message) => {\n            set((state) => ({\n              loadingStates: { ...state.loadingStates, [key]: loading },\n              loadingMessages: message \n                ? { ...state.loadingMessages, [key]: message }\n                : state.loadingMessages\n            }), false, 'setLoadingState');\n          },\n          \n          clearLoadingStates: () => {\n            set({ loadingStates: {}, loadingMessages: {} }, false, 'clearLoadingStates');\n          },\n          \n          // Notifications\n          addNotification: (notificationData) => {\n            const id = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;\n            const notification: Notification = {\n              ...notificationData,\n              id,\n              timestamp: new Date()\n            };\n            \n            set((state) => {\n              const newNotifications = [notification, ...state.notifications];\n              \n              // Keep only maxNotifications\n              const trimmedNotifications = newNotifications.slice(0, state.maxNotifications);\n              \n              return { notifications: trimmedNotifications };\n            }, false, 'addNotification');\n            \n            // Auto-remove notification if duration is set\n            if (notification.duration && notification.duration > 0) {\n              setTimeout(() => {\n                get().removeNotification(id);\n              }, notification.duration);\n            }\n            \n            return id;\n          },\n          \n          removeNotification: (id) => {\n            set((state) => ({\n              notifications: state.notifications.filter(notification => notification.id !== id)\n            }), false, 'removeNotification');\n          },\n          \n          clearNotifications: () => {\n            set({ notifications: [] }, false, 'clearNotifications');\n          },\n          \n          // Focus management\n          setFocusTrap: (elementId) => {\n            set({ focusTrap: elementId }, false, 'setFocusTrap');\n          },\n          \n          announce: (message) => {\n            set((state) => ({\n              announcements: [...state.announcements, message]\n            }), false, 'announce');\n            \n            // Clear announcement after a short delay\n            setTimeout(() => {\n              set((state) => ({\n                announcements: state.announcements.filter(ann => ann !== message)\n              }), false, 'clearAnnouncement');\n            }, 1000);\n          },\n          \n          clearAnnouncements: () => {\n            set({ announcements: [] }, false, 'clearAnnouncements');\n          },\n          \n          // Keyboard shortcuts\n          registerShortcut: (key, handler) => {\n            set((state) => ({\n              activeShortcuts: { ...state.activeShortcuts, [key]: handler }\n            }), false, 'registerShortcut');\n          },\n          \n          unregisterShortcut: (key) => {\n            set((state) => {\n              const { [key]: removed, ...remaining } = state.activeShortcuts;\n              return { activeShortcuts: remaining };\n            }, false, 'unregisterShortcut');\n          },\n          \n          setShortcutsEnabled: (enabled) => {\n            set({ shortcutsEnabled: enabled }, false, 'setShortcutsEnabled');\n          },\n          \n          // Layout\n          setLayout: (layout) => {\n            set({ layout }, false, 'setLayout');\n            \n            if (typeof window !== 'undefined') {\n              document.documentElement.setAttribute('data-layout', layout);\n            }\n          },\n          \n          setHeaderVisible: (visible) => {\n            set({ headerVisible: visible }, false, 'setHeaderVisible');\n          },\n          \n          setFooterVisible: (visible) => {\n            set({ footerVisible: visible }, false, 'setFooterVisible');\n          }\n        }),\n        {\n          name: 'describe-it-ui-store',\n          partialize: (state) => ({\n            theme: state.theme,\n            colorScheme: state.colorScheme,\n            fontSize: state.fontSize,\n            reduceMotion: state.reduceMotion,\n            highContrast: state.highContrast,\n            sidebarCollapsed: state.sidebarCollapsed,\n            layout: state.layout\n          }),\n          syncAcrossTabs: true\n        }\n      )\n    ),\n    { name: 'UIStore' }\n  )\n);\n\n// Optimized selectors\nconst modalSelector = createShallowSelector((state: UIState) => ({\n  modals: state.modals,\n  topModal: state.modals[0] || null,\n  hasModals: state.modals.length > 0\n}));\n\nconst themeSelector = createShallowSelector((state: UIState) => ({\n  theme: state.theme,\n  colorScheme: state.colorScheme,\n  fontSize: state.fontSize,\n  reduceMotion: state.reduceMotion,\n  highContrast: state.highContrast\n}));\n\nconst navigationSelector = createShallowSelector((state: UIState) => ({\n  sidebarOpen: state.sidebarOpen,\n  sidebarCollapsed: state.sidebarCollapsed,\n  breadcrumbs: state.breadcrumbs,\n  currentRoute: state.currentRoute\n}));\n\nconst notificationsSelector = createShallowSelector((state: UIState) => ({\n  notifications: state.notifications,\n  hasNotifications: state.notifications.length > 0\n}));\n\nconst loadingSelector = createShallowSelector((state: UIState) => ({\n  globalLoading: state.globalLoading,\n  loadingStates: state.loadingStates,\n  loadingMessages: state.loadingMessages,\n  isLoading: state.globalLoading || Object.values(state.loadingStates).some(Boolean)\n}));\n\n// Hooks\nexport const useModals = () => modalSelector(useUIStore);\nexport const useTheme = () => themeSelector(useUIStore);\nexport const useNavigation = () => navigationSelector(useUIStore);\nexport const useNotifications = () => notificationsSelector(useUIStore);\nexport const useLoading = () => loadingSelector(useUIStore);\n\nexport const useUIActions = () => useUIStore((state) => ({\n  // Modals\n  openModal: state.openModal,\n  closeModal: state.closeModal,\n  closeAllModals: state.closeAllModals,\n  closeTopModal: state.closeTopModal,\n  \n  // Navigation\n  setSidebarOpen: state.setSidebarOpen,\n  toggleSidebar: state.toggleSidebar,\n  setBreadcrumbs: state.setBreadcrumbs,\n  \n  // Theme\n  setTheme: state.setTheme,\n  setColorScheme: state.setColorScheme,\n  setFontSize: state.setFontSize,\n  \n  // Notifications\n  addNotification: state.addNotification,\n  removeNotification: state.removeNotification,\n  \n  // Loading\n  setLoadingState: state.setLoadingState,\n  setGlobalLoading: state.setGlobalLoading\n}));\n\n// Keyboard shortcut hook\nexport const useKeyboardShortcuts = () => {\n  const { shortcutsEnabled, activeShortcuts } = useUIStore((state) => ({\n    shortcutsEnabled: state.shortcutsEnabled,\n    activeShortcuts: state.activeShortcuts\n  }));\n  \n  const { registerShortcut, unregisterShortcut } = useUIActions();\n  \n  React.useEffect(() => {\n    if (!shortcutsEnabled || typeof window === 'undefined') return;\n    \n    const handleKeyDown = (event: KeyboardEvent) => {\n      const key = `${event.ctrlKey ? 'ctrl+' : ''}${event.shiftKey ? 'shift+' : ''}${event.altKey ? 'alt+' : ''}${event.key.toLowerCase()}`;\n      \n      if (activeShortcuts[key]) {\n        event.preventDefault();\n        activeShortcuts[key]();\n      }\n    };\n    \n    window.addEventListener('keydown', handleKeyDown);\n    \n    return () => {\n      window.removeEventListener('keydown', handleKeyDown);\n    };\n  }, [shortcutsEnabled, activeShortcuts]);\n  \n  return { registerShortcut, unregisterShortcut };\n};\n\n// Focus trap hook\nexport const useFocusTrap = (elementId: string) => {\n  const { setFocusTrap } = useUIActions();\n  \n  React.useEffect(() => {\n    setFocusTrap(elementId);\n    return () => setFocusTrap(null);\n  }, [elementId, setFocusTrap]);\n};
+};
+
+export const useUIStore = create<UIState>()(
+  devtools(
+    subscribeWithSelector(
+      ssrPersist(
+        (set, get) => ({
+          ...defaultUIState,
+          
+          // Modal management
+          openModal: (modalData) => {
+            const id = `modal-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const modal: Modal = {
+              ...modalData,
+              id,
+              priority: modalData.priority || 0
+            };
+            
+            set((state) => ({
+              modals: [...state.modals, modal].sort((a, b) => b.priority - a.priority),
+              modalHistory: [...state.modalHistory, id]
+            }), false, 'openModal');
+            
+            return id;
+          },
+          
+          closeModal: (id) => {
+            set((state) => ({
+              modals: state.modals.filter(modal => modal.id !== id),
+              modalHistory: state.modalHistory.filter(modalId => modalId !== id)
+            }), false, 'closeModal');
+          },
+          
+          closeAllModals: () => {
+            set({ modals: [], modalHistory: [] }, false, 'closeAllModals');
+          },
+          
+          closeTopModal: () => {
+            set((state) => {
+              if (state.modals.length === 0) return state;
+              
+              const topModal = state.modals[0];
+              if (topModal.persistent) return state;
+              
+              return {
+                modals: state.modals.slice(1),
+                modalHistory: state.modalHistory.filter(id => id !== topModal.id)
+              };
+            }, false, 'closeTopModal');
+          },
+          
+          updateModal: (id, updates) => {
+            set((state) => ({
+              modals: state.modals.map(modal => 
+                modal.id === id ? { ...modal, ...updates } : modal
+              )
+            }), false, 'updateModal');
+          },
+          
+          // Navigation
+          setSidebarOpen: (open) => {
+            set({ sidebarOpen: open }, false, 'setSidebarOpen');
+          },
+          
+          toggleSidebar: () => {
+            set((state) => ({ sidebarOpen: !state.sidebarOpen }), false, 'toggleSidebar');
+          },
+          
+          setSidebarCollapsed: (collapsed) => {
+            set({ sidebarCollapsed: collapsed }, false, 'setSidebarCollapsed');
+          },
+          
+          setBreadcrumbs: (breadcrumbs) => {
+            set({ breadcrumbs }, false, 'setBreadcrumbs');
+          },
+          
+          addBreadcrumb: (item) => {
+            set((state) => ({
+              breadcrumbs: [...state.breadcrumbs, item]
+            }), false, 'addBreadcrumb');
+          },
+          
+          setCurrentRoute: (route) => {
+            set({ currentRoute: route }, false, 'setCurrentRoute');
+          },
+          
+          // Theme
+          setTheme: (theme) => {
+            set({ theme }, false, 'setTheme');
+            
+            // Apply theme to document
+            if (typeof window !== 'undefined') {
+              const root = document.documentElement;
+              root.setAttribute('data-theme', theme);
+              
+              if (theme === 'auto') {
+                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                root.classList.toggle('dark', prefersDark);
+              } else {
+                root.classList.toggle('dark', theme === 'dark');
+              }
+            }
+          },
+          
+          setColorScheme: (scheme) => {
+            set({ colorScheme: scheme }, false, 'setColorScheme');
+            
+            if (typeof window !== 'undefined') {
+              document.documentElement.setAttribute('data-color-scheme', scheme);
+            }
+          },
+          
+          setFontSize: (size) => {
+            set({ fontSize: size }, false, 'setFontSize');
+            
+            if (typeof window !== 'undefined') {
+              document.documentElement.setAttribute('data-font-size', size);
+            }
+          },
+          
+          toggleReduceMotion: () => {
+            set((state) => {
+              const newValue = !state.reduceMotion;
+              
+              if (typeof window !== 'undefined') {
+                document.documentElement.setAttribute('data-reduce-motion', String(newValue));
+              }
+              
+              return { reduceMotion: newValue };
+            }, false, 'toggleReduceMotion');
+          },
+          
+          toggleHighContrast: () => {
+            set((state) => {
+              const newValue = !state.highContrast;
+              
+              if (typeof window !== 'undefined') {
+                document.documentElement.setAttribute('data-high-contrast', String(newValue));
+              }
+              
+              return { highContrast: newValue };
+            }, false, 'toggleHighContrast');
+          },
+          
+          // Panels
+          openRightPanel: (content, props) => {
+            set({ 
+              rightPanelOpen: true, 
+              rightPanelContent: content,
+              rightPanelProps: props 
+            }, false, 'openRightPanel');
+          },
+          
+          closeRightPanel: () => {
+            set({ 
+              rightPanelOpen: false, 
+              rightPanelContent: null,
+              rightPanelProps: undefined 
+            }, false, 'closeRightPanel');
+          },
+          
+          toggleRightPanel: () => {
+            set((state) => ({ rightPanelOpen: !state.rightPanelOpen }), false, 'toggleRightPanel');
+          },
+          
+          openBottomPanel: (content, props) => {
+            set({ 
+              bottomPanelOpen: true, 
+              bottomPanelContent: content,
+              bottomPanelProps: props 
+            }, false, 'openBottomPanel');
+          },
+          
+          closeBottomPanel: () => {
+            set({ 
+              bottomPanelOpen: false, 
+              bottomPanelContent: null,
+              bottomPanelProps: undefined 
+            }, false, 'closeBottomPanel');
+          },
+          
+          toggleBottomPanel: () => {
+            set((state) => ({ bottomPanelOpen: !state.bottomPanelOpen }), false, 'toggleBottomPanel');
+          },
+          
+          // Loading
+          setGlobalLoading: (loading) => {
+            set({ globalLoading: loading }, false, 'setGlobalLoading');
+          },
+          
+          setLoadingState: (key, loading, message) => {
+            set((state) => ({
+              loadingStates: { ...state.loadingStates, [key]: loading },
+              loadingMessages: message 
+                ? { ...state.loadingMessages, [key]: message }
+                : state.loadingMessages
+            }), false, 'setLoadingState');
+          },
+          
+          clearLoadingStates: () => {
+            set({ loadingStates: {}, loadingMessages: {} }, false, 'clearLoadingStates');
+          },
+          
+          // Notifications
+          addNotification: (notificationData) => {
+            const id = `notification-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+            const notification: Notification = {
+              ...notificationData,
+              id,
+              timestamp: new Date()
+            };
+            
+            set((state) => {
+              const newNotifications = [notification, ...state.notifications];
+              
+              // Keep only maxNotifications
+              const trimmedNotifications = newNotifications.slice(0, state.maxNotifications);
+              
+              return { notifications: trimmedNotifications };
+            }, false, 'addNotification');
+            
+            // Auto-remove notification if duration is set
+            if (notification.duration && notification.duration > 0) {
+              setTimeout(() => {
+                get().removeNotification(id);
+              }, notification.duration);
+            }
+            
+            return id;
+          },
+          
+          removeNotification: (id) => {
+            set((state) => ({
+              notifications: state.notifications.filter(notification => notification.id !== id)
+            }), false, 'removeNotification');
+          },
+          
+          clearNotifications: () => {
+            set({ notifications: [] }, false, 'clearNotifications');
+          },
+          
+          // Focus management
+          setFocusTrap: (elementId) => {
+            set({ focusTrap: elementId }, false, 'setFocusTrap');
+          },
+          
+          announce: (message) => {
+            set((state) => ({
+              announcements: [...state.announcements, message]
+            }), false, 'announce');
+            
+            // Clear announcement after a short delay
+            setTimeout(() => {
+              set((state) => ({
+                announcements: state.announcements.filter(ann => ann !== message)
+              }), false, 'clearAnnouncement');
+            }, 1000);
+          },
+          
+          clearAnnouncements: () => {
+            set({ announcements: [] }, false, 'clearAnnouncements');
+          },
+          
+          // Keyboard shortcuts
+          registerShortcut: (key, handler) => {
+            set((state) => ({
+              activeShortcuts: { ...state.activeShortcuts, [key]: handler }
+            }), false, 'registerShortcut');
+          },
+          
+          unregisterShortcut: (key) => {
+            set((state) => {
+              const { [key]: removed, ...remaining } = state.activeShortcuts;
+              return { activeShortcuts: remaining };
+            }, false, 'unregisterShortcut');
+          },
+          
+          setShortcutsEnabled: (enabled) => {
+            set({ shortcutsEnabled: enabled }, false, 'setShortcutsEnabled');
+          },
+          
+          // Layout
+          setLayout: (layout) => {
+            set({ layout }, false, 'setLayout');
+            
+            if (typeof window !== 'undefined') {
+              document.documentElement.setAttribute('data-layout', layout);
+            }
+          },
+          
+          setHeaderVisible: (visible) => {
+            set({ headerVisible: visible }, false, 'setHeaderVisible');
+          },
+          
+          setFooterVisible: (visible) => {
+            set({ footerVisible: visible }, false, 'setFooterVisible');
+          }
+        }),
+        {
+          name: 'describe-it-ui-store',
+          partialize: (state) => ({
+            theme: state.theme,
+            colorScheme: state.colorScheme,
+            fontSize: state.fontSize,
+            reduceMotion: state.reduceMotion,
+            highContrast: state.highContrast,
+            sidebarCollapsed: state.sidebarCollapsed,
+            layout: state.layout
+          }),
+          syncAcrossTabs: true
+        }
+      )
+    ),
+    { name: 'UIStore' }
+  )
+);
+
+// Optimized selectors
+const modalSelector = createShallowSelector((state: UIState) => ({
+  modals: state.modals,
+  topModal: state.modals[0] || null,
+  hasModals: state.modals.length > 0
+}));
+
+const themeSelector = createShallowSelector((state: UIState) => ({
+  theme: state.theme,
+  colorScheme: state.colorScheme,
+  fontSize: state.fontSize,
+  reduceMotion: state.reduceMotion,
+  highContrast: state.highContrast
+}));
+
+const navigationSelector = createShallowSelector((state: UIState) => ({
+  sidebarOpen: state.sidebarOpen,
+  sidebarCollapsed: state.sidebarCollapsed,
+  breadcrumbs: state.breadcrumbs,
+  currentRoute: state.currentRoute
+}));
+
+const notificationsSelector = createShallowSelector((state: UIState) => ({
+  notifications: state.notifications,
+  hasNotifications: state.notifications.length > 0
+}));
+
+const loadingSelector = createShallowSelector((state: UIState) => ({
+  globalLoading: state.globalLoading,
+  loadingStates: state.loadingStates,
+  loadingMessages: state.loadingMessages,
+  isLoading: state.globalLoading || Object.values(state.loadingStates).some(Boolean)
+}));
+
+// Hooks
+export const useModals = () => modalSelector(useUIStore);
+export const useTheme = () => themeSelector(useUIStore);
+export const useNavigation = () => navigationSelector(useUIStore);
+export const useNotifications = () => notificationsSelector(useUIStore);
+export const useLoading = () => loadingSelector(useUIStore);
+
+export const useUIActions = () => useUIStore((state) => ({
+  // Modals
+  openModal: state.openModal,
+  closeModal: state.closeModal,
+  closeAllModals: state.closeAllModals,
+  closeTopModal: state.closeTopModal,
+  
+  // Navigation
+  setSidebarOpen: state.setSidebarOpen,
+  toggleSidebar: state.toggleSidebar,
+  setBreadcrumbs: state.setBreadcrumbs,
+  
+  // Theme
+  setTheme: state.setTheme,
+  setColorScheme: state.setColorScheme,
+  setFontSize: state.setFontSize,
+  
+  // Notifications
+  addNotification: state.addNotification,
+  removeNotification: state.removeNotification,
+  
+  // Loading
+  setLoadingState: state.setLoadingState,
+  setGlobalLoading: state.setGlobalLoading
+}));
+
+// Keyboard shortcut hook
+export const useKeyboardShortcuts = () => {
+  const { shortcutsEnabled, activeShortcuts } = useUIStore((state) => ({
+    shortcutsEnabled: state.shortcutsEnabled,
+    activeShortcuts: state.activeShortcuts
+  }));
+  
+  const { registerShortcut, unregisterShortcut } = useUIActions();
+  
+  React.useEffect(() => {
+    if (!shortcutsEnabled || typeof window === 'undefined') return;
+    
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const key = `${event.ctrlKey ? 'ctrl+' : ''}${event.shiftKey ? 'shift+' : ''}${event.altKey ? 'alt+' : ''}${event.key.toLowerCase()}`;
+      
+      if (activeShortcuts[key]) {
+        event.preventDefault();
+        activeShortcuts[key]();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [shortcutsEnabled, activeShortcuts]);
+  
+  return { registerShortcut, unregisterShortcut };
+};
+
+// Focus trap hook
+export const useFocusTrap = (elementId: string) => {
+  const { setFocusTrap } = useUIActions();
+  
+  React.useEffect(() => {
+    setFocusTrap(elementId);
+    return () => setFocusTrap(null);
+  }, [elementId, setFocusTrap]);
+};

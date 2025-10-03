@@ -4,6 +4,7 @@ import { z } from "zod";
 import { descriptionCache } from "@/lib/cache";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
+import { apiLogger } from '@/lib/logger';
 
 // Input validation schemas
 const userSettingsSchema = z.object({
@@ -313,7 +314,7 @@ class SettingsService {
 
       return settings;
     } catch (error) {
-      console.warn("Failed to get settings:", error);
+      apiLogger.warn("Failed to get settings:", error);
 
       if (includeDefaults) {
         return {
@@ -357,7 +358,7 @@ class SettingsService {
         sessionTTL: 3600, // 1 hour
       });
     } catch (error) {
-      console.warn("Failed to update user profile:", error);
+      apiLogger.warn("Failed to update user profile:", error);
     }
   }
 
@@ -570,7 +571,7 @@ async function handleSettingsSave(request: AuthenticatedRequest) {
       );
     }
 
-    console.error("Settings save error:", error);
+    apiLogger.error("Settings save error:", error);
 
     return NextResponse.json(
       {
@@ -650,7 +651,7 @@ async function handleSettingsGet(request: AuthenticatedRequest) {
       );
     }
 
-    console.error("Settings retrieval error:", error);
+    apiLogger.error("Settings retrieval error:", error);
 
     return NextResponse.json(
       {
@@ -707,7 +708,7 @@ async function handleSettingsDelete(request: AuthenticatedRequest) {
   } catch (error) {
     const responseTime = performance.now() - startTime;
 
-    console.error("Settings reset error:", error);
+    apiLogger.error("Settings reset error:", error);
 
     return NextResponse.json(
       {

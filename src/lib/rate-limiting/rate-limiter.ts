@@ -1,5 +1,6 @@
 import { Redis } from 'ioredis';
 import { NextRequest, NextResponse } from 'next/server';
+import { logger } from '@/lib/logger';
 
 /**
  * Rate limiting configuration for different endpoint types
@@ -116,17 +117,17 @@ export class RateLimiter {
         });
 
         this.redis.on('connect', () => {
-          console.log('[Rate Limiter] Redis connected');
+          logger.info('[Rate Limiter] Redis connected');
           this.redisAvailable = true;
         });
 
         this.redis.on('error', (error) => {
-          console.warn('[Rate Limiter] Redis error, falling back to memory:', error.message);
+          logger.warn('[Rate Limiter] Redis error, falling back to memory:', error.message);
           this.redisAvailable = false;
         });
 
         this.redis.on('close', () => {
-          console.warn('[Rate Limiter] Redis connection closed, using memory fallback');
+          logger.warn('[Rate Limiter] Redis connection closed, using memory fallback');
           this.redisAvailable = false;
         });
 
@@ -134,10 +135,10 @@ export class RateLimiter {
         await this.redis.ping();
         this.redisAvailable = true;
       } else {
-        console.log('[Rate Limiter] No Redis configuration found, using memory-only mode');
+        logger.info('[Rate Limiter] No Redis configuration found, using memory-only mode');
       }
     } catch (error) {
-      console.warn('[Rate Limiter] Failed to connect to Redis, using memory fallback:', error);
+      logger.warn('[Rate Limiter] Failed to connect to Redis, using memory fallback:', error);
       this.redisAvailable = false;
       this.redis = null;
     }
@@ -244,7 +245,7 @@ export class RateLimiter {
       };
 
     } catch (error) {
-      console.error('[Rate Limiter] Error checking rate limit:', error);
+      logger.error('[Rate Limiter] Error checking rate limit:', error);
       
       // On error, allow the request but log the issue
       return {
@@ -293,7 +294,7 @@ export class RateLimiter {
       };
 
     } catch (error) {
-      console.error('[Rate Limiter] Error getting rate limit status:', error);
+      logger.error('[Rate Limiter] Error getting rate limit status:', error);
       
       return {
         success: true,
@@ -321,7 +322,7 @@ export class RateLimiter {
       
       return true;
     } catch (error) {
-      console.error('[Rate Limiter] Error resetting rate limit:', error);
+      logger.error('[Rate Limiter] Error resetting rate limit:', error);
       return false;
     }
   }

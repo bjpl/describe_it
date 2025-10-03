@@ -1,6 +1,7 @@
 // Session Persistence - Handle localStorage/sessionStorage for session data
 import { SessionStorage, SessionSummary, SessionReport } from "@/types/session";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export class SessionPersistence {
   private readonly storagePrefix = "describe_it_session_";
@@ -39,9 +40,9 @@ export class SessionPersistence {
       // Update session list
       await this.updateSessionList(sessionId);
 
-      console.debug("Session data saved:", sessionId);
+      logger.debug("Session data saved:", sessionId);
     } catch (error) {
-      console.error("Failed to save session data:", error);
+      logger.error("Failed to save session data:", error);
 
       // Try to clear old data if storage is full
       if (this.isStorageQuotaExceeded(error)) {
@@ -53,7 +54,7 @@ export class SessionPersistence {
           const compressedData = this.compressData(data);
           storage.setItem(key, JSON.stringify(compressedData));
         } catch (retryError) {
-          console.error(
+          logger.error(
             "Failed to save session data after cleanup:",
             retryError,
           );
@@ -75,10 +76,10 @@ export class SessionPersistence {
       const parsed = safeParse(stored);
       const decompressed = this.decompressData(parsed);
 
-      console.debug("Session data loaded:", sessionId);
+      logger.debug("Session data loaded:", sessionId);
       return decompressed;
     } catch (error) {
-      console.error("Failed to load session data:", error);
+      logger.error("Failed to load session data:", error);
       return null;
     }
   }
@@ -92,9 +93,9 @@ export class SessionPersistence {
       // Remove from session list
       await this.removeFromSessionList(sessionId);
 
-      console.debug("Session data cleared:", sessionId);
+      logger.debug("Session data cleared:", sessionId);
     } catch (error) {
-      console.error("Failed to clear session data:", error);
+      logger.error("Failed to clear session data:", error);
     }
   }
 
@@ -110,7 +111,7 @@ export class SessionPersistence {
       const parsed = safeParse(sessionList);
       return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
-      console.error("Failed to list sessions:", error);
+      logger.error("Failed to list sessions:", error);
       return [];
     }
   }
@@ -125,9 +126,9 @@ export class SessionPersistence {
       const key = this.summaryPrefix + sessionId;
       storage.setItem(key, safeStringify(summary));
 
-      console.debug("Session summary saved:", sessionId);
+      logger.debug("Session summary saved:", sessionId);
     } catch (error) {
-      console.error("Failed to save session summary:", error);
+      logger.error("Failed to save session summary:", error);
     }
   }
 
@@ -143,7 +144,7 @@ export class SessionPersistence {
 
       return safeParse(stored);
     } catch (error) {
-      console.error("Failed to load session summary:", error);
+      logger.error("Failed to load session summary:", error);
       return null;
     }
   }
@@ -163,7 +164,7 @@ export class SessionPersistence {
       // Sort by start time (most recent first)
       return summaries.sort((a, b) => b.startTime - a.startTime);
     } catch (error) {
-      console.error("Failed to load all summaries:", error);
+      logger.error("Failed to load all summaries:", error);
       return [];
     }
   }
@@ -213,7 +214,7 @@ export class SessionPersistence {
           return safeStringify(report, null, 2);
       }
     } catch (error) {
-      console.error("Failed to export session:", error);
+      logger.error("Failed to export session:", error);
       throw error;
     }
   }
@@ -230,7 +231,7 @@ export class SessionPersistence {
           const report: SessionReport = safeParse(reportData);
           allReports.push(report);
         } catch (error) {
-          console.warn(`Failed to export session ${sessionId}:`, error);
+          logger.warn(`Failed to export session ${sessionId}:`, error);
         }
       }
 
@@ -253,7 +254,7 @@ export class SessionPersistence {
           return safeStringify(allReports, null, 2);
       }
     } catch (error) {
-      console.error("Failed to export all sessions:", error);
+      logger.error("Failed to export all sessions:", error);
       throw error;
     }
   }
@@ -264,7 +265,7 @@ export class SessionPersistence {
       const storage = this.getStorage();
       storage.setItem(this.settingsKey, safeStringify(settings));
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      logger.error("Failed to save settings:", error);
     }
   }
 
@@ -279,7 +280,7 @@ export class SessionPersistence {
 
       return safeParse(stored);
     } catch (error) {
-      console.error("Failed to load settings:", error);
+      logger.error("Failed to load settings:", error);
       return null;
     }
   }
@@ -339,7 +340,7 @@ export class SessionPersistence {
         newestSession,
       };
     } catch (error) {
-      console.error("Failed to get storage info:", error);
+      logger.error("Failed to get storage info:", error);
       return {
         used: 0,
         available: 0,
@@ -366,10 +367,10 @@ export class SessionPersistence {
           await this.clearSummary(summary.sessionId);
         }
 
-        console.log(`Cleaned up ${sortedSessions.length} old sessions`);
+        logger.info(`Cleaned up ${sortedSessions.length} old sessions`);
       }
     } catch (error) {
-      console.error("Failed to cleanup storage:", error);
+      logger.error("Failed to cleanup storage:", error);
     }
   }
 
@@ -399,7 +400,7 @@ export class SessionPersistence {
       const key = this.summaryPrefix + sessionId;
       storage.removeItem(key);
     } catch (error) {
-      console.error("Failed to clear session summary:", error);
+      logger.error("Failed to clear session summary:", error);
     }
   }
 

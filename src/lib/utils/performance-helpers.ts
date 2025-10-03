@@ -3,6 +3,7 @@
 import { useRef, useEffect, useState } from "react";
 import { logger } from "@/lib/logger";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { performanceLogger } from '@/lib/logger';
 
 // Performance profiler class
 export class PerformanceProfiler {
@@ -52,7 +53,7 @@ export function useRenderCount(componentName: string) {
   useEffect(() => {
     renderCount.current += 1;
     if (process.env.NODE_ENV === "development") {
-      console.log(`${componentName} rendered ${renderCount.current} times`);
+      performanceLogger.info(`${componentName} rendered ${renderCount.current} times`);
     }
   });
 
@@ -160,7 +161,7 @@ export const memoryTracker = {
     if (process.env.NODE_ENV === "development") {
       const usage = memoryTracker.getMemoryUsage();
       if (usage) {
-        console.log(`Memory ${label}:`, usage);
+        performanceLogger.info(`Memory ${label}:`, usage);
       }
     }
   },
@@ -219,7 +220,7 @@ export const bundleAnalyzer = {
   logComponentSize: (componentName: string, component: any) => {
     if (process.env.NODE_ENV === "development") {
       const size = safeStringify(component).length;
-      console.log(`Component ${componentName} approximate size: ${size} bytes`);
+      performanceLogger.info(`Component ${componentName} approximate size: ${size} bytes`);
     }
   },
 };
@@ -236,7 +237,7 @@ export function usePerformanceMonitor(componentName: string) {
     return () => {
       if (mountTime.current && process.env.NODE_ENV === "development") {
         const totalTime = performance.now() - mountTime.current;
-        console.log(
+        performanceLogger.info(
           `Component ${componentName} was mounted for ${totalTime.toFixed(2)}ms with ${renderCount.current} renders`,
         );
       }

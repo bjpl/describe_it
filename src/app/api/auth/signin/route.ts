@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { createClient } from '@supabase/supabase-js';
-import { 
+import {
   authSigninSchema,
   validateSecurityHeaders,
   validateRequestSize,
@@ -13,6 +13,7 @@ import {
   createSuccessResponse
 } from '@/lib/schemas/api-validation';
 import { z } from 'zod';
+import { authLogger, createRequestLogger } from '@/lib/logger';
 
 // CORS headers for production
 const corsHeaders = {
@@ -26,8 +27,9 @@ export async function OPTIONS() {
 }
 
 export async function POST(request: NextRequest) {
-  console.log('[Signin] Endpoint called');
-  
+  const logger = createRequestLogger('auth-signin', request);
+  logger.auth('Sign-in endpoint called', true);
+
   try {
     // Security validation
     const securityCheck = validateSecurityHeaders(request.headers);
@@ -77,7 +79,10 @@ export async function POST(request: NextRequest) {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('[Signin] Missing Supabase configuration');
+      logger.error('Missing Supabase configuration', undefined, {
+        category: 'system',
+        severity: 'critical'
+      });
       return createErrorResponse('Server configuration error', 500);
     }
     
@@ -89,7 +94,7 @@ export async function POST(request: NextRequest) {
       }
     });
     
-    console.log('[Signin] Authenticating user:', email);
+    logger.info('Authenticating user', { email, rememberMe });
     
     // Special handling for admin account during development
     if (email === 'brandon.lambert87@gmail.com' && password === 'Test123') {
@@ -101,7 +106,7 @@ export async function POST(request: NextRequest) {
       
       // If rate limited, return a valid mock session for admin
       if (error && (error.message?.includes('quota') || error.message?.includes('exceeded'))) {
-        console.log('[Signin] Admin account rate limited, using enhanced mock');
+        apiLogger.info('[Signin] Admin account rate limited, using enhanced mock');
         return createSuccessResponse({
           message: 'Signed in successfully (admin bypass)',
           user: {
@@ -127,7 +132,7 @@ export async function POST(request: NextRequest) {
       
       // If successful, continue normally
       if (!error && data) {
-        console.log('[Signin] Admin signin successful');
+        apiLogger.info('[Signin] Admin signin successful');
         return createSuccessResponse({
           message: 'Signed in successfully!',
           user: data.user ? {
@@ -148,14 +153,14 @@ export async function POST(request: NextRequest) {
     });
     
     if (error) {
-      console.error('[Signin] Auth error:', error);
+      apiLogger.error('[Signin] Auth error:', error);
       
       // Handle rate limiting by falling back to mock auth
       if (error.message?.includes('quota') || 
           error.message?.includes('rate') || 
           error.message?.includes('exceeded') ||
           error.status === 429) {
-        console.log('[Signin] Rate limited, using mock auth');
+        apiLogger.info('[Signin] Rate limited, using mock auth');
         
         // Return mock session for development
         return createSuccessResponse({
@@ -190,7 +195,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log('[Signin] Success:', { userId: data.user?.id });
+    apiLogger.info('[Signin] Success:', { userId: data.user?.id });
     
     // Return success with session
     return createSuccessResponse({
@@ -205,7 +210,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error: any) {
-    console.error('[Signin] Unexpected error:', error);
+    apiLogger.error('[Signin] Unexpected error:', error);
     return createErrorResponse(
       'Server error during sign in', 
       500,

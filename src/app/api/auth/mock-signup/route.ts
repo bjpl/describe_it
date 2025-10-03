@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { apiLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,7 +21,7 @@ export async function POST(request: NextRequest) {
     // For testing: return success with auto-confirmed account
     // This is mock data - not saved to any database
     
-    console.log('[MockAuth] Creating mock user for:', email);
+    apiLogger.info('[MockAuth] Creating mock user for:', email);
     
     return NextResponse.json({
       success: true,

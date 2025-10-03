@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { apiLogger } from '@/lib/logger';
 
 // Use Edge Runtime for faster cold starts and better performance
 export const runtime = "edge";
@@ -112,7 +113,7 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch (error) {
-        console.warn("[Edge API] Unsplash fetch failed or timed out, using demo:", error);
+        apiLogger.warn("[Edge API] Unsplash fetch failed or timed out, using demo:", error);
         // Fall through to demo mode
       }
     }
@@ -132,7 +133,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error("[Edge API] Error:", error);
+    apiLogger.error("[Edge API] Error:", error);
     
     // Return minimal fallback
     return NextResponse.json(

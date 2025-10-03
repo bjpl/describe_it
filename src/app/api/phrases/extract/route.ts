@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { z } from "zod";
 import { PhraseExtractor } from "@/lib/services/phraseExtractor";
+import { apiLogger } from '@/lib/logger';
 
 // Input validation schema
 const phraseExtractionSchema = z.object({
@@ -280,7 +281,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.error("Phrase extraction error:", error);
+    apiLogger.error("Phrase extraction error:", error);
 
     return NextResponse.json(
       {

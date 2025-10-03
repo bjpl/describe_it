@@ -25,14 +25,15 @@ const nextConfig = {
   
   // Output configuration for Vercel
   output: 'standalone',
-  
-  // TypeScript - allow build to continue for now
+
+  // TypeScript - strict validation enabled
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
-  
+
+  // ESLint - strict validation enabled
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 };
 

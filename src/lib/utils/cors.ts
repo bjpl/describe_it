@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * Centralized CORS utility for consistent origin handling across all API routes
  */
@@ -52,7 +54,7 @@ export function getAllowedOrigins(): string[] {
           new URL(origin);
           return true;
         } catch {
-          console.warn(`[CORS] Invalid origin format: ${origin}`);
+          logger.warn(`[CORS] Invalid origin format: ${origin}`);
           return false;
         }
       });
@@ -65,7 +67,7 @@ export function getAllowedOrigins(): string[] {
       new URL(process.env.NEXT_PUBLIC_APP_URL);
       productionOrigins.push(process.env.NEXT_PUBLIC_APP_URL);
     } catch {
-      console.warn(`[CORS] Invalid NEXT_PUBLIC_APP_URL: ${process.env.NEXT_PUBLIC_APP_URL}`);
+      logger.warn(`[CORS] Invalid NEXT_PUBLIC_APP_URL: ${process.env.NEXT_PUBLIC_APP_URL}`);
     }
   }
   
@@ -82,7 +84,7 @@ export function isOriginAllowed(requestOrigin: string, allowedOrigins: string[] 
   try {
     new URL(requestOrigin);
   } catch {
-    console.warn(`[CORS] Invalid request origin format: ${requestOrigin}`);
+    logger.warn(`[CORS] Invalid request origin format: ${requestOrigin}`);
     return false;
   }
   
@@ -153,22 +155,22 @@ export function getCorsHeaders(
     if (allowCredentials) {
       headers['Access-Control-Allow-Credentials'] = 'true';
     }
-    console.log(`[CORS] Development request from: ${requestOrigin}`);
+    logger.info(`[CORS] Development request from: ${requestOrigin}`);
   } else if (!isDevelopment && requestOrigin && isOriginAllowed(requestOrigin, allowedOrigins)) {
     headers['Access-Control-Allow-Origin'] = requestOrigin;
     if (allowCredentials) {
       headers['Access-Control-Allow-Credentials'] = 'true';
     }
-    console.log(`[CORS] Production request allowed from: ${requestOrigin}`);
+    logger.info(`[CORS] Production request allowed from: ${requestOrigin}`);
   } else if (!requestOrigin) {
     // Handle same-origin requests
     headers['Access-Control-Allow-Origin'] = allowedOrigins[0] || 'null';
-    console.log(`[CORS] Same-origin request (no origin header)`);
+    logger.info(`[CORS] Same-origin request (no origin header)`);
   } else {
     // Reject unauthorized origins with detailed logging
     headers['Access-Control-Allow-Origin'] = 'null';
     
-    console.warn(`[SECURITY] CORS request rejected`, {
+    logger.warn(`[SECURITY] CORS request rejected`, {
       origin: requestOrigin,
       allowedOrigins,
       timestamp: new Date().toISOString(),

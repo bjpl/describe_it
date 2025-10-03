@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useEffect } from "react";
 import { Eye, EyeOff, Copy, Check, AlertCircle, Loader2, Key, ExternalLink, Trash2 } from "lucide-react";
+import { logger } from '@/lib/logger';
 
 interface ApiKeyInputProps {
   label: string;
@@ -63,7 +64,7 @@ export function ApiKeyInput({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err);
+      logger.error("Failed to copy:", err);
     }
   }, [value]);
 

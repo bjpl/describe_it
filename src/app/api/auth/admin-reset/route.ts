@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import { createClient } from '@supabase/supabase-js';
+import { apiLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,7 +43,7 @@ export async function POST(request: NextRequest) {
     );
     
     if (error) {
-      console.error('Password reset error:', error);
+      apiLogger.error('Password reset error:', error);
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
     
@@ -52,7 +53,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error: any) {
-    console.error('Admin reset error:', error);
+    apiLogger.error('Admin reset error:', error);
     return NextResponse.json({ error: 'Failed to reset password' }, { status: 500 });
   }
 }

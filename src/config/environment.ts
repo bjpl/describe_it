@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { devLog, devWarn, devError } from "../lib/logger";
+import { logger } from '@/lib/logger';
 
 // Environment variable schema with optional values for demo mode
 const envSchema = z.object({
@@ -98,7 +99,7 @@ function validateEnvironment() {
   DEMO_MODE_AUTO: process.env.DEMO_MODE_AUTO,
     });
   } catch (error) {
-    console.error('Environment validation failed:', error);
+    logger.error('Environment validation failed:', error);
     // Return a safe default configuration in demo mode
     return {
       NODE_ENV: 'development' as const,

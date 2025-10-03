@@ -5,6 +5,7 @@ import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { Globe, BookOpen, Copy, Check, Volume2 } from "lucide-react";
 import { DescriptionStyle } from "@/types";
+import { logger } from '@/lib/logger';
 
 interface DescriptionTabsProps {
   englishDescription: string;
@@ -32,7 +33,7 @@ export const DescriptionTabs: React.FC<DescriptionTabsProps> = ({
       setCopiedText(language);
       setTimeout(() => setCopiedText(null), 2000);
     } catch (error) {
-      console.error("Failed to copy text:", error);
+      logger.error("Failed to copy text:", error);
     }
   }, []);
 

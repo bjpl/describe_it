@@ -1,5 +1,6 @@
 import { kv } from "@vercel/kv";
 import { CacheEntry } from "../../types/api";
+import { apiLogger } from '@/lib/logger';
 
 class VercelKVCache {
   private defaultTTL: number = 3600; // 1 hour default
@@ -8,7 +9,7 @@ class VercelKVCache {
   constructor() {
     // Check if KV is properly configured
     if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
-      console.warn("Vercel KV not configured. Caching will be disabled.");
+      apiLogger.warn("Vercel KV not configured. Caching will be disabled.");
     }
   }
 
@@ -35,7 +36,7 @@ class VercelKVCache {
     ttl: number = this.defaultTTL,
   ): Promise<void> {
     if (!this.isAvailable()) {
-      console.warn("KV not available, skipping cache set");
+      apiLogger.warn("KV not available, skipping cache set");
       return;
     }
 
@@ -50,7 +51,7 @@ class VercelKVCache {
 
       await kv.set(prefixedKey, cacheEntry, { ex: ttl });
     } catch (error) {
-      console.error("Error setting cache value:", error);
+      apiLogger.error("Error setting cache value:", error);
       // Don't throw - caching failures should not break the application
     }
   }
@@ -83,7 +84,7 @@ class VercelKVCache {
 
       return cacheEntry.data;
     } catch (error) {
-      console.error("Error getting cache value:", error);
+      apiLogger.error("Error getting cache value:", error);
       return null;
     }
   }
@@ -101,7 +102,7 @@ class VercelKVCache {
       const result = await kv.del(prefixedKey);
       return result === 1;
     } catch (error) {
-      console.error("Error deleting cache value:", error);
+      apiLogger.error("Error deleting cache value:", error);
       return false;
     }
   }
@@ -119,7 +120,7 @@ class VercelKVCache {
       const result = await kv.exists(prefixedKey);
       return result === 1;
     } catch (error) {
-      console.error("Error checking cache key existence:", error);
+      apiLogger.error("Error checking cache key existence:", error);
       return false;
     }
   }
@@ -156,7 +157,7 @@ class VercelKVCache {
         return cacheEntry.data;
       });
     } catch (error) {
-      console.error("Error getting multiple cache values:", error);
+      apiLogger.error("Error getting multiple cache values:", error);
       return keys.map(() => null);
     }
   }
@@ -179,7 +180,7 @@ class VercelKVCache {
 
       await Promise.all(promises);
     } catch (error) {
-      console.error("Error setting multiple cache values:", error);
+      apiLogger.error("Error setting multiple cache values:", error);
     }
   }
 
@@ -202,7 +203,7 @@ class VercelKVCache {
 
       return result;
     } catch (error) {
-      console.error("Error incrementing cache value:", error);
+      apiLogger.error("Error incrementing cache value:", error);
       return null;
     }
   }
@@ -222,7 +223,7 @@ class VercelKVCache {
       // Remove the prefix from returned keys
       return keys.map((key) => key.replace(this.keyPrefix, ""));
     } catch (error) {
-      console.error("Error getting cache keys:", error);
+      apiLogger.error("Error getting cache keys:", error);
       return [];
     }
   }
@@ -245,7 +246,7 @@ class VercelKVCache {
       const result = await kv.del(...prefixedKeys);
       return result;
     } catch (error) {
-      console.error("Error clearing cache:", error);
+      apiLogger.error("Error clearing cache:", error);
       return 0;
     }
   }
@@ -280,7 +281,7 @@ class VercelKVCache {
 
       return stats;
     } catch (error) {
-      console.error("Error getting cache stats:", error);
+      apiLogger.error("Error getting cache stats:", error);
       return stats;
     }
   }
@@ -308,7 +309,7 @@ class VercelKVCache {
 
       return data;
     } catch (error) {
-      console.error("Error in cache fetcher:", error);
+      apiLogger.error("Error in cache fetcher:", error);
       throw error;
     }
   }
@@ -345,7 +346,7 @@ class VercelKVCache {
 
       return retrieved === testValue;
     } catch (error) {
-      console.error("Cache health check failed:", error);
+      apiLogger.error("Cache health check failed:", error);
       return false;
     }
   }
@@ -385,7 +386,7 @@ class VercelKVCache {
     try {
       return await Promise.all(promises);
     } catch (error) {
-      console.error("Error in batch operations:", error);
+      apiLogger.error("Error in batch operations:", error);
       return operations.map(() => null);
     }
   }

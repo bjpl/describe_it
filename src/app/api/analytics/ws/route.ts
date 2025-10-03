@@ -8,6 +8,7 @@ import { WebSocketServer } from 'ws';
 import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 import Redis from 'ioredis';
 import { recordApiRequest } from '@/lib/monitoring/prometheus';
+import { apiLogger } from '@/lib/logger';
 
 // Global WebSocket server instance
 let wss: WebSocketServer | null = null;
@@ -49,7 +50,7 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    console.error('WebSocket endpoint error:', error);
+    apiLogger.error('WebSocket endpoint error:', error);
     recordApiRequest('GET', '/api/analytics/ws', 500, (Date.now() - startTime) / 1000);
 
     return new Response('WebSocket setup failed', { status: 500 });
@@ -78,7 +79,7 @@ export function initWebSocketServer(server?: any) {
     };
 
     connectedClients.set(clientId, client);
-    console.log(`Analytics WebSocket client connected: ${clientId}`);
+    apiLogger.info(`Analytics WebSocket client connected: ${clientId}`);
 
     // Send welcome message
     sendToClient(clientId, {
@@ -96,17 +97,17 @@ export function initWebSocketServer(server?: any) {
       if (data) {
         handleClientMessage(clientId, data);
       } else {
-        console.error('Invalid WebSocket message from client:', clientId);
+        apiLogger.error('Invalid WebSocket message from client:', clientId);
       }
     });
 
     ws.on('close', () => {
       connectedClients.delete(clientId);
-      console.log(`Analytics WebSocket client disconnected: ${clientId}`);
+      apiLogger.info(`Analytics WebSocket client disconnected: ${clientId}`);
     });
 
     ws.on('error', (error) => {
-      console.error(`WebSocket error for client ${clientId}:`, error);
+      apiLogger.error(`WebSocket error for client ${clientId}:`, error);
       connectedClients.delete(clientId);
     });
 
@@ -132,7 +133,7 @@ export function initWebSocketServer(server?: any) {
   // Clean up stale connections
   setInterval(cleanupStaleConnections, 60000); // Every minute
 
-  console.log(`Analytics WebSocket server started on port ${process.env.WS_PORT || '3001'}`);
+  apiLogger.info(`Analytics WebSocket server started on port ${process.env.WS_PORT || '3001'}`);
   return wss;
 }
 
@@ -169,7 +170,7 @@ function handleClientMessage(clientId: string, message: any) {
       break;
 
     default:
-      console.log(`Unknown message type from client ${clientId}:`, message.type);
+      apiLogger.info(`Unknown message type from client ${clientId}:`, message.type);
   }
 }
 
@@ -180,7 +181,7 @@ function sendToClient(clientId: string, message: WebSocketMessage) {
   try {
     client.ws.send(safeStringify(message, '{}', `websocket-broadcast-${client.id}`));
   } catch (error) {
-    console.error(`Failed to send message to client ${clientId}:`, error);
+    apiLogger.error(`Failed to send message to client ${clientId}:`, error);
     connectedClients.delete(clientId);
   }
 }
@@ -204,7 +205,7 @@ async function startDataBroadcasting() {
         timestamp: Date.now(),
       }, 'metrics');
     } catch (error) {
-      console.error('Error broadcasting metrics:', error);
+      apiLogger.error('Error broadcasting metrics:', error);
     }
   }, 30000);
 
@@ -218,7 +219,7 @@ async function startDataBroadcasting() {
         timestamp: Date.now(),
       }, 'api_keys');
     } catch (error) {
-      console.error('Error broadcasting API keys data:', error);
+      apiLogger.error('Error broadcasting API keys data:', error);
     }
   }, 60000);
 
@@ -226,10 +227,10 @@ async function startDataBroadcasting() {
   const alertSubscriber = redis.duplicate();
   alertSubscriber.subscribe('analytics:alerts', 'analytics:fraud_events', (err, count) => {
     if (err) {
-      console.error('Failed to subscribe to Redis channels:', err);
+      apiLogger.error('Failed to subscribe to Redis channels:', err);
       return;
     }
-    console.log(`Subscribed to ${count} Redis channels for real-time updates`);
+    apiLogger.info(`Subscribed to ${count} Redis channels for real-time updates`);
   });
 
   alertSubscriber.on('message', (channel, message) => {
@@ -251,7 +252,7 @@ async function startDataBroadcasting() {
         }, 'fraud');
       }
     } catch (error) {
-      console.error('Error processing Redis message:', error);
+      apiLogger.error('Error processing Redis message:', error);
     }
   });
 }
@@ -291,13 +292,13 @@ async function getCurrentApiKeysData() {
           rateLimitHits: parseInt(data.rateLimitHits || '0'),
         });
       } catch (error) {
-        console.error(`Error processing API key data for ${key}:`, error);
+        apiLogger.error(`Error processing API key data for ${key}:`, error);
       }
     }
 
     return apiKeysData.sort((a, b) => b.requests - a.requests);
   } catch (error) {
-    console.error('Error fetching API keys data:', error);
+    apiLogger.error('Error fetching API keys data:', error);
     return [];
   }
 }
@@ -321,7 +322,7 @@ async function sendCurrentData(clientId: string) {
       timestamp: Date.now(),
     });
   } catch (error) {
-    console.error('Error sending current data:', error);
+    apiLogger.error('Error sending current data:', error);
   }
 }
 
@@ -331,11 +332,11 @@ function cleanupStaleConnections() {
 
   for (const [clientId, client] of connectedClients) {
     if (now - client.lastPing > staleThreshold) {
-      console.log(`Cleaning up stale connection: ${clientId}`);
+      apiLogger.info(`Cleaning up stale connection: ${clientId}`);
       try {
         client.ws.close();
       } catch (error) {
-        console.error(`Error closing stale connection ${clientId}:`, error);
+        apiLogger.error(`Error closing stale connection ${clientId}:`, error);
       }
       connectedClients.delete(clientId);
     }
@@ -373,6 +374,6 @@ export function closeWebSocketServer() {
   if (wss) {
     wss.close();
     wss = null;
-    console.log('Analytics WebSocket server closed');
+    apiLogger.info('Analytics WebSocket server closed');
   }
 }

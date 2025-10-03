@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { safeParse, safeStringify } from '@/lib/utils/json-safe';
+import { apiLogger } from '@/lib/logger';
 
 interface WebVitalData {
   name: string;
@@ -35,7 +36,7 @@ export async function POST(request: NextRequest) {
 
     // Log to console in development
     if (process.env.NODE_ENV === 'development') {
-      console.log('📊 Web Vital received:', {
+      apiLogger.info('📊 Web Vital received:', {
         metric: data.name,
         value: Math.round(data.value),
         rating: data.rating,
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error processing web vitals:', error);
+    apiLogger.error('Error processing web vitals:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -72,7 +73,7 @@ async function sendToVercelAnalytics(data: WebVitalData) {
   // Vercel Analytics integration
   // This would be handled by the Vercel Analytics script on the frontend
   // but we can log server-side for additional tracking
-  console.log('Vercel Analytics:', data.name, data.value);
+  apiLogger.info('Vercel Analytics:', data.name, data.value);
 }
 
 async function sendToGoogleAnalytics(data: WebVitalData) {
@@ -107,10 +108,10 @@ async function sendToGoogleAnalytics(data: WebVitalData) {
     );
 
     if (!response.ok) {
-      console.warn('Failed to send to Google Analytics:', response.status);
+      apiLogger.warn('Failed to send to Google Analytics:', response.status);
     }
   } catch (error) {
-    console.warn('Google Analytics error:', error);
+    apiLogger.warn('Google Analytics error:', error);
   }
 }
 
@@ -134,7 +135,7 @@ async function sendToCustomAnalytics(data: WebVitalData) {
       await kv.expire(key, 30 * 24 * 60 * 60);
     }
   } catch (error) {
-    console.warn('Custom analytics error:', error);
+    apiLogger.warn('Custom analytics error:', error);
   }
 }
 
@@ -164,7 +165,7 @@ export async function GET(request: NextRequest) {
       metric: metric || 'all',
     });
   } catch (error) {
-    console.error('Error retrieving analytics:', error);
+    apiLogger.error('Error retrieving analytics:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }
@@ -202,7 +203,7 @@ async function retrieveAnalyticsData(metric?: string | null, days: number = 7) {
               .filter(Boolean)
           );
         } catch (error) {
-          console.warn(`Error retrieving key ${key}:`, error);
+          apiLogger.warn(`Error retrieving key ${key}:`, error);
         }
       }
 
@@ -211,7 +212,7 @@ async function retrieveAnalyticsData(metric?: string | null, days: number = 7) {
 
     return [];
   } catch (error) {
-    console.warn('Error retrieving analytics data:', error);
+    apiLogger.warn('Error retrieving analytics data:', error);
     return [];
   }
 }

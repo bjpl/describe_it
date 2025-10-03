@@ -41,6 +41,7 @@ import {
   ChevronDown
 } from "lucide-react";
 import type { UserProgress, StudySession } from "@/types/database";
+import { logger } from '@/lib/logger';
 
 interface UserStatsProps {
   className?: string;
@@ -183,7 +184,7 @@ export function UserStats({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch user stats";
       setError(errorMessage);
-      console.error("Error fetching user stats:", err);
+      logger.error("Error fetching user stats:", err);
     } finally {
       setLoading(false);
     }

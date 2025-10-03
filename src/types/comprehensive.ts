@@ -1864,7 +1864,11 @@ export type {
 } from './api';
 
 // Export everything from this module as the comprehensive types collection
+// Note: VocabularyStats is defined in both database and unified - using unified version
 export * from './database';
 export * from './api';
 export * from './unified';
 export * from './export';
+
+// Re-export VocabularyStats explicitly from unified to resolve ambiguity
+export type { VocabularyStats } from './unified';

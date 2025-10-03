@@ -14,6 +14,7 @@ import {
 import { qaService, QAService } from "./qaService";
 import { progressService, ProgressService } from "./progressService";
 import { exportService, ExportService } from "./exportService";
+import { logger } from '@/lib/logger';
 
 // Re-export all services for external use
 export { openAIService, OpenAIService } from "./openaiService";
@@ -155,10 +156,10 @@ export class ServiceRegistry {
 
     for (const [name, service] of Array.from(this.services.entries())) {
       if (typeof service.initialize === "function") {
-        console.log(`Initializing service: ${name}`);
+        logger.info(`Initializing service: ${name}`);
         initPromises.push(
           service.initialize().catch((error: Error) => {
-            console.warn(
+            logger.warn(
               `Failed to initialize service ${name}:`,
               error.message,
             );
@@ -178,10 +179,10 @@ export class ServiceRegistry {
 
     for (const [name, service] of Array.from(this.services.entries())) {
       if (typeof service.cleanup === "function") {
-        console.log(`Cleaning up service: ${name}`);
+        logger.info(`Cleaning up service: ${name}`);
         cleanupPromises.push(
           service.cleanup().catch((error: Error) => {
-            console.warn(`Failed to cleanup service ${name}:`, error.message);
+            logger.warn(`Failed to cleanup service ${name}:`, error.message);
           }),
         );
       }
@@ -191,7 +192,7 @@ export class ServiceRegistry {
         try {
           service.clearCache();
         } catch (error) {
-          console.warn(`Failed to clear cache for service ${name}:`, error);
+          logger.warn(`Failed to clear cache for service ${name}:`, error);
         }
       }
     }

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { descriptionCache } from "@/lib/cache";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
+import { apiLogger } from '@/lib/logger';
 
 // Input validation schemas
 const progressEventSchema = z.object({
@@ -222,7 +223,7 @@ class ProgressTracker {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      console.warn("Failed to update user progress:", error);
+      apiLogger.warn("Failed to update user progress:", error);
     }
   }
 
@@ -291,7 +292,7 @@ class ProgressTracker {
         sessionTTL: 7200, // 2 hours
       });
     } catch (error) {
-      console.warn("Failed to update session progress:", error);
+      apiLogger.warn("Failed to update session progress:", error);
     }
   }
 
@@ -341,7 +342,7 @@ class ProgressTracker {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      console.warn("Failed to update daily aggregation:", error);
+      apiLogger.warn("Failed to update daily aggregation:", error);
     }
   }
 
@@ -401,7 +402,7 @@ class ProgressTracker {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      console.warn("Failed to check goal progress:", error);
+      apiLogger.warn("Failed to check goal progress:", error);
     }
   }
 
@@ -583,7 +584,7 @@ async function handleProgressTrack(request: AuthenticatedRequest) {
       );
     }
 
-    console.error("Progress tracking error:", error);
+    apiLogger.error("Progress tracking error:", error);
 
     return NextResponse.json(
       {
@@ -678,7 +679,7 @@ async function handleProgressGet(request: AuthenticatedRequest) {
       );
     }
 
-    console.error("Progress retrieval error:", error);
+    apiLogger.error("Progress retrieval error:", error);
 
     return NextResponse.json(
       {

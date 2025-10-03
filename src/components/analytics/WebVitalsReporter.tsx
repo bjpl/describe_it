@@ -3,6 +3,7 @@
 import { getCLS, getFID, getFCP, getLCP, getTTFB, Metric } from 'web-vitals';
 import { useEffect } from 'react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface AnalyticsData {
   name: string;
@@ -65,7 +66,7 @@ function sendToAnalytics({ name, value, rating, delta, id }: AnalyticsData) {
 
   // Development logging
   if (process.env.NODE_ENV === 'development') {
-    console.log(`🔍 Web Vital: ${name}`, {
+    logger.info(`🔍 Web Vital: ${name}`, {
       value: Math.round(value),
       rating,
       threshold: THRESHOLDS[name as keyof typeof THRESHOLDS],
@@ -141,7 +142,7 @@ export function usePerformanceTracking() {
     sendToAnalytics(analyticsData);
 
     if (process.env.NODE_ENV === 'development') {
-      console.log(`📊 Custom Metric: ${name}`, { value, unit });
+      logger.info(`📊 Custom Metric: ${name}`, { value, unit });
     }
   };
 
@@ -159,7 +160,7 @@ export function usePerformanceTracking() {
         }
       }
     } catch (error) {
-      console.warn('Performance tracking error:', error);
+      logger.warn('Performance tracking error:', error);
     }
   };
 

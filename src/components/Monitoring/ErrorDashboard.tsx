@@ -5,8 +5,8 @@ import { useErrorReporting } from '@/hooks/useErrorReporting';
 import { performanceMonitor, getPerformanceSummary } from '@/lib/monitoring/performanceMonitor';
 import { logger } from '@/lib/logger';
 import { ErrorCategory, ErrorSeverity } from '@/lib/errorHandler';
-import {
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import {
   AlertTriangle,
   TrendingUp,
   Clock,

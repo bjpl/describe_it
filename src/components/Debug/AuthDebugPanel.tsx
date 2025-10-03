@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { AuthContext } from '../../providers/AuthProvider';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { authLogger } from '@/lib/logger';
 
 interface AuthDebugPanelProps {
   isVisible?: boolean;
@@ -33,7 +34,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
       const { authManager } = require('../../lib/auth/authManager');
       zustandState = authManager.getState();
     } catch (error) {
-      console.warn('Could not access authManager:', error);
+      authLogger.warn('Could not access authManager:', error);
     }
     
     let localStorageData = null;
@@ -111,11 +112,11 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
     try {
       const { authManager } = require('../../lib/auth/authManager');
       unsubscribe = authManager.subscribe((state) => {
-        console.log('[AUTH_DEBUG] Zustand state changed:', state);
+        authLogger.info('[AUTH_DEBUG] Zustand state changed:', state);
         setDebugState(captureDebugState());
       });
     } catch (error) {
-      console.warn('Could not subscribe to authManager:', error);
+      authLogger.warn('Could not subscribe to authManager:', error);
     }
 
     return () => {
@@ -235,7 +236,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
                     const { authManager } = require('../../lib/auth/authManager');
                     authManager.getState().signOut();
                   } catch (error) {
-                    console.warn('Could not access authManager for signOut:', error);
+                    authLogger.warn('Could not access authManager for signOut:', error);
                   }
                 }}
                 style={{
@@ -253,7 +254,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
               </button>
               <button
                 onClick={() => {
-                  console.log('[AUTH_DEBUG] Current state:', captureDebugState());
+                  authLogger.info('[AUTH_DEBUG] Current state:', captureDebugState());
                 }}
                 style={{
                   backgroundColor: '#4444ff',

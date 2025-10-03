@@ -4,6 +4,7 @@
  */
 
 import DOMPurify from 'isomorphic-dompurify';
+import { securityLogger } from '@/lib/logger';
 
 /**
  * Sanitization options interface
@@ -408,7 +409,7 @@ export class DataSanitizer {
           result[key] = sanitizers[key](value);
         } catch (error) {
           // Log error and use fallback sanitization
-          console.warn(`Failed to sanitize ${key}:`, error);
+          securityLogger.warn(`Failed to sanitize ${key}:`, error);
           result[key] = this.sanitizeText(String(value));
         }
       } else {

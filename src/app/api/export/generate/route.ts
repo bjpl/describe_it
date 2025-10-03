@@ -4,6 +4,7 @@ import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 import { descriptionCache } from "@/lib/cache";
 import { withPremiumAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
+import { apiLogger } from '@/lib/logger';
 
 // Input validation schema
 const exportRequestSchema = z.object({
@@ -115,7 +116,7 @@ class ExportService {
 
       return content;
     } catch (error) {
-      console.warn("Failed to get content for export:", error);
+      apiLogger.warn("Failed to get content for export:", error);
       return [];
     }
   }
@@ -511,7 +512,7 @@ async function handleExportGenerate(request: AuthenticatedRequest) {
       );
     }
 
-    console.error("Export generation error:", error);
+    apiLogger.error("Export generation error:", error);
 
     return NextResponse.json(
       {
@@ -568,7 +569,7 @@ async function handleExportDownload(request: AuthenticatedRequest) {
       },
     });
   } catch (error) {
-    console.error("Export download error:", error);
+    apiLogger.error("Export download error:", error);
 
     return NextResponse.json(
       {

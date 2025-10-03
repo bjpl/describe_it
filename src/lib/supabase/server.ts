@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 import type { Database } from './types'
+import { dbLogger } from '@/lib/logger';
 
 // Environment variables validation
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
@@ -57,7 +58,7 @@ export const serverAuthHelpers = {
       if (error) throw error
       return user
     } catch (error) {
-      console.error('Error getting current user on server:', error)
+      dbLogger.error('Error getting current user on server:', error)
       return null
     }
   },
@@ -73,7 +74,7 @@ export const serverAuthHelpers = {
       if (error) throw error
       return session
     } catch (error) {
-      console.error('Error getting current session on server:', error)
+      dbLogger.error('Error getting current session on server:', error)
       return null
     }
   },
@@ -109,7 +110,7 @@ export const serverAuthHelpers = {
       if (error) throw error
       return { ...user, profile: data }
     } catch (error) {
-      console.error('Error getting user profile on server:', error)
+      dbLogger.error('Error getting user profile on server:', error)
       return user
     }
   },
@@ -141,7 +142,7 @@ export const serverDbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error getting user descriptions on server:', error)
+      dbLogger.error('Error getting user descriptions on server:', error)
       return []
     }
   },
@@ -173,7 +174,7 @@ export const serverDbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error getting description by ID on server:', error)
+      dbLogger.error('Error getting description by ID on server:', error)
       return null
     }
   },
@@ -195,7 +196,7 @@ export const serverDbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error getting user export history on server:', error)
+      dbLogger.error('Error getting user export history on server:', error)
       return []
     }
   },
@@ -216,7 +217,7 @@ export const serverDbHelpers = {
       if (error) throw error
       return data
     } catch (error) {
-      console.error('Error getting user API keys on server:', error)
+      dbLogger.error('Error getting user API keys on server:', error)
       return null
     }
   },

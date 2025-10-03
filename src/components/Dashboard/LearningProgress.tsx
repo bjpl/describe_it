@@ -35,6 +35,7 @@ import {
   Zap
 } from "lucide-react";
 import type { UserProgress, StudySession } from "@/types/database";
+import { logger } from '@/lib/logger';
 
 interface LearningProgressProps {
   className?: string;
@@ -137,7 +138,7 @@ export function LearningProgress({
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to fetch progress data";
       setError(errorMessage);
-      console.error("Error fetching progress data:", err);
+      logger.error("Error fetching progress data:", err);
     } finally {
       setLoading(false);
     }

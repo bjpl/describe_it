@@ -11,6 +11,7 @@ import {
 
 import { vercelKvCache } from "./vercel-kv";
 import { apiKeyProvider } from "./keyProvider";
+import { apiLogger } from '@/lib/logger';
 
 class UnsplashService {
   private client: AxiosInstance | null = null;
@@ -39,7 +40,7 @@ class UnsplashService {
       const config = apiKeyProvider.getServiceConfig('unsplash');
       this.accessKey = config.apiKey;
 
-      console.log("[UnsplashService] Initializing with keyProvider:", {
+      apiLogger.info("[UnsplashService] Initializing with keyProvider:", {
         hasKey: !!this.accessKey,
         accessKeyLength: this.accessKey.length,
         isDemo: config.isDemo,
@@ -49,7 +50,7 @@ class UnsplashService {
 
       // Always prefer user-provided settings API key
       if (config.source === 'settings' && config.apiKey && config.apiKey.trim()) {
-        console.log("[UnsplashService] Using API key from user settings");
+        apiLogger.info("[UnsplashService] Using API key from user settings");
         this.accessKey = config.apiKey.trim();
         this.isDemo = false;
         this.initializeClient();
@@ -57,7 +58,7 @@ class UnsplashService {
       }
 
       if (config.isDemo || !config.isValid) {
-        console.warn("Unsplash API key not configured or invalid. Using demo mode.");
+        apiLogger.warn("Unsplash API key not configured or invalid. Using demo mode.");
         this.accessKey = "demo";
         this.isDemo = true;
         this.client = null;
@@ -68,7 +69,7 @@ class UnsplashService {
       this.isDemo = false;
       this.initializeClient();
     } catch (error) {
-      console.warn("[UnsplashService] KeyProvider failed, falling back to demo mode:", error);
+      apiLogger.warn("[UnsplashService] KeyProvider failed, falling back to demo mode:", error);
       this.accessKey = "demo";
       this.client = null;
       this.initializeDemoMode();
@@ -83,7 +84,7 @@ class UnsplashService {
       this.accessKey = apiKey.trim();
       this.isDemo = false; // Explicitly set to non-demo mode
       this.initializeClient();
-      console.log("[UnsplashService] Using temporary API key, demo mode:", this.isDemo);
+      apiLogger.info("[UnsplashService] Using temporary API key, demo mode:", this.isDemo);
     }
   }
 
@@ -92,13 +93,13 @@ class UnsplashService {
    */
   private initializeClient(): void {
     if (!this.accessKey || this.accessKey === "demo") {
-      console.log("[UnsplashService] No valid access key, client not initialized");
+      apiLogger.info("[UnsplashService] No valid access key, client not initialized");
       this.client = null;
       this.isDemo = true;
       return;
     }
 
-    console.log("[UnsplashService] Initializing Unsplash client with key:", this.accessKey.substring(0, 10) + '...');
+    apiLogger.info("[UnsplashService] Initializing Unsplash client with key:", this.accessKey.substring(0, 10) + '...');
     
     this.client = axios.create({
       baseURL: "https://api.unsplash.com",
@@ -118,7 +119,7 @@ class UnsplashService {
 
     this.isDemo = false; // Explicitly set to non-demo mode when client is initialized
     this.setupInterceptors();
-    console.log("[UnsplashService] Client initialized successfully, isDemo:", this.isDemo);
+    apiLogger.info("[UnsplashService] Client initialized successfully, isDemo:", this.isDemo);
   }
 
   /**
@@ -130,7 +131,7 @@ class UnsplashService {
         const newKey = keys.unsplash;
         
         if (newKey !== this.accessKey) {
-          console.log("[UnsplashService] Key updated, reinitializing service");
+          apiLogger.info("[UnsplashService] Key updated, reinitializing service");
           this.accessKey = newKey;
           
           // Clear any existing client
@@ -147,14 +148,14 @@ class UnsplashService {
       this.initializeClient();
             }
           } catch (error) {
-            console.warn("[UnsplashService] Failed to reinitialize after key update:", error);
+            apiLogger.warn("[UnsplashService] Failed to reinitialize after key update:", error);
             this.accessKey = "demo";
             this.initializeDemoMode();
           }
         }
       });
     } catch (error) {
-      console.warn("[UnsplashService] Failed to setup key update listener:", error);
+      apiLogger.warn("[UnsplashService] Failed to setup key update listener:", error);
     }
   }
 
@@ -477,7 +478,7 @@ class UnsplashService {
     currentPage: number;
     hasNextPage: boolean;
   }> {
-    console.log("[UnsplashService] searchImages called with:", {
+    apiLogger.info("[UnsplashService] searchImages called with:", {
       query: params.query,
       page: params.page,
       isDemo: this.isDemo,
@@ -487,7 +488,7 @@ class UnsplashService {
 
     // Return demo data if no API key or explicitly in demo mode
     if (this.accessKey === "demo" || this.isDemo) {
-      console.log("[UnsplashService] Using demo mode - generating demo images");
+      apiLogger.info("[UnsplashService] Using demo mode - generating demo images");
       return this.generateDemoImages(params);
     }
 
@@ -516,7 +517,7 @@ class UnsplashService {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => {
         controller.abort();
-        console.warn('[UnsplashService] Request timeout - falling back to demo mode');
+        apiLogger.warn('[UnsplashService] Request timeout - falling back to demo mode');
       }, 4000); // 4 second limit for real API calls
       
       try {
@@ -543,7 +544,7 @@ class UnsplashService {
 
         // Cache the response for 30 minutes (increased for better performance)
         await vercelKvCache.set(cacheKey, data, 1800).catch(err => 
-          console.warn('[UnsplashService] Cache write failed:', err)
+          apiLogger.warn('[UnsplashService] Cache write failed:', err)
         );
 
         const processedImages = this.processImages(data.results);
@@ -558,14 +559,14 @@ class UnsplashService {
       } catch (timeoutError) {
         clearTimeout(timeoutId);
         if (timeoutError.name === 'CanceledError' || timeoutError.code === 'ECONNABORTED') {
-          console.warn('[UnsplashService] Request timed out, using demo mode');
+          apiLogger.warn('[UnsplashService] Request timed out, using demo mode');
           return this.generateDemoImages(params);
         }
         throw timeoutError;
       }
     } catch (error) {
       // Always fallback to demo data on any error for reliability
-      console.warn("[UnsplashService] API error, falling back to demo mode:", {
+      apiLogger.warn("[UnsplashService] API error, falling back to demo mode:", {
         error: error.message || error,
         code: error.code,
         status: error.response?.status

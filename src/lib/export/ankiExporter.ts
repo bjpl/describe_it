@@ -4,6 +4,7 @@
  */
 
 import { saveAs } from "file-saver";
+import { logger } from '@/lib/logger';
 import {
   ExportData,
   AnkiExportOptions,
@@ -69,7 +70,7 @@ export class AnkiExporter {
       // Generate the Anki package
       return await this.generateAnkiPackage();
     } catch (error) {
-      console.error("Error generating Anki deck:", error);
+      logger.error("Error generating Anki deck:", error);
       throw new Error("Failed to generate Anki deck export");
     }
   }

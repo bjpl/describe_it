@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useEffect, useState } from 'react';
 import { useDebounce } from './useDebounce';
+import { performanceLogger } from '@/lib/logger';
 
 // Performance optimization hooks
 
@@ -23,7 +24,7 @@ export const useExpensiveMemo = <T>(
     if (process.env.NODE_ENV === 'development' && debugName && startTime.current) {
       const duration = performance.now() - startTime.current;
       if (duration > 10) { // Log if calculation takes more than 10ms
-        console.warn(`[Performance] Expensive memo "${debugName}" took ${duration.toFixed(2)}ms`);
+        performanceLogger.warn(`[Performance] Expensive memo "${debugName}" took ${duration.toFixed(2)}ms`);
       }
     }
 
@@ -46,7 +47,7 @@ export const usePerformanceCallback = <T extends (...args: any[]) => any>(
     if (process.env.NODE_ENV === 'development' && debugName) {
       const duration = performance.now() - startTime;
       if (duration > 10) {
-        console.warn(`[Performance] Callback "${debugName}" took ${duration.toFixed(2)}ms`);
+        performanceLogger.warn(`[Performance] Callback "${debugName}" took ${duration.toFixed(2)}ms`);
       }
     }
 
@@ -69,12 +70,12 @@ export const useRenderOptimization = (componentName: string) => {
       if (lastRenderTime.current) {
         const timeBetweenRenders = now - lastRenderTime.current;
         if (timeBetweenRenders < 16) { // Less than one frame (60fps)
-          console.warn(`[Performance] ${componentName} rendering too frequently: ${timeBetweenRenders.toFixed(2)}ms between renders`);
+          performanceLogger.warn(`[Performance] ${componentName} rendering too frequently: ${timeBetweenRenders.toFixed(2)}ms between renders`);
         }
       }
       
       if (renderCount.current > 10) {
-        console.warn(`[Performance] ${componentName} has rendered ${renderCount.current} times`);
+        performanceLogger.warn(`[Performance] ${componentName} has rendered ${renderCount.current} times`);
       }
     }
 
@@ -136,7 +137,7 @@ export const useOptimizedApiCall = <T>(
         const duration = performance.now() - startTime;
         
         if (duration > 2000) {
-          console.warn(`[Performance] API call "${cacheKey}" took ${duration.toFixed(2)}ms`);
+          performanceLogger.warn(`[Performance] API call "${cacheKey}" took ${duration.toFixed(2)}ms`);
         }
 
         // Cache the result
@@ -216,7 +217,7 @@ export const useOptimizedSearch = <T>(
         const duration = performance.now() - startTime;
         
         if (duration > 1000) {
-          console.warn(`[Performance] Search for "${debouncedQuery}" took ${duration.toFixed(2)}ms`);
+          performanceLogger.warn(`[Performance] Search for "${debouncedQuery}" took ${duration.toFixed(2)}ms`);
         }
 
         // Cache results
@@ -285,7 +286,7 @@ export const useLazyImage = (src: string, threshold: number = 0.1) => {
     img.onload = () => {
       const loadTime = performance.now() - startTime;
       if (loadTime > 2000) {
-        console.warn(`[Performance] Image "${src}" took ${loadTime.toFixed(2)}ms to load`);
+        performanceLogger.warn(`[Performance] Image "${src}" took ${loadTime.toFixed(2)}ms to load`);
       }
       setLoaded(true);
     };
@@ -361,7 +362,7 @@ export const usePerformanceProfiler = (name: string) => {
       measurements.current.push(duration);
       
       if (process.env.NODE_ENV === 'development') {
-        console.log(`[Profiler] ${name}: ${duration.toFixed(2)}ms`);
+        performanceLogger.info(`[Profiler] ${name}: ${duration.toFixed(2)}ms`);
       }
       
       startTime.current = undefined;

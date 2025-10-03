@@ -1,4 +1,5 @@
 import { CacheEntry } from '../../types/api';
+import { apiLogger } from '@/lib/logger';
 
 // Simple in-memory cache implementation
 class MemoryCache {
@@ -70,7 +71,7 @@ class RedisAdapter {
   private keyPrefix: string = 'describe_it:';
 
   constructor() {
-    console.log('Using memory-only cache adapter');
+    apiLogger.info('Using memory-only cache adapter');
   }
 
   private getPrefixedKey(key: string): string {

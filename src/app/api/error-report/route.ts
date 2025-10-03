@@ -10,6 +10,7 @@ import {
   createSuccessResponse
 } from '@/lib/schemas/api-validation';
 import { z } from 'zod';
+import { apiLogger } from '@/lib/logger';
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
@@ -43,7 +44,7 @@ export async function POST(request: NextRequest) {
     const rateLimitResult = await rateLimiter.isRateLimited('error-report', identifier);
     
     if (rateLimitResult.limited) {
-      console.warn(`[SECURITY] Error report rate limit exceeded for ${identifier}`);
+      apiLogger.warn(`[SECURITY] Error report rate limit exceeded for ${identifier}`);
       return NextResponse.json(
         { 
           success: false,
@@ -66,7 +67,7 @@ export async function POST(request: NextRequest) {
     // Validate content type
     const contentType = request.headers.get('content-type');
     if (!contentType?.includes('application/json')) {
-      console.warn(`[SECURITY] Invalid content type from ${identifier}: ${contentType}`);
+      apiLogger.warn(`[SECURITY] Invalid content type from ${identifier}: ${contentType}`);
       return NextResponse.json(
         { 
           success: false, 
@@ -84,7 +85,7 @@ export async function POST(request: NextRequest) {
       
       // Check payload size (max 50KB)
       if (text.length > 50000) {
-        console.warn(`[SECURITY] Oversized error report from ${identifier}: ${text.length} bytes`);
+        apiLogger.warn(`[SECURITY] Oversized error report from ${identifier}: ${text.length} bytes`);
         return NextResponse.json(
           { 
             success: false, 
@@ -97,7 +98,7 @@ export async function POST(request: NextRequest) {
 
       errorData = safeParse(text);
     } catch (parseError) {
-      console.warn(`[SECURITY] Invalid JSON from ${identifier}:`, parseError);
+      apiLogger.warn(`[SECURITY] Invalid JSON from ${identifier}:`, parseError);
       return NextResponse.json(
         { 
           success: false, 
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
       validatedData = errorReportSchema.parse(errorData);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        console.warn(`[SECURITY] Zod validation failed from ${identifier}:`, error.errors);
+        apiLogger.warn(`[SECURITY] Zod validation failed from ${identifier}:`, error.errors);
         return NextResponse.json(
           { 
             success: false, 
@@ -134,7 +135,7 @@ export async function POST(request: NextRequest) {
     // Fallback to existing validation for compatibility
     const validation = inputValidator.validateErrorReport(errorData);
     if (!validation.success) {
-      console.warn(`[SECURITY] Legacy validation failed from ${identifier}: ${validation.error}`);
+      apiLogger.warn(`[SECURITY] Legacy validation failed from ${identifier}: ${validation.error}`);
       return NextResponse.json(
         { 
           success: false, 
@@ -154,7 +155,7 @@ export async function POST(request: NextRequest) {
         const urlObj = new URL(sanitizedData.url);
         // Only allow same origin or HTTPS URLs
         if (urlObj.protocol !== 'https:' && urlObj.protocol !== 'http:') {
-          console.warn(`[SECURITY] Suspicious URL protocol from ${identifier}: ${urlObj.protocol}`);
+          apiLogger.warn(`[SECURITY] Suspicious URL protocol from ${identifier}: ${urlObj.protocol}`);
           return NextResponse.json(
             { 
               success: false, 
@@ -165,7 +166,7 @@ export async function POST(request: NextRequest) {
           );
         }
       } catch (urlError) {
-        console.warn(`[SECURITY] Invalid URL from ${identifier}:`, urlError);
+        apiLogger.warn(`[SECURITY] Invalid URL from ${identifier}:`, urlError);
         return NextResponse.json(
           { 
             success: false, 
@@ -181,7 +182,7 @@ export async function POST(request: NextRequest) {
     const errorId = `err_${Date.now()}_${crypto.randomUUID().substring(0, 8)}`;
     
     // Log sanitized error data securely
-    console.error('[ERROR REPORT] Received sanitized error:', {
+    apiLogger.error('[ERROR REPORT] Received sanitized error:', {
       errorId,
       requestId,
       timestamp: new Date().toISOString(),
@@ -259,7 +260,7 @@ export async function POST(request: NextRequest) {
     );
     
   } catch (error) {
-    console.error(`[SECURITY] Error report processing failed for ${identifier}:`, {
+    apiLogger.error(`[SECURITY] Error report processing failed for ${identifier}:`, {
       requestId,
       error: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack?.substring(0, 500) : undefined
@@ -341,7 +342,7 @@ export async function OPTIONS(request: NextRequest) {
     corsHeaders['Access-Control-Allow-Origin'] = allowedOrigins[0] || 'null';
   } else {
     // Reject unauthorized origins
-    console.warn(`[SECURITY] CORS preflight rejected for origin: ${origin}`);
+    apiLogger.warn(`[SECURITY] CORS preflight rejected for origin: ${origin}`);
     corsHeaders['Access-Control-Allow-Origin'] = 'null';
   }
 

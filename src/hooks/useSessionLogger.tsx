@@ -4,6 +4,7 @@ import React, { useEffect, useCallback, useRef } from "react";
 import { SessionLogger, getSessionLogger } from "@/lib/logging/sessionLogger";
 import { SessionReportGenerator } from "@/lib/logging/sessionReportGenerator";
 import { SessionPersistence } from "@/lib/logging/sessionPersistence";
+import { logger } from '@/lib/logger';
 import {
   InteractionType,
   InteractionData,
@@ -308,7 +309,7 @@ export function useSessionLogger(
         sessionLoggerRef.current,
       );
 
-      console.log("Session loaded:", sessionId);
+      logger.info("Session loaded:", sessionId);
     }
   }, []);
 

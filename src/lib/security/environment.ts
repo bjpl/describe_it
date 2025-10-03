@@ -1,3 +1,5 @@
+import { securityLogger } from '@/lib/logger';
+
 /**
  * Environment Configuration and Security Settings
  * Manages environment-specific security configurations
@@ -188,11 +190,11 @@ export const environmentConfig = EnvironmentConfig.getInstance();
 // Validate configuration on load
 const validation = environmentConfig.validateConfiguration();
 if (!validation.valid) {
-  console.warn('[SECURITY] Environment configuration issues:', validation.issues);
+  securityLogger.warn('[SECURITY] Environment configuration issues:', validation.issues);
   
   // In production, these should be treated as errors
   if (process.env.NODE_ENV === 'production') {
-    console.error('[SECURITY] Critical configuration issues in production environment');
+    securityLogger.error('[SECURITY] Critical configuration issues in production environment');
     // In a real application, you might want to exit the process
     // process.exit(1);
   }

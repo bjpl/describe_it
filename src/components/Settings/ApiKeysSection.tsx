@@ -19,6 +19,7 @@ import {
 import { useSettings } from '@/hooks/useSettings';
 import { settingsManager } from '@/lib/settings/settingsManager';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface ApiKeyConfig {
   id: string;
@@ -143,7 +144,7 @@ export function ApiKeysSection() {
   }, [updateSection, validation, testApiKey]);
 
   const handleSave = useCallback(async () => {
-    console.log('[ApiKeysSection] Starting save operation');
+    logger.info('[ApiKeysSection] Starting save operation');
     setSaveStatus('saving');
     
     try {
@@ -160,7 +161,7 @@ export function ApiKeysSection() {
         throw new Error('Failed to save settings locally');
       }
       
-      console.log('[ApiKeysSection] Settings saved to localStorage');
+      logger.info('[ApiKeysSection] Settings saved to localStorage');
       
       // Optional: Save to cloud if authenticated
       try {
@@ -168,7 +169,7 @@ export function ApiKeysSection() {
         if (authUser) {
           const user = safeParse(authUser);
           if (user?.id) {
-            console.log('[ApiKeysSection] Attempting cloud save for user:', user.email);
+            logger.info('[ApiKeysSection] Attempting cloud save for user:', user.email);
             
             const cloudTimeout = new Promise((_, reject) => 
               setTimeout(() => reject(new Error('Cloud save timed out')), 3000)
@@ -186,20 +187,20 @@ export function ApiKeysSection() {
             const response = await Promise.race([cloudPromise, cloudTimeout]) as Response;
             
             if (!response.ok) {
-              console.warn('[ApiKeysSection] Cloud save failed, but local save succeeded');
+              logger.warn('[ApiKeysSection] Cloud save failed, but local save succeeded');
             } else {
-              console.log('[ApiKeysSection] Cloud save successful');
+              logger.info('[ApiKeysSection] Cloud save successful');
             }
           }
         }
       } catch (cloudError) {
         // Cloud save is optional, don't fail the whole operation
-        console.warn('[ApiKeysSection] Cloud save failed:', cloudError);
+        logger.warn('[ApiKeysSection] Cloud save failed:', cloudError);
       }
 
       // Trigger Unsplash service update
       if (settings.apiKeys.unsplash) {
-        console.log('[ApiKeysSection] Updating Unsplash service with new API key');
+        logger.info('[ApiKeysSection] Updating Unsplash service with new API key');
         // Dispatch a custom event to notify the Unsplash service
         window.dispatchEvent(new CustomEvent('apiKeysUpdated', { 
           detail: { unsplash: settings.apiKeys.unsplash } 
@@ -207,12 +208,12 @@ export function ApiKeysSection() {
       }
 
       setSaveStatus('saved');
-      console.log('[ApiKeysSection] Save operation completed successfully');
+      logger.info('[ApiKeysSection] Save operation completed successfully');
       
       // Reset status after showing success
       setTimeout(() => setSaveStatus('idle'), 2000);
     } catch (error: any) {
-      console.error('[ApiKeysSection] Save operation failed:', error);
+      logger.error('[ApiKeysSection] Save operation failed:', error);
       setSaveStatus('error');
       
       // Show error for longer

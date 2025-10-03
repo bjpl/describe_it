@@ -6,6 +6,7 @@ import { User, Settings, LogOut, KeyRound, ChevronDown } from 'lucide-react';
 import { AuthModal } from './AuthModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import { safeParse, safeStringify, safeParseLocalStorage } from '@/lib/utils/json-safe';
+import { authLogger } from '@/lib/logger';
 
 // Custom auth state interface
 interface AuthStateDetail {
@@ -51,7 +52,7 @@ export function UserMenu() {
 
   // Custom event handler for auth state changes
   const handleAuthChange = useCallback((e: CustomEvent<AuthStateDetail>) => {
-    console.log('[UserMenu] Custom auth event received:', e.detail);
+    authLogger.info('[UserMenu] Custom auth event received:', e.detail);
     const { isAuthenticated: authState, user: userData, profile: profileData } = e.detail;
     
     // Force immediate UI update
@@ -91,7 +92,7 @@ export function UserMenu() {
             
             // Only update if there's a meaningful change
             if (hasToken !== localIsAuthenticated) {
-              console.log('[UserMenu] Polling detected auth change:', hasToken);
+              authLogger.info('[UserMenu] Polling detected auth change:', hasToken);
               setLocalIsAuthenticated(hasToken);
               setLocalUser(storedUser);
               
@@ -102,20 +103,20 @@ export function UserMenu() {
               }
             }
           } else {
-            console.error('[UserMenu] Failed to parse stored auth data');
+            authLogger.error('[UserMenu] Failed to parse stored auth data');
             localStorage.removeItem('describe-it-auth');
             setLocalIsAuthenticated(false);
             setLocalUser(null);
           }
         } else if (localIsAuthenticated) {
           // No stored auth but local state says authenticated - clear it
-          console.log('[UserMenu] Polling detected sign out');
+          authLogger.info('[UserMenu] Polling detected sign out');
           setLocalIsAuthenticated(false);
           setLocalUser(null);
           setLocalProfile(null);
         }
       } catch (error) {
-        console.error('[UserMenu] Polling error:', error);
+        authLogger.error('[UserMenu] Polling error:', error);
       }
     }, 1000); // Check every second
 
@@ -136,7 +137,7 @@ export function UserMenu() {
             const parsedData = safeParse(stored, null);
             if (parsedData && parsedData.access_token) {
               const { access_token, user: storedUser } = parsedData;
-              console.log('[UserMenu] Recent auth success detected, updating UI');
+              authLogger.info('[UserMenu] Recent auth success detected, updating UI');
               setLocalIsAuthenticated(true);
               setLocalUser(storedUser);
               setIsLoading(false);
@@ -147,7 +148,7 @@ export function UserMenu() {
                 detail: { isAuthenticated: true, user: storedUser }
               }));
             } else {
-              console.error('[UserMenu] Error parsing stored auth');
+              authLogger.error('[UserMenu] Error parsing stored auth');
               setIsLoading(false);
             }
           } else {
@@ -221,7 +222,7 @@ export function UserMenu() {
       divergences.push('localStorage has token but component shows unauthenticated');
     }
 
-    console.log('[UserMenu] State Analysis:', {
+    authLogger.info('[UserMenu] State Analysis:', {
       ...stateComparison,
       divergences,
       hasDivergences: divergences.length > 0
@@ -229,7 +230,7 @@ export function UserMenu() {
 
     // Log critical divergences as warnings
     if (divergences.length > 0) {
-      console.warn('[UserMenu] AUTH STATE DIVERGENCE DETECTED:', divergences);
+      authLogger.warn('[UserMenu] AUTH STATE DIVERGENCE DETECTED:', divergences);
     }
   }, [isAuthenticated, localIsAuthenticated, user, localUser, profile, localProfile, isLoading]);
 
@@ -254,7 +255,7 @@ export function UserMenu() {
       sessionStorage.removeItem('recent-auth-success');
       
     } catch (error) {
-      console.error('[UserMenu] Sign out error:', error);
+      authLogger.error('[UserMenu] Sign out error:', error);
     } finally {
       setIsLoading(false);
     }
@@ -298,7 +299,7 @@ export function UserMenu() {
             setIsLoading(false);
           }}
           onAuthSuccess={(authData) => {
-            console.log('[UserMenu] Auth success callback:', authData);
+            authLogger.info('[UserMenu] Auth success callback:', authData);
             
             // Immediate UI update
             setLocalIsAuthenticated(true);
@@ -441,7 +442,7 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
   }, [isOpen, getApiKeys]);
 
   const handleSave = async () => {
-    console.log('[ApiKeyModal] Starting save operation');
+    authLogger.info('[ApiKeyModal] Starting save operation');
     setLoading(true);
     try {
       // Add timeout protection
@@ -451,7 +452,7 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
       );
       
       const success = await Promise.race([savePromise, timeoutPromise]);
-      console.log('[ApiKeyModal] Save result:', success);
+      authLogger.info('[ApiKeyModal] Save result:', success);
       
       if (success) {
         // Also save to sessionStorage as backup
@@ -470,7 +471,7 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
         // Force refresh OpenAI service with new key
         const { openAIService } = await import('@/lib/api/openai');
         openAIService.refreshService();
-        console.log('[ApiKeyModal] OpenAI service refreshed with new key');
+        authLogger.info('[ApiKeyModal] OpenAI service refreshed with new key');
         
         setSaved(true);
         setTimeout(() => {
@@ -481,7 +482,7 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
         throw new Error('Failed to save API keys');
       }
     } catch (error: any) {
-      console.error('[ApiKeyModal] Failed to save API keys:', error);
+      authLogger.error('[ApiKeyModal] Failed to save API keys:', error);
       
       // Fallback: Save to sessionStorage directly
       try {
@@ -501,7 +502,7 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
           setSaved(false);
         }, 1500);
       } catch (fallbackError) {
-        console.error('[ApiKeyModal] Fallback save also failed:', fallbackError);
+        authLogger.error('[ApiKeyModal] Fallback save also failed:', fallbackError);
         alert('Failed to save API keys. Please try again.');
       }
     } finally {

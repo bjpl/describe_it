@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * Hive-Mind Coordination System - Agent Gamma-3 Implementation
  * Coordinates vocabulary data sharing with Alpha-1 and Delta-4
@@ -220,7 +222,7 @@ export class HiveCoordinator {
       try {
         listener(message);
       } catch (error) {
-        console.error("Error in coordination listener:", error);
+        logger.error("Error in coordination listener:", error);
       }
     });
   }
@@ -371,7 +373,7 @@ export class HiveCoordinator {
 
   private handleResponse(message: CoordinationMessage): void {
     // Handle responses to our requests
-    console.log(`Received response from ${message.from}:`, message.payload);
+    logger.info(`Received response from ${message.from}:`, message.payload);
   }
 
   private handleNotification(message: CoordinationMessage): void {
@@ -455,7 +457,7 @@ export class HiveCoordinator {
       const storedData = window.sessionStorage.getItem("gamma3-coordination");
       return storedData ? safeParse(storedData) : null;
     } catch (error) {
-      console.error("Error extracting stored vocabulary data:", error);
+      logger.error("Error extracting stored vocabulary data:", error);
       return null;
     }
   }
@@ -493,7 +495,7 @@ export class HiveCoordinator {
         }
       });
     } catch (error) {
-      console.error("Error cleaning up stored coordination:", error);
+      logger.error("Error cleaning up stored coordination:", error);
     }
   }
 

@@ -5,9 +5,10 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { safeParse, safeStringify } from '@/lib/utils/json-safe';
+import { apiLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
-  console.log('[SimpleSignup] Endpoint called');
+  apiLogger.info('[SimpleSignup] Endpoint called');
   
   try {
     const requestText = await request.text();
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     };
-    console.log('[SimpleSignup] Request body:', { email: body.email, hasPassword: !!body.password });
+    apiLogger.info('[SimpleSignup] Request body:', { email: body.email, hasPassword: !!body.password });
     
     const { email, password } = body;
     
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
     
-    console.log('[SimpleSignup] Environment check:', {
+    apiLogger.info('[SimpleSignup] Environment check:', {
       hasUrl: !!supabaseUrl,
       hasKey: !!supabaseKey,
       urlStart: supabaseUrl?.substring(0, 30)
@@ -50,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Make direct HTTP request to Supabase Auth API
     const signupUrl = `${supabaseUrl}/auth/v1/signup`;
     
-    console.log('[SimpleSignup] Calling Supabase:', signupUrl);
+    apiLogger.info('[SimpleSignup] Calling Supabase:', signupUrl);
     
     const response = await fetch(signupUrl, {
       method: 'POST',
@@ -69,7 +70,7 @@ export async function POST(request: NextRequest) {
     });
     
     const responseText = await response.text();
-    console.log('[SimpleSignup] Supabase response:', {
+    apiLogger.info('[SimpleSignup] Supabase response:', {
       status: response.status,
       statusText: response.statusText,
       body: responseText.substring(0, 200)
@@ -102,7 +103,7 @@ export async function POST(request: NextRequest) {
     });
     
   } catch (error: any) {
-    console.error('[SimpleSignup] Unexpected error:', error);
+    apiLogger.error('[SimpleSignup] Unexpected error:', error);
     return NextResponse.json(
       { 
         error: 'Server error during signup',

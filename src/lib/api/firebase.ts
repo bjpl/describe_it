@@ -1,3 +1,5 @@
+import { apiLogger } from '@/lib/logger';
+
 /**
  * Firebase Configuration (Alternative to Supabase)
  * Currently using Supabase as the primary database
@@ -23,27 +25,27 @@ export class FirebaseService {
 
   constructor() {
     // Currently not using Firebase - using Supabase instead
-    console.log('Firebase service initialized in compatibility mode');
+    apiLogger.info('Firebase service initialized in compatibility mode');
   }
 
   // Mock authentication methods
   async signIn(email: string, password: string): Promise<{ success: boolean; error?: string }> {
-    console.warn('Firebase auth not implemented - using demo mode');
+    apiLogger.warn('Firebase auth not implemented - using demo mode');
     return { success: false, error: 'Firebase auth not configured' };
   }
 
   async signUp(email: string, password: string): Promise<{ success: boolean; error?: string }> {
-    console.warn('Firebase auth not implemented - using demo mode');
+    apiLogger.warn('Firebase auth not implemented - using demo mode');
     return { success: false, error: 'Firebase auth not configured' };
   }
 
   async signOut(): Promise<void> {
-    console.log('Firebase signOut called (no-op in compatibility mode)');
+    apiLogger.info('Firebase signOut called (no-op in compatibility mode)');
   }
 
   // Mock Firestore methods
   async collection(name: string) {
-    console.warn(`Firestore collection '${name}' not available - using Supabase instead`);
+    apiLogger.warn(`Firestore collection '${name}' not available - using Supabase instead`);
     return {
       doc: () => ({ get: () => null, set: () => null, update: () => null, delete: () => null }),
       add: () => null,

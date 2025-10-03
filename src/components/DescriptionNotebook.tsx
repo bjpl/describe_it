@@ -13,8 +13,9 @@ import {
 } from "@/types";
 import { StyleSelector } from "./StyleSelector";
 import { LanguageToggles } from "./LanguageToggles";
-import {
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
+import {
   performanceProfiler,
   useRenderCount,
   shallowCompare,
@@ -153,7 +154,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
           onDescriptionUpdate(style, englishText, spanishText);
         }
       } catch (error) {
-        console.error("Generation error:", error);
+        logger.error("Generation error:", error);
         const fallbackEnglish = `This is a beautiful image described in ${style} style.`;
         const fallbackSpanish = `Esta es una imagen hermosa descrita en estilo ${style}.`;
 
@@ -184,7 +185,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
         setCopiedText(`${activeStyle}-${type}`);
         setTimeout(() => setCopiedText(null), 2000);
       } catch (error) {
-        console.error("Failed to copy text:", error);
+        logger.error("Failed to copy text:", error);
       }
     },
     [activeStyle],

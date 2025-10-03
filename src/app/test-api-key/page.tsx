@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { logger } from '@/lib/logger';
 
 export default function TestAPIKey() {
   const [results, setResults] = useState<any>(null);
@@ -49,7 +50,7 @@ export default function TestAPIKey() {
       });
       
     } catch (error) {
-      console.error('Test failed:', error);
+      logger.error('Test failed:', error);
       setResults({
         error: error instanceof Error ? error.message : 'Unknown error'
       });

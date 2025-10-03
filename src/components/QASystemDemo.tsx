@@ -6,6 +6,7 @@ import useQASystem from "@/hooks/useQASystem";
 import { QuestionNavigator } from "./QuestionNavigator";
 import { QuestionCounter } from "./QuestionCounter";
 import { ShowAnswer } from "./ShowAnswer";
+import { logger } from '@/lib/logger';
 import {
   performanceProfiler,
   useRenderCount,
@@ -89,11 +90,11 @@ const QASystemDemoBase: React.FC<QASystemDemoProps> = ({
       allowHints: true,
     },
     onSessionComplete: useCallback((sessionData: any) => {
-      console.log("Session completed:", sessionData);
+      logger.info("Session completed:", sessionData);
       setIsStarted(false);
     }, []),
     onQuestionAnswered: useCallback((response: any) => {
-      console.log("Question answered:", response);
+      logger.info("Question answered:", response);
     }, []),
   });
 

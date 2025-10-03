@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { env, isDevelopment } from '@/config/env';
+import { securityLogger } from '@/lib/logger';
 
 // Rate limiting configuration
 const RATE_LIMITS = {
@@ -185,7 +186,7 @@ export class ApiKeyManager {
    */
   getOpenAIKey(): string | null {
     if (!env?.OPENAI_API_KEY) {
-      console.warn('OpenAI API key not configured - demo mode active');
+      securityLogger.warn('OpenAI API key not configured - demo mode active');
       return null;
     }
     
@@ -197,7 +198,7 @@ export class ApiKeyManager {
    */
   getUnsplashKey(): string | null {
     if (!env?.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY) {
-      console.warn('Unsplash API key not configured - demo mode active');
+      securityLogger.warn('Unsplash API key not configured - demo mode active');
       return null;
     }
     
@@ -292,9 +293,9 @@ export function logSecureError(error: any, context: string): void {
 
   // Don't log full error details in production
   if (isDevelopment()) {
-    console.error('Secure Error Log:', sanitizedError, error.stack);
+    securityLogger.error('Secure Error Log:', sanitizedError, error.stack);
   } else {
-    console.error('Secure Error Log:', sanitizedError);
+    securityLogger.error('Secure Error Log:', sanitizedError);
   }
 }
 

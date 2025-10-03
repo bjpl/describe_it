@@ -23,6 +23,7 @@ import QAExporter, {
 } from "../lib/export/qaExporter";
 import { getCurrentTimestamp } from "../lib/export/csvExporter";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface Question {
   id: string;
@@ -156,7 +157,7 @@ export const EnhancedQAPanel: React.FC<EnhancedQAPanelProps> = ({
         throw new Error(data.message || "Failed to generate questions");
       }
     } catch (err) {
-      console.error("Error generating questions:", err);
+      logger.error("Error generating questions:", err);
       setError(
         err instanceof Error ? err.message : "Failed to generate questions",
       );

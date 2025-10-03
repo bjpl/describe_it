@@ -17,6 +17,7 @@ import {
 import { UserPreferences } from "../../types";
 import { useStableCallback, useCleanupManager, createShallowSelector } from "../utils/storeUtils";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 // Add missing types for this store
 export type LearningLevel = DifficultyLevel;
@@ -243,7 +244,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
                   state.currentSession = savedSession;
                 });
               } catch (error) {
-                console.error("Failed to save session to database:", error);
+                logger.error("Failed to save session to database:", error);
               }
             }
           },
@@ -307,7 +308,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
                   updatedSession,
                 );
               } catch (error) {
-                console.error("Failed to update session in database:", error);
+                logger.error("Failed to update session in database:", error);
               }
             }
           },
@@ -329,7 +330,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
                   status: "abandoned", // 'paused' not supported in schema
                 });
               } catch (error) {
-                console.error("Failed to pause session in database:", error);
+                logger.error("Failed to pause session in database:", error);
               }
             }
           },
@@ -352,7 +353,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
                   status: "active",
                 });
               } catch (error) {
-                console.error("Failed to resume session in database:", error);
+                logger.error("Failed to resume session in database:", error);
               }
             }
           },
@@ -482,7 +483,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
                 updated_at: new Date().toISOString(),
               });
             } catch (error) {
-              console.error("Failed to save session:", error);
+              logger.error("Failed to save session:", error);
             }
           },
 
@@ -496,7 +497,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
                 state.recentSessions = sessions;
               });
             } catch (error) {
-              console.error("Failed to load recent sessions:", error);
+              logger.error("Failed to load recent sessions:", error);
             }
           },
 
@@ -551,7 +552,7 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
 
               return true;
             } catch (error) {
-              console.error("Failed to import session data:", error);
+              logger.error("Failed to import session data:", error);
               return false;
             }
           },

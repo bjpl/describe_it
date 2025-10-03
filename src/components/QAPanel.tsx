@@ -19,6 +19,7 @@ import {
 } from "../lib/export/csvExporter";
 import { QAProgressIndicator, TextContentSkeleton } from "./ProgressIndicator";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface Question {
   id: string;
@@ -157,7 +158,7 @@ const QAPanel = memo<QAPanelProps>(function QAPanel({
 
       setQuestions(generatedQuestions);
     } catch (err) {
-      console.error("Error generating questions:", err);
+      logger.error("Error generating questions:", err);
       setError(
         err instanceof Error ? err.message : "Failed to generate questions",
       );

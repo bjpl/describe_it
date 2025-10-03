@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface ProgressStats {
   total_points: number;
@@ -64,7 +65,7 @@ function setStorageItem(key: string, value: any): void {
   try {
     localStorage.setItem(key, safeStringify(value));
   } catch (error) {
-    console.error("Failed to save to localStorage:", error);
+    logger.error("Failed to save to localStorage:", error);
   }
 }
 

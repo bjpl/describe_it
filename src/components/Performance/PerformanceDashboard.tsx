@@ -21,6 +21,7 @@ import {
 import { useWebVitals } from "./PerformanceMonitor";
 import { optimizedSupabase } from "@/lib/api/optimizedSupabase";
 import { cacheManager } from "./AdvancedCaching";
+import { performanceLogger } from '@/lib/logger';
 
 interface PerformanceData {
   webVitals: {
@@ -138,7 +139,7 @@ export const PerformanceDashboard: React.FC = () => {
         // Generate alerts based on thresholds
         generateAlerts(performanceData);
       } catch (error) {
-        console.error("Failed to collect performance data:", error);
+        performanceLogger.error("Failed to collect performance data:", error);
       }
     };
 

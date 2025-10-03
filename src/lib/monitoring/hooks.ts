@@ -7,6 +7,7 @@ import { logger } from './logger';
 import { metrics } from './metrics';
 import { errorTracker } from './errorTracking';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface MonitoringHooksConfig {
   enableLogging: boolean;
@@ -320,7 +321,7 @@ export class MonitoringHooks {
       try {
         callback(this.config);
       } catch (error) {
-        console.error('Error notifying config subscriber:', error);
+        logger.error('Error notifying config subscriber:', error);
       }
     });
 
@@ -393,7 +394,7 @@ export class MonitoringHooks {
         })
       });
     } catch (error) {
-      console.error('Failed to send webhook notification:', error);
+      logger.error('Failed to send webhook notification:', error);
     }
   }
 

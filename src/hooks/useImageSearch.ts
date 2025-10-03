@@ -2,6 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { UnsplashImage } from "@/types";
 import { logger, logUserAction, devLog } from "@/lib/logger";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 // Enhanced error types for better error handling
 interface SearchError {
@@ -155,10 +156,10 @@ export function useImageSearch() {
             const keys = safeParse(apiKeysBackupStr);
             apiKey = keys.unsplash;
             if (apiKey) {
-              console.log('[useImageSearch] Using API key from backup');
+              logger.info('[useImageSearch] Using API key from backup');
             }
           } catch (e) {
-            console.warn('[useImageSearch] Failed to parse api-keys-backup:', e);
+            logger.warn('[useImageSearch] Failed to parse api-keys-backup:', e);
           }
         }
         
@@ -170,10 +171,10 @@ export function useImageSearch() {
               const settings = safeParse(settingsStr);
               apiKey = settings.data?.apiKeys?.unsplash || settings.apiKeys?.unsplash;
               if (apiKey) {
-                console.log('[useImageSearch] Using API key from settings');
+                logger.info('[useImageSearch] Using API key from settings');
               }
             } catch (e) {
-              console.warn('[useImageSearch] Failed to parse app-settings:', e);
+              logger.warn('[useImageSearch] Failed to parse app-settings:', e);
             }
           }
         }
@@ -181,12 +182,12 @@ export function useImageSearch() {
       
       if (apiKey) {
         url.searchParams.set("api_key", apiKey);
-        console.log('[useImageSearch] API key added to request');
+        logger.info('[useImageSearch] API key added to request');
       } else {
-        console.log('[useImageSearch] No API key - using demo mode');
+        logger.info('[useImageSearch] No API key - using demo mode');
       }
 
-      console.log("[useImageSearch] Making API request to:", url.toString());
+      logger.info("[useImageSearch] Making API request to:", url.toString());
 
       const response = await fetch(url.toString(), {
         signal: abortControllerRef.current.signal,
@@ -204,7 +205,7 @@ export function useImageSearch() {
 
       const data = await response.json();
 
-      console.log("[useImageSearch] API response:", {
+      logger.info("[useImageSearch] API response:", {
         hasImages: !!(data.images || data.results),
         imageCount: (data.images || data.results || []).length,
         totalPages: data.totalPages || data.total_pages
@@ -231,26 +232,26 @@ export function useImageSearch() {
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
       try {
-        console.log(`[useImageSearch] Retry attempt ${attempt + 1}`);
+        logger.info(`[useImageSearch] Retry attempt ${attempt + 1}`);
         retryCountRef.current = attempt;
         const result = await makeSearchRequest(query, page);
-        console.log("[useImageSearch] Request successful on attempt", attempt + 1);
+        logger.info("[useImageSearch] Request successful on attempt", attempt + 1);
         return result;
       } catch (error) {
-        console.error(`[useImageSearch] Request failed on attempt ${attempt + 1}:`, error);
+        logger.error(`[useImageSearch] Request failed on attempt ${attempt + 1}:`, error);
         lastError = error;
 
         const searchError = createSearchError(error);
 
         // Don't retry if error is not retryable or we've exceeded max retries
         if (!searchError.retryable || attempt === MAX_RETRIES) {
-          console.log("[useImageSearch] Not retrying - retryable:", searchError.retryable, "attempt:", attempt, "MAX_RETRIES:", MAX_RETRIES);
+          logger.info("[useImageSearch] Not retrying - retryable:", searchError.retryable, "attempt:", attempt, "MAX_RETRIES:", MAX_RETRIES);
           throw error;
         }
 
         // Wait before retrying with progressive backoff
         if (attempt < MAX_RETRIES) {
-          console.log(`[useImageSearch] Waiting ${RETRY_DELAYS[attempt]}ms before retry`);
+          logger.info(`[useImageSearch] Waiting ${RETRY_DELAYS[attempt]}ms before retry`);
           await new Promise((resolve) =>
             setTimeout(resolve, RETRY_DELAYS[attempt]),
           );
@@ -263,24 +264,24 @@ export function useImageSearch() {
 
   const searchImages = useCallback(
     async (query: string, page: number = 1, filters?: any) => {
-      console.log("[useImageSearch] searchImages called with:", { query, page, filters });
+      logger.info("[useImageSearch] searchImages called with:", { query, page, filters });
       
       if (!query.trim()) {
-        console.log("[useImageSearch] Empty query, clearing error and returning");
+        logger.info("[useImageSearch] Empty query, clearing error and returning");
         setError("Please enter a search query");
         setLoading({ isLoading: false, message: "" });
         return;
       }
 
-      console.log("[useImageSearch] Starting search, setting loading state");
+      logger.info("[useImageSearch] Starting search, setting loading state");
       setLoading({ isLoading: true, message: "Searching images..." });
       setError(null);
       retryCountRef.current = 0;
 
       try {
-        console.log("[useImageSearch] Calling retryRequest");
+        logger.info("[useImageSearch] Calling retryRequest");
         const data = await retryRequest(query, page);
-        console.log("[useImageSearch] retryRequest completed, data received:", {
+        logger.info("[useImageSearch] retryRequest completed, data received:", {
           hasData: !!data,
           hasImages: !!(data?.images || data?.results),
           imageCount: (data?.images || data?.results || []).length
@@ -299,10 +300,10 @@ export function useImageSearch() {
         setSearchParams({ query, page, per_page: 20 });
         setTotalPages(responseTotalPages);
         
-        console.log("[useImageSearch] Search successful, clearing loading state");
+        logger.info("[useImageSearch] Search successful, clearing loading state");
         setLoading({ isLoading: false, message: "" });
       } catch (error) {
-        console.error("[useImageSearch] Search failed with error:", error);
+        logger.error("[useImageSearch] Search failed with error:", error);
         
         logger.error(
           "Image search failed",
@@ -317,7 +318,7 @@ export function useImageSearch() {
 
         const searchError = createSearchError(error);
 
-        console.log("[useImageSearch] Setting error and clearing loading state");
+        logger.info("[useImageSearch] Setting error and clearing loading state");
         setLoading({ isLoading: false, message: "" });
         setError(searchError.message);
       }

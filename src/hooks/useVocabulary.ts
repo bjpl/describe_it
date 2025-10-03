@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { normalizeLegacyVocabularyItem } from "../types/unified";
+import { logger } from '@/lib/logger';
 import type {
   VocabularyItem,
   VocabularyItemUI,
@@ -325,7 +326,7 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
         throw new Error("Unable to connect to vocabulary database");
       }
     } catch (err) {
-      console.error("Vocabulary loading error:", err);
+      logger.error("Vocabulary loading error:", err);
       setError(
         err instanceof Error ? err.message : "Failed to load vocabulary",
       );

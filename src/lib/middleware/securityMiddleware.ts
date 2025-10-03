@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { rateLimiter } from '@/lib/security/rateLimiter';
 import { inputValidator } from '@/lib/security/inputValidation';
+import { securityLogger } from '@/lib/logger';
 
 // Security configuration
 interface SecurityConfig {
@@ -115,7 +116,7 @@ export class SecurityMiddleware {
           response.headers.set('Access-Control-Allow-Origin', this.config.allowedOrigins[0] || 'null');
         } else {
           // Reject unauthorized origins
-          console.warn(`[SECURITY] CORS preflight rejected for origin: ${origin}`);
+          securityLogger.warn(`[SECURITY] CORS preflight rejected for origin: ${origin}`);
           return new NextResponse(null, { status: 403 });
         }
       }

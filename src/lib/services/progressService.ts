@@ -6,6 +6,7 @@ import { withRetry, RetryConfig } from "../utils/error-retry";
 import { supabaseService } from "../api/supabase";
 import { getEnvironment } from "../../config/env";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface UserProgress {
   userId: string;
@@ -200,7 +201,7 @@ export class ProgressService {
     try {
       await this.saveSessionToDatabase(sessionData);
     } catch (error) {
-      console.warn("Failed to save session to database:", error);
+      logger.warn("Failed to save session to database:", error);
     }
 
     return sessionId;
@@ -243,7 +244,7 @@ export class ProgressService {
 
       this.clearCacheByPattern(`session_${sessionId}`);
     } catch (error) {
-      console.warn("Failed to update session progress:", error);
+      logger.warn("Failed to update session progress:", error);
     }
   }
 
@@ -300,7 +301,7 @@ export class ProgressService {
       this.clearCacheByPattern("progress_");
       return updatedSession as unknown as SessionProgress | null;
     } catch (error) {
-      console.warn("Failed to end session:", error);
+      logger.warn("Failed to end session:", error);
       return null;
     }
   }
@@ -342,7 +343,7 @@ export class ProgressService {
       this.setCache(cacheKey, result);
       return result as unknown as UserProgress | null;
     } catch (error) {
-      console.warn("Failed to get user progress:", error);
+      logger.warn("Failed to get user progress:", error);
       return null;
     }
   }
@@ -384,7 +385,7 @@ export class ProgressService {
       this.setCache(cacheKey, metrics, 600000); // 10 minutes
       return metrics;
     } catch (error) {
-      console.warn("Failed to get learning metrics:", error);
+      logger.warn("Failed to get learning metrics:", error);
       return {
         dailyStats: [],
         weeklyProgress: {
@@ -469,7 +470,7 @@ export class ProgressService {
       this.setCache(cacheKey, result);
       return result as unknown as SessionProgress[];
     } catch (error) {
-      console.warn("Failed to get user sessions:", error);
+      logger.warn("Failed to get user sessions:", error);
       return [];
     }
   }
@@ -507,7 +508,7 @@ export class ProgressService {
       this.clearCacheByPattern(`user_progress_${userId}`);
       return true;
     } catch (error) {
-      console.warn("Failed to award badge:", error);
+      logger.warn("Failed to award badge:", error);
       return false;
     }
   }
@@ -548,7 +549,7 @@ export class ProgressService {
 
       this.clearCacheByPattern(`user_progress_${userId}`);
     } catch (error) {
-      console.warn("Failed to update achievement progress:", error);
+      logger.warn("Failed to update achievement progress:", error);
     }
   }
 
@@ -577,7 +578,7 @@ export class ProgressService {
         await client.from("user_progress").insert([initialProgress]);
       }
     } catch (error) {
-      console.warn("Failed to save initial progress:", error);
+      logger.warn("Failed to save initial progress:", error);
     }
 
     return initialProgress;
@@ -634,7 +635,7 @@ export class ProgressService {
           .eq("userId", userId);
       }
     } catch (error) {
-      console.warn("Failed to update user progress:", error);
+      logger.warn("Failed to update user progress:", error);
     }
   }
 
@@ -654,7 +655,7 @@ export class ProgressService {
         return data;
       }
     } catch (error) {
-      console.warn("Failed to get session:", error);
+      logger.warn("Failed to get session:", error);
     }
     return null;
   }
@@ -667,7 +668,7 @@ export class ProgressService {
         .insert([session]);
 
       if (error) {
-        console.warn("Failed to save session to database:", error);
+        logger.warn("Failed to save session to database:", error);
       }
     }
   }

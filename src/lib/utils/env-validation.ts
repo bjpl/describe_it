@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 // Environment validation utility for better developer experience
 
 interface EnvStatus {
@@ -134,26 +136,26 @@ export function logEnvironmentStatus(): void {
   console.group("🔧 Environment Status");
 
   if (status.isValid) {
-    console.log("✅ All required environment variables are set");
+    logger.info("✅ All required environment variables are set");
   } else {
-    console.warn("❌ Missing required environment variables:", status.missing);
+    logger.warn("❌ Missing required environment variables:", status.missing);
   }
 
   if (status.warnings.length > 0) {
     console.group("⚠️  Warnings:");
-    status.warnings.forEach((warning) => console.warn(`  • ${warning}`));
+    status.warnings.forEach((warning) => logger.warn(`  • ${warning}`));
     console.groupEnd();
   }
 
   if (status.recommendations.length > 0) {
     console.group("💡 Recommendations:");
-    status.recommendations.forEach((rec) => console.info(`  • ${rec}`));
+    status.recommendations.forEach((rec) => logger.info(`  • ${rec}`));
     console.groupEnd();
   }
 
   if (!status.isValid || status.warnings.length > 0) {
-    console.info("\n📖 Run setup guide:");
-    console.info(getSetupInstructions());
+    logger.info("\n📖 Run setup guide:");
+    logger.info(getSetupInstructions());
   }
 
   console.groupEnd();

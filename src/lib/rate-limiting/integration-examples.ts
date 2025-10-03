@@ -9,6 +9,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withRateLimit, RateLimitMiddleware, QuickSetup } from './index';
 import { withBasicAuth } from '@/lib/middleware/withAuth';
 import type { AuthenticatedRequest } from '@/lib/middleware/auth';
+import { logger } from '@/lib/logger';
 
 /**
  * Example 1: Adding rate limiting to authentication endpoints
@@ -91,7 +92,7 @@ export function integrateCustomRateLimit() {
       bypassAdmin: true,
       onLimitExceeded: (req, result) => {
         // Custom logging or alerting
-        console.warn('Custom rate limit exceeded:', {
+        logger.warn('Custom rate limit exceeded:', {
           url: req.url,
           method: req.method,
           headers: Object.fromEntries(req.headers.entries()),
@@ -248,7 +249,7 @@ export function integrateWithDevelopmentMode() {
 
   // Conditional rate limiting based on environment
   if (process.env.NODE_ENV === 'development' && process.env.DISABLE_RATE_LIMITING === 'true') {
-    console.log('[Dev] Rate limiting disabled for development');
+    logger.info('[Dev] Rate limiting disabled for development');
     return handler;
   }
 

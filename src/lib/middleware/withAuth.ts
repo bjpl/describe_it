@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { validateAuth, checkRateLimit } from './auth';
+import { authLogger } from '@/lib/logger';
 
 export function withAuth(
   handler: (request: NextRequest, context?: any) => Promise<NextResponse>
@@ -24,7 +25,7 @@ export function withAuth(
       // Execute the handler
       return handler(request, context);
     } catch (error) {
-      console.error('Auth middleware error:', error);
+      authLogger.error('Auth middleware error:', error);
       return NextResponse.json(
         { error: 'Internal server error' },
         { status: 500 }

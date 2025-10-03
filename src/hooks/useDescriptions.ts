@@ -3,6 +3,7 @@ import { Description, DescriptionRequest } from "@/types";
 import { logger } from "@/lib/logger";
 import { useStableCallback, useCleanupManager } from "@/lib/utils/storeUtils";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 // Enhanced error types for better error handling
 interface DescriptionError {
@@ -143,7 +144,7 @@ export function useDescriptions(imageId: string) {
       const { apiKeyProvider } = await import('@/lib/api/keyProvider');
       const openAIConfig = apiKeyProvider.getServiceConfig('openai');
       
-      console.log('[useDescriptions] Sending API key to server:', {
+      logger.info('[useDescriptions] Sending API key to server:', {
         hasKey: !!openAIConfig.apiKey,
         keyLength: openAIConfig.apiKey?.length,
         keyPrefix: openAIConfig.apiKey?.substring(0, 10) + '...',

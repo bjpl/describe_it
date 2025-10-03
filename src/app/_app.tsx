@@ -1,9 +1,10 @@
 // This file enables Web Vitals tracking for the application
 import { getCLS, getFID, getFCP, getLCP, getTTFB, getINP } from 'web-vitals';
+import { logger } from '@/lib/logger';
 
 function sendToAnalytics(metric: any) {
   // Send to your analytics service
-  console.log('Web Vital:', metric);
+  logger.info('Web Vital:', metric);
   
   // Example: Send to Google Analytics
   if (typeof window !== 'undefined' && (window as any).gtag) {
@@ -46,7 +47,7 @@ export function reportWebVitals() {
     getTTFB(sendToAnalytics);
     getINP(sendToAnalytics);
   } catch (error) {
-    console.error('Failed to initialize Web Vitals reporting:', error);
+    logger.error('Failed to initialize Web Vitals reporting:', error);
   }
 }
 

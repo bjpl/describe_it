@@ -6,6 +6,7 @@
 import { VocabularySet, SavedPhrase } from "@/types/api";
 import { ReviewItem, StudyStatistics } from "../algorithms/spacedRepetition";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface StoredVocabularyData {
   vocabularySets: VocabularySet[];
@@ -70,7 +71,7 @@ export class VocabularyStorage {
       // Migrate data if needed
       return this.migrateData(data);
     } catch (error) {
-      console.error("Error loading vocabulary data:", error);
+      logger.error("Error loading vocabulary data:", error);
       return this.getDefaultData();
     }
   }
@@ -93,7 +94,7 @@ export class VocabularyStorage {
       localStorage.setItem(this.STORAGE_KEY, safeStringify(dataToSave));
       return true;
     } catch (error) {
-      console.error("Error saving vocabulary data:", error);
+      logger.error("Error saving vocabulary data:", error);
       return false;
     }
   }
@@ -262,7 +263,7 @@ export class VocabularyStorage {
 
       return this.saveData(migratedData);
     } catch (error) {
-      console.error("Error importing data:", error);
+      logger.error("Error importing data:", error);
       return false;
     }
   }
@@ -406,7 +407,7 @@ export class VocabularyStorage {
 
       return vocabularySet;
     } catch (error) {
-      console.error("Error importing CSV:", error);
+      logger.error("Error importing CSV:", error);
       return null;
     }
   }
@@ -421,7 +422,7 @@ export class VocabularyStorage {
         localStorage.setItem(this.BACKUP_KEY, currentData);
       }
     } catch (error) {
-      console.error("Error creating backup:", error);
+      logger.error("Error creating backup:", error);
     }
   }
 
@@ -437,7 +438,7 @@ export class VocabularyStorage {
       }
       return false;
     } catch (error) {
-      console.error("Error restoring backup:", error);
+      logger.error("Error restoring backup:", error);
       return false;
     }
   }
@@ -451,7 +452,7 @@ export class VocabularyStorage {
       localStorage.removeItem(this.BACKUP_KEY);
       return true;
     } catch (error) {
-      console.error("Error clearing data:", error);
+      logger.error("Error clearing data:", error);
       return false;
     }
   }

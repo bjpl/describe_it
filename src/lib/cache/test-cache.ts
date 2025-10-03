@@ -13,6 +13,7 @@ import {
 import { vercelKvCache } from "../api/vercel-kv";
 import { memoryCache } from "./memory-cache";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface CacheTestResult {
   success: boolean;
@@ -248,7 +249,7 @@ async function testSpecializedCache(
  * Run complete cache test suite
  */
 export async function runCacheTests(): Promise<CacheTestSuite> {
-  console.log("🧪 Starting cache system tests...");
+  logger.info("🧪 Starting cache system tests...");
 
   const [
     memoryResult,
@@ -302,41 +303,41 @@ export async function runCacheTests(): Promise<CacheTestSuite> {
   results.summary.overallSuccess = results.summary.failed === 0;
 
   // Log results
-  console.log("📊 Cache test results:");
-  console.log(
+  logger.info("📊 Cache test results:");
+  logger.info(
     `   Memory Cache: ${memoryResult.success ? "✅" : "❌"} (${memoryResult.responseTime.toFixed(2)}ms)`,
   );
-  console.log(
+  logger.info(
     `   Vercel KV: ${kvResult.success ? "✅" : "❌"} (${kvResult.responseTime.toFixed(2)}ms)`,
   );
-  console.log(
+  logger.info(
     `   Tiered Cache: ${tieredResult.success ? "✅" : "❌"} (${tieredResult.responseTime.toFixed(2)}ms)`,
   );
-  console.log(
+  logger.info(
     `   Image Cache: ${imagesResult.success ? "✅" : "❌"} (${imagesResult.responseTime.toFixed(2)}ms)`,
   );
-  console.log(
+  logger.info(
     `   Description Cache: ${descriptionsResult.success ? "✅" : "❌"} (${descriptionsResult.responseTime.toFixed(2)}ms)`,
   );
-  console.log(
+  logger.info(
     `   Q&A Cache: ${qaResult.success ? "✅" : "❌"} (${qaResult.responseTime.toFixed(2)}ms)`,
   );
-  console.log(
+  logger.info(
     `   Phrases Cache: ${phrasesResult.success ? "✅" : "❌"} (${phrasesResult.responseTime.toFixed(2)}ms)`,
   );
-  console.log(
+  logger.info(
     `   Summary: ${results.summary.passed}/${results.summary.totalTests} tests passed`,
   );
 
   if (!results.summary.overallSuccess) {
-    console.log("❌ Some cache tests failed:");
+    logger.info("❌ Some cache tests failed:");
     allResults
       .filter((r) => !r.success)
       .forEach((r) => {
-        console.log(`   ${r.provider}: ${r.error}`);
+        logger.info(`   ${r.provider}: ${r.error}`);
       });
   } else {
-    console.log("✅ All cache tests passed!");
+    logger.info("✅ All cache tests passed!");
   }
 
   return results;
@@ -351,7 +352,7 @@ export async function runCachePerformanceTest(
   memory: { avgTime: number; hitRate: number };
   tiered: { avgTime: number; hitRate: number };
 }> {
-  console.log(
+  logger.info(
     `🚀 Running cache performance test with ${iterations} iterations...`,
   );
 
@@ -397,11 +398,11 @@ export async function runCachePerformanceTest(
     },
   };
 
-  console.log(`📈 Performance test results:`);
-  console.log(
+  logger.info(`📈 Performance test results:`);
+  logger.info(
     `   Memory Cache: ${memoryAvg.toFixed(2)}ms avg, ${(results.memory.hitRate * 100).toFixed(1)}% hit rate`,
   );
-  console.log(
+  logger.info(
     `   Tiered Cache: ${tieredAvg.toFixed(2)}ms avg, ${(results.tiered.hitRate * 100).toFixed(1)}% hit rate`,
   );
 

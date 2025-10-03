@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * Robust JSON extraction and parsing utility for handling OpenAI API responses
  * that may contain markdown-wrapped JSON or mixed text content
@@ -70,7 +72,7 @@ export class RobustJSONParser {
 
         if (result.success) {
           if (logging) {
-            console.log(
+            logger.info(
               `✅ JSON parsed successfully using method: ${result.method}`,
             );
           }
@@ -82,7 +84,7 @@ export class RobustJSONParser {
         lastError =
           error instanceof Error ? error.message : "Parsing strategy failed";
         if (logging) {
-          console.warn(`❌ Strategy ${attempt + 1} failed:`, lastError);
+          logger.warn(`❌ Strategy ${attempt + 1} failed:`, lastError);
         }
       }
     }
@@ -90,7 +92,7 @@ export class RobustJSONParser {
     // Final fallback
     if (fallbackValue !== undefined) {
       if (logging) {
-        console.warn("🔄 Using fallback value due to parsing failure");
+        logger.warn("🔄 Using fallback value due to parsing failure");
       }
       return {
         success: true,

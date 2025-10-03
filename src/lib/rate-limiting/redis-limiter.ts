@@ -5,6 +5,7 @@
 
 import Redis from 'ioredis';
 import { recordRateLimitHit } from '../monitoring/prometheus';
+import { logger } from '@/lib/logger';
 
 export interface RateLimitConfig {
   windowSizeMs: number;
@@ -111,7 +112,7 @@ export class RedisRateLimiter {
         retryAfterMs
       };
     } catch (error) {
-      console.error('Redis rate limit check failed:', error);
+      logger.error('Redis rate limit check failed:', error);
       // Fail open - allow request if Redis is down
       return {
         allowed: true,
@@ -131,7 +132,7 @@ export class RedisRateLimiter {
       const blocked = await this.redis.get(key);
       return blocked === '1';
     } catch (error) {
-      console.error('Redis block check failed:', error);
+      logger.error('Redis block check failed:', error);
       return false;
     }
   }
@@ -144,7 +145,7 @@ export class RedisRateLimiter {
       const key = `${this.defaultConfig.keyPrefix}:${identifier}:blocked`;
       await this.redis.setex(key, Math.ceil(durationMs / 1000), '1');
     } catch (error) {
-      console.error('Redis manual block failed:', error);
+      logger.error('Redis manual block failed:', error);
     }
   }
 
@@ -156,7 +157,7 @@ export class RedisRateLimiter {
       const key = `${this.defaultConfig.keyPrefix}:${identifier}:blocked`;
       await this.redis.del(key);
     } catch (error) {
-      console.error('Redis unblock failed:', error);
+      logger.error('Redis unblock failed:', error);
     }
   }
 
@@ -172,7 +173,7 @@ export class RedisRateLimiter {
       await this.redis.zremrangebyscore(key, '-inf', windowStart);
       return await this.redis.zcard(key);
     } catch (error) {
-      console.error('Redis usage check failed:', error);
+      logger.error('Redis usage check failed:', error);
       return 0;
     }
   }
@@ -185,7 +186,7 @@ export class RedisRateLimiter {
       const key = `${this.defaultConfig.keyPrefix}:${identifier}`;
       await this.redis.del(key);
     } catch (error) {
-      console.error('Redis reset failed:', error);
+      logger.error('Redis reset failed:', error);
     }
   }
 
@@ -213,7 +214,7 @@ export class RedisRateLimiter {
         totalRequests: currentCount
       };
     } catch (error) {
-      console.error('Redis info check failed:', error);
+      logger.error('Redis info check failed:', error);
       return {
         remainingRequests: finalConfig.maxRequests,
         resetTimeMs: now + finalConfig.windowSizeMs,
@@ -369,7 +370,7 @@ export function rateLimitMiddleware(
 
       next();
     } catch (error) {
-      console.error('Rate limiting middleware error:', error);
+      logger.error('Rate limiting middleware error:', error);
       // Fail open - continue if rate limiting fails
       next();
     }

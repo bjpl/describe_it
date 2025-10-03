@@ -29,6 +29,7 @@ import {
 import { VocabularyManager } from "@/lib/services/vocabularyManager";
 import GammaVocabularyExtractor from "./GammaVocabularyExtractor";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface EnhancedVocabularyPanelProps {
   selectedImage: any;
@@ -130,7 +131,7 @@ const EnhancedVocabularyPanel: React.FC<EnhancedVocabularyPanelProps> = ({
           },
         }));
       } catch (error) {
-        console.error("Error loading vocabulary stats:", error);
+        logger.error("Error loading vocabulary stats:", error);
       }
     };
 
@@ -247,7 +248,7 @@ const EnhancedVocabularyPanel: React.FC<EnhancedVocabularyPanelProps> = ({
         }
       }
     } catch (error) {
-      console.error("Quick extraction error:", error);
+      logger.error("Quick extraction error:", error);
     }
   }, [
     descriptionText,
@@ -284,7 +285,7 @@ const EnhancedVocabularyPanel: React.FC<EnhancedVocabularyPanelProps> = ({
         );
       }
     } catch (error) {
-      console.error("Export error:", error);
+      logger.error("Export error:", error);
       alert("Error exporting vocabulary. Please try again.");
     }
   }, [vocabularyManager, panelState.vocabularyStats]);

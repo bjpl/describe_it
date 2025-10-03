@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * Safe JSON parsing and stringification utilities
  * Prevents runtime crashes from malformed JSON
@@ -17,7 +19,7 @@ export function safeParse<T = any>(
     return JSON.parse(text) as T;
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('[safeParse] JSON parsing failed:', error);
+      logger.error('[safeParse] JSON parsing failed:', error);
     }
     return fallback;
   }
@@ -39,7 +41,7 @@ export function safeStringify(
     return JSON.stringify(value, replacer as any, space);
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('[safeStringify] JSON stringification failed:', error);
+      logger.error('[safeStringify] JSON stringification failed:', error);
     }
     return undefined;
   }
@@ -63,7 +65,7 @@ export function parseWithValidation<T>(
     return validated ?? undefined;
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      console.error('[parseWithValidation] Validation failed:', error);
+      logger.error('[parseWithValidation] Validation failed:', error);
     }
     return undefined;
   }
@@ -133,7 +135,7 @@ export function safeParseLimited<T = any>(
 ): T | undefined {
   if (text.length > maxLength) {
     if (process.env.NODE_ENV === 'development') {
-      console.error(`[safeParseLimited] JSON too large: ${text.length} > ${maxLength}`);
+      logger.error(`[safeParseLimited] JSON too large: ${text.length} > ${maxLength}`);
     }
     return undefined;
   }

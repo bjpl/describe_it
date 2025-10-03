@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { performanceLogger } from '@/lib/logger';
 
 export interface CircuitBreakerConfig {
   failureThreshold: number;
@@ -101,13 +102,13 @@ export class CircuitBreaker<T extends any[], R> extends EventEmitter {
     this.state = CircuitBreakerState.OPEN;
     this.emit('circuit:opened', this.getMetrics());
     
-    console.warn(`Circuit breaker opened - Failure rate: ${this.getFailureRate()}%`);
+    performanceLogger.warn(`Circuit breaker opened - Failure rate: ${this.getFailureRate()}%`);
 
     // Set timer to attempt reset
     this.resetTimer = setTimeout(() => {
       this.state = CircuitBreakerState.HALF_OPEN;
       this.emit('circuit:half-opened', this.getMetrics());
-      console.info('Circuit breaker half-opened - Testing if service recovered');
+      performanceLogger.info('Circuit breaker half-opened - Testing if service recovered');
     }, this.config.resetTimeoutMs);
   }
 
@@ -125,7 +126,7 @@ export class CircuitBreaker<T extends any[], R> extends EventEmitter {
     }
 
     this.emit('circuit:closed', this.getMetrics());
-    console.info('Circuit breaker closed - Service recovered');
+    performanceLogger.info('Circuit breaker closed - Service recovered');
   }
 
   async execute(...args: T): Promise<R> {

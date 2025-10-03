@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 // Define log levels
 const levels = {
@@ -32,26 +33,26 @@ class SimpleLogger {
   }
   
   error(message: string, error?: Error | any, meta?: Record<string, any>) {
-    console.error(this.formatMessage('error', message, { ...meta, error: error?.message || error }));
+    logger.error(this.formatMessage('error', message, { ...meta, error: error?.message || error }));
   }
   
   warn(message: string, meta?: Record<string, any>) {
-    console.warn(this.formatMessage('warn', message, meta));
+    logger.warn(this.formatMessage('warn', message, meta));
   }
   
   info(message: string, meta?: Record<string, any>) {
-    console.info(this.formatMessage('info', message, meta));
+    logger.info(this.formatMessage('info', message, meta));
   }
   
   debug(message: string, meta?: Record<string, any>) {
     if (process.env.NODE_ENV !== 'production') {
-      console.debug(this.formatMessage('debug', message, meta));
+      logger.debug(this.formatMessage('debug', message, meta));
     }
   }
   
   http(message: string, meta?: Record<string, any>) {
     if (process.env.NODE_ENV !== 'production') {
-      console.log(this.formatMessage('http', message, meta));
+      logger.info(this.formatMessage('http', message, meta));
     }
   }
   
@@ -142,7 +143,7 @@ if (typeof window === 'undefined') {
       transports,
     });
   } catch (error) {
-    console.error('Failed to initialize Winston logger:', error);
+    logger.error('Failed to initialize Winston logger:', error);
   }
 }
 

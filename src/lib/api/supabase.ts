@@ -15,6 +15,7 @@ import type {
 } from "../../types/database";
 import { featureFlags, getServiceConfig } from "../../config/environment";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { apiLogger } from '@/lib/logger';
 
 // Demo/Local storage implementation for when Supabase is not available
 class LocalStorageAdapter {
@@ -211,7 +212,7 @@ class SupabaseService {
         url === "https://placeholder.supabase.co" ||
         anonKey === "placeholder_anon_key")
     ) {
-      console.warn(
+      apiLogger.warn(
         "Supabase credentials not configured. Running in demo mode with localStorage.",
       );
       this.isDemo = true;
@@ -222,7 +223,7 @@ class SupabaseService {
         // Use the singleton client from ../supabase/client
         this.client = supabase;
       } catch (error) {
-        console.warn(
+        apiLogger.warn(
           "Failed to initialize Supabase client. Falling back to demo mode.",
           error,
         );
@@ -281,7 +282,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error saving image:", error);
+      apiLogger.error("Error saving image:", error);
       throw error;
     }
   }
@@ -308,7 +309,7 @@ class SupabaseService {
 
       return data as ImageRecord | null;
     } catch (error) {
-      console.error("Error getting image:", error);
+      apiLogger.error("Error getting image:", error);
       throw error;
     }
   }
@@ -334,7 +335,7 @@ class SupabaseService {
 
       return data as DescriptionRecord;
     } catch (error) {
-      console.error("Error saving description:", error);
+      apiLogger.error("Error saving description:", error);
       throw error;
     }
   }
@@ -360,7 +361,7 @@ class SupabaseService {
 
       return data || [];
     } catch (error) {
-      console.error("Error getting descriptions:", error);
+      apiLogger.error("Error getting descriptions:", error);
       throw error;
     }
   }
@@ -391,7 +392,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error getting description:", error);
+      apiLogger.error("Error getting description:", error);
       throw error;
     }
   }
@@ -421,7 +422,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error updating image:", error);
+      apiLogger.error("Error updating image:", error);
       throw error;
     }
   }
@@ -459,7 +460,7 @@ class SupabaseService {
 
       return true;
     } catch (error) {
-      console.error("Error deleting image:", error);
+      apiLogger.error("Error deleting image:", error);
       throw error;
     }
   }
@@ -486,7 +487,7 @@ class SupabaseService {
 
       return data || [];
     } catch (error) {
-      console.error("Error searching images:", error);
+      apiLogger.error("Error searching images:", error);
       throw error;
     }
   }
@@ -512,7 +513,7 @@ class SupabaseService {
 
       return data || [];
     } catch (error) {
-      console.error("Error getting recent images:", error);
+      apiLogger.error("Error getting recent images:", error);
       throw error;
     }
   }
@@ -545,7 +546,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error getting image with descriptions:", error);
+      apiLogger.error("Error getting image with descriptions:", error);
       throw error;
     }
   }
@@ -570,7 +571,7 @@ class SupabaseService {
 
       return data || [];
     } catch (error) {
-      console.error("Error bulk inserting images:", error);
+      apiLogger.error("Error bulk inserting images:", error);
       throw error;
     }
   }
@@ -608,7 +609,7 @@ class SupabaseService {
         totalDescriptions: descriptionsResponse.count || 0,
       };
     } catch (error) {
-      console.error("Error getting stats:", error);
+      apiLogger.error("Error getting stats:", error);
       throw error;
     }
   }
@@ -688,12 +689,12 @@ class SupabaseService {
 
       // This would depend on your specific cleanup needs
       // For example, you might want to clean up old temporary images
-      // console.log(`Cleanup would remove data older than ${cutoffDate.toISOString()}`);
+      // apiLogger.info(`Cleanup would remove data older than ${cutoffDate.toISOString()}`);
 
       // Implementation would depend on your specific requirements
       return true;
     } catch (error) {
-      console.error("Error during cleanup:", error);
+      apiLogger.error("Error during cleanup:", error);
       throw error;
     }
   }
@@ -725,7 +726,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error upserting user progress:", error);
+      apiLogger.error("Error upserting user progress:", error);
       throw error;
     }
   }
@@ -765,7 +766,7 @@ class SupabaseService {
 
       return data || [];
     } catch (error) {
-      console.error("Error getting user progress:", error);
+      apiLogger.error("Error getting user progress:", error);
       throw error;
     }
   }
@@ -793,7 +794,7 @@ class SupabaseService {
 
       return data?.[0] || null;
     } catch (error) {
-      console.error("Error getting progress summary:", error);
+      apiLogger.error("Error getting progress summary:", error);
       throw error;
     }
   }
@@ -821,7 +822,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error calculating daily progress:", error);
+      apiLogger.error("Error calculating daily progress:", error);
       throw error;
     }
   }
@@ -851,7 +852,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error creating phrase:", error);
+      apiLogger.error("Error creating phrase:", error);
       throw error;
     }
   }
@@ -878,7 +879,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error updating phrase:", error);
+      apiLogger.error("Error updating phrase:", error);
       throw error;
     }
   }
@@ -900,7 +901,7 @@ class SupabaseService {
 
       return true;
     } catch (error) {
-      console.error("Error deleting phrase:", error);
+      apiLogger.error("Error deleting phrase:", error);
       throw error;
     }
   }
@@ -965,7 +966,7 @@ class SupabaseService {
 
       return data || [];
     } catch (error) {
-      console.error("Error getting user phrases:", error);
+      apiLogger.error("Error getting user phrases:", error);
       throw error;
     }
   }
@@ -995,7 +996,7 @@ class SupabaseService {
 
       return data || [];
     } catch (error) {
-      console.error("Error getting phrases for review:", error);
+      apiLogger.error("Error getting phrases for review:", error);
       throw error;
     }
   }
@@ -1029,7 +1030,7 @@ class SupabaseService {
 
       return await this.updatePhrase(phraseId, updates);
     } catch (error) {
-      console.error("Error marking phrase as studied:", error);
+      apiLogger.error("Error marking phrase as studied:", error);
       throw error;
     }
   }
@@ -1055,7 +1056,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error getting phrase:", error);
+      apiLogger.error("Error getting phrase:", error);
       throw error;
     }
   }
@@ -1085,7 +1086,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error creating session:", error);
+      apiLogger.error("Error creating session:", error);
       throw error;
     }
   }
@@ -1112,7 +1113,7 @@ class SupabaseService {
 
       return data;
     } catch (error) {
-      console.error("Error updating session:", error);
+      apiLogger.error("Error updating session:", error);
       throw error;
     }
   }
@@ -1139,7 +1140,7 @@ class SupabaseService {
 
       return data || [];
     } catch (error) {
-      console.error("Error getting user sessions:", error);
+      apiLogger.error("Error getting user sessions:", error);
       throw error;
     }
   }

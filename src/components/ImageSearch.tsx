@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { Search, Image as ImageIcon } from "lucide-react";
 import { UnsplashImage } from "@/types";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface ImageSearchProps {
   onImageSelect: (image: UnsplashImage) => void;
@@ -50,12 +51,12 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
         
         if (apiKey) {
           url.searchParams.set('api_key', apiKey);
-          console.log('[ImageSearch] Using API key from settings (found)');
+          logger.info('[ImageSearch] Using API key from settings (found)');
         } else {
-          console.log('[ImageSearch] No API key found in localStorage');
+          logger.info('[ImageSearch] No API key found in localStorage');
         }
       } catch (e) {
-        console.warn('[ImageSearch] Could not retrieve API key from settings:', e);
+        logger.warn('[ImageSearch] Could not retrieve API key from settings:', e);
       }
 
       const response = await fetch(url.toString());
@@ -72,7 +73,7 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
       }
     } catch (err) {
       setError("Failed to search images");
-      console.error("Search error:", err);
+      logger.error("Search error:", err);
     } finally {
       setLoading(false);
     }

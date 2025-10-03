@@ -5,6 +5,7 @@ import Image from "next/image";
 import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
 import { ImageOff, Loader2 } from "lucide-react";
+import { logger } from '@/lib/logger';
 
 interface OptimizedImageProps {
   src: string;
@@ -84,7 +85,7 @@ export const OptimizedImage = memo(
         // Performance monitoring
         if (typeof window !== "undefined" && window.performance) {
           window.performance.mark("image-loaded");
-          console.debug(`Image loaded in ${loadTime}ms:`, src);
+          logger.debug(`Image loaded in ${loadTime}ms:`, src);
         }
 
         onLoad?.();

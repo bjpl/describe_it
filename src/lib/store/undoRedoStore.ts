@@ -52,4 +52,781 @@ export interface UndoRedoConfig {
   };
   groupingEnabled: boolean;
   groupingTimeoutMs: number;
-}\n\ninterface UndoRedoState {\n  // History management\n  branches: Map<string, HistoryBranch>;\n  currentBranchId: string;\n  currentIndex: number; // Index within current branch\n  \n  // Configuration\n  config: UndoRedoConfig;\n  \n  // Registered stores\n  registeredStores: Map<string, {\n    getState: () => any;\n    setState: (state: any, actionName?: string) => void;\n    subscribe: (callback: (state: any) => void) => () => void;\n  }>;\n  \n  // Action grouping\n  currentGroup: {\n    id: string;\n    entries: HistoryEntry[];\n    timeout: NodeJS.Timeout | null;\n  } | null;\n  \n  // Actions\n  registerStore: (storeKey: string, storeInterface: any, strategy?: 'full' | 'selective' | 'none') => void;\n  unregisterStore: (storeKey: string) => void;\n  \n  // History operations\n  canUndo: (storeKey?: string) => boolean;\n  canRedo: (storeKey?: string) => boolean;\n  undo: (storeKey?: string) => boolean;\n  redo: (storeKey?: string) => boolean;\n  \n  // Batch operations\n  startGroup: (description?: string) => void;\n  endGroup: () => void;\n  \n  // Branch management\n  createBranch: (name: string, fromCurrentState?: boolean) => string;\n  switchBranch: (branchId: string) => boolean;\n  deleteBranch: (branchId: string) => void;\n  mergeBranch: (sourceBranchId: string, targetBranchId: string) => boolean;\n  \n  // History queries\n  getHistory: (storeKey?: string, limit?: number) => HistoryEntry[];\n  getHistorySize: (storeKey?: string) => number;\n  clearHistory: (storeKey?: string) => void;\n  \n  // State utilities\n  jumpToEntry: (entryId: string) => boolean;\n  getStateAt: (timestamp: Date, storeKey: string) => any;\n  \n  // Internal methods\n  _recordEntry: (storeKey: string, actionName: string, previousState: any, nextState: any, metadata?: any) => void;\n  _compressEntry: (entry: HistoryEntry) => HistoryEntry;\n  _cleanup: () => void;\n  _shouldTrack: (storeKey: string, actionName?: string) => boolean;\n  _extractTrackedState: (storeKey: string, fullState: any) => any;\n}\n\n// Default configuration\nconst defaultConfig: UndoRedoConfig = {\n  maxHistorySize: 100,\n  compressionThreshold: 1024 * 10, // 10KB\n  autoCleanupMs: 1000 * 60 * 60 * 24, // 24 hours\n  trackingStrategies: {},\n  selectiveProps: {},\n  groupingEnabled: true,\n  groupingTimeoutMs: 500\n};\n\n// Compression utilities\nconst compressState = (state: any): string => {\n  try {\n    const json = JSON.stringify(state);\n    // Simple compression - in production, use a real compression library\n    return btoa(json);\n  } catch {\n    return '';\n  }\n};\n\nconst decompressState = (compressed: string): any => {\n  try {\n    return JSON.parse(atob(compressed));\n  } catch {\n    return null;\n  }\n};\n\n// Generate unique IDs\nconst generateId = (): string => {\n  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;\n};\n\nexport const useUndoRedoStore = create<UndoRedoState>()(  \n  devtools(\n    subscribeWithSelector(\n      (set, get) => {\n        let cleanupInterval: NodeJS.Timeout | null = null;\n        \n        // Initialize cleanup interval\n        if (typeof window !== 'undefined') {\n          cleanupInterval = setInterval(() => {\n            get()._cleanup();\n          }, 60000); // Run cleanup every minute\n        }\n        \n        return {\n          branches: new Map([[\n            'main', \n            {\n              id: 'main',\n              name: 'Main',\n              entries: [],\n              createdAt: new Date()\n            }\n          ]]),\n          currentBranchId: 'main',\n          currentIndex: -1,\n          config: defaultConfig,\n          registeredStores: new Map(),\n          currentGroup: null,\n          \n          registerStore: (storeKey, storeInterface, strategy = 'full') => {\n            const state = get();\n            \n            // Set tracking strategy\n            set((state) => ({\n              config: {\n                ...state.config,\n                trackingStrategies: {\n                  ...state.config.trackingStrategies,\n                  [storeKey]: strategy\n                }\n              }\n            }), false, 'setTrackingStrategy');\n            \n            // Register store interface\n            const registeredStores = new Map(state.registeredStores);\n            registeredStores.set(storeKey, storeInterface);\n            \n            // Subscribe to store changes\n            const unsubscribe = storeInterface.subscribe((newState: any, actionName?: string) => {\n              const currentState = get();\n              if (!currentState._shouldTrack(storeKey, actionName)) return;\n              \n              // Get previous state for comparison\n              const currentBranch = currentState.branches.get(currentState.currentBranchId);\n              let previousState = null;\n              \n              if (currentBranch && currentState.currentIndex >= 0) {\n                const lastEntry = currentBranch.entries[currentState.currentIndex];\n                if (lastEntry && lastEntry.storeKey === storeKey) {\n                  previousState = lastEntry.nextState;\n                }\n              }\n              \n              if (!previousState) {\n                previousState = currentState._extractTrackedState(storeKey, storeInterface.getState());\n              }\n              \n              const trackedNewState = currentState._extractTrackedState(storeKey, newState);\n              \n              // Only record if state actually changed\n              if (JSON.stringify(previousState) !== JSON.stringify(trackedNewState)) {\n                currentState._recordEntry(\n                  storeKey,\n                  actionName || 'unknown',\n                  previousState,\n                  trackedNewState\n                );\n              }\n            });\n            \n            // Store cleanup function with store interface\n            registeredStores.set(storeKey, {\n              ...storeInterface,\n              _unsubscribe: unsubscribe\n            });\n            \n            set({ registeredStores }, false, 'registerStore');\n          },\n          \n          unregisterStore: (storeKey) => {\n            const state = get();\n            const storeInterface = state.registeredStores.get(storeKey);\n            \n            if (storeInterface && (storeInterface as any)._unsubscribe) {\n              (storeInterface as any)._unsubscribe();\n            }\n            \n            const newRegisteredStores = new Map(state.registeredStores);\n            newRegisteredStores.delete(storeKey);\n            \n            set({ registeredStores: newRegisteredStores }, false, 'unregisterStore');\n          },\n          \n          canUndo: (storeKey) => {\n            const state = get();\n            const currentBranch = state.branches.get(state.currentBranchId);\n            \n            if (!currentBranch || state.currentIndex < 0) return false;\n            \n            if (storeKey) {\n              // Check if there's an entry for this specific store to undo\n              for (let i = state.currentIndex; i >= 0; i--) {\n                if (currentBranch.entries[i].storeKey === storeKey) {\n                  return true;\n                }\n              }\n              return false;\n            }\n            \n            return state.currentIndex >= 0;\n          },\n          \n          canRedo: (storeKey) => {\n            const state = get();\n            const currentBranch = state.branches.get(state.currentBranchId);\n            \n            if (!currentBranch || state.currentIndex >= currentBranch.entries.length - 1) return false;\n            \n            if (storeKey) {\n              // Check if there's an entry for this specific store to redo\n              for (let i = state.currentIndex + 1; i < currentBranch.entries.length; i++) {\n                if (currentBranch.entries[i].storeKey === storeKey) {\n                  return true;\n                }\n              }\n              return false;\n            }\n            \n            return state.currentIndex < currentBranch.entries.length - 1;\n          },\n          \n          undo: (storeKey) => {\n            const state = get();\n            if (!state.canUndo(storeKey)) return false;\n            \n            const currentBranch = state.branches.get(state.currentBranchId)!;\n            let targetIndex = state.currentIndex;\n            \n            if (storeKey) {\n              // Find the most recent entry for this store\n              for (let i = state.currentIndex; i >= 0; i--) {\n                if (currentBranch.entries[i].storeKey === storeKey) {\n                  const entry = currentBranch.entries[i];\n                  const storeInterface = state.registeredStores.get(storeKey);\n                  \n                  if (storeInterface) {\n                    const stateToRestore = entry.compressed \n                      ? decompressState(entry.previousState)\n                      : entry.previousState;\n                      \n                    storeInterface.setState(stateToRestore, `undo:${entry.actionName}`);\n                  }\n                  \n                  targetIndex = i - 1;\n                  break;\n                }\n              }\n            } else {\n              // Undo the last action regardless of store\n              const entry = currentBranch.entries[state.currentIndex];\n              const storeInterface = state.registeredStores.get(entry.storeKey);\n              \n              if (storeInterface) {\n                const stateToRestore = entry.compressed \n                  ? decompressState(entry.previousState)\n                  : entry.previousState;\n                  \n                storeInterface.setState(stateToRestore, `undo:${entry.actionName}`);\n              }\n              \n              targetIndex = state.currentIndex - 1;\n            }\n            \n            set({ currentIndex: targetIndex }, false, 'undo');\n            return true;\n          },\n          \n          redo: (storeKey) => {\n            const state = get();\n            if (!state.canRedo(storeKey)) return false;\n            \n            const currentBranch = state.branches.get(state.currentBranchId)!;\n            let targetIndex = state.currentIndex;\n            \n            if (storeKey) {\n              // Find the next entry for this store\n              for (let i = state.currentIndex + 1; i < currentBranch.entries.length; i++) {\n                if (currentBranch.entries[i].storeKey === storeKey) {\n                  const entry = currentBranch.entries[i];\n                  const storeInterface = state.registeredStores.get(storeKey);\n                  \n                  if (storeInterface) {\n                    const stateToRestore = entry.compressed \n                      ? decompressState(entry.nextState)\n                      : entry.nextState;\n                      \n                    storeInterface.setState(stateToRestore, `redo:${entry.actionName}`);\n                  }\n                  \n                  targetIndex = i;\n                  break;\n                }\n              }\n            } else {\n              // Redo the next action\n              const entry = currentBranch.entries[state.currentIndex + 1];\n              const storeInterface = state.registeredStores.get(entry.storeKey);\n              \n              if (storeInterface) {\n                const stateToRestore = entry.compressed \n                  ? decompressState(entry.nextState)\n                  : entry.nextState;\n                  \n                storeInterface.setState(stateToRestore, `redo:${entry.actionName}`);\n              }\n              \n              targetIndex = state.currentIndex + 1;\n            }\n            \n            set({ currentIndex: targetIndex }, false, 'redo');\n            return true;\n          },\n          \n          startGroup: (description) => {\n            const state = get();\n            \n            // End current group if exists\n            if (state.currentGroup) {\n              get().endGroup();\n            }\n            \n            set({\n              currentGroup: {\n                id: generateId(),\n                entries: [],\n                timeout: null\n              }\n            }, false, 'startGroup');\n          },\n          \n          endGroup: () => {\n            const state = get();\n            if (!state.currentGroup) return;\n            \n            if (state.currentGroup.timeout) {\n              clearTimeout(state.currentGroup.timeout);\n            }\n            \n            // If group has entries, they're already recorded individually\n            // Just clear the group\n            set({ currentGroup: null }, false, 'endGroup');\n          },\n          \n          createBranch: (name, fromCurrentState = true) => {\n            const branchId = generateId();\n            const state = get();\n            \n            const newBranch: HistoryBranch = {\n              id: branchId,\n              name,\n              entries: [],\n              parentBranchId: state.currentBranchId,\n              createdAt: new Date()\n            };\n            \n            // Copy current history up to current index if requested\n            if (fromCurrentState) {\n              const currentBranch = state.branches.get(state.currentBranchId);\n              if (currentBranch) {\n                newBranch.entries = currentBranch.entries.slice(0, state.currentIndex + 1);\n              }\n            }\n            \n            const newBranches = new Map(state.branches);\n            newBranches.set(branchId, newBranch);\n            \n            set({ branches: newBranches }, false, 'createBranch');\n            \n            return branchId;\n          },\n          \n          switchBranch: (branchId) => {\n            const state = get();\n            const targetBranch = state.branches.get(branchId);\n            \n            if (!targetBranch) return false;\n            \n            // Apply all states from the target branch\n            targetBranch.entries.forEach(entry => {\n              const storeInterface = state.registeredStores.get(entry.storeKey);\n              if (storeInterface) {\n                const stateToApply = entry.compressed \n                  ? decompressState(entry.nextState)\n                  : entry.nextState;\n                  \n                storeInterface.setState(stateToApply, `branch:${entry.actionName}`);\n              }\n            });\n            \n            set({\n              currentBranchId: branchId,\n              currentIndex: targetBranch.entries.length - 1\n            }, false, 'switchBranch');\n            \n            return true;\n          },\n          \n          deleteBranch: (branchId) => {\n            if (branchId === 'main') return; // Can't delete main branch\n            \n            const state = get();\n            const newBranches = new Map(state.branches);\n            newBranches.delete(branchId);\n            \n            let newCurrentBranchId = state.currentBranchId;\n            if (state.currentBranchId === branchId) {\n              newCurrentBranchId = 'main';\n            }\n            \n            set({\n              branches: newBranches,\n              currentBranchId: newCurrentBranchId,\n              currentIndex: newBranches.get(newCurrentBranchId)?.entries.length - 1 || -1\n            }, false, 'deleteBranch');\n          },\n          \n          mergeBranch: (sourceBranchId, targetBranchId) => {\n            const state = get();\n            const sourceBranch = state.branches.get(sourceBranchId);\n            const targetBranch = state.branches.get(targetBranchId);\n            \n            if (!sourceBranch || !targetBranch) return false;\n            \n            // Merge source branch entries into target branch\n            const mergedEntries = [...targetBranch.entries, ...sourceBranch.entries];\n            \n            const newBranches = new Map(state.branches);\n            newBranches.set(targetBranchId, {\n              ...targetBranch,\n              entries: mergedEntries\n            });\n            \n            set({ branches: newBranches }, false, 'mergeBranch');\n            \n            return true;\n          },\n          \n          getHistory: (storeKey, limit) => {\n            const state = get();\n            const currentBranch = state.branches.get(state.currentBranchId);\n            \n            if (!currentBranch) return [];\n            \n            let entries = currentBranch.entries;\n            \n            if (storeKey) {\n              entries = entries.filter(entry => entry.storeKey === storeKey);\n            }\n            \n            if (limit && entries.length > limit) {\n              entries = entries.slice(-limit);\n            }\n            \n            return entries;\n          },\n          \n          getHistorySize: (storeKey) => {\n            return get().getHistory(storeKey).length;\n          },\n          \n          clearHistory: (storeKey) => {\n            const state = get();\n            const currentBranch = state.branches.get(state.currentBranchId);\n            \n            if (!currentBranch) return;\n            \n            let newEntries = currentBranch.entries;\n            \n            if (storeKey) {\n              newEntries = newEntries.filter(entry => entry.storeKey !== storeKey);\n            } else {\n              newEntries = [];\n            }\n            \n            const newBranches = new Map(state.branches);\n            newBranches.set(state.currentBranchId, {\n              ...currentBranch,\n              entries: newEntries\n            });\n            \n            set({\n              branches: newBranches,\n              currentIndex: newEntries.length - 1\n            }, false, 'clearHistory');\n          },\n          \n          jumpToEntry: (entryId) => {\n            const state = get();\n            const currentBranch = state.branches.get(state.currentBranchId);\n            \n            if (!currentBranch) return false;\n            \n            const entryIndex = currentBranch.entries.findIndex(entry => entry.id === entryId);\n            \n            if (entryIndex === -1) return false;\n            \n            // Apply all states up to the target entry\n            for (let i = 0; i <= entryIndex; i++) {\n              const entry = currentBranch.entries[i];\n              const storeInterface = state.registeredStores.get(entry.storeKey);\n              \n              if (storeInterface) {\n                const stateToApply = entry.compressed \n                  ? decompressState(entry.nextState)\n                  : entry.nextState;\n                  \n                storeInterface.setState(stateToApply, `jump:${entry.actionName}`);\n              }\n            }\n            \n            set({ currentIndex: entryIndex }, false, 'jumpToEntry');\n            \n            return true;\n          },\n          \n          getStateAt: (timestamp, storeKey) => {\n            const state = get();\n            const currentBranch = state.branches.get(state.currentBranchId);\n            \n            if (!currentBranch) return null;\n            \n            // Find the last entry for this store before or at the timestamp\n            for (let i = currentBranch.entries.length - 1; i >= 0; i--) {\n              const entry = currentBranch.entries[i];\n              if (entry.storeKey === storeKey && entry.timestamp <= timestamp) {\n                return entry.compressed \n                  ? decompressState(entry.nextState)\n                  : entry.nextState;\n              }\n            }\n            \n            return null;\n          },\n          \n          _recordEntry: (storeKey, actionName, previousState, nextState, metadata) => {\n            const state = get();\n            \n            const entry: HistoryEntry = {\n              id: generateId(),\n              timestamp: new Date(),\n              storeKey,\n              actionName,\n              previousState,\n              nextState,\n              metadata\n            };\n            \n            // Check if compression is needed\n            const entrySize = JSON.stringify(entry).length;\n            if (entrySize > state.config.compressionThreshold) {\n              entry.previousState = compressState(previousState);\n              entry.nextState = compressState(nextState);\n              entry.compressed = true;\n            }\n            \n            const currentBranch = state.branches.get(state.currentBranchId)!;\n            \n            // If we're not at the end of history, create a new branch\n            let targetBranch = currentBranch;\n            let targetBranchId = state.currentBranchId;\n            \n            if (state.currentIndex < currentBranch.entries.length - 1) {\n              // Create new branch from current position\n              targetBranchId = get().createBranch(`Auto-${Date.now()}`, true);\n              targetBranch = state.branches.get(targetBranchId)!;\n            }\n            \n            // Add entry to branch\n            const newEntries = [...targetBranch.entries, entry];\n            \n            // Maintain max history size\n            if (newEntries.length > state.config.maxHistorySize) {\n              newEntries.shift(); // Remove oldest entry\n            }\n            \n            const newBranches = new Map(state.branches);\n            newBranches.set(targetBranchId, {\n              ...targetBranch,\n              entries: newEntries\n            });\n            \n            set({\n              branches: newBranches,\n              currentBranchId: targetBranchId,\n              currentIndex: newEntries.length - 1\n            }, false, 'recordEntry');\n          },\n          \n          _compressEntry: (entry) => {\n            return {\n              ...entry,\n              previousState: compressState(entry.previousState),\n              nextState: compressState(entry.nextState),\n              compressed: true\n            };\n          },\n          \n          _cleanup: () => {\n            const state = get();\n            const cutoffTime = Date.now() - state.config.autoCleanupMs;\n            let hasChanges = false;\n            \n            const newBranches = new Map();\n            \n            state.branches.forEach((branch, branchId) => {\n              const filteredEntries = branch.entries.filter(\n                entry => entry.timestamp.getTime() > cutoffTime\n              );\n              \n              if (filteredEntries.length !== branch.entries.length) {\n                hasChanges = true;\n              }\n              \n              newBranches.set(branchId, {\n                ...branch,\n                entries: filteredEntries\n              });\n            });\n            \n            if (hasChanges) {\n              set({ branches: newBranches }, false, 'cleanup');\n            }\n          },\n          \n          _shouldTrack: (storeKey, actionName) => {\n            const state = get();\n            const strategy = state.config.trackingStrategies[storeKey] || 'full';\n            \n            if (strategy === 'none') return false;\n            \n            // Don't track undo/redo actions to prevent infinite loops\n            if (actionName?.startsWith('undo:') || actionName?.startsWith('redo:')) {\n              return false;\n            }\n            \n            return true;\n          },\n          \n          _extractTrackedState: (storeKey, fullState) => {\n            const state = get();\n            const strategy = state.config.trackingStrategies[storeKey] || 'full';\n            \n            if (strategy === 'selective') {\n              const propsToTrack = state.config.selectiveProps[storeKey] || [];\n              const trackedState: any = {};\n              \n              propsToTrack.forEach(prop => {\n                if (prop in fullState) {\n                  trackedState[prop] = fullState[prop];\n                }\n              });\n              \n              return trackedState;\n            }\n            \n            return fullState;\n          }\n        };\n      }\n    ),\n    { name: 'UndoRedoStore' }\n  )\n);\n\n// Selectors\nconst undoRedoSelector = createShallowSelector((state: UndoRedoState) => ({\n  canUndo: (storeKey?: string) => state.canUndo(storeKey),\n  canRedo: (storeKey?: string) => state.canRedo(storeKey),\n  currentBranch: state.branches.get(state.currentBranchId)?.name || 'Unknown',\n  historySize: state.branches.get(state.currentBranchId)?.entries.length || 0,\n  currentIndex: state.currentIndex\n}));\n\n// Hooks\nexport const useUndoRedo = (storeKey?: string) => {\n  const selector = undoRedoSelector(useUndoRedoStore);\n  const actions = useUndoRedoStore((state) => ({\n    undo: () => state.undo(storeKey),\n    redo: () => state.redo(storeKey),\n    startGroup: state.startGroup,\n    endGroup: state.endGroup,\n    canUndo: selector.canUndo(storeKey),\n    canRedo: selector.canRedo(storeKey)\n  }));\n  \n  return actions;\n};\n\nexport const useUndoRedoActions = () => {\n  return useUndoRedoStore((state) => ({\n    registerStore: state.registerStore,\n    unregisterStore: state.unregisterStore,\n    createBranch: state.createBranch,\n    switchBranch: state.switchBranch,\n    deleteBranch: state.deleteBranch,\n    mergeBranch: state.mergeBranch,\n    clearHistory: state.clearHistory,\n    jumpToEntry: state.jumpToEntry\n  }));\n};\n\n// Auto-registration hook\nexport const useUndoRedoRegistration = (\n  storeKey: string,\n  useStore: any,\n  strategy: 'full' | 'selective' | 'none' = 'full',\n  selectiveProps?: string[]\n) => {\n  const { registerStore, unregisterStore } = useUndoRedoActions();\n  \n  React.useEffect(() => {\n    const storeInterface = {\n      getState: () => useStore.getState(),\n      setState: (state: any, actionName?: string) => {\n        useStore.setState(state, false, actionName);\n      },\n      subscribe: (callback: (state: any) => void) => {\n        return useStore.subscribe(callback);\n      }\n    };\n    \n    registerStore(storeKey, storeInterface, strategy);\n    \n    // Set selective props if provided\n    if (strategy === 'selective' && selectiveProps) {\n      useUndoRedoStore.setState((state) => ({\n        config: {\n          ...state.config,\n          selectiveProps: {\n            ...state.config.selectiveProps,\n            [storeKey]: selectiveProps\n          }\n        }\n      }));\n    }\n    \n    return () => unregisterStore(storeKey);\n  }, [storeKey, registerStore, unregisterStore, strategy, selectiveProps]);\n};\n\n// Keyboard shortcuts for undo/redo\nexport const useUndoRedoShortcuts = (storeKey?: string) => {\n  const { undo, redo } = useUndoRedo(storeKey);\n  \n  React.useEffect(() => {\n    const handleKeyDown = (event: KeyboardEvent) => {\n      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key === 'z') {\n        event.preventDefault();\n        undo();\n      } else if ((event.ctrlKey || event.metaKey) && (event.shiftKey && event.key === 'Z' || event.key === 'y')) {\n        event.preventDefault();\n        redo();\n      }\n    };\n    \n    if (typeof window !== 'undefined') {\n      window.addEventListener('keydown', handleKeyDown);\n      return () => window.removeEventListener('keydown', handleKeyDown);\n    }\n  }, [undo, redo]);\n};
+}
+
+interface UndoRedoState {
+  // History management
+  branches: Map<string, HistoryBranch>;
+  currentBranchId: string;
+  currentIndex: number; // Index within current branch
+
+  // Configuration
+  config: UndoRedoConfig;
+
+  // Registered stores
+  registeredStores: Map<string, {
+    getState: () => any;
+    setState: (state: any, actionName?: string) => void;
+    subscribe: (callback: (state: any) => void) => () => void;
+  }>;
+
+  // Action grouping
+  currentGroup: {
+    id: string;
+    entries: HistoryEntry[];
+    timeout: NodeJS.Timeout | null;
+  } | null;
+
+  // Actions
+  registerStore: (storeKey: string, storeInterface: any, strategy?: 'full' | 'selective' | 'none') => void;
+  unregisterStore: (storeKey: string) => void;
+
+  // History operations
+  canUndo: (storeKey?: string) => boolean;
+  canRedo: (storeKey?: string) => boolean;
+  undo: (storeKey?: string) => boolean;
+  redo: (storeKey?: string) => boolean;
+
+  // Batch operations
+  startGroup: (description?: string) => void;
+  endGroup: () => void;
+
+  // Branch management
+  createBranch: (name: string, fromCurrentState?: boolean) => string;
+  switchBranch: (branchId: string) => boolean;
+  deleteBranch: (branchId: string) => void;
+  mergeBranch: (sourceBranchId: string, targetBranchId: string) => boolean;
+
+  // History queries
+  getHistory: (storeKey?: string, limit?: number) => HistoryEntry[];
+  getHistorySize: (storeKey?: string) => number;
+  clearHistory: (storeKey?: string) => void;
+
+  // State utilities
+  jumpToEntry: (entryId: string) => boolean;
+  getStateAt: (timestamp: Date, storeKey: string) => any;
+
+  // Internal methods
+  _recordEntry: (storeKey: string, actionName: string, previousState: any, nextState: any, metadata?: any) => void;
+  _compressEntry: (entry: HistoryEntry) => HistoryEntry;
+  _cleanup: () => void;
+  _shouldTrack: (storeKey: string, actionName?: string) => boolean;
+  _extractTrackedState: (storeKey: string, fullState: any) => any;
+}
+
+// Default configuration
+const defaultConfig: UndoRedoConfig = {
+  maxHistorySize: 100,
+  compressionThreshold: 1024 * 10, // 10KB
+  autoCleanupMs: 1000 * 60 * 60 * 24, // 24 hours
+  trackingStrategies: {},
+  selectiveProps: {},
+  groupingEnabled: true,
+  groupingTimeoutMs: 500
+};
+
+// Compression utilities
+const compressState = (state: any): string => {
+  try {
+    const json = JSON.stringify(state);
+    // Simple compression - in production, use a real compression library
+    return btoa(json);
+  } catch {
+    return '';
+  }
+};
+
+const decompressState = (compressed: string): any => {
+  try {
+    return JSON.parse(atob(compressed));
+  } catch {
+    return null;
+  }
+};
+
+// Generate unique IDs
+const generateId = (): string => {
+  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+};
+
+export const useUndoRedoStore = create<UndoRedoState>()(  
+  devtools(
+    subscribeWithSelector(
+      (set, get) => {
+        let cleanupInterval: NodeJS.Timeout | null = null;
+        
+        // Initialize cleanup interval
+        if (typeof window !== 'undefined') {
+          cleanupInterval = setInterval(() => {
+            get()._cleanup();
+          }, 60000); // Run cleanup every minute
+        }
+        
+        return {
+          branches: new Map([[
+            'main', 
+            {
+              id: 'main',
+              name: 'Main',
+              entries: [],
+              createdAt: new Date()
+            }
+          ]]),
+          currentBranchId: 'main',
+          currentIndex: -1,
+          config: defaultConfig,
+          registeredStores: new Map(),
+          currentGroup: null,
+          
+          registerStore: (storeKey, storeInterface, strategy = 'full') => {
+            const state = get();
+            
+            // Set tracking strategy
+            set((state) => ({
+              config: {
+                ...state.config,
+                trackingStrategies: {
+                  ...state.config.trackingStrategies,
+                  [storeKey]: strategy
+                }
+              }
+            }), false, 'setTrackingStrategy');
+            
+            // Register store interface
+            const registeredStores = new Map(state.registeredStores);
+            registeredStores.set(storeKey, storeInterface);
+            
+            // Subscribe to store changes
+            const unsubscribe = storeInterface.subscribe((newState: any, actionName?: string) => {
+              const currentState = get();
+              if (!currentState._shouldTrack(storeKey, actionName)) return;
+              
+              // Get previous state for comparison
+              const currentBranch = currentState.branches.get(currentState.currentBranchId);
+              let previousState = null;
+              
+              if (currentBranch && currentState.currentIndex >= 0) {
+                const lastEntry = currentBranch.entries[currentState.currentIndex];
+                if (lastEntry && lastEntry.storeKey === storeKey) {
+                  previousState = lastEntry.nextState;
+                }
+              }
+              
+              if (!previousState) {
+                previousState = currentState._extractTrackedState(storeKey, storeInterface.getState());
+              }
+              
+              const trackedNewState = currentState._extractTrackedState(storeKey, newState);
+              
+              // Only record if state actually changed
+              if (JSON.stringify(previousState) !== JSON.stringify(trackedNewState)) {
+                currentState._recordEntry(
+                  storeKey,
+                  actionName || 'unknown',
+                  previousState,
+                  trackedNewState
+                );
+              }
+            });
+            
+            // Store cleanup function with store interface
+            registeredStores.set(storeKey, {
+              ...storeInterface,
+              _unsubscribe: unsubscribe
+            });
+            
+            set({ registeredStores }, false, 'registerStore');
+          },
+          
+          unregisterStore: (storeKey) => {
+            const state = get();
+            const storeInterface = state.registeredStores.get(storeKey);
+            
+            if (storeInterface && (storeInterface as any)._unsubscribe) {
+              (storeInterface as any)._unsubscribe();
+            }
+            
+            const newRegisteredStores = new Map(state.registeredStores);
+            newRegisteredStores.delete(storeKey);
+            
+            set({ registeredStores: newRegisteredStores }, false, 'unregisterStore');
+          },
+          
+          canUndo: (storeKey) => {
+            const state = get();
+            const currentBranch = state.branches.get(state.currentBranchId);
+            
+            if (!currentBranch || state.currentIndex < 0) return false;
+            
+            if (storeKey) {
+              // Check if there's an entry for this specific store to undo
+              for (let i = state.currentIndex; i >= 0; i--) {
+                if (currentBranch.entries[i].storeKey === storeKey) {
+                  return true;
+                }
+              }
+              return false;
+            }
+            
+            return state.currentIndex >= 0;
+          },
+          
+          canRedo: (storeKey) => {
+            const state = get();
+            const currentBranch = state.branches.get(state.currentBranchId);
+            
+            if (!currentBranch || state.currentIndex >= currentBranch.entries.length - 1) return false;
+            
+            if (storeKey) {
+              // Check if there's an entry for this specific store to redo
+              for (let i = state.currentIndex + 1; i < currentBranch.entries.length; i++) {
+                if (currentBranch.entries[i].storeKey === storeKey) {
+                  return true;
+                }
+              }
+              return false;
+            }
+            
+            return state.currentIndex < currentBranch.entries.length - 1;
+          },
+          
+          undo: (storeKey) => {
+            const state = get();
+            if (!state.canUndo(storeKey)) return false;
+            
+            const currentBranch = state.branches.get(state.currentBranchId)!;
+            let targetIndex = state.currentIndex;
+            
+            if (storeKey) {
+              // Find the most recent entry for this store
+              for (let i = state.currentIndex; i >= 0; i--) {
+                if (currentBranch.entries[i].storeKey === storeKey) {
+                  const entry = currentBranch.entries[i];
+                  const storeInterface = state.registeredStores.get(storeKey);
+                  
+                  if (storeInterface) {
+                    const stateToRestore = entry.compressed 
+                      ? decompressState(entry.previousState)
+                      : entry.previousState;
+                      
+                    storeInterface.setState(stateToRestore, `undo:${entry.actionName}`);
+                  }
+                  
+                  targetIndex = i - 1;
+                  break;
+                }
+              }
+            } else {
+              // Undo the last action regardless of store
+              const entry = currentBranch.entries[state.currentIndex];
+              const storeInterface = state.registeredStores.get(entry.storeKey);
+              
+              if (storeInterface) {
+                const stateToRestore = entry.compressed 
+                  ? decompressState(entry.previousState)
+                  : entry.previousState;
+                  
+                storeInterface.setState(stateToRestore, `undo:${entry.actionName}`);
+              }
+              
+              targetIndex = state.currentIndex - 1;
+            }
+            
+            set({ currentIndex: targetIndex }, false, 'undo');
+            return true;
+          },
+          
+          redo: (storeKey) => {
+            const state = get();
+            if (!state.canRedo(storeKey)) return false;
+            
+            const currentBranch = state.branches.get(state.currentBranchId)!;
+            let targetIndex = state.currentIndex;
+            
+            if (storeKey) {
+              // Find the next entry for this store
+              for (let i = state.currentIndex + 1; i < currentBranch.entries.length; i++) {
+                if (currentBranch.entries[i].storeKey === storeKey) {
+                  const entry = currentBranch.entries[i];
+                  const storeInterface = state.registeredStores.get(storeKey);
+                  
+                  if (storeInterface) {
+                    const stateToRestore = entry.compressed 
+                      ? decompressState(entry.nextState)
+                      : entry.nextState;
+                      
+                    storeInterface.setState(stateToRestore, `redo:${entry.actionName}`);
+                  }
+                  
+                  targetIndex = i;
+                  break;
+                }
+              }
+            } else {
+              // Redo the next action
+              const entry = currentBranch.entries[state.currentIndex + 1];
+              const storeInterface = state.registeredStores.get(entry.storeKey);
+              
+              if (storeInterface) {
+                const stateToRestore = entry.compressed 
+                  ? decompressState(entry.nextState)
+                  : entry.nextState;
+                  
+                storeInterface.setState(stateToRestore, `redo:${entry.actionName}`);
+              }
+              
+              targetIndex = state.currentIndex + 1;
+            }
+            
+            set({ currentIndex: targetIndex }, false, 'redo');
+            return true;
+          },
+          
+          startGroup: (description) => {
+            const state = get();
+            
+            // End current group if exists
+            if (state.currentGroup) {
+              get().endGroup();
+            }
+            
+            set({
+              currentGroup: {
+                id: generateId(),
+                entries: [],
+                timeout: null
+              }
+            }, false, 'startGroup');
+          },
+          
+          endGroup: () => {
+            const state = get();
+            if (!state.currentGroup) return;
+            
+            if (state.currentGroup.timeout) {
+              clearTimeout(state.currentGroup.timeout);
+            }
+            
+            // If group has entries, they're already recorded individually
+            // Just clear the group
+            set({ currentGroup: null }, false, 'endGroup');
+          },
+          
+          createBranch: (name, fromCurrentState = true) => {
+            const branchId = generateId();
+            const state = get();
+            
+            const newBranch: HistoryBranch = {
+              id: branchId,
+              name,
+              entries: [],
+              parentBranchId: state.currentBranchId,
+              createdAt: new Date()
+            };
+            
+            // Copy current history up to current index if requested
+            if (fromCurrentState) {
+              const currentBranch = state.branches.get(state.currentBranchId);
+              if (currentBranch) {
+                newBranch.entries = currentBranch.entries.slice(0, state.currentIndex + 1);
+              }
+            }
+            
+            const newBranches = new Map(state.branches);
+            newBranches.set(branchId, newBranch);
+            
+            set({ branches: newBranches }, false, 'createBranch');
+            
+            return branchId;
+          },
+          
+          switchBranch: (branchId) => {
+            const state = get();
+            const targetBranch = state.branches.get(branchId);
+            
+            if (!targetBranch) return false;
+            
+            // Apply all states from the target branch
+            targetBranch.entries.forEach(entry => {
+              const storeInterface = state.registeredStores.get(entry.storeKey);
+              if (storeInterface) {
+                const stateToApply = entry.compressed 
+                  ? decompressState(entry.nextState)
+                  : entry.nextState;
+                  
+                storeInterface.setState(stateToApply, `branch:${entry.actionName}`);
+              }
+            });
+            
+            set({
+              currentBranchId: branchId,
+              currentIndex: targetBranch.entries.length - 1
+            }, false, 'switchBranch');
+            
+            return true;
+          },
+          
+          deleteBranch: (branchId) => {
+            if (branchId === 'main') return; // Can't delete main branch
+            
+            const state = get();
+            const newBranches = new Map(state.branches);
+            newBranches.delete(branchId);
+            
+            let newCurrentBranchId = state.currentBranchId;
+            if (state.currentBranchId === branchId) {
+              newCurrentBranchId = 'main';
+            }
+            
+            set({
+              branches: newBranches,
+              currentBranchId: newCurrentBranchId,
+              currentIndex: newBranches.get(newCurrentBranchId)?.entries.length - 1 || -1
+            }, false, 'deleteBranch');
+          },
+          
+          mergeBranch: (sourceBranchId, targetBranchId) => {
+            const state = get();
+            const sourceBranch = state.branches.get(sourceBranchId);
+            const targetBranch = state.branches.get(targetBranchId);
+            
+            if (!sourceBranch || !targetBranch) return false;
+            
+            // Merge source branch entries into target branch
+            const mergedEntries = [...targetBranch.entries, ...sourceBranch.entries];
+            
+            const newBranches = new Map(state.branches);
+            newBranches.set(targetBranchId, {
+              ...targetBranch,
+              entries: mergedEntries
+            });
+            
+            set({ branches: newBranches }, false, 'mergeBranch');
+            
+            return true;
+          },
+          
+          getHistory: (storeKey, limit) => {
+            const state = get();
+            const currentBranch = state.branches.get(state.currentBranchId);
+            
+            if (!currentBranch) return [];
+            
+            let entries = currentBranch.entries;
+            
+            if (storeKey) {
+              entries = entries.filter(entry => entry.storeKey === storeKey);
+            }
+            
+            if (limit && entries.length > limit) {
+              entries = entries.slice(-limit);
+            }
+            
+            return entries;
+          },
+          
+          getHistorySize: (storeKey) => {
+            return get().getHistory(storeKey).length;
+          },
+          
+          clearHistory: (storeKey) => {
+            const state = get();
+            const currentBranch = state.branches.get(state.currentBranchId);
+            
+            if (!currentBranch) return;
+            
+            let newEntries = currentBranch.entries;
+            
+            if (storeKey) {
+              newEntries = newEntries.filter(entry => entry.storeKey !== storeKey);
+            } else {
+              newEntries = [];
+            }
+            
+            const newBranches = new Map(state.branches);
+            newBranches.set(state.currentBranchId, {
+              ...currentBranch,
+              entries: newEntries
+            });
+            
+            set({
+              branches: newBranches,
+              currentIndex: newEntries.length - 1
+            }, false, 'clearHistory');
+          },
+          
+          jumpToEntry: (entryId) => {
+            const state = get();
+            const currentBranch = state.branches.get(state.currentBranchId);
+            
+            if (!currentBranch) return false;
+            
+            const entryIndex = currentBranch.entries.findIndex(entry => entry.id === entryId);
+            
+            if (entryIndex === -1) return false;
+            
+            // Apply all states up to the target entry
+            for (let i = 0; i <= entryIndex; i++) {
+              const entry = currentBranch.entries[i];
+              const storeInterface = state.registeredStores.get(entry.storeKey);
+              
+              if (storeInterface) {
+                const stateToApply = entry.compressed 
+                  ? decompressState(entry.nextState)
+                  : entry.nextState;
+                  
+                storeInterface.setState(stateToApply, `jump:${entry.actionName}`);
+              }
+            }
+            
+            set({ currentIndex: entryIndex }, false, 'jumpToEntry');
+            
+            return true;
+          },
+          
+          getStateAt: (timestamp, storeKey) => {
+            const state = get();
+            const currentBranch = state.branches.get(state.currentBranchId);
+            
+            if (!currentBranch) return null;
+            
+            // Find the last entry for this store before or at the timestamp
+            for (let i = currentBranch.entries.length - 1; i >= 0; i--) {
+              const entry = currentBranch.entries[i];
+              if (entry.storeKey === storeKey && entry.timestamp <= timestamp) {
+                return entry.compressed 
+                  ? decompressState(entry.nextState)
+                  : entry.nextState;
+              }
+            }
+            
+            return null;
+          },
+          
+          _recordEntry: (storeKey, actionName, previousState, nextState, metadata) => {
+            const state = get();
+            
+            const entry: HistoryEntry = {
+              id: generateId(),
+              timestamp: new Date(),
+              storeKey,
+              actionName,
+              previousState,
+              nextState,
+              metadata
+            };
+            
+            // Check if compression is needed
+            const entrySize = JSON.stringify(entry).length;
+            if (entrySize > state.config.compressionThreshold) {
+              entry.previousState = compressState(previousState);
+              entry.nextState = compressState(nextState);
+              entry.compressed = true;
+            }
+            
+            const currentBranch = state.branches.get(state.currentBranchId)!;
+            
+            // If we're not at the end of history, create a new branch
+            let targetBranch = currentBranch;
+            let targetBranchId = state.currentBranchId;
+            
+            if (state.currentIndex < currentBranch.entries.length - 1) {
+              // Create new branch from current position
+              targetBranchId = get().createBranch(`Auto-${Date.now()}`, true);
+              targetBranch = state.branches.get(targetBranchId)!;
+            }
+            
+            // Add entry to branch
+            const newEntries = [...targetBranch.entries, entry];
+            
+            // Maintain max history size
+            if (newEntries.length > state.config.maxHistorySize) {
+              newEntries.shift(); // Remove oldest entry
+            }
+            
+            const newBranches = new Map(state.branches);
+            newBranches.set(targetBranchId, {
+              ...targetBranch,
+              entries: newEntries
+            });
+            
+            set({
+              branches: newBranches,
+              currentBranchId: targetBranchId,
+              currentIndex: newEntries.length - 1
+            }, false, 'recordEntry');
+          },
+          
+          _compressEntry: (entry) => {
+            return {
+              ...entry,
+              previousState: compressState(entry.previousState),
+              nextState: compressState(entry.nextState),
+              compressed: true
+            };
+          },
+          
+          _cleanup: () => {
+            const state = get();
+            const cutoffTime = Date.now() - state.config.autoCleanupMs;
+            let hasChanges = false;
+            
+            const newBranches = new Map();
+            
+            state.branches.forEach((branch, branchId) => {
+              const filteredEntries = branch.entries.filter(
+                entry => entry.timestamp.getTime() > cutoffTime
+              );
+              
+              if (filteredEntries.length !== branch.entries.length) {
+                hasChanges = true;
+              }
+              
+              newBranches.set(branchId, {
+                ...branch,
+                entries: filteredEntries
+              });
+            });
+            
+            if (hasChanges) {
+              set({ branches: newBranches }, false, 'cleanup');
+            }
+          },
+          
+          _shouldTrack: (storeKey, actionName) => {
+            const state = get();
+            const strategy = state.config.trackingStrategies[storeKey] || 'full';
+            
+            if (strategy === 'none') return false;
+            
+            // Don't track undo/redo actions to prevent infinite loops
+            if (actionName?.startsWith('undo:') || actionName?.startsWith('redo:')) {
+              return false;
+            }
+            
+            return true;
+          },
+          
+          _extractTrackedState: (storeKey, fullState) => {
+            const state = get();
+            const strategy = state.config.trackingStrategies[storeKey] || 'full';
+            
+            if (strategy === 'selective') {
+              const propsToTrack = state.config.selectiveProps[storeKey] || [];
+              const trackedState: any = {};
+              
+              propsToTrack.forEach(prop => {
+                if (prop in fullState) {
+                  trackedState[prop] = fullState[prop];
+                }
+              });
+              
+              return trackedState;
+            }
+            
+            return fullState;
+          }
+        };
+      }
+    ),
+    { name: 'UndoRedoStore' }
+  )
+);
+
+// Selectors
+const undoRedoSelector = createShallowSelector((state: UndoRedoState) => ({
+  canUndo: (storeKey?: string) => state.canUndo(storeKey),
+  canRedo: (storeKey?: string) => state.canRedo(storeKey),
+  currentBranch: state.branches.get(state.currentBranchId)?.name || 'Unknown',
+  historySize: state.branches.get(state.currentBranchId)?.entries.length || 0,
+  currentIndex: state.currentIndex
+}));
+
+// Hooks
+export const useUndoRedo = (storeKey?: string) => {
+  const selector = undoRedoSelector(useUndoRedoStore);
+  const actions = useUndoRedoStore((state) => ({
+    undo: () => state.undo(storeKey),
+    redo: () => state.redo(storeKey),
+    startGroup: state.startGroup,
+    endGroup: state.endGroup,
+    canUndo: selector.canUndo(storeKey),
+    canRedo: selector.canRedo(storeKey)
+  }));
+  
+  return actions;
+};
+
+export const useUndoRedoActions = () => {
+  return useUndoRedoStore((state) => ({
+    registerStore: state.registerStore,
+    unregisterStore: state.unregisterStore,
+    createBranch: state.createBranch,
+    switchBranch: state.switchBranch,
+    deleteBranch: state.deleteBranch,
+    mergeBranch: state.mergeBranch,
+    clearHistory: state.clearHistory,
+    jumpToEntry: state.jumpToEntry
+  }));
+};
+
+// Auto-registration hook
+export const useUndoRedoRegistration = (
+  storeKey: string,
+  useStore: any,
+  strategy: 'full' | 'selective' | 'none' = 'full',
+  selectiveProps?: string[]
+) => {
+  const { registerStore, unregisterStore } = useUndoRedoActions();
+  
+  React.useEffect(() => {
+    const storeInterface = {
+      getState: () => useStore.getState(),
+      setState: (state: any, actionName?: string) => {
+        useStore.setState(state, false, actionName);
+      },
+      subscribe: (callback: (state: any) => void) => {
+        return useStore.subscribe(callback);
+      }
+    };
+    
+    registerStore(storeKey, storeInterface, strategy);
+    
+    // Set selective props if provided
+    if (strategy === 'selective' && selectiveProps) {
+      useUndoRedoStore.setState((state) => ({
+        config: {
+          ...state.config,
+          selectiveProps: {
+            ...state.config.selectiveProps,
+            [storeKey]: selectiveProps
+          }
+        }
+      }));
+    }
+    
+    return () => unregisterStore(storeKey);
+  }, [storeKey, registerStore, unregisterStore, strategy, selectiveProps]);
+};
+
+// Keyboard shortcuts for undo/redo
+export const useUndoRedoShortcuts = (storeKey?: string) => {
+  const { undo, redo } = useUndoRedo(storeKey);
+  
+  React.useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && !event.shiftKey && event.key === 'z') {
+        event.preventDefault();
+        undo();
+      } else if ((event.ctrlKey || event.metaKey) && (event.shiftKey && event.key === 'Z' || event.key === 'y')) {
+        event.preventDefault();
+        redo();
+      }
+    };
+    
+    if (typeof window !== 'undefined') {
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }
+  }, [undo, redo]);
+};

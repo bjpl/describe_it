@@ -6,6 +6,7 @@ import {
   isProduction,
 } from "@/config/env";
 import { performHealthCheck } from "@/lib/startup-validation";
+import { apiLogger } from '@/lib/logger';
 
 /**
  * Environment Status API Endpoint
@@ -98,7 +99,7 @@ export async function GET(request: Request) {
       },
     });
   } catch (error) {
-    console.error("Environment status check failed:", error);
+    apiLogger.error("Environment status check failed:", error);
 
     return NextResponse.json(
       {

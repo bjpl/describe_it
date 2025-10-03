@@ -1,3 +1,5 @@
+import { securityLogger } from '@/lib/logger';
+
 /**
  * Rate Limiting Security Utilities
  * Provides comprehensive rate limiting to prevent abuse and DDoS attacks
@@ -118,7 +120,7 @@ class RedisRateLimitStore implements RateLimitStore {
       const data = await this.client.get(key);
       return data ? safeParse(data) : null;
     } catch (error) {
-      console.error('Redis rate limit get error:', error);
+      securityLogger.error('Redis rate limit get error:', error);
       return null;
     }
   }
@@ -127,7 +129,7 @@ class RedisRateLimitStore implements RateLimitStore {
     try {
       await this.client.setex(key, Math.ceil(ttl / 1000), safeStringify(value));
     } catch (error) {
-      console.error('Redis rate limit set error:', error);
+      securityLogger.error('Redis rate limit set error:', error);
     }
   }
 
@@ -149,7 +151,7 @@ class RedisRateLimitStore implements RateLimitStore {
       await this.set(key, newData, ttl);
       return newData;
     } catch (error) {
-      console.error('Redis rate limit increment error:', error);
+      securityLogger.error('Redis rate limit increment error:', error);
       // Fallback to allow the request
       return { count: 1, resetTime: Date.now() + ttl };
     }
@@ -159,7 +161,7 @@ class RedisRateLimitStore implements RateLimitStore {
     try {
       await this.client.del(key);
     } catch (error) {
-      console.error('Redis rate limit reset error:', error);
+      securityLogger.error('Redis rate limit reset error:', error);
     }
   }
 }
@@ -211,7 +213,7 @@ export class RateLimiter {
         retryAfter: allowed ? undefined : Math.ceil((current.resetTime - Date.now()) / 1000)
       };
     } catch (error) {
-      console.error('Rate limit check error:', error);
+      securityLogger.error('Rate limit check error:', error);
       
       // On error, allow the request but log the issue
       return {
@@ -409,7 +411,7 @@ export function createRateLimitMiddleware(
 
       next();
     } catch (error) {
-      console.error('Rate limit middleware error:', error);
+      securityLogger.error('Rate limit middleware error:', error);
       // On error, allow the request to continue
       next();
     }

@@ -13,6 +13,7 @@ import {
   SessionExportItem,
 } from "../../types/export";
 import { VocabularyItem } from "../../types/unified";
+import { logger } from '@/lib/logger';
 
 export interface ResponseItem {
   question: string;
@@ -89,10 +90,10 @@ export function exportVocabulary(vocabularyData: VocabularyExportItem[]): Blob {
       "created_at",
     ];
     const csvContent = arrayToCSV(vocabularyData, headers);
-    console.log("Vocabulary CSV generated successfully");
+    logger.info("Vocabulary CSV generated successfully");
     return new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   } catch (error) {
-    console.error("Error exporting vocabulary:", error);
+    logger.error("Error exporting vocabulary:", error);
     throw new Error("Failed to export vocabulary data");
   }
 }
@@ -105,10 +106,10 @@ export function exportResponses(responsesData: ResponseItem[]): Blob {
   try {
     const headers = ["question", "user_answer", "correct_answer", "timestamp"];
     const csvContent = arrayToCSV(responsesData, headers);
-    console.log("Responses CSV generated successfully");
+    logger.info("Responses CSV generated successfully");
     return new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   } catch (error) {
-    console.error("Error exporting responses:", error);
+    logger.error("Error exporting responses:", error);
     throw new Error("Failed to export responses data");
   }
 }
@@ -121,10 +122,10 @@ export function exportSession(sessionData: SessionData[]): Blob {
   try {
     const headers = ["timestamp", "activity_type", "content", "details"];
     const csvContent = arrayToCSV(sessionData, headers);
-    console.log("Session CSV generated successfully");
+    logger.info("Session CSV generated successfully");
     return new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
   } catch (error) {
-    console.error("Error exporting session:", error);
+    logger.error("Error exporting session:", error);
     throw new Error("Failed to export session data");
   }
 }
@@ -216,7 +217,7 @@ export class CSVExporter {
         type: `text/csv;charset=${this.options.encoding}`,
       });
     } catch (error) {
-      console.error("Error generating CSV export:", error);
+      logger.error("Error generating CSV export:", error);
       throw new Error("Failed to generate CSV export");
     }
   }
@@ -531,10 +532,10 @@ export async function exportAllData(
 
     const combinedCSV = csvSections.join("\n");
     
-    console.log("All data exported successfully");
+    logger.info("All data exported successfully");
     return new Blob([combinedCSV], { type: "text/csv;charset=utf-8;" });
   } catch (error) {
-    console.error("Error exporting all data:", error);
+    logger.error("Error exporting all data:", error);
     throw new Error("Failed to export all data");
   }
 }

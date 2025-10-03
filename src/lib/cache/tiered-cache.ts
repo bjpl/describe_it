@@ -10,6 +10,7 @@ import { redisCache } from "../api/redis-adapter";
 import { vercelKvCache } from "../api/vercel-kv";
 import { memoryCache } from "./memory-cache";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 interface CacheConfig {
   enableRedis: boolean;
@@ -98,7 +99,7 @@ export class TieredCache {
           return redisResult;
         }
       } catch (error) {
-        console.warn("Redis cache error during get:", error);
+        logger.warn("Redis cache error during get:", error);
         this.metrics.redisHealthy = false;
       }
     }
@@ -123,7 +124,7 @@ export class TieredCache {
           return kvResult;
         }
       } catch (error) {
-        console.warn("KV cache error during get:", error);
+        logger.warn("KV cache error during get:", error);
         this.metrics.kvHealthy = false;
       }
     }
@@ -158,7 +159,7 @@ export class TieredCache {
           }
         }
       } catch (error) {
-        console.warn("Session cache error during get:", error);
+        logger.warn("Session cache error during get:", error);
       }
     }
 
@@ -192,7 +193,7 @@ export class TieredCache {
     if (this.config.enableRedis && this.metrics.redisHealthy) {
       promises.push(
         redisCache.set(prefixedKey, value, redisTTL).catch((error) => {
-          console.warn("Redis cache error during set:", error);
+          logger.warn("Redis cache error during set:", error);
           this.metrics.redisHealthy = false;
         }),
       );
@@ -202,7 +203,7 @@ export class TieredCache {
     if (this.config.enableKV && this.metrics.kvHealthy) {
       promises.push(
         vercelKvCache.set(prefixedKey, value, kvTTL).catch((error) => {
-          console.warn("KV cache error during set:", error);
+          logger.warn("KV cache error during set:", error);
           this.metrics.kvHealthy = false;
         }),
       );
@@ -226,7 +227,7 @@ export class TieredCache {
             };
             sessionStorage.setItem(prefixedKey, safeStringify(sessionEntry));
           } catch (error) {
-            console.warn("Session cache error during set:", error);
+            logger.warn("Session cache error during set:", error);
           }
         }),
       );
@@ -238,7 +239,7 @@ export class TieredCache {
     } else {
       // Fire and forget for better performance
       Promise.all(promises).catch((error) => {
-        console.warn("Background cache set failed:", error);
+        logger.warn("Background cache set failed:", error);
       });
     }
   }
@@ -256,7 +257,7 @@ export class TieredCache {
         const kvResult = await vercelKvCache.delete(prefixedKey);
         results.push(kvResult);
       } catch (error) {
-        console.warn("KV cache error during delete:", error);
+        logger.warn("KV cache error during delete:", error);
         results.push(false);
       }
     }
@@ -272,7 +273,7 @@ export class TieredCache {
         sessionStorage.removeItem(prefixedKey);
         results.push(true);
       } catch (error) {
-        console.warn("Session cache error during delete:", error);
+        logger.warn("Session cache error during delete:", error);
         results.push(false);
       }
     }
@@ -352,7 +353,7 @@ export class TieredCache {
         const kvCleared = await vercelKvCache.clear(pattern);
         totalCleared += kvCleared;
       } catch (error) {
-        console.warn("KV cache error during clear:", error);
+        logger.warn("KV cache error during clear:", error);
       }
     }
 
@@ -377,7 +378,7 @@ export class TieredCache {
         }
         totalCleared += sessionCleared;
       } catch (error) {
-        console.warn("Session cache error during clear:", error);
+        logger.warn("Session cache error during clear:", error);
       }
     }
 
@@ -395,7 +396,7 @@ export class TieredCache {
       try {
         kvStats = await vercelKvCache.getStats();
       } catch (error) {
-        console.warn("Could not get KV stats:", error);
+        logger.warn("Could not get KV stats:", error);
       }
     }
 

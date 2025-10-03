@@ -64,7 +64,7 @@ export class ComponentPreloader {
       await preloadPromise;
       this.preloadedComponents.add(componentName);
     } catch (error) {
-      console.warn(`Failed to preload component ${componentName}:`, error);
+      logger.warn(`Failed to preload component ${componentName}:`, error);
       this.preloadPromises.delete(componentName);
     }
   }
@@ -97,7 +97,7 @@ export class ComponentPreloader {
   async executeStrategy(strategyName: string): Promise<void> {
     const strategy = PreloadStrategies[strategyName];
     if (!strategy) {
-      console.warn(`Unknown preload strategy: ${strategyName}`);
+      logger.warn(`Unknown preload strategy: ${strategyName}`);
       return;
     }
 
@@ -149,6 +149,7 @@ export function useComponentPreloader() {
  * HOC for automatic component preloading
  */
 import React from "react";
+import { logger } from '@/lib/logger';
 
 export function withPreloader<P extends object>(
   WrappedComponent: React.ComponentType<P>,

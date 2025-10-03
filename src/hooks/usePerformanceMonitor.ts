@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
+import { performanceLogger } from '@/lib/logger';
 
 interface PerformanceMetrics {
   renderTime: number;
@@ -18,7 +19,7 @@ interface PerformanceState {
 }
 
 export const usePerformanceMonitor = (componentName?: string) => {
-  console.log(`[PERFORMANCE] Initializing monitor for ${componentName || 'component'}`);
+  performanceLogger.info(`[PERFORMANCE] Initializing monitor for ${componentName || 'component'}`);
   
   const [performanceState, setPerformanceState] = useState<PerformanceState>({
     metrics: { renderTime: 0 },
@@ -46,7 +47,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
     try {
       if (renderStartTime.current > 0) {
         const renderTime = (isBrowser ? performance.now() : Date.now()) - renderStartTime.current;
-        console.log(`[PERFORMANCE] ${componentName || 'Component'} render end: ${renderTime.toFixed(2)}ms`);
+        performanceLogger.info(`[PERFORMANCE] ${componentName || 'Component'} render end: ${renderTime.toFixed(2)}ms`);
         
         setPerformanceState(prev => ({
           ...prev,
@@ -56,7 +57,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
         // Alert if render time is too high
         if (renderTime > 16) { // > 16ms can cause jank at 60fps
           const alertMessage = `Slow render: ${renderTime.toFixed(2)}ms in ${componentName || 'component'}`;
-          console.warn(`[PERFORMANCE] ${alertMessage}`);
+          performanceLogger.warn(`[PERFORMANCE] ${alertMessage}`);
           setPerformanceState(prev => ({
             ...prev,
             alerts: [...prev.alerts, alertMessage]
@@ -64,7 +65,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
         }
       }
     } catch (error) {
-      console.warn('[PERFORMANCE] Failed to track render end:', error);
+      performanceLogger.warn('[PERFORMANCE] Failed to track render end:', error);
     }
   }, [componentName, isBrowser]);
 
@@ -153,13 +154,13 @@ export const usePerformanceMonitor = (componentName?: string) => {
           fcpObserver.disconnect();
           clsObserver.disconnect();
           fidObserver.disconnect();
-          console.log('[PERFORMANCE] Web Vitals observers disconnected');
+          performanceLogger.info('[PERFORMANCE] Web Vitals observers disconnected');
         } catch (error) {
-          console.warn('[PERFORMANCE] Failed to disconnect observers:', error);
+          performanceLogger.warn('[PERFORMANCE] Failed to disconnect observers:', error);
         }
       };
     } catch (error) {
-      console.warn('[PERFORMANCE] Failed to start Web Vitals monitoring:', error);
+      performanceLogger.warn('[PERFORMANCE] Failed to start Web Vitals monitoring:', error);
       return () => {}; // Return empty cleanup function
     }
   }, [isBrowser]);
@@ -178,7 +179,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
         const usagePercent = (memoryInfo.usedJSHeapSize / memoryInfo.totalJSHeapSize) * 100;
         if (usagePercent > 80) {
           const alertMessage = `High memory usage: ${usagePercent.toFixed(1)}%`;
-          console.warn(`[PERFORMANCE] ${alertMessage}`);
+          performanceLogger.warn(`[PERFORMANCE] ${alertMessage}`);
           setPerformanceState(prev => ({
             ...prev,
             alerts: [...prev.alerts, alertMessage]
@@ -186,7 +187,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
         }
       }
     } catch (error) {
-      console.warn('[PERFORMANCE] Failed to track memory usage:', error);
+      performanceLogger.warn('[PERFORMANCE] Failed to track memory usage:', error);
     }
   }, [isBrowser]);
 

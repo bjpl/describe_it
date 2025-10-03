@@ -7,6 +7,7 @@ import { exportResponses } from "./csvExporter";
 import { SessionReportGenerator } from "../logging/sessionReportGenerator";
 import { getSessionLogger } from "../logging/sessionLogger";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface ExportData {
   descriptions?: Array<{
@@ -92,7 +93,7 @@ export class UnifiedExporter {
         componentName: baseFilename,
       });
     } catch (error) {
-      console.error("Export failed:", error);
+      logger.error("Export failed:", error);
       this.getSessionLogger().logError(
         `Export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         error instanceof Error ? error.stack : undefined,
@@ -198,7 +199,7 @@ export class UnifiedExporter {
       const sessionSummary = this.getSessionLogger().generateSummary();
       exportData.sessionSummary = sessionSummary;
     } catch (error) {
-      console.warn("Could not generate session summary for export");
+      logger.warn("Could not generate session summary for export");
     }
 
     // Add metadata
@@ -255,7 +256,7 @@ export class UnifiedExporter {
   ): void {
     // Only works in browser environment
     if (typeof window === "undefined" || typeof document === "undefined") {
-      console.warn("Download not available in SSR environment");
+      logger.warn("Download not available in SSR environment");
       return;
     }
 

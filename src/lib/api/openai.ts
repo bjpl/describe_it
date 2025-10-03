@@ -12,6 +12,7 @@ import {
 import { vercelKvCache } from "./vercel-kv";
 import { apiKeyProvider } from "./keyProvider";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { apiLogger } from '@/lib/logger';
 
 class OpenAIService {
   private client: OpenAI | null = null;
@@ -37,7 +38,7 @@ class OpenAIService {
       this.initializeWithKeyProvider();
       this.setupKeyUpdateListener();
     } else {
-      console.warn('[OpenAIService] Running in browser environment - service will use server API routes');
+      apiLogger.warn('[OpenAIService] Running in browser environment - service will use server API routes');
       this.client = null;
       this.isValidApiKey = false;
     }
@@ -52,7 +53,7 @@ class OpenAIService {
     try {
       config = apiKeyProvider.getServiceConfig('openai');
     } catch (configError) {
-      console.error('[OpenAIService] Failed to get service config:', configError);
+      apiLogger.error('[OpenAIService] Failed to get service config:', configError);
       this.client = null;
       this.isValidApiKey = false;
       this.initializeDemoMode();
@@ -60,7 +61,7 @@ class OpenAIService {
     }
     
     if (!config) {
-      console.error('[OpenAIService] No service config returned');
+      apiLogger.error('[OpenAIService] No service config returned');
       this.client = null;
       this.isValidApiKey = false;
       this.initializeDemoMode();
@@ -70,7 +71,7 @@ class OpenAIService {
     this.currentApiKey = config.apiKey || '';
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[OpenAIService] Initializing with keyProvider:', {
+      apiLogger.info('[OpenAIService] Initializing with keyProvider:', {
         hasKey: !!this.currentApiKey,
         keyLength: this.currentApiKey?.length || 0,
         keyPrefix: this.currentApiKey ? this.currentApiKey.substring(0, 6) + '...' : 'none',
@@ -83,7 +84,7 @@ class OpenAIService {
 
     // First check if we have a valid API key before falling back to demo mode
     if (!this.currentApiKey || !this.validateApiKey(this.currentApiKey)) {
-      console.warn('[OpenAIService] API key not found or invalid format. Using demo mode.', {
+      apiLogger.warn('[OpenAIService] API key not found or invalid format. Using demo mode.', {
         hasKey: !!this.currentApiKey,
         keyLength: this.currentApiKey?.length || 0,
         validationResult: this.currentApiKey ? this.validateApiKey(this.currentApiKey) : false,
@@ -98,7 +99,7 @@ class OpenAIService {
 
     // Key exists and has valid format, initialize client
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[OpenAIService] Valid API key detected, initializing OpenAI client', {
+      apiLogger.info('[OpenAIService] Valid API key detected, initializing OpenAI client', {
         keyLength: this.currentApiKey.length,
         keyPrefix: this.currentApiKey.substring(0, 6) + '...',
         source: config.source
@@ -108,7 +109,7 @@ class OpenAIService {
     try {
       this.initializeClient();
     } catch (initError) {
-      console.error('[OpenAIService] Failed to initialize client:', initError);
+      apiLogger.error('[OpenAIService] Failed to initialize client:', initError);
       this.client = null;
       this.isValidApiKey = false;
       this.initializeDemoMode();
@@ -122,21 +123,21 @@ class OpenAIService {
     // CRITICAL: Only initialize OpenAI client on the server side
     // The OpenAI SDK blocks browser initialization for security
     if (typeof window !== 'undefined') {
-      console.warn('[OpenAIService] Skipping client initialization in browser environment');
+      apiLogger.warn('[OpenAIService] Skipping client initialization in browser environment');
       this.client = null;
       this.isValidApiKey = false;
       return;
     }
 
     if (!this.currentApiKey) {
-      console.error('[OpenAIService] Cannot initialize client: no API key available');
+      apiLogger.error('[OpenAIService] Cannot initialize client: no API key available');
       this.client = null;
       this.isValidApiKey = false;
       return;
     }
 
     if (!this.validateApiKey(this.currentApiKey)) {
-      console.error('[OpenAIService] Cannot initialize client: API key validation failed');
+      apiLogger.error('[OpenAIService] Cannot initialize client: API key validation failed');
       this.client = null;
       this.isValidApiKey = false;
       return;
@@ -153,14 +154,14 @@ class OpenAIService {
 
       this.isValidApiKey = true;
       
-      console.log('[OpenAIService] OpenAI client successfully initialized (server-side)', {
+      apiLogger.info('[OpenAIService] OpenAI client successfully initialized (server-side)', {
         hasClient: !!this.client,
         isValidApiKey: this.isValidApiKey,
         keyType: this.currentApiKey.startsWith('sk-proj-') ? 'project' : 'standard',
         environment: 'server'
       });
     } catch (error) {
-      console.error('[OpenAIService] Failed to initialize OpenAI client:', error);
+      apiLogger.error('[OpenAIService] Failed to initialize OpenAI client:', error);
       this.client = null;
       this.isValidApiKey = false;
     }
@@ -176,7 +177,7 @@ class OpenAIService {
           const newKey = keys?.openai || '';
           
           if (newKey !== this.currentApiKey) {
-            console.log('[OpenAIService] Key updated, reinitializing service', {
+            apiLogger.info('[OpenAIService] Key updated, reinitializing service', {
               hadPreviousKey: !!this.currentApiKey,
               hasNewKey: !!newKey,
               keyChanged: true
@@ -197,16 +198,16 @@ class OpenAIService {
                 this.initializeClient();
               }
             } catch (reinitError) {
-              console.error('[OpenAIService] Failed to reinitialize after key update:', reinitError);
+              apiLogger.error('[OpenAIService] Failed to reinitialize after key update:', reinitError);
               this.initializeDemoMode();
             }
           }
         } catch (listenerError) {
-          console.error('[OpenAIService] Error in key update listener:', listenerError);
+          apiLogger.error('[OpenAIService] Error in key update listener:', listenerError);
         }
       });
     } catch (setupError) {
-      console.error('[OpenAIService] Failed to setup key update listener:', setupError);
+      apiLogger.error('[OpenAIService] Failed to setup key update listener:', setupError);
     }
   }
 
@@ -225,7 +226,7 @@ class OpenAIService {
    */
   private validateApiKey(apiKey: string | undefined): boolean {
     if (!apiKey || typeof apiKey !== 'string') {
-      console.warn('[OpenAIService] API key validation failed: missing or invalid type', {
+      apiLogger.warn('[OpenAIService] API key validation failed: missing or invalid type', {
         hasKey: !!apiKey,
         type: typeof apiKey
       });
@@ -234,7 +235,7 @@ class OpenAIService {
 
     // Check API key format (OpenAI keys start with 'sk-' or 'sk-proj-')
     if (!apiKey.startsWith('sk-')) {
-      console.error('[OpenAIService] API key validation failed: invalid format', {
+      apiLogger.error('[OpenAIService] API key validation failed: invalid format', {
         keyPrefix: apiKey.substring(0, 5),
         expectedFormat: 'sk-* or sk-proj-*'
       });
@@ -246,7 +247,7 @@ class OpenAIService {
     const minLength = 20;
 
     if (apiKey.length < minLength) {
-      console.error('[OpenAIService] API key validation failed: too short', {
+      apiLogger.error('[OpenAIService] API key validation failed: too short', {
         keyLength: apiKey.length,
         expectedMinLength: minLength
       });
@@ -256,7 +257,7 @@ class OpenAIService {
     // Use consistent regex pattern with keyProvider
     const keyPattern = /^sk-(proj-)?[a-zA-Z0-9_-]{20,}$/;
     if (!keyPattern.test(apiKey)) {
-      console.error('[OpenAIService] API key validation failed: invalid format pattern', {
+      apiLogger.error('[OpenAIService] API key validation failed: invalid format pattern', {
         keyLength: apiKey.length,
         keyPrefix: apiKey.substring(0, 8) + '...'
       });
@@ -265,7 +266,7 @@ class OpenAIService {
     
     // Accept any length above minimum - keys can be 164+ characters
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[OpenAIService] API key validation passed', {
+      apiLogger.info('[OpenAIService] API key validation passed', {
         keyLength: apiKey.length,
         keyType: apiKey.startsWith('sk-proj-') ? 'project' : 'standard'
       });
@@ -285,7 +286,7 @@ class OpenAIService {
 
     if (invalidPlaceholders.some(placeholder => apiKey.toLowerCase().includes(placeholder.toLowerCase()))) {
       if (process.env.NODE_ENV !== 'production') {
-        console.error('[OpenAIService] API key validation failed: placeholder detected', {
+        apiLogger.error('[OpenAIService] API key validation failed: placeholder detected', {
           keyPrefix: apiKey.substring(0, 6) + '...'
         });
       }
@@ -296,7 +297,7 @@ class OpenAIService {
     const suspiciousPatterns = /[<>"'`\\]/;
     if (suspiciousPatterns.test(apiKey)) {
       if (process.env.NODE_ENV !== 'production') {
-        console.error('[OpenAIService] API key validation failed: suspicious characters', {
+        apiLogger.error('[OpenAIService] API key validation failed: suspicious characters', {
           keyPrefix: apiKey.substring(0, 6) + '...'
         });
       }
@@ -304,7 +305,7 @@ class OpenAIService {
     }
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[OpenAIService] API key validation passed', {
+      apiLogger.info('[OpenAIService] API key validation passed', {
         keyLength: apiKey.length,
         keyType: apiKey.startsWith('sk-proj-') ? 'project' : 'standard',
         keyPrefix: apiKey.substring(0, 6) + '...'
@@ -318,7 +319,7 @@ class OpenAIService {
    * Initialize demo mode with enhanced logging
    */
   private initializeDemoMode(): void {
-    console.info('[OpenAIService] Initializing demo mode', {
+    apiLogger.info('[OpenAIService] Initializing demo mode', {
       reason: 'API key unavailable or invalid',
       hasCurrentKey: !!this.currentApiKey,
       keyLength: this.currentApiKey?.length || 0,
@@ -331,7 +332,7 @@ class OpenAIService {
     this.isValidApiKey = false;
     
     // Log demo mode capabilities
-    console.info('[OpenAIService] Demo mode active - will use fallback responses for:', {
+    apiLogger.info('[OpenAIService] Demo mode active - will use fallback responses for:', {
       capabilities: [
         'generateDescription',
         'generateQA', 
@@ -353,7 +354,7 @@ class OpenAIService {
    * Force refresh the service with latest keys
    */
   public refreshService(): void {
-    console.log('[OpenAIService] Force refreshing service');
+    apiLogger.info('[OpenAIService] Force refreshing service');
     // Force the key provider to refresh
     apiKeyProvider.refreshKeys();
     // Reinitialize with latest keys
@@ -555,7 +556,7 @@ class OpenAIService {
     const demoMode = this.client === null || !this.isValidApiKey;
     
     if (demoMode) {
-      console.warn('[OpenAIService] Currently in demo mode', {
+      apiLogger.warn('[OpenAIService] Currently in demo mode', {
         hasClient: !!this.client,
         isValidApiKey: this.isValidApiKey,
         hasCurrentApiKey: !!this.currentApiKey,
@@ -795,7 +796,7 @@ class OpenAIService {
     const { imageUrl, style, language = "es", maxLength = 300 } = request;
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('[OpenAI] generateDescription called:', {
+      apiLogger.info('[OpenAI] generateDescription called:', {
         hasImageUrl: !!imageUrl,
         imageUrlType: imageUrl?.startsWith('data:') ? 'base64' : 'url',
         style,
@@ -808,7 +809,7 @@ class OpenAIService {
 
     // Return demo description if in demo mode
     if (this.isDemoMode()) {
-      console.warn('[OpenAI] Running in DEMO MODE - no real vision analysis will occur');
+      apiLogger.warn('[OpenAI] Running in DEMO MODE - no real vision analysis will occur');
       return this.generateDemoDescription(style, imageUrl, language);
     }
 
@@ -834,7 +835,7 @@ class OpenAIService {
       const systemPrompt = `${stylePrompt} ${lengthInstruction}`;
 
       if (process.env.NODE_ENV !== 'production') {
-        console.log('[OpenAI] Calling GPT-4 Vision with:', {
+        apiLogger.info('[OpenAI] Calling GPT-4 Vision with:', {
           model: 'gpt-4o',
           style,
           language,
@@ -903,7 +904,7 @@ class OpenAIService {
       return description;
     } catch (error) {
       // Log the actual error for debugging
-      console.error('[OpenAI] generateDescription error:', {
+      apiLogger.error('[OpenAI] generateDescription error:', {
         error: error instanceof Error ? error.message : error,
         isDemoMode: this.isDemoMode(),
         hasClient: !!this.client,

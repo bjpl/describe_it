@@ -4,6 +4,7 @@ import { z } from "zod";
 import { descriptionCache } from "@/lib/cache";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
+import { apiLogger } from '@/lib/logger';
 
 // Type definitions from Zod schemas
 type VocabularyItem = z.infer<typeof vocabularySaveSchema>["vocabulary"] & {
@@ -287,7 +288,7 @@ class VocabularyStorage {
         hasMore: offset + limit < items.length,
       };
     } catch (error) {
-      console.warn("Failed to get vocabulary from cache:", error);
+      apiLogger.warn("Failed to get vocabulary from cache:", error);
       return {
         items: [],
         total: 0,
@@ -345,7 +346,7 @@ class VocabularyStorage {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      console.warn("Failed to update collection index:", error);
+      apiLogger.warn("Failed to update collection index:", error);
     }
   }
 
@@ -374,7 +375,7 @@ class VocabularyStorage {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      console.warn("Failed to update user stats:", error);
+      apiLogger.warn("Failed to update user stats:", error);
     }
   }
 
@@ -513,7 +514,7 @@ async function handleVocabularySave(request: AuthenticatedRequest) {
       );
     }
 
-    console.error("Vocabulary save error:", error);
+    apiLogger.error("Vocabulary save error:", error);
 
     return NextResponse.json(
       {
@@ -619,7 +620,7 @@ async function handleVocabularyGet(request: AuthenticatedRequest) {
       );
     }
 
-    console.error("Vocabulary retrieval error:", error);
+    apiLogger.error("Vocabulary retrieval error:", error);
 
     return NextResponse.json(
       {

@@ -8,6 +8,7 @@ import {
   createSuccessResponse
 } from '@/lib/schemas/api-validation';
 import { z } from 'zod';
+import { apiLogger } from '@/lib/logger';
 
 // Use Edge Runtime for better performance
 export const runtime = "edge";
@@ -89,7 +90,7 @@ export async function POST(request: NextRequest) {
       clearTimeout(timeoutId);
 
       if (!imageResponse.ok) {
-        console.error(`Failed to fetch image: ${imageResponse.status}`);
+        apiLogger.error(`Failed to fetch image: ${imageResponse.status}`);
         return createErrorResponse(
           `Failed to fetch image: ${imageResponse.status}`,
           imageResponse.status
@@ -133,11 +134,11 @@ export async function POST(request: NextRequest) {
         return createErrorResponse("Image fetch timeout", 504);
       }
 
-      console.error('Image proxy error:', error);
+      apiLogger.error('Image proxy error:', error);
       return createErrorResponse("Failed to process image", 500);
     }
   } catch (error) {
-    console.error('Image proxy error:', error);
+    apiLogger.error('Image proxy error:', error);
     return createErrorResponse(
       "Internal server error",
       500,

@@ -4,6 +4,7 @@
 
 import dotenv from 'dotenv';
 import path from 'path';
+import { authLogger } from '@/lib/logger';
 
 // Load Flow Nexus specific environment
 dotenv.config({ path: path.resolve(process.cwd(), '.env.flow-nexus') });
@@ -34,7 +35,7 @@ class FlowNexusAuthManager {
 
         // Password complexity check
         if (password.length < 8) {
-            console.warn('Password should be at least 8 characters');
+            authLogger.warn('Password should be at least 8 characters');
         }
 
         return { email, password };
@@ -46,7 +47,7 @@ class FlowNexusAuthManager {
         try {
             // Check if we have a valid session
             if (this.isSessionValid()) {
-                console.log('Using existing Flow Nexus session');
+                authLogger.info('Using existing Flow Nexus session');
                 return this.session;
             }
 
@@ -62,14 +63,14 @@ class FlowNexusAuthManager {
                 }
             };
 
-            console.log('Flow Nexus Authentication Configuration:');
-            console.log('Email:', email);
-            console.log('Password: [REDACTED]');
-            console.log('\nTo authenticate, use the following MCP call:');
-            console.log(`mcp__flow-nexus__user_login({`);
-            console.log(`  email: "${email}",`);
-            console.log(`  password: "${this.escapeSpecialChars(password)}"`);
-            console.log(`})`);
+            authLogger.info('Flow Nexus Authentication Configuration:');
+            authLogger.info('Email:', email);
+            authLogger.info('Password: [REDACTED]');
+            authLogger.info('\nTo authenticate, use the following MCP call:');
+            authLogger.info(`mcp__flow-nexus__user_login({`);
+            authLogger.info(`  email: "${email}",`);
+            authLogger.info(`  password: "${this.escapeSpecialChars(password)}"`);
+            authLogger.info(`})`);
 
             // Simulated response structure
             this.session = {
@@ -86,7 +87,7 @@ class FlowNexusAuthManager {
             return this.session;
 
         } catch (error) {
-            console.error('Authentication failed:', error.message);
+            authLogger.error('Authentication failed:', error.message);
             throw error;
         }
     }
@@ -122,7 +123,7 @@ class FlowNexusAuthManager {
         this.session = null;
         this.tokenExpiry = null;
         this.refreshToken = null;
-        console.log('Flow Nexus session cleared');
+        authLogger.info('Flow Nexus session cleared');
     }
 
     // CONCEPT: Balance checking with caching
@@ -131,8 +132,8 @@ class FlowNexusAuthManager {
         await this.authenticate();
         
         // Would call: mcp__flow-nexus__check_balance()
-        console.log('\nTo check balance, use:');
-        console.log('mcp__flow-nexus__check_balance()');
+        authLogger.info('\nTo check balance, use:');
+        authLogger.info('mcp__flow-nexus__check_balance()');
         
         return this.session?.user?.credits || 0;
     }
@@ -144,7 +145,7 @@ const authManager = new FlowNexusAuthManager();
 // Example usage demonstration
 async function demonstrateAuth() {
     try {
-        console.log('=== Flow Nexus Authentication Demo ===\n');
+        authLogger.info('=== Flow Nexus Authentication Demo ===\n');
         
         // Authenticate
         const session = await authManager.authenticate();
@@ -152,12 +153,12 @@ async function demonstrateAuth() {
         // Check balance
         const credits = await authManager.checkBalance();
         
-        console.log('\n=== Authentication Successful ===');
-        console.log('Session established for:', process.env.FLOW_NEXUS_EMAIL);
-        console.log('Available credits:', credits);
+        authLogger.info('\n=== Authentication Successful ===');
+        authLogger.info('Session established for:', process.env.FLOW_NEXUS_EMAIL);
+        authLogger.info('Available credits:', credits);
         
     } catch (error) {
-        console.error('Demo failed:', error);
+        authLogger.error('Demo failed:', error);
     }
 }
 

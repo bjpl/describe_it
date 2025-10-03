@@ -29,6 +29,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
+import { logger } from '@/lib/logger';
 
 interface HelpContentProps {
   onClose: () => void;
@@ -129,7 +130,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
           },
         ]);
       } catch (error) {
-        console.error("Failed to load system status:", error);
+        logger.error("Failed to load system status:", error);
       }
     };
 
@@ -165,7 +166,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
         includeSystemInfo: true,
       });
     } catch (error) {
-      console.error("Failed to submit feedback:", error);
+      logger.error("Failed to submit feedback:", error);
     } finally {
       setIsSubmitting(false);
     }

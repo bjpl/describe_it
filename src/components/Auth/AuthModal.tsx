@@ -5,6 +5,7 @@ import { useAuth } from '@/providers/AuthProvider';
 import { useDirectAuth } from './useDirectAuth';
 import { X, Mail, Lock, User, KeyRound, Github, Chrome } from 'lucide-react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { authLogger } from '@/lib/logger';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -35,7 +36,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
     setLoading(true);
     setError(null);
     
-    console.log('[AuthModal] Starting', mode, 'for', email);
+    authLogger.info('[AuthModal] Starting', mode, 'for', email);
 
     try {
       let result;
@@ -52,7 +53,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
         
         result = await Promise.race([authPromise, timeoutPromise]) as any;
       } catch (authError: any) {
-        console.log('[AuthModal] AuthManager failed, trying direct auth');
+        authLogger.info('[AuthModal] AuthManager failed, trying direct auth');
         
         // Fallback to direct API call
         result = mode === 'signin'
@@ -60,7 +61,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
           : await directSignUp(email, password, { full_name: fullName });
       }
       
-      console.log('[AuthModal] Result:', result);
+      authLogger.info('[AuthModal] Result:', result);
 
       if (result?.success) {
         setSuccess(true);
@@ -102,7 +103,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
           setTimeout(() => {
             const currentAuth = localStorage.getItem('describe-it-auth');
             if (!currentAuth) {
-              console.log('[AuthModal] UI sync failed, forcing page reload');
+              authLogger.info('[AuthModal] UI sync failed, forcing page reload');
               window.location.reload();
             }
           }, 2000);
@@ -112,7 +113,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
         setLoading(false);
       }
     } catch (err: any) {
-      console.error('[AuthModal] Error:', err);
+      authLogger.error('[AuthModal] Error:', err);
       setError(err.message === 'Request timed out' 
         ? 'Request timed out. Please try again.' 
         : err.message || 'An unexpected error occurred');
@@ -155,7 +156,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
         setError(result.error || 'Failed to sign in with provider');
       }
     } catch (err) {
-      console.error('[AuthModal] Provider sign in error:', err);
+      authLogger.error('[AuthModal] Provider sign in error:', err);
       setError('An unexpected error occurred');
     } finally {
       setLoading(false);

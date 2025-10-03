@@ -16,7 +16,7 @@ import {
 // Global error handler
 const handleError = (error: unknown) => {
   // Log error using console for emergency mode
-  console.error("React Query Error:", error);
+  logger.error("React Query Error:", error);
 };
 
 // Create query client with configuration

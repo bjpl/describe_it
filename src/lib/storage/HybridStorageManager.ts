@@ -7,6 +7,7 @@ import { supabase, DatabaseService } from '../supabase';
 import { localStorageManager } from './LocalStorageManager';
 import { logger } from '../logger';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface StorageStrategy {
   type: 'local' | 'supabase' | 'hybrid';
@@ -194,7 +195,7 @@ class HybridStorageManager {
           return !error;
       }
     } catch (error) {
-      console.error('Supabase save error:', error);
+      logger.error('Supabase save error:', error);
       // Fallback to localStorage
       this.syncQueue.set(`${category}:${key}`, data);
       return this.saveToLocal(`__sync_${category}_${key}`, data);
@@ -233,7 +234,7 @@ class HybridStorageManager {
           return error ? null : data?.data as T;
       }
     } catch (error) {
-      console.error('Supabase load error:', error);
+      logger.error('Supabase load error:', error);
       // Fallback to localStorage cache
       return this.loadFromLocal<T>(`__sync_${category}_${key}`);
     }
@@ -317,7 +318,7 @@ class HybridStorageManager {
       
       return true;
     } catch (error) {
-      console.error('Failed to save image history:', error);
+      logger.error('Failed to save image history:', error);
       return false;
     }
   }
@@ -336,7 +337,7 @@ class HybridStorageManager {
       if (error) throw error;
       return data || [];
     } catch (error) {
-      console.error('Failed to load image history:', error);
+      logger.error('Failed to load image history:', error);
       // Fallback to localStorage recent items
       return this.loadFromLocal<ImageHistoryEntry[]>('recent_images') || [];
     }
@@ -410,7 +411,7 @@ class HybridStorageManager {
   private async syncPendingData(): Promise<void> {
     if (this.syncQueue.size === 0) return;
 
-    console.log(`Syncing ${this.syncQueue.size} pending items to Supabase...`);
+    logger.info(`Syncing ${this.syncQueue.size} pending items to Supabase...`);
 
     for (const [fullKey, data] of this.syncQueue.entries()) {
       const [category, key] = fullKey.split(':');
@@ -423,7 +424,7 @@ class HybridStorageManager {
           localStorageManager.removeItem(`__sync_${category}_${key}`);
         }
       } catch (error) {
-        console.error(`Failed to sync ${fullKey}:`, error);
+        logger.error(`Failed to sync ${fullKey}:`, error);
       }
     }
   }
@@ -447,7 +448,7 @@ class HybridStorageManager {
       
       supabaseCount = (imageCount || 0) + (descCount || 0);
     } catch (error) {
-      console.error('Failed to get Supabase metrics:', error);
+      logger.error('Failed to get Supabase metrics:', error);
     }
 
     return {
@@ -495,7 +496,7 @@ class HybridStorageManager {
       
       return true;
     } catch (error) {
-      console.error(`Failed to clear category ${category}:`, error);
+      logger.error(`Failed to clear category ${category}:`, error);
       return false;
     }
   }
@@ -520,9 +521,9 @@ class HybridStorageManager {
           .lt('viewed_at', thirtyDaysAgo.toISOString())
           .eq('is_favorite', false);
         
-        console.log('Cleaned old Supabase data');
+        logger.info('Cleaned old Supabase data');
       } catch (error) {
-        console.error('Supabase cleanup failed:', error);
+        logger.error('Supabase cleanup failed:', error);
       }
     }
   }

@@ -46,8 +46,9 @@ import {
   VocabularyManager,
   ClickToAddOptions,
 } from "@/lib/services/vocabularyManager";
-import {
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
+import {
   getDifficultyColor,
   getCategoryColor,
   createSortKey,
@@ -292,7 +293,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
         );
       }
     } catch (error) {
-      console.error("Phrase extraction error:", error);
+      logger.error("Phrase extraction error:", error);
       setState((prev) => ({
         ...prev,
         isExtracting: false,
@@ -352,7 +353,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
           }, 1200);
         }
       } catch (error) {
-        console.error("Error adding phrase to vocabulary:", error);
+        logger.error("Error adding phrase to vocabulary:", error);
         alert("Error adding phrase to vocabulary. Please try again.");
       }
     },
@@ -397,7 +398,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
           `Successfully added ${addedPhrases.length} phrases to vocabulary!`,
         );
       } catch (error) {
-        console.error("Error adding selected phrases:", error);
+        logger.error("Error adding selected phrases:", error);
         alert("Error adding phrases to vocabulary. Please try again.");
       }
     },
@@ -438,7 +439,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
         );
       }
     } catch (error) {
-      console.error("Export error:", error);
+      logger.error("Export error:", error);
       alert("Error exporting vocabulary. Please try again.");
     }
   }, [vocabularyManager, settings.showTranslations]);

@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 // API Keys Configuration
 // This file provides the API keys with fallback to environment variables
 
@@ -14,7 +16,7 @@ export const API_KEYS = {
 
 // Log for debugging (only in development)
 if (process.env.NODE_ENV === 'development') {
-  console.log('[Config] API Keys loaded:', {
+  logger.info('[Config] API Keys loaded:', {
     hasUnsplashKey: !!API_KEYS.unsplash.accessKey,
     unsplashKeyLength: API_KEYS.unsplash.accessKey?.length || 0
   });

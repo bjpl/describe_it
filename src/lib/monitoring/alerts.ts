@@ -6,6 +6,7 @@
 import { supabase } from '@/lib/supabase';
 import { captureError } from './sentry';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface Alert {
   id?: string;
@@ -111,7 +112,7 @@ class AlertManager {
       // For now, we'll use the default rules
       this.rules = DEFAULT_ALERT_RULES;
     } catch (error) {
-      console.error('Failed to load alert rules:', error);
+      logger.error('Failed to load alert rules:', error);
     }
   }
 
@@ -231,7 +232,7 @@ class AlertManager {
         .single();
 
       if (error) {
-        console.error('Failed to store alert:', error);
+        logger.error('Failed to store alert:', error);
         return null;
       }
 
@@ -241,7 +242,7 @@ class AlertManager {
       await this.sendNotifications(alert, alertId);
 
       // Log alert for debugging
-      console.warn(`🚨 ALERT [${alert.severity.toUpperCase()}]: ${alert.title}`, {
+      logger.warn(`🚨 ALERT [${alert.severity.toUpperCase()}]: ${alert.title}`, {
         type: alert.type,
         message: alert.message,
         metadata: alert.metadata,
@@ -250,7 +251,7 @@ class AlertManager {
       return alertId;
 
     } catch (error) {
-      console.error('Failed to trigger alert:', error);
+      logger.error('Failed to trigger alert:', error);
       captureError(error as Error, {
         alertType: alert.type,
         alertSeverity: alert.severity,
@@ -301,7 +302,7 @@ class AlertManager {
       }
 
     } catch (error) {
-      console.error('Failed to send immediate notification:', error);
+      logger.error('Failed to send immediate notification:', error);
     }
   }
 
@@ -309,9 +310,9 @@ class AlertManager {
     // Store in a format that the admin dashboard can easily consume
     try {
       // This could be stored in a separate table or sent to a real-time system
-      console.log('Dashboard Alert:', { alertId, ...alert });
+      logger.info('Dashboard Alert:', { alertId, ...alert });
     } catch (error) {
-      console.error('Failed to log alert for dashboard:', error);
+      logger.error('Failed to log alert for dashboard:', error);
     }
   }
 
@@ -328,7 +329,7 @@ class AlertManager {
 
       return !error;
     } catch (error) {
-      console.error('Failed to acknowledge alert:', error);
+      logger.error('Failed to acknowledge alert:', error);
       return false;
     }
   }
@@ -346,7 +347,7 @@ class AlertManager {
 
       return !error;
     } catch (error) {
-      console.error('Failed to resolve alert:', error);
+      logger.error('Failed to resolve alert:', error);
       return false;
     }
   }
@@ -361,7 +362,7 @@ class AlertManager {
         .limit(50);
 
       if (error) {
-        console.error('Failed to get active alerts:', error);
+        logger.error('Failed to get active alerts:', error);
         return [];
       }
 
@@ -380,7 +381,7 @@ class AlertManager {
       })) || [];
 
     } catch (error) {
-      console.error('Failed to get active alerts:', error);
+      logger.error('Failed to get active alerts:', error);
       return [];
     }
   }

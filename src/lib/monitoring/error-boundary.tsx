@@ -10,6 +10,7 @@ import { captureError } from './sentry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/Button';
 import { AlertTriangle, RefreshCw, Bug } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Props {
   children: ReactNode;
@@ -80,7 +81,7 @@ export class SentryErrorBoundary extends Component<Props, State> {
       this.props.onError(error, errorInfo);
     }
 
-    console.error('Error caught by boundary:', error, errorInfo);
+    logger.error('Error caught by boundary:', error, errorInfo);
   }
 
   handleRetry = () => {

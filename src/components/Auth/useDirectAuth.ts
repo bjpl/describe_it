@@ -5,6 +5,7 @@
 
 import { useState } from 'react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { authLogger } from '@/lib/logger';
 
 export function useDirectAuth() {
   const [loading, setLoading] = useState(false);
@@ -37,7 +38,7 @@ export function useDirectAuth() {
         error: data.error || 'Authentication failed' 
       };
     } catch (error: any) {
-      console.error('[DirectAuth] Error:', error);
+      authLogger.error('[DirectAuth] Error:', error);
       return { 
         success: false, 
         error: 'Network error. Please try again.' 
@@ -75,7 +76,7 @@ export function useDirectAuth() {
         error: data.error || 'Signup failed' 
       };
     } catch (error: any) {
-      console.error('[DirectAuth] Signup error:', error);
+      authLogger.error('[DirectAuth] Signup error:', error);
       return { 
         success: false, 
         error: 'Network error. Please try again.' 

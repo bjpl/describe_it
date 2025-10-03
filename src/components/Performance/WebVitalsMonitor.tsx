@@ -5,6 +5,7 @@ import { getCLS, getFID, getFCP, getLCP, getTTFB, getINP } from 'web-vitals';
 import { MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
 import { Activity, AlertTriangle, CheckCircle, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { performanceLogger } from '@/lib/logger';
 
 interface WebVital {
   name: string;
@@ -94,7 +95,7 @@ export const WebVitalsMonitor = memo(() => {
 
       // Log performance issues
       if (vital.rating === 'poor') {
-        console.warn(`Poor Web Vital: ${vital.name} = ${vital.value} (${vital.rating})`);
+        performanceLogger.warn(`Poor Web Vital: ${vital.name} = ${vital.value} (${vital.rating})`);
       }
     };
 

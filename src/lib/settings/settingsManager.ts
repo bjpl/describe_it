@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 export interface AppSettings {
   // API Configuration
   apiKeys: {
@@ -160,7 +162,7 @@ export class SettingsManager {
         }
       }
     } catch (error) {
-      console.warn("Failed to load settings from localStorage:", error);
+      logger.warn("Failed to load settings from localStorage:", error);
     }
     return { ...DEFAULT_SETTINGS };
   }
@@ -183,15 +185,15 @@ export class SettingsManager {
       return await new Promise<boolean>((resolve) => {
         try {
           localStorage.setItem(this.STORAGE_KEY, safeStringify(data));
-          console.log('[SettingsManager] Settings saved successfully');
+          logger.info('[SettingsManager] Settings saved successfully');
           resolve(true);
         } catch (error) {
-          console.error("Failed to save settings to localStorage:", error);
+          logger.error("Failed to save settings to localStorage:", error);
           resolve(false);
         }
       });
     } catch (error) {
-      console.error("Failed to save settings:", error);
+      logger.error("Failed to save settings:", error);
       return false;
     }
   }
@@ -211,7 +213,7 @@ export class SettingsManager {
       };
       localStorage.setItem(this.STORAGE_KEY, safeStringify(data));
     } catch (error) {
-      console.error("Failed to save settings to localStorage:", error);
+      logger.error("Failed to save settings to localStorage:", error);
     }
   }
 
@@ -303,7 +305,7 @@ export class SettingsManager {
     this.settings.study.reminderTimes.forEach((time) => {
       // In a real implementation, you'd use a service worker or similar
       // to schedule notifications
-      console.log(`Reminder scheduled for ${time}`);
+      logger.info(`Reminder scheduled for ${time}`);
     });
   }
 
@@ -399,7 +401,7 @@ export class SettingsManager {
         return true;
       }
     } catch (error) {
-      console.error("Failed to import settings:", error);
+      logger.error("Failed to import settings:", error);
     }
     return false;
   }
@@ -449,7 +451,7 @@ export class SettingsManager {
         });
       }
     } catch (error) {
-      console.error("Failed to clear cache:", error);
+      logger.error("Failed to clear cache:", error);
     }
   }
 

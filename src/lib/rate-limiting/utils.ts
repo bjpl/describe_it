@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimiter, RateLimitConfigs } from './rate-limiter';
 import { checkRateLimitStatus } from './middleware';
+import { logger } from '@/lib/logger';
 
 /**
  * Rate limit testing utilities
@@ -55,7 +56,7 @@ export class RateLimitTester {
           await new Promise(resolve => setTimeout(resolve, delayMs));
         }
       } catch (error) {
-        console.error('Error in simulateRequests:', error);
+        logger.error('Error in simulateRequests:', error);
         results.push({
           success: false,
           remaining: 0,
@@ -152,7 +153,7 @@ export class RateLimitTester {
               return result;
             })
             .catch(error => {
-              console.warn('Benchmark request failed:', error);
+              logger.warn('Benchmark request failed:', error);
               return { success: false };
             })
         );
@@ -260,7 +261,7 @@ export class RateLimitMonitor {
         // to detect and report violations
         
       } catch (error) {
-        console.error('Rate limit monitoring error:', error);
+        logger.error('Rate limit monitoring error:', error);
       }
     }, 5000); // Check every 5 seconds
 
@@ -357,7 +358,7 @@ export class RateLimitAdmin {
     const expiresAt = new Date(Date.now() + durationMinutes * 60 * 1000);
     
     // In a real implementation, you'd store this in your admin database
-    console.log(`[Admin] Created temporary whitelist for ${identifier} until ${expiresAt}`);
+    logger.info(`[Admin] Created temporary whitelist for ${identifier} until ${expiresAt}`);
     
     return {
       success: true,

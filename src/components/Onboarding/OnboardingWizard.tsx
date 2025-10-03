@@ -9,6 +9,7 @@ import ApiKeySetup from './ApiKeySetup';
 import PreferencesSetup from './PreferencesSetup';
 import TutorialStep from './TutorialStep';
 import CompletionStep from './CompletionStep';
+import { logger } from '@/lib/logger';
 
 interface OnboardingWizardProps {
   isOpen: boolean;
@@ -164,7 +165,7 @@ export default function OnboardingWizard({
     const StepComponent = stepComponents[currentStepData.component as keyof typeof stepComponents];
     
     if (!StepComponent) {
-      console.error(`Step component ${currentStepData.component} not found`);
+      logger.error(`Step component ${currentStepData.component} not found`);
       return <div className="p-8 text-center">Step not found</div>;
     }
 

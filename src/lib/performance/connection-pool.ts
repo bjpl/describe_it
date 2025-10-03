@@ -1,5 +1,6 @@
 import { createPool, Pool, PoolOptions } from 'generic-pool';
 import OpenAI from 'openai';
+import { performanceLogger } from '@/lib/logger';
 
 export interface PooledClient extends OpenAI {
   _poolId: string;
@@ -78,7 +79,7 @@ export class OpenAIConnectionPool {
             client._httpAgent.destroy?.();
           }
         } catch (error) {
-          console.warn('Error during client cleanup:', error);
+          performanceLogger.warn('Error during client cleanup:', error);
         }
       },
 
@@ -115,7 +116,7 @@ export class OpenAIConnectionPool {
       
       return Boolean(response);
     } catch (error) {
-      console.warn('Client validation failed:', error);
+      performanceLogger.warn('Client validation failed:', error);
       return false;
     }
   }
@@ -131,9 +132,9 @@ export class OpenAIConnectionPool {
         }
 
         // Log pool statistics
-        console.log('Connection pool stats:', poolStats);
+        performanceLogger.info('Connection pool stats:', poolStats);
       } catch (error) {
-        console.error('Health check error:', error);
+        performanceLogger.error('Health check error:', error);
       }
     }, this.config.healthCheckInterval);
   }
@@ -166,7 +167,7 @@ export class OpenAIConnectionPool {
       promises.push(
         this.acquire()
           .then(client => this.release(client))
-          .catch(error => console.warn('Warm-up error:', error))
+          .catch(error => performanceLogger.warn('Warm-up error:', error))
       );
     }
 
@@ -255,12 +256,12 @@ export async function getPooledOpenAIClient(
 // Hook for Next.js to clean up pools on shutdown
 if (typeof process !== 'undefined') {
   process.on('SIGTERM', async () => {
-    console.log('Shutting down OpenAI connection pools...');
+    performanceLogger.info('Shutting down OpenAI connection pools...');
     await poolManager.destroyAll();
   });
 
   process.on('SIGINT', async () => {
-    console.log('Shutting down OpenAI connection pools...');
+    performanceLogger.info('Shutting down OpenAI connection pools...');
     await poolManager.destroyAll();
   });
 }

@@ -24,6 +24,7 @@ import { getAuditLogger } from "@/lib/security/audit-logger";
 
 // Import rate limiting
 import { withRateLimit, RateLimitMiddleware, checkRateLimitStatus } from "@/lib/rate-limiting";
+import { apiLogger } from '@/lib/logger';
 
 const logger = getAuditLogger('description-api');
 
@@ -70,7 +71,7 @@ async function generateParallelDescriptions(
   const { imageUrl, style, maxLength, customPrompt, languages, originalImageUrl } = request;
   const baseTimestamp = Date.now();
   
-  console.log('[Vision Debug] Starting parallel generation with comprehensive logging:', {
+  apiLogger.info('[Vision Debug] Starting parallel generation with comprehensive logging:', {
     step: 'parallel_start',
     languages: languages,
     hasImageUrl: !!imageUrl,
@@ -89,7 +90,7 @@ async function generateParallelDescriptions(
     const languageKey = language === "en" ? "english" : "spanish";
     
     try {
-      console.log(`[Vision Debug] Starting ${languageLabel} description with full context:`, {
+      apiLogger.info(`[Vision Debug] Starting ${languageLabel} description with full context:`, {
         step: 'vision_call_start',
         language: language,
         languageLabel: languageLabel,
@@ -111,7 +112,7 @@ async function generateParallelDescriptions(
         language
       }, userApiKey);
       
-      console.log(`[Vision Debug] ${languageLabel} vision call completed:`, {
+      apiLogger.info(`[Vision Debug] ${languageLabel} vision call completed:`, {
         step: 'vision_call_success',
         language: language,
         hasDescription: !!description,
@@ -126,7 +127,7 @@ async function generateParallelDescriptions(
         throw new Error(`Empty description returned from vision service for ${languageLabel}`);
       }
       
-      console.log(`[Parallel Generation] ${languageLabel} description generated successfully`, {
+      apiLogger.info(`[Parallel Generation] ${languageLabel} description generated successfully`, {
         contentLength: description.text.length,
         wordCount: description.wordCount
       });
@@ -141,7 +142,7 @@ async function generateParallelDescriptions(
       };
       
     } catch (error) {
-      console.error(`[Vision Debug] Critical failure in ${languageLabel} vision generation:`, {
+      apiLogger.error(`[Vision Debug] Critical failure in ${languageLabel} vision generation:`, {
         step: 'vision_call_error',
         language: language,
         languageLabel: languageLabel,
@@ -175,10 +176,10 @@ async function generateParallelDescriptions(
   });
   
   // Execute all description generations in parallel
-  console.log('[Parallel Generation] Executing parallel description generation...');
+  apiLogger.info('[Parallel Generation] Executing parallel description generation...');
   const results = await Promise.all(descriptionPromises);
   
-  console.log('[Parallel Generation] Parallel generation completed successfully', {
+  apiLogger.info('[Parallel Generation] Parallel generation completed successfully', {
     totalDescriptions: results.length,
     languages: results.map(r => r.language)
   });
@@ -216,7 +217,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
   // Note: Vercel strips custom headers, so we receive API key in request body instead
   let userApiKey: string | undefined;
   
-  console.log('[Generate Route] Processing description generation request:', {
+  apiLogger.info('[Generate Route] Processing description generation request:', {
     requestId,
     userId: userId || 'anonymous',
     userTier,
@@ -242,9 +243,9 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     }
 
     // Parse and validate request body with size limits
-    console.log('[API Route] Parsing request body...');
+    apiLogger.info('[API Route] Parsing request body...');
     const body = await request.json();
-    console.log('[API Route] Request body keys:', Object.keys(body));
+    apiLogger.info('[API Route] Request body keys:', Object.keys(body));
     
     if (!validateRequestSize(body, 50 * 1024)) { // 50KB limit
       return NextResponse.json(
@@ -260,29 +261,29 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
       );
     }
 
-    console.log('[API Route] Validating with schema...');
+    apiLogger.info('[API Route] Validating with schema...');
     const params = descriptionGenerateSchema.parse(body);
-    console.log('[API Route] Schema validation passed');
+    apiLogger.info('[API Route] Schema validation passed');
     
     // Extract user's API key from validated params (Vercel-compatible approach)
     userApiKey = params.userApiKey || undefined;
     
     if (userApiKey) {
-      console.log('[API Route] Received user API key from request body:', {
+      apiLogger.info('[API Route] Received user API key from request body:', {
         hasKey: !!userApiKey,
         keyLength: userApiKey.length,
         keyPrefix: userApiKey.substring(0, 10) + '...',
         requestId
       });
     } else {
-      console.log('[API Route] No user API key provided, will use server default');
+      apiLogger.info('[API Route] No user API key provided, will use server default');
     }
     
     // Additional validation for style parameter
     const validStyles = ['narrativo', 'poetico', 'academico', 'conversacional', 'infantil'];
     const validatedStyle = (params.style && validStyles.includes(params.style as string)) ? params.style : 'narrativo';
     if (params.style !== validatedStyle) {
-      console.warn('[Generate Route] Invalid style parameter, using default', {
+      apiLogger.warn('[Generate Route] Invalid style parameter, using default', {
         providedStyle: params.style,
         validatedStyle,
         validStyles
@@ -294,7 +295,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
       ? params.maxLength 
       : 300;
     if (params.maxLength !== validatedMaxLength) {
-      console.warn('[Generate Route] Invalid maxLength parameter, using default', {
+      apiLogger.warn('[Generate Route] Invalid maxLength parameter, using default', {
         providedMaxLength: params.maxLength,
         validatedMaxLength
       });
@@ -370,7 +371,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     // If it's an external URL (not a data URI), proxy it
     if (processedImageUrl && !processedImageUrl.startsWith('data:')) {
       try {
-        console.log('[Generate Route] Proxying external image URL...');
+        apiLogger.info('[Generate Route] Proxying external image URL...');
         const proxyResponse = await fetch(`${request.nextUrl.origin}/api/images/proxy`, {
           method: 'POST',
           headers: { 
@@ -384,22 +385,22 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
           const proxyData = await proxyResponse.json();
           if (proxyData.dataUri && proxyData.dataUri.startsWith('data:')) {
             processedImageUrl = proxyData.dataUri;
-            console.log('[Generate Route] Image proxied successfully:', {
+            apiLogger.info('[Generate Route] Image proxied successfully:', {
               originalLength: params.imageUrl.length,
               proxiedLength: processedImageUrl.length,
               size: proxyData.size
             });
           } else {
-            console.warn('[Generate Route] Proxy returned invalid data URI');
+            apiLogger.warn('[Generate Route] Proxy returned invalid data URI');
           }
         } else {
-          console.warn('[Generate Route] Image proxy failed:', {
+          apiLogger.warn('[Generate Route] Image proxy failed:', {
             status: proxyResponse.status,
             statusText: proxyResponse.statusText
           });
         }
       } catch (error) {
-        console.warn('[Generate Route] Image proxy error, using original URL:', {
+        apiLogger.warn('[Generate Route] Image proxy error, using original URL:', {
           error: error instanceof Error ? error.message : error,
           originalUrl: processedImageUrl.substring(0, 100) + '...'
         });
@@ -410,7 +411,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     const secureApiKey = await getSecureApiKey('OPENAI_API_KEY', params.openaiApiKey);
     
     if (!secureApiKey) {
-      console.error('[Generate Route] Failed to retrieve secure API key');
+      apiLogger.error('[Generate Route] Failed to retrieve secure API key');
       return NextResponse.json(
         {
           success: false,
@@ -426,7 +427,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     }
     
     // Generate descriptions for both languages in parallel using server-side OpenAI
-    console.log('[Generate Route] Starting parallel description generation...');
+    apiLogger.info('[Generate Route] Starting parallel description generation...');
     const descriptions = await generateParallelDescriptions({
       imageUrl: processedImageUrl,
       style: validatedStyle as DescriptionStyle,
@@ -496,7 +497,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     }
 
     // Handle other errors
-    console.error("Description generation error:", error);
+    apiLogger.error("Description generation error:", error);
 
     // Provide fallback demo descriptions even on complete failure
     const fallbackDescriptions = [

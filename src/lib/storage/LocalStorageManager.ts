@@ -5,6 +5,7 @@
 
 import { logger } from '../logger';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface StorageEntry {
   key: string;
@@ -101,7 +102,7 @@ class LocalStorageManager {
         };
       }
     } catch (error) {
-      console.warn('Storage quota API not available:', error);
+      logger.warn('Storage quota API not available:', error);
     }
 
     // Fallback: Calculate from localStorage
@@ -130,7 +131,7 @@ class LocalStorageManager {
         }
       }
     } catch (error) {
-      console.error('Error calculating localStorage size:', error);
+      logger.error('Error calculating localStorage size:', error);
     }
     
     return totalSize * 2; // Multiply by 2 for UTF-16 encoding
@@ -160,7 +161,7 @@ class LocalStorageManager {
         }
       }
     } catch (error) {
-      console.error('Error analyzing storage:', error);
+      logger.error('Error analyzing storage:', error);
     }
     
     return entries.sort((a, b) => b.size - a.size);
@@ -239,7 +240,7 @@ class LocalStorageManager {
       return true;
     } catch (error: any) {
       if (error.name === 'QuotaExceededError') {
-        console.warn('localStorage quota exceeded, attempting cleanup...');
+        logger.warn('localStorage quota exceeded, attempting cleanup...');
         
         if (this.config.autoCleanup) {
           this.performCleanup();
@@ -249,7 +250,7 @@ class LocalStorageManager {
             localStorage.setItem(key, value);
             return true;
           } catch (retryError) {
-            console.error('Failed to store even after cleanup:', retryError);
+            logger.error('Failed to store even after cleanup:', retryError);
             this.handleQuotaExceeded(key, value);
           }
         }
@@ -280,7 +281,7 @@ class LocalStorageManager {
 
       return value;
     } catch (error) {
-      console.error('Error getting item from localStorage:', error);
+      logger.error('Error getting item from localStorage:', error);
       return null;
     }
   }
@@ -293,7 +294,7 @@ class LocalStorageManager {
       localStorage.removeItem(key);
       localStorage.removeItem(`__meta_${key}`);
     } catch (error) {
-      console.error('Error removing item from localStorage:', error);
+      logger.error('Error removing item from localStorage:', error);
     }
   }
 
@@ -305,7 +306,7 @@ class LocalStorageManager {
     const entries = this.analyzeStorage();
     let freedSpace = 0;
 
-    console.log(`Performing cleanup with strategy: ${cleanupStrategy.strategy}`);
+    logger.info(`Performing cleanup with strategy: ${cleanupStrategy.strategy}`);
 
     switch (cleanupStrategy.strategy) {
       case 'lru':
@@ -323,7 +324,7 @@ class LocalStorageManager {
         break;
     }
 
-    console.log(`Cleanup freed ${(freedSpace / 1024).toFixed(2)} KB`);
+    logger.info(`Cleanup freed ${(freedSpace / 1024).toFixed(2)} KB`);
     this.notifyListeners('cleanup', { freedSpace });
     
     return freedSpace;
@@ -351,7 +352,7 @@ class LocalStorageManager {
 
         this.removeItem(item.key);
         freedSpace += item.size;
-        console.log(`Removed ${item.key} (${priority} priority, ${(item.size / 1024).toFixed(2)} KB)`);
+        logger.info(`Removed ${item.key} (${priority} priority, ${(item.size / 1024).toFixed(2)} KB)`);
       }
     }
 
@@ -371,7 +372,7 @@ class LocalStorageManager {
         if (age > entry.ttl) {
           this.removeItem(entry.key);
           freedSpace += entry.size;
-          console.log(`Removed expired ${entry.key} (age: ${(age / 1000 / 60).toFixed(0)} minutes)`);
+          logger.info(`Removed expired ${entry.key} (age: ${(age / 1000 / 60).toFixed(0)} minutes)`);
         }
       }
     }
@@ -399,7 +400,7 @@ class LocalStorageManager {
 
       this.removeItem(entry.key);
       freedSpace += entry.size;
-      console.log(`Removed LRU ${entry.key} (${(entry.size / 1024).toFixed(2)} KB)`);
+      logger.info(`Removed LRU ${entry.key} (${(entry.size / 1024).toFixed(2)} KB)`);
     }
 
     return freedSpace;
@@ -425,7 +426,7 @@ class LocalStorageManager {
 
       this.removeItem(entry.key);
       freedSpace += entry.size;
-      console.log(`Removed large item ${entry.key} (${(entry.size / 1024).toFixed(2)} KB)`);
+      logger.info(`Removed large item ${entry.key} (${(entry.size / 1024).toFixed(2)} KB)`);
     }
 
     return freedSpace;
@@ -503,14 +504,14 @@ class LocalStorageManager {
       const quota = await this.getQuota();
       
       if (quota.percentage > this.config.quotaCriticalThreshold) {
-        console.error(`Critical storage usage: ${quota.percentage.toFixed(1)}%`);
+        logger.error(`Critical storage usage: ${quota.percentage.toFixed(1)}%`);
         this.notifyListeners('critical', quota);
         
         if (this.config.autoCleanup) {
           this.performCleanup();
         }
       } else if (quota.percentage > this.config.quotaWarningThreshold) {
-        console.warn(`High storage usage: ${quota.percentage.toFixed(1)}%`);
+        logger.warn(`High storage usage: ${quota.percentage.toFixed(1)}%`);
         this.notifyListeners('warning', quota);
       }
     }, 30000);
@@ -557,7 +558,7 @@ class LocalStorageManager {
       try {
         callback(data);
       } catch (error) {
-        console.error(`Error in storage event listener:`, error);
+        logger.error(`Error in storage event listener:`, error);
       }
     });
   }
@@ -643,7 +644,7 @@ class LocalStorageManager {
       }
     }
 
-    console.log(`Cleared category '${category}': ${(freedSpace / 1024).toFixed(2)} KB freed`);
+    logger.info(`Cleared category '${category}': ${(freedSpace / 1024).toFixed(2)} KB freed`);
     return freedSpace;
   }
 
@@ -675,7 +676,7 @@ class LocalStorageManager {
       
       return true;
     } catch (error) {
-      console.error('Failed to import data:', error);
+      logger.error('Failed to import data:', error);
       return false;
     }
   }

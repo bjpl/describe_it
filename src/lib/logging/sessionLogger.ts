@@ -1,5 +1,6 @@
 // Session Logger - Comprehensive user interaction tracking
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 import {
   SessionInteraction,
   InteractionType,
@@ -125,7 +126,7 @@ export class SessionLogger {
       this.saveToStorage();
     }
 
-    console.debug("Session interaction logged:", { type, data });
+    logger.debug("Session interaction logged:", { type, data });
   }
 
   // Specific logging methods for better type safety
@@ -535,7 +536,7 @@ export class SessionLogger {
         safeStringify(storage),
       );
     } catch (error) {
-      console.warn("Failed to save session to storage:", error);
+      logger.warn("Failed to save session to storage:", error);
     }
   }
 
@@ -550,7 +551,7 @@ export class SessionLogger {
         this.settings = { ...this.settings, ...storage.settings };
       }
     } catch (error) {
-      console.warn("Failed to load session from storage:", error);
+      logger.warn("Failed to load session from storage:", error);
     }
   }
 

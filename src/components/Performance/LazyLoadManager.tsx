@@ -13,6 +13,7 @@ import React, {
 } from 'react';
 import { LoadingSpinner } from '@/components/Loading/LoadingSpinner';
 import { isDevelopment } from '@/config/env';
+import { performanceLogger } from '@/lib/logger';
 
 interface LazyLoadOptions {
   threshold?: number;
@@ -74,7 +75,7 @@ export const LazyLoadManager: React.FC<LazyComponentWrapperProps> = ({
           }
           
           if (isDevelopment()) {
-            console.log('LazyLoadManager: Component became visible', {
+            performanceLogger.info('LazyLoadManager: Component became visible', {
               priority,
               threshold,
               rootMargin,
@@ -101,7 +102,7 @@ export const LazyLoadManager: React.FC<LazyComponentWrapperProps> = ({
       onError(error);
     }
     if (isDevelopment()) {
-      console.error('LazyLoadManager: Component failed to load', error);
+      performanceLogger.error('LazyLoadManager: Component failed to load', error);
     }
   }, [onError]);
 
@@ -210,12 +211,12 @@ export class ComponentPreloader {
       loadingStates.set(id, 'loaded');
       
       if (isDevelopment()) {
-        console.log(`ComponentPreloader: Successfully preloaded ${id}`);
+        performanceLogger.info(`ComponentPreloader: Successfully preloaded ${id}`);
       }
     } catch (error) {
       loadingStates.set(id, 'error');
       if (isDevelopment()) {
-        console.error(`ComponentPreloader: Failed to preload ${id}`, error);
+        performanceLogger.error(`ComponentPreloader: Failed to preload ${id}`, error);
       }
     }
   }

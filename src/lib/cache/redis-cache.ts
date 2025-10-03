@@ -1,6 +1,7 @@
 import { createHash } from 'crypto';
 import { Redis } from 'ioredis';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 export interface CacheConfig {
   host: string;
@@ -88,19 +89,19 @@ export class RedisCache {
 
   private setupEventHandlers(): void {
     this.redis.on('connect', () => {
-      console.log('Redis cache connected');
+      logger.info('Redis cache connected');
     });
 
     this.redis.on('error', (error) => {
-      console.error('Redis cache error:', error);
+      logger.error('Redis cache error:', error);
     });
 
     this.redis.on('ready', () => {
-      console.log('Redis cache ready');
+      logger.info('Redis cache ready');
     });
 
     this.redis.on('close', () => {
-      console.log('Redis cache connection closed');
+      logger.info('Redis cache connection closed');
     });
   }
 
@@ -171,7 +172,7 @@ export class RedisCache {
       return null;
 
     } catch (error) {
-      console.error('Cache get error:', error);
+      logger.error('Cache get error:', error);
       this.stats.operations.misses++;
       return null;
     }
@@ -211,7 +212,7 @@ export class RedisCache {
       return true;
 
     } catch (error) {
-      console.error('Cache set error:', error);
+      logger.error('Cache set error:', error);
       return false;
     }
   }
@@ -229,7 +230,7 @@ export class RedisCache {
       return result > 0;
 
     } catch (error) {
-      console.error('Cache delete error:', error);
+      logger.error('Cache delete error:', error);
       return false;
     }
   }
@@ -261,7 +262,7 @@ export class RedisCache {
       return deletedCount;
 
     } catch (error) {
-      console.error('Cache invalidate by tags error:', error);
+      logger.error('Cache invalidate by tags error:', error);
       return 0;
     }
   }
@@ -279,7 +280,7 @@ export class RedisCache {
       await pipeline.exec();
 
     } catch (error) {
-      console.error('Tag index update error:', error);
+      logger.error('Tag index update error:', error);
     }
   }
 
@@ -318,7 +319,7 @@ export class RedisCache {
       });
 
     } catch (error) {
-      console.error('Cache mget error:', error);
+      logger.error('Cache mget error:', error);
       return keys.map(() => null);
     }
   }
@@ -352,7 +353,7 @@ export class RedisCache {
       return true;
 
     } catch (error) {
-      console.error('Cache mset error:', error);
+      logger.error('Cache mset error:', error);
       return false;
     }
   }
@@ -374,7 +375,7 @@ export class RedisCache {
       };
 
     } catch (error) {
-      console.error('Cache stats error:', error);
+      logger.error('Cache stats error:', error);
       return this.stats;
     }
   }
@@ -396,7 +397,7 @@ export class RedisCache {
       return true;
 
     } catch (error) {
-      console.error('Cache flush error:', error);
+      logger.error('Cache flush error:', error);
       return false;
     }
   }
@@ -435,7 +436,7 @@ export class CacheWarmer {
           const description = await fetcher(url);
           await this.cache.set(key, description, 3600, ['image_descriptions']);
         } catch (error) {
-          console.warn('Cache warming failed for', url, error);
+          logger.warn('Cache warming failed for', url, error);
         }
       }
     });
@@ -453,7 +454,7 @@ export class CacheWarmer {
           const content = await fetcher(id);
           await this.cache.set(key, content, 7200, ['popular_content']); // 2 hours TTL
         } catch (error) {
-          console.warn('Cache warming failed for content', id, error);
+          logger.warn('Cache warming failed for content', id, error);
         }
       }
     });

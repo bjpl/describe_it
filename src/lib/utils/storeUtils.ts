@@ -3,6 +3,7 @@
  */
 
 import React, { useCallback, useMemo, useRef } from 'react';
+import { logger } from '@/lib/logger';
 
 /**
  * Shallow comparison utility for objects
@@ -281,7 +282,7 @@ export class CleanupManager {
       try {
         fn();
       } catch (error) {
-        console.warn('Cleanup function failed:', error);
+        logger.warn('Cleanup function failed:', error);
       }
     });
     this.cleanupFunctions = [];

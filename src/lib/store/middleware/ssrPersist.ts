@@ -48,7 +48,7 @@ export const createSSRStorage = (storage?: StateStorage): StateStorage => {
       try {
         return actualStorage.getItem(name);
       } catch (error) {
-        console.warn(`Failed to get item from storage: ${name}`, error);
+        logger.warn(`Failed to get item from storage: ${name}`, error);
         return null;
       }
     },
@@ -56,14 +56,14 @@ export const createSSRStorage = (storage?: StateStorage): StateStorage => {
       try {
         actualStorage.setItem(name, value);
       } catch (error) {
-        console.warn(`Failed to set item in storage: ${name}`, error);
+        logger.warn(`Failed to set item in storage: ${name}`, error);
       }
     },
     removeItem: (name: string) => {
       try {
         actualStorage.removeItem(name);
       } catch (error) {
-        console.warn(`Failed to remove item from storage: ${name}`, error);
+        logger.warn(`Failed to remove item from storage: ${name}`, error);
       }
     }
   };
@@ -82,7 +82,7 @@ export const createSecureStorage = (
       try {
         return encryption.decrypt(value);
       } catch (error) {
-        console.warn(`Failed to decrypt storage item: ${name}`, error);
+        logger.warn(`Failed to decrypt storage item: ${name}`, error);
         return null;
       }
     },
@@ -131,7 +131,7 @@ class TabSyncManager {
       const newValue = safeParse(event.newValue);
       this.notifyListeners(event.key, newValue);
     } catch (error) {
-      console.warn('Failed to parse storage change event', error);
+      logger.warn('Failed to parse storage change event', error);
     }
   };
 
@@ -226,7 +226,7 @@ export const ssrPersist = <T>(
         set(mergedState, false, 'rehydrate');
         hasHydrated = true;
       } catch (error) {
-        console.warn(`Failed to rehydrate ${name}:`, error);
+        logger.warn(`Failed to rehydrate ${name}:`, error);
         if (onRehydrationError) {
           onRehydrationError(error as Error);
         }
@@ -255,7 +255,7 @@ export const ssrPersist = <T>(
           globalTabSyncManager.broadcast(name, stateToStore);
         }
       } catch (error) {
-        console.warn(`Failed to persist ${name}:`, error);
+        logger.warn(`Failed to persist ${name}:`, error);
       }
     };
 
@@ -383,7 +383,7 @@ export const storageAdapters = {
         const result = await store.get(name);
         return result?.value || null;
       } catch (error) {
-        console.warn('IndexedDB getItem failed:', error);
+        logger.warn('IndexedDB getItem failed:', error);
         return null;
       }
     },
@@ -397,7 +397,7 @@ export const storageAdapters = {
         const store = transaction.objectStore('zustand');
         await store.put({ key: name, value, timestamp: Date.now() });
       } catch (error) {
-        console.warn('IndexedDB setItem failed:', error);
+        logger.warn('IndexedDB setItem failed:', error);
       }
     },
     
@@ -410,7 +410,7 @@ export const storageAdapters = {
         const store = transaction.objectStore('zustand');
         await store.delete(name);
       } catch (error) {
-        console.warn('IndexedDB removeItem failed:', error);
+        logger.warn('IndexedDB removeItem failed:', error);
       }
     }
   }
@@ -435,3 +435,4 @@ const openDB = (): Promise<IDBDatabase> => {
 
 import React from 'react';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';

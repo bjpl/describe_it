@@ -4,6 +4,7 @@
  */
 import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { isDevelopment } from '@/config/env';
+import { logger } from '@/lib/logger';
 
 interface OptimizedStateOptions<T> {
   initialValue: T;
@@ -59,7 +60,7 @@ export function useOptimizedState<T>(
   useEffect(() => {
     renderCount.current++;
     if (debug && isDevelopment()) {
-      console.log(`useOptimizedState render #${renderCount.current}:`, {
+      logger.info(`useOptimizedState render #${renderCount.current}:`, {
         currentValue: value,
         previousValue: previousValue.current,
         hasChanged: !compare(value, previousValue.current),
@@ -81,14 +82,14 @@ export function useOptimizedState<T>(
         setValueInternal(nextValue);
         
         if (debug && isDevelopment()) {
-          console.log('useOptimizedState: Value updated', {
+          logger.info('useOptimizedState: Value updated', {
             from: value,
             to: nextValue,
             timestamp: new Date().toISOString(),
           });
         }
       } else if (debug && isDevelopment()) {
-        console.log('useOptimizedState: Update skipped (no change)', {
+        logger.info('useOptimizedState: Update skipped (no change)', {
           attempted: nextValue,
           current: value,
         });

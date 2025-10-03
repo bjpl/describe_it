@@ -3,6 +3,7 @@
 import React, { useEffect, useState, memo } from 'react';
 import { MotionDiv } from '@/components/ui/MotionComponents';
 import { AlertTriangle, CheckCircle, XCircle, Target, TrendingUp, Clock } from 'lucide-react';
+import { performanceLogger } from '@/lib/logger';
 
 interface BudgetMetric {
   name: string;
@@ -155,7 +156,7 @@ export const PerformanceBudget = memo<PerformanceBudgetProps>(({ className = '' 
 
     // Log violations to console
     newViolations.forEach(violation => {
-      console.warn(`Performance Budget Violation: ${violation.name} (${violation.current.toFixed(1)}${violation.unit}) exceeds budget (${violation.budget}${violation.unit})`);
+      performanceLogger.warn(`Performance Budget Violation: ${violation.name} (${violation.current.toFixed(1)}${violation.unit}) exceeds budget (${violation.budget}${violation.unit})`);
     });
   }, [metrics]);
 

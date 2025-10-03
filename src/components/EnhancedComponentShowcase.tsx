@@ -70,7 +70,7 @@ const EnhancedComponentShowcase: React.FC<EnhancedComponentShowcaseProps> = ({
       props: {
         onImageSelect: (image: UnsplashImage) => {
           setSelectedImage(image);
-          console.log("Selected image:", image);
+          logger.info("Selected image:", image);
         },
       },
       features: [
@@ -223,6 +223,7 @@ const EnhancedComponentShowcase: React.FC<EnhancedComponentShowcaseProps> = ({
   const codeExample = `// Enhanced Component Usage Example
 
 import { 
+import { logger } from '@/lib/logger';
   ImageSearch, 
   EnhancedQASystem, 
   DatabaseVocabularyManager,
@@ -233,7 +234,7 @@ import {
 
 // Image Search with filters and error handling
 <ImageSearch
-  onImageSelect={(image) => console.log('Selected:', image)}
+  onImageSelect={(image) => logger.info('Selected:', image)}
   className="w-full max-w-6xl"
 />
 
@@ -246,14 +247,14 @@ import {
   questionCount={10}
   timeLimit={30}
   showHints={true}
-  onSessionComplete={(data) => console.log('Session:', data)}
+  onSessionComplete={(data) => logger.info('Session:', data)}
 />
 
 // Real-time Vocabulary Manager
 <DatabaseVocabularyManager
   showStats={true}
   allowEdit={true}
-  onVocabularyUpdate={(vocab) => console.log('Updated:', vocab)}
+  onVocabularyUpdate={(vocab) => logger.info('Updated:', vocab)}
 />
 
 // Progress Dashboard with visualizations

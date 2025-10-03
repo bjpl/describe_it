@@ -1,3 +1,5 @@
+import { logger } from '@/lib/logger';
+
 /**
  * Storage management utilities to handle localStorage quota issues
  */
@@ -29,7 +31,7 @@ export class StorageManager {
               // Remove cache entries older than 24 hours
               if (parsed.timestamp && Date.now() - parsed.timestamp > 86400000) {
                 localStorage.removeItem(key);
-                console.log(`[StorageManager] Removed old cache: ${key}`);
+                logger.info(`[StorageManager] Removed old cache: ${key}`);
               }
             }
           } catch (e) {
@@ -51,14 +53,14 @@ export class StorageManager {
             if (parsed.cache) delete parsed.cache;
             
             localStorage.setItem(key, safeStringify(parsed));
-            console.log(`[StorageManager] Compacted ${key}`);
+            logger.info(`[StorageManager] Compacted ${key}`);
           }
         } catch (e) {
-          console.warn(`[StorageManager] Could not compact ${key}:`, e);
+          logger.warn(`[StorageManager] Could not compact ${key}:`, e);
         }
       });
     } catch (error) {
-      console.error('[StorageManager] Cleanup failed:', error);
+      logger.error('[StorageManager] Cleanup failed:', error);
     }
   }
 
@@ -97,7 +99,7 @@ export class StorageManager {
       return true;
     } catch (e) {
       if (e.name === 'QuotaExceededError') {
-        console.warn('[StorageManager] Quota exceeded, attempting cleanup...');
+        logger.warn('[StorageManager] Quota exceeded, attempting cleanup...');
         this.cleanupStorage();
         
         // Try again after cleanup
@@ -106,11 +108,11 @@ export class StorageManager {
           localStorage.setItem(key, stringValue);
           return true;
         } catch (e2) {
-          console.error('[StorageManager] Save failed even after cleanup:', e2);
+          logger.error('[StorageManager] Save failed even after cleanup:', e2);
           return false;
         }
       }
-      console.error('[StorageManager] Save error:', e);
+      logger.error('[StorageManager] Save error:', e);
       return false;
     }
   }
@@ -124,7 +126,7 @@ if (typeof window !== 'undefined') {
     localStorage.removeItem(testKey);
   } catch (e) {
     // Storage is full or nearly full
-    console.log('[StorageManager] Storage appears full, running cleanup...');
+    logger.info('[StorageManager] Storage appears full, running cleanup...');
     StorageManager.cleanupStorage();
   }
 }
