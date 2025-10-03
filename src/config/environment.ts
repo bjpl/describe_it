@@ -99,7 +99,7 @@ function validateEnvironment() {
   DEMO_MODE_AUTO: process.env.DEMO_MODE_AUTO,
     });
   } catch (error) {
-    logger.error('Environment validation failed:', error);
+    logger.error('Environment validation failed:', error as Error);
     // Return a safe default configuration in demo mode
     return {
       NODE_ENV: 'development' as const,

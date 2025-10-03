@@ -326,7 +326,7 @@ export function useVocabulary(options: UseVocabularyOptions = {}) {
         throw new Error("Unable to connect to vocabulary database");
       }
     } catch (err) {
-      logger.error("Vocabulary loading error:", err);
+      logger.error("Vocabulary loading error:", err as Error);
       setError(
         err instanceof Error ? err.message : "Failed to load vocabulary",
       );

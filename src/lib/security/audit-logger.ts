@@ -58,7 +58,7 @@ class AuditLogger {
           component,
           message: sanitized.message,
           ...sanitized,
-        });
+        }, '{}', 'audit-logger');
       })
     );
 
@@ -70,8 +70,8 @@ class AuditLogger {
           filename: logFile,
           level: this.config.level,
           format: customFormat,
-          maxsize: this.parseSize(this.config.maxSize),
-          maxFiles: this.config.maxFiles,
+          maxsize: parseInt(this.config.maxSize) || this.parseSize(this.config.maxSize),
+          maxFiles: parseInt(this.config.maxFiles) || 14,
           tailable: true,
         })
       );
@@ -216,25 +216,33 @@ class AuditLogger {
   debug(message: string, metadata?: Record<string, any>): void {
     this.logger.debug(message, metadata);
   }
+
+  logEvent(event: { action: string; details: Record<string, any> }): void {
+    this.auditEvent({
+      action: event.action,
+      success: true,
+      metadata: event.details,
+    });
+  }
 }
 
 // Cache for audit loggers to prevent creating multiple instances
 const loggerCache = new Map<string, AuditLogger>();
 
-export function createAuditLogger(component: string, config?: AuditLoggerConfig): Logger {
-  const cacheKey = `${component}-${safeStringify(config || {})}`;
-  
+export function createAuditLogger(component: string, config?: AuditLoggerConfig): AuditLogger {
+  const cacheKey = `${component}-${safeStringify(config || {}, '{}', 'cache-key')}`;
+
   if (!loggerCache.has(cacheKey)) {
     const auditLogger = new AuditLogger(component, config);
     loggerCache.set(cacheKey, auditLogger);
   }
 
-  return loggerCache.get(cacheKey)!.logger;
+  return loggerCache.get(cacheKey)!;
 }
 
 export function getAuditLogger(component: string, config?: AuditLoggerConfig): AuditLogger {
-  const cacheKey = `${component}-${safeStringify(config || {})}`;
-  
+  const cacheKey = `${component}-${safeStringify(config || {}, '{}', 'cache-key')}`;
+
   if (!loggerCache.has(cacheKey)) {
     const auditLogger = new AuditLogger(component, config);
     loggerCache.set(cacheKey, auditLogger);

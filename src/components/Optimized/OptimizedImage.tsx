@@ -85,7 +85,7 @@ export const OptimizedImage = memo(
         // Performance monitoring
         if (typeof window !== "undefined" && window.performance) {
           window.performance.mark("image-loaded");
-          logger.debug(`Image loaded in ${loadTime}ms:`, src);
+          logger.debug(`Image loaded in ${loadTime}ms:`, { src, loadTime });
         }
 
         onLoad?.();

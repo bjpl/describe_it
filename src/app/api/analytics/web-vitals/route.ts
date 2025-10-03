@@ -73,7 +73,7 @@ async function sendToVercelAnalytics(data: WebVitalData) {
   // Vercel Analytics integration
   // This would be handled by the Vercel Analytics script on the frontend
   // but we can log server-side for additional tracking
-  apiLogger.info('Vercel Analytics:', data.name, data.value);
+  apiLogger.info('Vercel Analytics:', { name: data.name, value: data.value });
 }
 
 async function sendToGoogleAnalytics(data: WebVitalData) {
@@ -103,15 +103,15 @@ async function sendToGoogleAnalytics(data: WebVitalData) {
               },
             },
           ],
-        }, '{}', 'google-analytics-payload'),
+        }),
       }
     );
 
     if (!response.ok) {
-      apiLogger.warn('Failed to send to Google Analytics:', response.status);
+      apiLogger.warn('Failed to send to Google Analytics:', { status: response.status });
     }
   } catch (error) {
-    apiLogger.warn('Google Analytics error:', error);
+    apiLogger.warn('Google Analytics error:', { error: error as Error });
   }
 }
 
@@ -129,13 +129,13 @@ async function sendToCustomAnalytics(data: WebVitalData) {
       await kv.lpush(key, safeStringify({
         ...data,
         timestamp: Date.now(),
-      }, '{}', `web-vitals-storage-${key}`));
-      
+      }));
+
       // Set expiration to 30 days
       await kv.expire(key, 30 * 24 * 60 * 60);
     }
   } catch (error) {
-    apiLogger.warn('Custom analytics error:', error);
+    apiLogger.warn('Custom analytics error:', { error: error as Error });
   }
 }
 
@@ -199,11 +199,11 @@ async function retrieveAnalyticsData(metric?: string | null, days: number = 7) {
           const values = await kv.lrange(key, 0, -1);
           results.push(
             ...values
-              .map((v: string) => safeParse(v, null, `web-vitals-retrieval-${key}`))
-              .filter(Boolean)
+              .map((v: string) => safeParse(v))
+              .filter((v): v is NonNullable<typeof v> => v !== undefined)
           );
         } catch (error) {
-          apiLogger.warn(`Error retrieving key ${key}:`, error);
+          apiLogger.warn(`Error retrieving key ${key}:`, { error: error as Error });
         }
       }
 
@@ -212,7 +212,7 @@ async function retrieveAnalyticsData(metric?: string | null, days: number = 7) {
 
     return [];
   } catch (error) {
-    apiLogger.warn('Error retrieving analytics data:', error);
+    apiLogger.warn('Error retrieving analytics data:', { error: error as Error });
     return [];
   }
 }

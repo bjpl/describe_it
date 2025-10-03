@@ -161,7 +161,7 @@ export class ServiceRegistry {
           service.initialize().catch((error: Error) => {
             logger.warn(
               `Failed to initialize service ${name}:`,
-              error.message,
+              { message: error.message, service: name },
             );
           }),
         );
@@ -182,7 +182,7 @@ export class ServiceRegistry {
         logger.info(`Cleaning up service: ${name}`);
         cleanupPromises.push(
           service.cleanup().catch((error: Error) => {
-            logger.warn(`Failed to cleanup service ${name}:`, error.message);
+            logger.warn(`Failed to cleanup service ${name}:`, { message: error.message, service: name });
           }),
         );
       }

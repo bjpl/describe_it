@@ -5,7 +5,6 @@
 
 import { logger } from '../logger';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
-import { logger } from '@/lib/logger';
 
 export interface StorageEntry {
   key: string;

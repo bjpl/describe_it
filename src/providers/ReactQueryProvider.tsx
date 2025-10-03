@@ -7,7 +7,7 @@ import {
   QueryCache,
   MutationCache,
 } from "@tanstack/react-query";
-// import { logger } from '@/lib/logger';
+import { logger } from '@/lib/logger';
 // Temporarily disabled for deployment
 // import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 // import { useAppStore } from '../lib/store/appStore';
@@ -16,7 +16,7 @@ import {
 // Global error handler
 const handleError = (error: unknown) => {
   // Log error using console for emergency mode
-  logger.error("React Query Error:", error);
+  logger.error("React Query Error:", error as Error);
 };
 
 // Create query client with configuration

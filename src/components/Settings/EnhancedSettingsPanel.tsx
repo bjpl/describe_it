@@ -285,7 +285,7 @@ const EnhancedSettingsPanel: React.FC<{
           value="US" // Default region since not in AppSettings
           onChange={(e) => {
             // Region setting not implemented in current AppSettings
-            logger.info('Region setting not implemented:', e.target.value);
+            logger.info('Region setting not implemented:', { value: e.target.value });
           }}
           className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700"
         >
@@ -326,7 +326,7 @@ const EnhancedSettingsPanel: React.FC<{
           value={30} // Default session timeout since not in AppSettings
           onChange={(e) => {
             // Session timeout setting not implemented in current AppSettings
-            logger.info('Session timeout setting not implemented:', e.target.value);
+            logger.info('Session timeout setting not implemented:', { value: e.target.value });
           }
           }
           className={`w-full px-3 py-2 border rounded-md bg-white dark:bg-gray-700 ${

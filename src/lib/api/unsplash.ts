@@ -84,7 +84,7 @@ class UnsplashService {
       this.accessKey = apiKey.trim();
       this.isDemo = false; // Explicitly set to non-demo mode
       this.initializeClient();
-      apiLogger.info("[UnsplashService] Using temporary API key, demo mode:", this.isDemo);
+      apiLogger.info("[UnsplashService] Using temporary API key, demo mode:", { isDemo: this.isDemo });
     }
   }
 
@@ -99,7 +99,7 @@ class UnsplashService {
       return;
     }
 
-    apiLogger.info("[UnsplashService] Initializing Unsplash client with key:", this.accessKey.substring(0, 10) + '...');
+    apiLogger.info("[UnsplashService] Initializing Unsplash client with key:", { keyPrefix: this.accessKey.substring(0, 10) + '...' });
     
     this.client = axios.create({
       baseURL: "https://api.unsplash.com",
@@ -119,7 +119,7 @@ class UnsplashService {
 
     this.isDemo = false; // Explicitly set to non-demo mode when client is initialized
     this.setupInterceptors();
-    apiLogger.info("[UnsplashService] Client initialized successfully, isDemo:", this.isDemo);
+    apiLogger.info("[UnsplashService] Client initialized successfully, isDemo:", { isDemo: this.isDemo });
   }
 
   /**

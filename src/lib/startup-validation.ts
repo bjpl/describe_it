@@ -10,7 +10,6 @@ import {
   isProduction,
 } from "@/config/env";
 import { logger } from "@/lib/logger";
-import { logger } from '@/lib/logger';
 
 /**
  * Performs comprehensive startup validation

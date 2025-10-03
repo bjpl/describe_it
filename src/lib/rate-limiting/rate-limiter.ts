@@ -122,7 +122,7 @@ export class RateLimiter {
         });
 
         this.redis.on('error', (error) => {
-          logger.warn('[Rate Limiter] Redis error, falling back to memory:', error.message);
+          logger.warn('[Rate Limiter] Redis error, falling back to memory:', { message: error.message });
           this.redisAvailable = false;
         });
 

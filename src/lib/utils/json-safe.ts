@@ -28,22 +28,22 @@ export function safeParse<T = any>(
 /**
  * Safely stringify JSON with error handling
  * @param value - Value to stringify
- * @param replacer - Optional replacer function or array
- * @param space - Optional indentation
- * @returns JSON string or undefined on error
+ * @param fallback - Fallback string on error (default '{}')
+ * @param context - Optional context for logging
+ * @returns JSON string or fallback on error
  */
 export function safeStringify(
   value: any,
-  replacer?: (key: string, value: any) => any | (string | number)[],
-  space?: string | number
-): string | undefined {
+  fallback: string = '{}',
+  context?: string
+): string {
   try {
-    return JSON.stringify(value, replacer as any, space);
+    return JSON.stringify(value);
   } catch (error) {
     if (process.env.NODE_ENV === 'development') {
-      logger.error('[safeStringify] JSON stringification failed:', error);
+      logger.error(`[safeStringify${context ? ` ${context}` : ''}] JSON stringification failed:`, error);
     }
-    return undefined;
+    return fallback;
   }
 }
 

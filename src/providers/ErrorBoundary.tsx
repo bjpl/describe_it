@@ -51,10 +51,10 @@ class ErrorBoundaryClass extends Component<Props, State> {
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.group("🔥 React Error Boundary - PRODUCTION DEBUG");
     logger.error("[PRODUCTION ERROR] Error:", error);
-    logger.error("[PRODUCTION ERROR] Error Message:", error.message);
-    logger.error("[PRODUCTION ERROR] Error Stack:", error.stack);
-    logger.error("[PRODUCTION ERROR] Error Info:", errorInfo);
-    logger.error("[PRODUCTION ERROR] Component Stack:", errorInfo.componentStack);
+    logger.error("[PRODUCTION ERROR] Error Message:", undefined, { message: error.message });
+    logger.error("[PRODUCTION ERROR] Error Stack:", undefined, { stack: error.stack });
+    logger.error("[PRODUCTION ERROR] Error Info:", undefined, errorInfo as any);
+    logger.error("[PRODUCTION ERROR] Component Stack:", undefined, { componentStack: errorInfo.componentStack });
     logger.error("[PRODUCTION ERROR] Environment:", {
       NODE_ENV: process.env.NODE_ENV,
       isClient: isBrowser,
@@ -146,11 +146,11 @@ class ErrorBoundaryClass extends Component<Props, State> {
             JSON.stringify(existingErrors),
           );
         } catch (storageError) {
-          logger.warn('[ERROR BOUNDARY] Failed to store error in localStorage:', storageError);
+          logger.warn('[ERROR BOUNDARY] Failed to store error in localStorage:', { error: storageError as Error });
         }
       }
     } catch (reportingError) {
-      logger.error("[ERROR BOUNDARY] Failed to report error:", reportingError);
+      logger.error("[ERROR BOUNDARY] Failed to report error:", reportingError as Error);
     }
   };
 
@@ -241,12 +241,12 @@ ${errorInfo?.componentStack}
         await navigator.clipboard.writeText(errorText);
         alert("Error details copied to clipboard");
       } else {
-        logger.info('[ERROR BOUNDARY] Error details (clipboard not available):', errorText);
+        logger.info('[ERROR BOUNDARY] Error details (clipboard not available):', { errorText });
         alert("Error details logged to console (clipboard not available)");
       }
     } catch (err) {
-      logger.error("[ERROR BOUNDARY] Failed to copy error details:", err);
-      logger.info('[ERROR BOUNDARY] Error details:', errorText);
+      logger.error("[ERROR BOUNDARY] Failed to copy error details:", err as Error);
+      logger.info('[ERROR BOUNDARY] Error details:', { errorText });
     }
   };
 
@@ -373,7 +373,7 @@ export const withErrorBoundary = <P extends object>(
 export const useErrorHandler = () => {
   const reportError = React.useCallback((error: Error | string) => {
     const errorMessage = typeof error === "string" ? error : error.message;
-    logger.error("Manual error report:", errorMessage);
+    logger.error("Manual error report:", typeof error === "string" ? undefined : error, { message: errorMessage });
   }, []);
 
   return { reportError };

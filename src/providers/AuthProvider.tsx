@@ -38,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const storedSession = localStorage.getItem('describe-it-auth');
       if (storedSession && !currentState.isAuthenticated) {
         authLogger.info('[AuthProvider] Found session in localStorage but auth not initialized');
-        const sessionData = safeParse(storedSession, null);
+        const sessionData = safeParse<{ access_token?: string }>(storedSession);
         if (sessionData && sessionData.access_token) {
           // Initialize auth manager with the stored session
           await authManager.initialize();

@@ -93,7 +93,7 @@ export class RateLimiter {
         totalRequests: requestCount,
       };
     } catch (error) {
-      apiHelperLogger.warn('Rate limiting check failed', error);
+      apiHelperLogger.warn('Rate limiting check failed', { error: error as Error });
       // Allow request if rate limiting check fails
       return {
         allowed: true,

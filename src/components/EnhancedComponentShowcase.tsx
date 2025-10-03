@@ -70,7 +70,7 @@ const EnhancedComponentShowcase: React.FC<EnhancedComponentShowcaseProps> = ({
       props: {
         onImageSelect: (image: UnsplashImage) => {
           setSelectedImage(image);
-          logger.info("Selected image:", image);
+          logger.info("Selected image:", { image });
         },
       },
       features: [

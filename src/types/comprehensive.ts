@@ -25,7 +25,7 @@ export type SafeAny = unknown;
  * JSON-safe value types
  */
 export type JsonPrimitive = string | number | boolean | null;
-export type JsonValue = JsonPrimitive | JsonObject | JsonArray;
+export type JsonValue = JsonPrimitive | JsonObject | JsonArray | undefined;
 export type JsonObject = { [key: string]: JsonValue };
 export type JsonArray = JsonValue[];
 

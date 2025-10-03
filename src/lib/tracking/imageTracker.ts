@@ -65,7 +65,7 @@ class ImageTracker {
 
       return imageMap;
     } catch (error) {
-      logger.warn("Failed to load tracked images:", error);
+      logger.warn("Failed to load tracked images:", { error: error as Error });
       return new Map();
     }
   }
@@ -87,7 +87,7 @@ class ImageTracker {
 
       localStorage.setItem(STORAGE_KEY, safeStringify(imageArray));
     } catch (error) {
-      logger.error("Failed to save tracked images:", error);
+      logger.error("Failed to save tracked images:", error as Error);
       // If storage is full, try to clear old entries and retry
       this.clearExpiredImages();
       try {
@@ -100,7 +100,7 @@ class ImageTracker {
       } catch (retryError) {
         logger.error(
           "Failed to save tracked images after cleanup:",
-          retryError,
+          retryError as Error,
         );
       }
     }
@@ -246,7 +246,7 @@ class ImageTracker {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      logger.error("Failed to clear image history:", error);
+      logger.error("Failed to clear image history:", error as Error);
     }
   }
 

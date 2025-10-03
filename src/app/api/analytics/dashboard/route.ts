@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(response);
   } catch (error) {
     const logger = createContextLogger('analytics-dashboard');
-    logger.error('Analytics dashboard API error', { error: error instanceof Error ? error.message : error, stack: error instanceof Error ? error.stack : undefined });
+    logger.error('Analytics dashboard API error', error);
     
     const duration = (Date.now() - startTime) / 1000;
     recordApiRequest('GET', '/api/analytics/dashboard', 500, duration);

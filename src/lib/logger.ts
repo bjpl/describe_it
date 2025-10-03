@@ -42,8 +42,11 @@ export interface ErrorCategory {
 // Winston logger instance (server-side only)
 let winstonLogger: any = null;
 
-// Initialize Winston on server-side
-if (typeof window === 'undefined') {
+// Detect Edge Runtime
+const isEdgeRuntime = typeof EdgeRuntime !== 'undefined' || process.env.NEXT_RUNTIME === 'edge';
+
+// Initialize Winston on Node.js runtime only (not Edge Runtime)
+if (typeof window === 'undefined' && !isEdgeRuntime) {
   try {
     const winston = require('winston');
     const { format, transports } = winston;
@@ -240,25 +243,28 @@ class Logger {
   }
 
   /**
-   * Write log using Winston (server) or console (client)
+   * Write log using Winston (server) or console (client/edge)
    */
   private writeLog(level: LogLevel, message: string, context?: LogContext): void {
     const logData = this.formatLogData(message, context);
 
-    if (winstonLogger && !this.isClient) {
-      // Server-side: Use Winston
+    // Detect Edge Runtime
+    const isEdge = typeof EdgeRuntime !== 'undefined' || process.env.NEXT_RUNTIME === 'edge';
+
+    if (winstonLogger && !this.isClient && !isEdge) {
+      // Node.js runtime: Use Winston
       winstonLogger.log(level, message, logData);
     } else {
-      // Client-side: Use console with formatting
+      // Client-side or Edge Runtime: Use console with formatting
       this.writeToConsole(level, message, logData);
     }
 
-    // Store errors in localStorage for client-side debugging
-    if (level === 'error' && this.isClient) {
+    // Store errors in localStorage for client-side debugging (not available in Edge Runtime)
+    if (level === 'error' && this.isClient && !isEdge) {
       this.storeError(message, logData);
     }
 
-    // Send to external monitoring in production
+    // Send to external monitoring in production (Edge Runtime compatible)
     if (this.isProduction && (level === 'error' || level === 'warn')) {
       this.sendToExternalMonitoring(level, message, logData);
     }
@@ -666,6 +672,25 @@ export const logPerformance = (operation: string, duration: number, context?: Lo
 
 export const logUserAction = (action: string, context?: LogContext) =>
   logger.userAction(action, context);
+
+// Development-only logging helpers
+export const devLog = (message: string, ...args: any[]) => {
+  if (process.env.NODE_ENV === 'development') {
+    logger.debug(message, { args });
+  }
+};
+
+export const devWarn = (message: string, context?: LogContext) => {
+  if (process.env.NODE_ENV === 'development') {
+    logger.warn(message, context);
+  }
+};
+
+export const devError = (message: string, error?: Error, context?: LogContext) => {
+  if (process.env.NODE_ENV === 'development') {
+    logger.error(message, error, context);
+  }
+};
 
 // Default export
 export default logger;

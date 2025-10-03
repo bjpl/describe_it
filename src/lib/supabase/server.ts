@@ -15,8 +15,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
  * Create a Supabase client for server-side operations
  * This client uses cookies for session management in SSR contexts
  */
-export const createServerSupabaseClient = () => {
-  const cookieStore = cookies()
+export const createServerSupabaseClient = async () => {
+  const cookieStore = await cookies()
 
   return createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
     cookies: {
@@ -51,7 +51,7 @@ export const serverAuthHelpers = {
    * Get current user on server-side
    */
   async getCurrentUser() {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     try {
       const { data: { user }, error } = await supabase.auth.getUser()
@@ -67,7 +67,7 @@ export const serverAuthHelpers = {
    * Get current session on server-side
    */
   async getCurrentSession() {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     try {
       const { data: { session }, error } = await supabase.auth.getSession()
@@ -91,7 +91,7 @@ export const serverAuthHelpers = {
    * Get user with profile data
    */
   async getUserWithProfile() {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     const user = await this.getCurrentUser()
     
     if (!user) return null
@@ -124,7 +124,7 @@ export const serverDbHelpers = {
    * Get user's descriptions with server-side client
    */
   async getUserDescriptions(userId: string, limit = 20, offset = 0) {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     try {
       const { data, error } = await supabase
@@ -151,7 +151,7 @@ export const serverDbHelpers = {
    * Get description by ID with authorization check
    */
   async getDescriptionById(id: string, userId?: string) {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     try {
       let query = supabase
@@ -183,7 +183,7 @@ export const serverDbHelpers = {
    * Get user's export history
    */
   async getUserExportHistory(userId: string, limit = 10) {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     try {
       const { data, error } = await supabase
@@ -205,7 +205,7 @@ export const serverDbHelpers = {
    * Get user's API keys (server-side only for security)
    */
   async getUserApiKeys(userId: string) {
-    const supabase = createServerSupabaseClient()
+    const supabase = await createServerSupabaseClient()
     
     try {
       const { data, error } = await supabase

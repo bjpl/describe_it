@@ -56,7 +56,7 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
           logger.info('[ImageSearch] No API key found in localStorage');
         }
       } catch (e) {
-        logger.warn('[ImageSearch] Could not retrieve API key from settings:', e);
+        logger.warn('[ImageSearch] Could not retrieve API key from settings:', { error: e as Error });
       }
 
       const response = await fetch(url.toString());
@@ -73,7 +73,7 @@ export function ImageSearch({ onImageSelect }: ImageSearchProps) {
       }
     } catch (err) {
       setError("Failed to search images");
-      logger.error("Search error:", err);
+      logger.error("Search error:", err as Error);
     } finally {
       setLoading(false);
     }

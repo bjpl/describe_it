@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       const duration = (Date.now() - startTime) / 1000;
       recordApiRequest('GET', '/api/analytics/export', 200, duration);
 
-      return new NextResponse(safeStringify(data, '{}', 'analytics-export', null, 2), {
+      return new NextResponse(safeStringify(data, '{}'), {
         status: 200,
         headers: {
           'Content-Type': 'application/json',
@@ -142,8 +142,8 @@ async function getDetailedApiKeysData(startTime: number, endTime: number) {
         const history = await redis.lrange(historyKey, 0, -1);
         
         const usageHistory = history
-          .map(item => safeParse(item, null, `usage-history-${keyHash}`))
-          .filter(item => item && item.timestamp >= startTime && item.timestamp <= endTime)
+          .map(item => safeParse<{ timestamp: number }>(item))
+          .filter((item): item is { timestamp: number } => item !== undefined && typeof item.timestamp === 'number' && item.timestamp >= startTime && item.timestamp <= endTime)
           .sort((a, b) => a.timestamp - b.timestamp);
 
         apiKeysData.push({
@@ -182,11 +182,7 @@ async function getDetailedAlertsData(startTime: number, endTime: number) {
       try {
         const alerts = await redis.lrange(key, 0, -1);
         for (const alertStr of alerts) {
-          const alert = safeParse<{ timestamp: number; [key: string]: any }>(
-            alertStr, 
-            null, 
-            `detailed-alerts-${key}`
-          );
+          const alert = safeParse<{ timestamp: number; [key: string]: any }>(alertStr);
           if (alert && alert.timestamp >= startTime && alert.timestamp <= endTime) {
             allAlerts.push({
               ...alert,

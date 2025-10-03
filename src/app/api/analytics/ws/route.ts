@@ -93,11 +93,11 @@ export function initWebSocketServer(server?: any) {
     });
 
     ws.on('message', (message) => {
-      const data = safeParse(message.toString(), null, `websocket-message-${clientId}`);
+      const data = safeParse(message.toString());
       if (data) {
         handleClientMessage(clientId, data);
       } else {
-        apiLogger.error('Invalid WebSocket message from client:', clientId);
+        apiLogger.error('Invalid WebSocket message from client:', { clientId });
       }
     });
 
@@ -179,7 +179,7 @@ function sendToClient(clientId: string, message: WebSocketMessage) {
   if (!client || client.ws.readyState !== client.ws.OPEN) return;
 
   try {
-    client.ws.send(safeStringify(message, '{}', `websocket-broadcast-${client.id}`));
+    client.ws.send(safeStringify(message));
   } catch (error) {
     apiLogger.error(`Failed to send message to client ${clientId}:`, error);
     connectedClients.delete(clientId);
@@ -235,7 +235,7 @@ async function startDataBroadcasting() {
 
   alertSubscriber.on('message', (channel, message) => {
     try {
-      const data = safeParse(message, null, `websocket-handle-${clientId}`);
+      const data = safeParse(message);
       if (!data) return;
       
       if (channel === 'analytics:alerts') {

@@ -309,7 +309,7 @@ export function useSessionLogger(
         sessionLoggerRef.current,
       );
 
-      logger.info("Session loaded:", sessionId);
+      logger.info("Session loaded:", { sessionId });
     }
   }, []);
 

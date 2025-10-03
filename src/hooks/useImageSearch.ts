@@ -2,7 +2,6 @@ import { useState, useCallback, useRef } from "react";
 import { UnsplashImage } from "@/types";
 import { logger, logUserAction, devLog } from "@/lib/logger";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
-import { logger } from '@/lib/logger';
 
 // Enhanced error types for better error handling
 interface SearchError {
@@ -187,7 +186,7 @@ export function useImageSearch() {
         logger.info('[useImageSearch] No API key - using demo mode');
       }
 
-      logger.info("[useImageSearch] Making API request to:", url.toString());
+      logger.info("[useImageSearch] Making API request to:", { url: url.toString() });
 
       const response = await fetch(url.toString(), {
         signal: abortControllerRef.current.signal,
@@ -235,10 +234,10 @@ export function useImageSearch() {
         logger.info(`[useImageSearch] Retry attempt ${attempt + 1}`);
         retryCountRef.current = attempt;
         const result = await makeSearchRequest(query, page);
-        logger.info("[useImageSearch] Request successful on attempt", attempt + 1);
+        logger.info("[useImageSearch] Request successful on attempt", { attempt: attempt + 1 });
         return result;
       } catch (error) {
-        logger.error(`[useImageSearch] Request failed on attempt ${attempt + 1}:`, error);
+        logger.error(`[useImageSearch] Request failed on attempt ${attempt + 1}:`, error as Error);
         lastError = error;
 
         const searchError = createSearchError(error);

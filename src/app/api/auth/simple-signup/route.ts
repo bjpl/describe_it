@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
     // Make direct HTTP request to Supabase Auth API
     const signupUrl = `${supabaseUrl}/auth/v1/signup`;
     
-    apiLogger.info('[SimpleSignup] Calling Supabase:', signupUrl);
+    apiLogger.info('[SimpleSignup] Calling Supabase:', { url: signupUrl });
     
     const response = await fetch(signupUrl, {
       method: 'POST',

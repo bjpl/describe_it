@@ -40,7 +40,7 @@ export class SessionPersistence {
       // Update session list
       await this.updateSessionList(sessionId);
 
-      logger.debug("Session data saved:", sessionId);
+      logger.debug("Session data saved:", { sessionId });
     } catch (error) {
       logger.error("Failed to save session data:", error);
 
@@ -76,7 +76,7 @@ export class SessionPersistence {
       const parsed = safeParse(stored);
       const decompressed = this.decompressData(parsed);
 
-      logger.debug("Session data loaded:", sessionId);
+      logger.debug("Session data loaded:", { sessionId });
       return decompressed;
     } catch (error) {
       logger.error("Failed to load session data:", error);
@@ -93,7 +93,7 @@ export class SessionPersistence {
       // Remove from session list
       await this.removeFromSessionList(sessionId);
 
-      logger.debug("Session data cleared:", sessionId);
+      logger.debug("Session data cleared:", { sessionId });
     } catch (error) {
       logger.error("Failed to clear session data:", error);
     }
@@ -126,7 +126,7 @@ export class SessionPersistence {
       const key = this.summaryPrefix + sessionId;
       storage.setItem(key, safeStringify(summary));
 
-      logger.debug("Session summary saved:", sessionId);
+      logger.debug("Session summary saved:", { sessionId });
     } catch (error) {
       logger.error("Failed to save session summary:", error);
     }

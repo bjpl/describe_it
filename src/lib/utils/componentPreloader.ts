@@ -64,7 +64,7 @@ export class ComponentPreloader {
       await preloadPromise;
       this.preloadedComponents.add(componentName);
     } catch (error) {
-      logger.warn(`Failed to preload component ${componentName}:`, error);
+      logger.warn(`Failed to preload component ${componentName}:`, { error: error as Error, component: componentName });
       this.preloadPromises.delete(componentName);
     }
   }

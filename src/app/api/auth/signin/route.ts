@@ -13,7 +13,7 @@ import {
   createSuccessResponse
 } from '@/lib/schemas/api-validation';
 import { z } from 'zod';
-import { authLogger, createRequestLogger } from '@/lib/logger';
+import { authLogger, createRequestLogger, apiLogger } from '@/lib/logger';
 
 // CORS headers for production
 const corsHeaders = {

@@ -1,5 +1,8 @@
 import { logger } from '@/lib/logger';
 
+// Re-export json-safe utilities for convenience
+export { safeParse, safeStringify, safeDeepClone, safeParseLocalStorage, safeSetLocalStorage } from './json-safe';
+
 /**
  * Robust JSON extraction and parsing utility for handling OpenAI API responses
  * that may contain markdown-wrapped JSON or mixed text content
@@ -84,7 +87,7 @@ export class RobustJSONParser {
         lastError =
           error instanceof Error ? error.message : "Parsing strategy failed";
         if (logging) {
-          logger.warn(`❌ Strategy ${attempt + 1} failed:`, lastError);
+          logger.warn(`❌ Strategy ${attempt + 1} failed:`, { error: lastError, attempt: attempt + 1 });
         }
       }
     }

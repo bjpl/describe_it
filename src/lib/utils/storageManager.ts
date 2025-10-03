@@ -56,11 +56,11 @@ export class StorageManager {
             logger.info(`[StorageManager] Compacted ${key}`);
           }
         } catch (e) {
-          logger.warn(`[StorageManager] Could not compact ${key}:`, e);
+          logger.warn(`[StorageManager] Could not compact ${key}:`, { error: e as Error, key });
         }
       });
     } catch (error) {
-      logger.error('[StorageManager] Cleanup failed:', error);
+      logger.error('[StorageManager] Cleanup failed:', error as Error);
     }
   }
 

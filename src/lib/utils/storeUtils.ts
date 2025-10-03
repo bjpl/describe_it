@@ -282,7 +282,7 @@ export class CleanupManager {
       try {
         fn();
       } catch (error) {
-        logger.warn('Cleanup function failed:', error);
+        logger.warn('Cleanup function failed:', { error: error as Error });
       }
     });
     this.cleanupFunctions = [];

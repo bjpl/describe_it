@@ -56,10 +56,17 @@ async function getAnalyticsData() {
       .not('user_id', 'is', null);
 
     // Calculate unique users and active users (last 24h)
-    const uniqueUsers = new Set(userMetrics?.map(u => u.user_id) || []).size;
+    const uniqueUsers = new Set(
+      Array.isArray(userMetrics) ? userMetrics.map(u => 'user_id' in u ? u.user_id : null).filter(Boolean) : []
+    ).size;
     const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const activeUsers = new Set(
-      userMetrics?.filter(u => u.timestamp >= last24h).map(u => u.user_id) || []
+      Array.isArray(userMetrics)
+        ? userMetrics
+            .filter(u => 'timestamp' in u && 'user_id' in u && u.timestamp >= last24h)
+            .map(u => 'user_id' in u ? u.user_id : null)
+            .filter(Boolean)
+        : []
     ).size;
 
     // Get session data
@@ -68,10 +75,12 @@ async function getAnalyticsData() {
       .select('session_id, timestamp, properties')
       .eq('event_name', 'learning_session_ended');
 
-    const totalSessions = sessionData?.length || 0;
-    const avgSessionDuration = sessionData?.reduce((acc, session) => {
-      return acc + (session.properties?.sessionDuration || 0);
-    }, 0) / totalSessions || 0;
+    const totalSessions = Array.isArray(sessionData) ? sessionData.length : 0;
+    const avgSessionDuration = Array.isArray(sessionData) && totalSessions > 0
+      ? sessionData.reduce((acc, session) => {
+          return acc + ('properties' in session && session.properties?.sessionDuration || 0);
+        }, 0) / totalSessions
+      : 0;
 
     // Get feature usage
     const { data: featureData } = await supabase
@@ -79,13 +88,17 @@ async function getAnalyticsData() {
       .select('properties')
       .eq('event_name', 'feature_used');
 
-    const featureUsage = featureData?.reduce((acc, event) => {
-      const featureName = event.properties?.featureName;
-      if (featureName) {
-        acc[featureName] = (acc[featureName] || 0) + 1;
-      }
-      return acc;
-    }, {} as Record<string, number>) || {};
+    const featureUsage = Array.isArray(featureData)
+      ? featureData.reduce((acc, event) => {
+          if ('properties' in event) {
+            const featureName = event.properties?.featureName;
+            if (featureName) {
+              acc[featureName] = (acc[featureName] || 0) + 1;
+            }
+          }
+          return acc;
+        }, {} as Record<string, number>)
+      : {};
 
     const topFeatures = Object.entries(featureUsage)
       .map(([name, usage]) => ({ name, usage }))
@@ -93,11 +106,15 @@ async function getAnalyticsData() {
       .slice(0, 10);
 
     // Get user tier distribution
-    const userTiers = userMetrics?.reduce((acc, user) => {
-      const tier = user.user_tier || 'free';
-      acc[tier] = (acc[tier] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>) || {};
+    const userTiers = Array.isArray(userMetrics)
+      ? userMetrics.reduce((acc, user) => {
+          if ('user_tier' in user) {
+            const tier = user.user_tier || 'free';
+            acc[tier] = (acc[tier] || 0) + 1;
+          }
+          return acc;
+        }, {} as Record<string, number>)
+      : {};
 
     const userTierData = Object.entries(userTiers)
       .map(([tier, count]) => ({ tier, count }));
@@ -132,10 +149,10 @@ async function getErrorData() {
       .select('timestamp, properties')
       .eq('event_name', 'error_occurred');
 
-    const totalErrors = errorEvents?.length || 0;
-    const criticalErrors = errorEvents?.filter(
-      e => e.properties?.severity === 'critical'
-    ).length || 0;
+    const totalErrors = Array.isArray(errorEvents) ? errorEvents.length : 0;
+    const criticalErrors = Array.isArray(errorEvents)
+      ? errorEvents.filter(e => 'properties' in e && e.properties?.severity === 'critical').length
+      : 0;
 
     // Calculate error rate (errors per 100 requests)
     const { data: requestEvents } = await supabase
@@ -143,21 +160,25 @@ async function getErrorData() {
       .select('timestamp')
       .eq('event_name', 'api_request');
 
-    const totalRequests = requestEvents?.length || 1;
+    const totalRequests = Array.isArray(requestEvents) ? requestEvents.length : 1;
     const errorRate = (totalErrors / totalRequests) * 100;
 
     // Get top errors
-    const errorTypes = errorEvents?.reduce((acc, event) => {
-      const message = event.properties?.errorMessage || 'Unknown error';
-      const severity = event.properties?.severity || 'medium';
-      const key = `${message.substring(0, 100)}...`;
-      
-      if (!acc[key]) {
-        acc[key] = { message: key, count: 0, severity };
-      }
-      acc[key].count++;
-      return acc;
-    }, {} as Record<string, { message: string; count: number; severity: string }>) || {};
+    const errorTypes = Array.isArray(errorEvents)
+      ? errorEvents.reduce((acc, event) => {
+          if ('properties' in event) {
+            const message = event.properties?.errorMessage || 'Unknown error';
+            const severity = event.properties?.severity || 'medium';
+            const key = `${message.substring(0, 100)}...`;
+
+            if (!acc[key]) {
+              acc[key] = { message: key, count: 0, severity };
+            }
+            acc[key].count++;
+          }
+          return acc;
+        }, {} as Record<string, { message: string; count: number; severity: string }>)
+      : {};
 
     const topErrors = Object.values(errorTypes)
       .sort((a, b) => b.count - a.count)
@@ -189,7 +210,7 @@ async function getErrorData() {
 async function getErrorTrends() {
   try {
     const last7Days = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    
+
     const { data: errors } = await supabase
       .from('analytics_events')
       .select('timestamp')
@@ -197,11 +218,15 @@ async function getErrorTrends() {
       .gte('timestamp', last7Days);
 
     // Group errors by date
-    const errorsByDate = errors?.reduce((acc, error) => {
-      const date = new Date(error.timestamp).toISOString().split('T')[0];
-      acc[date] = (acc[date] || 0) + 1;
-      return acc;
-    }, {} as Record<string, number>) || {};
+    const errorsByDate = Array.isArray(errors)
+      ? errors.reduce((acc, error) => {
+          if ('timestamp' in error) {
+            const date = new Date(error.timestamp).toISOString().split('T')[0];
+            acc[date] = (acc[date] || 0) + 1;
+          }
+          return acc;
+        }, {} as Record<string, number>)
+      : {};
 
     // Fill in missing dates with 0
     const trends = [];
@@ -230,9 +255,13 @@ async function getPerformanceData() {
       .select('properties')
       .eq('event_name', 'api_request');
 
-    const responseTimes = apiEvents?.map(e => e.properties?.responseTime).filter(Boolean) || [];
-    const avgResponseTime = responseTimes.length > 0 
-      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length 
+    const responseTimes = Array.isArray(apiEvents)
+      ? apiEvents
+          .map(e => 'properties' in e ? e.properties?.responseTime : null)
+          .filter((t): t is number => typeof t === 'number')
+      : [];
+    const avgResponseTime = responseTimes.length > 0
+      ? responseTimes.reduce((a, b) => a + b, 0) / responseTimes.length
       : 0;
 
     // Calculate API success rate
@@ -241,8 +270,8 @@ async function getPerformanceData() {
       .select('timestamp')
       .eq('event_name', 'api_error');
 
-    const totalApiRequests = apiEvents?.length || 1;
-    const totalApiErrors = apiErrors?.length || 0;
+    const totalApiRequests = Array.isArray(apiEvents) ? apiEvents.length : 1;
+    const totalApiErrors = Array.isArray(apiErrors) ? apiErrors.length : 0;
     const apiSuccess = ((totalApiRequests - totalApiErrors) / totalApiRequests) * 100;
 
     // Get web vitals
@@ -253,7 +282,10 @@ async function getPerformanceData() {
       .order('timestamp', { ascending: false })
       .limit(10);
 
-    const latestVitals = vitalsEvents?.[0]?.properties?.vitals || {};
+    const latestVitals =
+      Array.isArray(vitalsEvents) && vitalsEvents.length > 0 && 'properties' in vitalsEvents[0]
+        ? vitalsEvents[0].properties?.vitals || {}
+        : {};
     const webVitals = {
       fcp: latestVitals.fcp || 0,
       lcp: latestVitals.lcp || 0,

@@ -246,9 +246,9 @@ const HomePageBase: React.FC = () => {
                 
                 <button
                   onClick={() => {
-                    logger.info('Settings button clicked! Current state:', state.showSettings);
+                    logger.info('Settings button clicked! Current state:', { showSettings: state.showSettings });
                     setState(prev => {
-                      logger.info('Toggling settings from', prev.showSettings, 'to', !prev.showSettings);
+                      logger.info('Toggling settings from to', { from: prev.showSettings, to: !prev.showSettings });
                       return { ...prev, showSettings: !prev.showSettings };
                     });
                   }}
@@ -423,7 +423,7 @@ const HomePageBase: React.FC = () => {
 
         {/* Settings Modal */}
         {(() => {
-          logger.info('[HOMEPAGE] Rendering settings modal check:', state.showSettings);
+          logger.info('[HOMEPAGE] Rendering settings modal check:', { showSettings: state.showSettings });
           return null;
         })()}
         {state.showSettings ? (

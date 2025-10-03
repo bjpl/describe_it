@@ -47,7 +47,6 @@ export default defineConfig({
     hookTimeout: 30000,
     // React 19 specific configuration
     isolate: false,
-    threads: false,
     // Better error reporting
     reporter: process.env.CI ? ['basic'] : ['verbose'],
     bail: process.env.CI ? 1 : 0,

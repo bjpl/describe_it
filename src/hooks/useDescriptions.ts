@@ -3,7 +3,6 @@ import { Description, DescriptionRequest } from "@/types";
 import { logger } from "@/lib/logger";
 import { useStableCallback, useCleanupManager } from "@/lib/utils/storeUtils";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
-import { logger } from '@/lib/logger';
 
 // Enhanced error types for better error handling
 interface DescriptionError {

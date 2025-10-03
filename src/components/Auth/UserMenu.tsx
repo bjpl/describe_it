@@ -92,7 +92,7 @@ export function UserMenu() {
             
             // Only update if there's a meaningful change
             if (hasToken !== localIsAuthenticated) {
-              authLogger.info('[UserMenu] Polling detected auth change:', hasToken);
+              authLogger.info('[UserMenu] Polling detected auth change:', { hasToken });
               setLocalIsAuthenticated(hasToken);
               setLocalUser(storedUser);
               
@@ -452,7 +452,7 @@ function ApiKeyModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void
       );
       
       const success = await Promise.race([savePromise, timeoutPromise]);
-      authLogger.info('[ApiKeyModal] Save result:', success);
+      authLogger.info('[ApiKeyModal] Save result:', { success });
       
       if (success) {
         // Also save to sessionStorage as backup
