@@ -1856,19 +1856,9 @@ export const VALIDATION_PATTERNS = {
 // EXPORT ALL TYPES
 // =============================================================================
 
-export type {
-  // Re-export existing types for compatibility
-  DescriptionStyle as ApiDescriptionStyle,
-  Language as ApiLanguage,
-  DifficultyLevel as ApiDifficultyLevel,
-} from './api';
-
-// Export everything from this module as the comprehensive types collection
-// Note: VocabularyStats is defined in both database and unified - using unified version
-export * from './database';
+// Export everything from modules, resolving conflicts manually
 export * from './api';
-export * from './unified';
 export * from './export';
 
-// Re-export VocabularyStats explicitly from unified to resolve ambiguity
-export type { VocabularyStats } from './unified';
+// Export from unified (preferred version of VocabularyStats and Database)
+export * from './unified';
