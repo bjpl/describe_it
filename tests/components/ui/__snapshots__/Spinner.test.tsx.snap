@@ -1,0 +1,132 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Loading Components > Snapshot Tests > should match snapshot for ButtonLoader 1`] = `
+<svg
+  aria-hidden="true"
+  class="animate-spin mr-2 h-4 w-4"
+  fill="none"
+  viewBox="0 0 24 24"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <circle
+    class="opacity-25"
+    cx="12"
+    cy="12"
+    r="10"
+    stroke="currentColor"
+    stroke-width="4"
+  />
+  <path
+    class="opacity-75"
+    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    fill="currentColor"
+  />
+</svg>
+`;
+
+exports[`Loading Components > Snapshot Tests > should match snapshot for InlineLoader 1`] = `
+<svg
+  aria-label="Loading"
+  class="animate-spin h-4 w-4"
+  fill="none"
+  viewBox="0 0 24 24"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <circle
+    class="opacity-25"
+    cx="12"
+    cy="12"
+    r="10"
+    stroke="currentColor"
+    stroke-width="4"
+  />
+  <path
+    class="opacity-75"
+    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+    fill="currentColor"
+  />
+</svg>
+`;
+
+exports[`Loading Components > Snapshot Tests > should match snapshot for LoadingOverlay 1`] = `
+<div
+  class="relative"
+>
+  <div>
+    Content
+  </div>
+  <div
+    class="absolute inset-0 bg-background/80 backdrop-blur-sm flex items-center justify-center z-50"
+  >
+    <div
+      class="text-center"
+    >
+      <div
+        class="flex flex-col items-center justify-center space-y-3 "
+      >
+        <div
+          class="flex items-center justify-center"
+        >
+          <svg
+            class="lucide lucide-loader2 w-6 h-6 animate-spin"
+            fill="none"
+            height="24"
+            stroke="currentColor"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            viewBox="0 0 24 24"
+            width="24"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M21 12a9 9 0 1 1-6.219-8.56"
+            />
+          </svg>
+        </div>
+        <p
+          class="text-center text-gray-600 text-base"
+        >
+          Loading...
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Loading Components > Snapshot Tests > should match snapshot for PageLoader 1`] = `
+<div
+  class="min-h-screen flex items-center justify-center"
+>
+  <div
+    class="flex flex-col items-center justify-center space-y-3 "
+  >
+    <div
+      class="flex items-center justify-center"
+    >
+      <svg
+        class="lucide lucide-loader2 w-12 h-12 animate-spin"
+        fill="none"
+        height="24"
+        stroke="currentColor"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        viewBox="0 0 24 24"
+        width="24"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M21 12a9 9 0 1 1-6.219-8.56"
+        />
+      </svg>
+    </div>
+    <p
+      class="text-center text-gray-600 text-lg"
+    >
+      Loading...
+    </p>
+  </div>
+</div>
+`;

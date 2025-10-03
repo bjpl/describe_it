@@ -1,0 +1,40 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Card Components > Snapshot Tests > should match snapshot for basic card 1`] = `
+<div
+  class="rounded-lg border bg-card text-card-foreground shadow-sm  "
+>
+  <div
+    class="flex flex-col space-y-1.5 p-6 "
+  >
+    <h3
+      class="text-2xl font-semibold leading-none tracking-tight "
+    >
+      Title
+    </h3>
+    <p
+      class="text-sm text-muted-foreground "
+    >
+      Description
+    </p>
+  </div>
+  <div
+    class="p-6 pt-0 "
+  >
+    Content
+  </div>
+  <div
+    class="flex items-center p-6 pt-0 "
+  >
+    Footer
+  </div>
+</div>
+`;
+
+exports[`Card Components > Snapshot Tests > should match snapshot for clickable card 1`] = `
+<button
+  class="rounded-lg border bg-card text-card-foreground shadow-sm hover:shadow-md transition-shadow cursor-pointer focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 "
+>
+  Clickable Card
+</button>
+`;

@@ -1,0 +1,114 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Alert Components > Snapshot Tests > should match snapshot for all variants 1`] = `
+<div
+  class="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-gray-950 bg-white text-gray-950 border-gray-200"
+  role="alert"
+>
+  <h5
+    class="mb-1 font-medium leading-none tracking-tight"
+  >
+    default
+  </h5>
+  <div
+    class="text-sm [&_p]:leading-relaxed"
+  >
+    default
+     description
+  </div>
+</div>
+`;
+
+exports[`Alert Components > Snapshot Tests > should match snapshot for all variants 2`] = `
+<div
+  class="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-gray-950 border-red-200 text-red-800 bg-red-50 [&>svg]:text-red-600"
+  role="alert"
+>
+  <h5
+    class="mb-1 font-medium leading-none tracking-tight"
+  >
+    destructive
+  </h5>
+  <div
+    class="text-sm [&_p]:leading-relaxed"
+  >
+    destructive
+     description
+  </div>
+</div>
+`;
+
+exports[`Alert Components > Snapshot Tests > should match snapshot for all variants 3`] = `
+<div
+  class="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-gray-950 border-yellow-200 text-yellow-800 bg-yellow-50 [&>svg]:text-yellow-600"
+  role="alert"
+>
+  <h5
+    class="mb-1 font-medium leading-none tracking-tight"
+  >
+    warning
+  </h5>
+  <div
+    class="text-sm [&_p]:leading-relaxed"
+  >
+    warning
+     description
+  </div>
+</div>
+`;
+
+exports[`Alert Components > Snapshot Tests > should match snapshot for all variants 4`] = `
+<div
+  class="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-gray-950 border-green-200 text-green-800 bg-green-50 [&>svg]:text-green-600"
+  role="alert"
+>
+  <h5
+    class="mb-1 font-medium leading-none tracking-tight"
+  >
+    success
+  </h5>
+  <div
+    class="text-sm [&_p]:leading-relaxed"
+  >
+    success
+     description
+  </div>
+</div>
+`;
+
+exports[`Alert Components > Snapshot Tests > should match snapshot for all variants 5`] = `
+<div
+  class="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-gray-950 border-blue-200 text-blue-800 bg-blue-50 [&>svg]:text-blue-600"
+  role="alert"
+>
+  <h5
+    class="mb-1 font-medium leading-none tracking-tight"
+  >
+    info
+  </h5>
+  <div
+    class="text-sm [&_p]:leading-relaxed"
+  >
+    info
+     description
+  </div>
+</div>
+`;
+
+exports[`Alert Components > Snapshot Tests > should match snapshot for default alert 1`] = `
+<div
+  class="relative w-full rounded-lg border p-4 [&>svg~*]:pl-7 [&>svg+div]:translate-y-[-3px] [&>svg]:absolute [&>svg]:left-4 [&>svg]:top-4 [&>svg]:text-gray-950 bg-white text-gray-950 border-gray-200"
+  role="alert"
+>
+  <h5
+    class="mb-1 font-medium leading-none tracking-tight"
+  >
+    Title
+  </h5>
+  <div
+    class="text-sm [&_p]:leading-relaxed"
+  >
+    Description
+  </div>
+</div>
+`;
