@@ -3,8 +3,12 @@ import { createSecretsManager, SecretManagerConfig } from './secrets-manager';
 import { createSessionManager, SessionManager } from './session-manager';
 import { getAuditLogger } from './audit-logger';
 import CryptoUtils from './encryption';
-import { defaultSecurityConfig, type SecurityConfig, type SecureRequest, type SecurityMiddlewareOptions, type ApiKeyValidation, type ZeroTrustRequest, type ZeroTrustValidation } from './index';
+import { defaultSecurityConfig, type SecurityConfig, type SecurityMiddlewareOptions, type ApiKeyValidation, type ZeroTrustRequest, type ZeroTrustValidation } from './index';
+import type { SecureRequest } from './index';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+
+// Re-export SecureRequest for convenience
+export type { SecureRequest };
 
 const logger = getAuditLogger('secure-middleware');
 

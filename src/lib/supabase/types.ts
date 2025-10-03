@@ -1,414 +1,8 @@
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+// Re-export generated types from database.generated.ts
+export type { Json, Database, Tables, TablesInsert, TablesUpdate, Enums } from '../../types/database.generated'
+import type { Database } from '../../types/database.generated'
 
-export interface Database {
-  public: {
-    Tables: {
-      descriptions: {
-        Row: {
-          id: string
-          user_id: string
-          title: string
-          content: string
-          description_type: string
-          tags: string[] | null
-          metadata: Json | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          title: string
-          content: string
-          description_type: string
-          tags?: string[] | null
-          metadata?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          title?: string
-          content?: string
-          description_type?: string
-          tags?: string[] | null
-          metadata?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "descriptions_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      export_history: {
-        Row: {
-          id: string
-          user_id: string
-          export_type: string
-          file_name: string
-          file_size: number | null
-          export_format: string
-          description_ids: string[] | null
-          metadata: Json | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          export_type: string
-          file_name: string
-          file_size?: number | null
-          export_format: string
-          description_ids?: string[] | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          export_type?: string
-          file_name?: string
-          file_size?: number | null
-          export_format?: string
-          description_ids?: string[] | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "export_history_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      images: {
-        Row: {
-          id: string
-          description_id: string
-          url: string
-          alt_text: string | null
-          source: string | null
-          width: number | null
-          height: number | null
-          file_size: number | null
-          metadata: Json | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          description_id: string
-          url: string
-          alt_text?: string | null
-          source?: string | null
-          width?: number | null
-          height?: number | null
-          file_size?: number | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          description_id?: string
-          url?: string
-          alt_text?: string | null
-          source?: string | null
-          width?: number | null
-          height?: number | null
-          file_size?: number | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "images_description_id_fkey"
-            columns: ["description_id"]
-            referencedRelation: "descriptions"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      phrases: {
-        Row: {
-          id: string
-          description_id: string
-          phrase: string
-          phrase_type: string
-          context: string | null
-          metadata: Json | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          description_id: string
-          phrase: string
-          phrase_type: string
-          context?: string | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          description_id?: string
-          phrase?: string
-          phrase_type?: string
-          context?: string | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "phrases_description_id_fkey"
-            columns: ["description_id"]
-            referencedRelation: "descriptions"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      questions: {
-        Row: {
-          id: string
-          description_id: string
-          question: string
-          question_type: string
-          answer: string | null
-          context: string | null
-          metadata: Json | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          description_id: string
-          question: string
-          question_type: string
-          answer?: string | null
-          context?: string | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          description_id?: string
-          question?: string
-          question_type?: string
-          answer?: string | null
-          context?: string | null
-          metadata?: Json | null
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "questions_description_id_fkey"
-            columns: ["description_id"]
-            referencedRelation: "descriptions"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      sessions: {
-        Row: {
-          id: string
-          user_id: string
-          session_token: string
-          expires_at: string
-          metadata: Json | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          session_token: string
-          expires_at: string
-          metadata?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          session_token?: string
-          expires_at?: string
-          metadata?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "sessions_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      user_api_keys: {
-        Row: {
-          id: string
-          user_id: string
-          openai_api_key: string | null
-          unsplash_api_key: string | null
-          claude_api_key: string | null
-          google_api_key: string | null
-          other_api_keys: Json | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          openai_api_key?: string | null
-          unsplash_api_key?: string | null
-          claude_api_key?: string | null
-          google_api_key?: string | null
-          other_api_keys?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          openai_api_key?: string | null
-          unsplash_api_key?: string | null
-          claude_api_key?: string | null
-          google_api_key?: string | null
-          other_api_keys?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_api_keys_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      user_progress: {
-        Row: {
-          id: string
-          user_id: string
-          total_descriptions: number
-          total_images: number
-          total_phrases: number
-          total_questions: number
-          total_exports: number
-          last_activity: string | null
-          metadata: Json | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          total_descriptions?: number
-          total_images?: number
-          total_phrases?: number
-          total_questions?: number
-          total_exports?: number
-          last_activity?: string | null
-          metadata?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          total_descriptions?: number
-          total_images?: number
-          total_phrases?: number
-          total_questions?: number
-          total_exports?: number
-          last_activity?: string | null
-          metadata?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_progress_user_id_fkey"
-            columns: ["user_id"]
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      users: {
-        Row: {
-          id: string
-          email: string
-          password_hash: string | null
-          display_name: string | null
-          avatar_url: string | null
-          subscription_tier: string
-          subscription_status: string
-          subscription_end_date: string | null
-          usage_limits: Json | null
-          preferences: Json | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          email: string
-          password_hash?: string | null
-          display_name?: string | null
-          avatar_url?: string | null
-          subscription_tier?: string
-          subscription_status?: string
-          subscription_end_date?: string | null
-          usage_limits?: Json | null
-          preferences?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          email?: string
-          password_hash?: string | null
-          display_name?: string | null
-          avatar_url?: string | null
-          subscription_tier?: string
-          subscription_status?: string
-          subscription_end_date?: string | null
-          usage_limits?: Json | null
-          preferences?: Json | null
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
-}
-
-// Convenience type exports
+// Convenience type exports based on the actual schema
 export type User = Database['public']['Tables']['users']['Row']
 export type UserInsert = Database['public']['Tables']['users']['Insert']
 export type UserUpdate = Database['public']['Tables']['users']['Update']
@@ -433,17 +27,52 @@ export type Session = Database['public']['Tables']['sessions']['Row']
 export type SessionInsert = Database['public']['Tables']['sessions']['Insert']
 export type SessionUpdate = Database['public']['Tables']['sessions']['Update']
 
-export type UserApiKeys = Database['public']['Tables']['user_api_keys']['Row']
-export type UserApiKeysInsert = Database['public']['Tables']['user_api_keys']['Insert']
-export type UserApiKeysUpdate = Database['public']['Tables']['user_api_keys']['Update']
+export type LearningProgress = Database['public']['Tables']['learning_progress']['Row']
+export type LearningProgressInsert = Database['public']['Tables']['learning_progress']['Insert']
+export type LearningProgressUpdate = Database['public']['Tables']['learning_progress']['Update']
 
-export type UserProgress = Database['public']['Tables']['user_progress']['Row']
-export type UserProgressInsert = Database['public']['Tables']['user_progress']['Insert']
-export type UserProgressUpdate = Database['public']['Tables']['user_progress']['Update']
+export type VocabularyList = Database['public']['Tables']['vocabulary_lists']['Row']
+export type VocabularyListInsert = Database['public']['Tables']['vocabulary_lists']['Insert']
+export type VocabularyListUpdate = Database['public']['Tables']['vocabulary_lists']['Update']
 
-export type ExportHistory = Database['public']['Tables']['export_history']['Row']
-export type ExportHistoryInsert = Database['public']['Tables']['export_history']['Insert']
-export type ExportHistoryUpdate = Database['public']['Tables']['export_history']['Update']
+export type VocabularyItem = Database['public']['Tables']['vocabulary_items']['Row']
+export type VocabularyItemInsert = Database['public']['Tables']['vocabulary_items']['Insert']
+export type VocabularyItemUpdate = Database['public']['Tables']['vocabulary_items']['Update']
+
+export type Answer = Database['public']['Tables']['answers']['Row']
+export type AnswerInsert = Database['public']['Tables']['answers']['Insert']
+export type AnswerUpdate = Database['public']['Tables']['answers']['Update']
+
+// ========================================
+// LEGACY TYPE ALIASES - FOR BACKWARD COMPATIBILITY ONLY
+// ========================================
+// WARNING: These types reference tables that DO NOT exist in the current Supabase schema
+// TODO: Either create these tables or migrate to existing tables (learning_progress, etc.)
+
+/**
+ * @deprecated user_api_keys table does not exist in current schema
+ * API keys are currently stored in localStorage only
+ * Consider adding these fields to the users table or creating the user_api_keys table
+ */
+export type UserApiKeys = { openai_api_key?: string | null; unsplash_api_key?: string | null }
+export type UserApiKeysInsert = UserApiKeys
+export type UserApiKeysUpdate = UserApiKeys
+
+/**
+ * @deprecated user_progress table does not exist in current schema
+ * Use LearningProgress type instead, which maps to the learning_progress table
+ */
+export type UserProgress = { user_id: string; total_descriptions?: number; total_images?: number }
+export type UserProgressInsert = UserProgress
+export type UserProgressUpdate = Partial<UserProgress>
+
+/**
+ * @deprecated export_history table does not exist in current schema
+ * This table needs to be created if export history tracking is required
+ */
+export type ExportHistory = { id: string; user_id: string; export_type: string; created_at: string }
+export type ExportHistoryInsert = Omit<ExportHistory, 'id' | 'created_at'>
+export type ExportHistoryUpdate = Partial<ExportHistory>
 
 // Extended types with relationships
 export type DescriptionWithRelations = Description & {
@@ -452,9 +81,15 @@ export type DescriptionWithRelations = Description & {
   questions?: Question[]
 }
 
+/**
+ * @deprecated UserWithProfile includes references to non-existent tables
+ * user_api_keys and user_progress tables do not exist
+ * Use User type directly and load API keys from localStorage
+ * Use LearningProgress for progress tracking
+ */
 export type UserWithProfile = User & {
-  user_api_keys?: UserApiKeys[]
-  user_progress?: UserProgress[]
+  user_api_keys?: UserApiKeys[] // WARNING: Table does not exist
+  user_progress?: UserProgress[] // WARNING: Table does not exist - use learning_progress instead
 }
 
 // Auth types

@@ -321,10 +321,11 @@ export class ProgressService {
       const result = await withRetry(async () => {
         const client = supabaseService.getClient();
         if (client) {
+          // TODO: user_progress table doesn't exist - using learning_progress instead
           const { data, error } = await client
-            .from("user_progress")
+            .from("learning_progress")
             .select("*")
-            .eq("userId", userId)
+            .eq("user_id", userId)
             .single();
 
           if (error && error.code !== "PGRST116") throw error; // PGRST116 is "not found"
@@ -575,7 +576,8 @@ export class ProgressService {
     try {
       const client = supabaseService.getClient();
       if (client) {
-        await client.from("user_progress").insert([initialProgress]);
+        // TODO: user_progress table doesn't exist - using learning_progress instead
+        await client.from("learning_progress").insert([initialProgress]);
       }
     } catch (error) {
       logger.warn("Failed to save initial progress:", error);
@@ -629,10 +631,11 @@ export class ProgressService {
     try {
       const client = supabaseService.getClient();
       if (client) {
+        // TODO: user_progress table doesn't exist - using learning_progress instead
         await client
-          .from("user_progress")
+          .from("learning_progress")
           .update(updatedProgress)
-          .eq("userId", userId);
+          .eq("user_id", userId);
       }
     } catch (error) {
       logger.warn("Failed to update user progress:", error);

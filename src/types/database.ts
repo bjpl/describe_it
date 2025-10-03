@@ -264,7 +264,9 @@ export type ImageInsert = Omit<ImageRecord, 'id' | 'created_at' | 'updated_at'> 
 export interface DescriptionRecord {
   id: string;
   image_id: string;
+  image_url?: string | null;
   style: 'narrativo' | 'poetico' | 'academico' | 'conversacional' | 'infantil';
+  description_style?: string;
   description_english: string;
   description_spanish: string;
   is_completed?: boolean;

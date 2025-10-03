@@ -76,30 +76,35 @@ export async function POST(request: NextRequest) {
       body: responseText.substring(0, 200)
     });
     
-    let result;
+    let result: any;
     try {
-      result = safeParse(responseText, {}, 'simple-signup-response') || {};
+      result = safeParse(responseText, {}) || {};
     } catch {
       result = { message: responseText };
     }
-    
+
     if (!response.ok) {
+      // Type guard for error response
+      const errorResult = result as { error_description?: string; msg?: string; message?: string };
       return NextResponse.json(
-        { 
-          error: result.error_description || result.msg || result.message || 'Signup failed',
+        {
+          error: errorResult.error_description || errorResult.msg || errorResult.message || 'Signup failed',
           details: result,
           status: response.status
         },
         { status: response.status }
       );
     }
-    
+
+    // Type guard for success response
+    const successResult = result as { user?: any; session?: any };
+
     // Success!
     return NextResponse.json({
       success: true,
       message: 'Check your email to confirm your account',
-      user: result.user,
-      session: result.session
+      user: successResult.user,
+      session: successResult.session
     });
     
   } catch (error: any) {

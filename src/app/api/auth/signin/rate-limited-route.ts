@@ -45,24 +45,26 @@ export async function OPTIONS(request: NextRequest) {
 async function handleSignin(request: NextRequest): Promise<NextResponse> {
   const requestId = crypto.randomUUID();
   const startTime = performance.now();
-  const clientIP = request.headers.get('x-forwarded-for') || 
-                  request.headers.get('x-real-ip') || 
-                  'unknown';
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  const realIp = request.headers.get('x-real-ip');
+  const clientIP: string = forwardedFor || realIp || 'unknown';
   
+  const userAgent = request.headers.get('user-agent') || undefined;
+
   apiLogger.info('[Signin] Endpoint called:', {
     requestId,
     clientIP,
-    userAgent: request.headers.get('user-agent'),
+    userAgent,
     timestamp: new Date().toISOString()
   });
-  
+
   // Log authentication attempt
   logger.logEvent({
     action: 'signin_attempt',
     details: {
       requestId,
       clientIP,
-      userAgent: request.headers.get('user-agent'),
+      userAgent,
     }
   });
   

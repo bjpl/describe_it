@@ -3,6 +3,8 @@
  * Centralized event tracking for user behavior and app performance
  */
 
+import { safeStringify, safeParse } from '@/lib/utils/json-safe';
+
 export interface BaseEvent {
   eventName: string;
   timestamp: number;
@@ -21,6 +23,9 @@ export interface LearningEvent extends BaseEvent {
     difficulty?: string;
     imageId?: string;
     language?: string;
+    word?: string; // For vocabulary_learned events
+    timeSpent?: number; // For quiz_completed events
+    questionsCount?: number; // For quiz_completed events
   };
 }
 
@@ -38,16 +43,17 @@ export interface ApiUsageEvent extends BaseEvent {
   eventName: 'api_request' | 'api_error' | 'api_limit_reached';
   properties: {
     endpoint: string;
-    method: string;
+    method?: string;
     statusCode?: number;
     responseTime?: number;
     errorType?: string;
     rateLimited?: boolean;
+    userId?: string; // For api_limit_reached events
   };
 }
 
 export interface PerformanceEvent extends BaseEvent {
-  eventName: 'page_load' | 'component_render' | 'api_response_time' | 'web_vitals';
+  eventName: 'page_load' | 'component_render' | 'api_response_time' | 'web_vitals' | 'memory_usage' | 'performance_issue';
   properties: {
     component?: string;
     loadTime?: number;
@@ -59,6 +65,22 @@ export interface PerformanceEvent extends BaseEvent {
       cls?: number;
       ttfb?: number;
     };
+    // For component_render events
+    action?: string; // 'mount' | 'unmount'
+    duration?: number; // Time spent in ms
+    // For api_response_time events
+    resource?: string;
+    endpoint?: string;
+    method?: string;
+    size?: number;
+    type?: string;
+    referrer?: string;
+    startTime?: number;
+    // For memory_usage events
+    usedJSHeapSize?: number;
+    totalJSHeapSize?: number;
+    jsHeapSizeLimit?: number;
+    percentage?: number;
   };
 }
 
@@ -75,12 +97,15 @@ export interface ErrorEvent extends BaseEvent {
 }
 
 export interface UserBehaviorEvent extends BaseEvent {
-  eventName: 'user_signup' | 'user_login' | 'user_logout' | 'settings_changed' | 'export_data';
+  eventName: 'user_signup' | 'user_login' | 'user_logout' | 'settings_changed' | 'export_data' | 'user_action';
   properties: {
     method?: string;
     settingChanged?: string;
     exportFormat?: string;
     dataSize?: number;
+    action?: string; // For user_action events
+    component?: string; // For user_action events
+    [key: string]: any; // Allow additional properties for user_action events
   };
 }
 

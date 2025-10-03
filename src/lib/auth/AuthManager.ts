@@ -500,21 +500,27 @@ class AuthManager {
    */
   private async initializeUserApiKeys(userId: string): Promise<void> {
     try {
-      const { error } = await supabase
-        .from('user_api_keys')
-        .insert({
-          user_id: userId,
-          unsplash_api_key: null,
-          openai_api_key: null,
-          claude_api_key: null,
-          google_api_key: null,
-          other_api_keys: {},
-          created_at: new Date().toISOString()
-        });
+      // TODO: user_api_keys table doesn't exist in current Supabase schema
+      // API keys should be stored in users table or a new table needs to be created
+      // Commenting out until table is created
+      // const { error } = await supabase
+      //   .from('user_api_keys')
+      //   .insert({
+      //     user_id: userId,
+      //     unsplash_api_key: null,
+      //     openai_api_key: null,
+      //     claude_api_key: null,
+      //     google_api_key: null,
+      //     other_api_keys: {},
+      //     created_at: new Date().toISOString()
+      //   });
 
-      if (error && !error.message.includes('duplicate')) {
-        throw error;
-      }
+      // if (error && !error.message.includes('duplicate')) {
+      //   throw error;
+      // }
+
+      // Temporary: API keys will be stored in localStorage only
+      authLogger.debug('API keys initialization skipped - table not available');
     } catch (error) {
       logger.error('Failed to initialize API keys', error as Error);
     }
@@ -550,21 +556,24 @@ class AuthManager {
 
       // Load API keys (encrypted) - but don't fail if they don't exist
       try {
-        const { data: apiKeys, error: keysError } = await supabase
-          .from('user_api_keys')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
+        // TODO: user_api_keys table doesn't exist in current Supabase schema
+        // Temporarily load from localStorage only
+        // const { data: apiKeys, error: keysError } = await supabase
+        //   .from('user_api_keys')
+        //   .select('*')
+        //   .eq('user_id', userId)
+        //   .single();
 
-        if (!keysError && apiKeys) {
-          profile.api_keys = {
-            unsplash: apiKeys.unsplash_api_key,
-            openai: apiKeys.openai_api_key,
-            anthropic: apiKeys.claude_api_key,
-            google: apiKeys.google_api_key,
-            encrypted: true
-          };
-        }
+        // if (!keysError && apiKeys) {
+        //   profile.api_keys = {
+        //     unsplash: apiKeys.unsplash_api_key,
+        //     openai: apiKeys.openai_api_key,
+        //     anthropic: apiKeys.claude_api_key,
+        //     google: apiKeys.google_api_key,
+        //     encrypted: true
+        //   };
+        // }
+        authLogger.debug('API keys table not available - using localStorage only');
       } catch (keysError) {
         authLogger.debug('No API keys found for user');
       }
@@ -644,26 +653,30 @@ class AuthManager {
             setTimeout(() => reject(new Error('Supabase save timeout')), 3000)
           );
           
-          // Try to save to Supabase with timeout
-          const savePromise = supabase
-            .from('user_api_keys')
-            .upsert({
-              user_id: this.currentUser.id,
-              unsplash_api_key: encryptedKeys.unsplash || null,
-              openai_api_key: encryptedKeys.openai || null,
-              claude_api_key: encryptedKeys.anthropic || null,
-              google_api_key: encryptedKeys.google || null,
-              other_api_keys: {},
-              updated_at: new Date().toISOString()
-            });
-          
-          const result = await Promise.race([savePromise, timeoutPromise]) as any;
-          
-          if (result?.error) {
-            authLogger.warn('Supabase save failed, but localStorage succeeded', result.error);
-          } else {
-            securityLogger.info('Saved API keys to Supabase successfully');
-          }
+          // TODO: user_api_keys table doesn't exist in current Supabase schema
+          // Try to save to Supabase with timeout (DISABLED - table not available)
+          // const savePromise = supabase
+          //   .from('user_api_keys')
+          //   .upsert({
+          //     user_id: this.currentUser.id,
+          //     unsplash_api_key: encryptedKeys.unsplash || null,
+          //     openai_api_key: encryptedKeys.openai || null,
+          //     claude_api_key: encryptedKeys.anthropic || null,
+          //     google_api_key: encryptedKeys.google || null,
+          //     other_api_keys: {},
+          //     updated_at: new Date().toISOString()
+          //   });
+
+          // const result = await Promise.race([savePromise, timeoutPromise]) as any;
+
+          // if (result?.error) {
+          //   authLogger.warn('Supabase save failed, but localStorage succeeded', result.error);
+          // } else {
+          //   securityLogger.info('Saved API keys to Supabase successfully');
+          // }
+
+          authLogger.info('API keys saved to localStorage only (Supabase table not available)');
+          securityLogger.info('API keys stored locally - create user_api_keys table for cloud storage');
         } catch (supabaseError) {
           // Supabase save failed, but localStorage succeeded
           authLogger.warn('Supabase operation failed, but localStorage succeeded', supabaseError);

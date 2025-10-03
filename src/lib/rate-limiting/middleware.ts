@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getRateLimiter, RateLimitConfig, RateLimitConfigs, ExponentialBackoff } from './rate-limiter';
 import { logger } from '@/lib/logger';
+import type { ErrorResponse } from '@/types/api';
 
 /**
  * Rate limiting middleware options
@@ -16,13 +17,11 @@ export interface RateLimitMiddlewareOptions {
 }
 
 /**
- * Enhanced error response for rate limiting
+ * Enhanced error response for rate limiting - extends canonical ErrorResponse
  */
-export interface RateLimitErrorResponse {
-  success: false;
-  error: string;
-  code: 'RATE_LIMIT_EXCEEDED';
-  details: {
+export interface RateLimitErrorResponse extends ErrorResponse {
+  code?: 'RATE_LIMIT_EXCEEDED';
+  details?: {
     limit: number;
     remaining: number;
     resetTime: string;
@@ -30,8 +29,6 @@ export interface RateLimitErrorResponse {
     backoffMultiplier?: number;
     violationCount?: number;
   };
-  timestamp: string;
-  requestId: string;
 }
 
 /**
@@ -128,13 +125,14 @@ export function withRateLimit(
  * Create standardized rate limit error response
  */
 function createRateLimitResponse(
-  rateLimitResult: any, 
+  rateLimitResult: any,
   requestId: string,
   extraDetails: Record<string, any> = {}
 ): NextResponse {
   const errorResponse: RateLimitErrorResponse = {
     success: false,
     error: "Rate limit exceeded",
+    message: "Too many requests. Please try again later.",
     code: 'RATE_LIMIT_EXCEEDED',
     details: {
       limit: rateLimitResult.limit,

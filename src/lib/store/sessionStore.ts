@@ -1,12 +1,24 @@
-import { create } from "zustand";
+import { create, StateCreator } from "zustand";
 import { devtools } from "zustand/middleware";
 import { UserSession, SearchHistoryItem, UserPreferences, DescriptionStyle } from "../../types";
 import { createShallowSelector } from "../utils/storeUtils";
 
-interface SessionStore {
+// Activity summary type for type-safe return values
+interface ActivitySummary {
+  totalSearches: number;
+  uniqueQueries: number;
+  sessionDuration: number;
+  lastActivity: Date;
+}
+
+// Session state
+interface SessionState {
   session: UserSession | null;
   isInitialized: boolean;
+}
 
+// Session actions
+interface SessionActions {
   // Session management
   initializeSession: (userId?: string) => void;
   updateLastActivity: () => void;
@@ -20,13 +32,11 @@ interface SessionStore {
 
   // Session data
   getSessionDuration: () => number;
-  getActivitySummary: () => {
-    totalSearches: number;
-    uniqueQueries: number;
-    sessionDuration: number;
-    lastActivity: Date;
-  };
+  getActivitySummary: () => ActivitySummary;
 }
+
+// Complete store type
+type SessionStore = SessionState & SessionActions;
 
 const createInitialSession = (userId?: string): UserSession => ({
   id: `session-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -45,9 +55,17 @@ const createInitialSession = (userId?: string): UserSession => ({
   isAuthenticated: !!userId,
 });
 
+// Type-safe store creator
+type SessionStoreCreator = StateCreator<
+  SessionStore,
+  [["zustand/devtools", never]],
+  [],
+  SessionStore
+>;
+
 export const useSessionStore = create<SessionStore>()(
   devtools(
-    (set, get) => ({
+    ((set, get) => ({
       session: null,
       isInitialized: false,
 
@@ -134,7 +152,7 @@ export const useSessionStore = create<SessionStore>()(
         return Date.now() - session.startTime.getTime();
       },
 
-      getActivitySummary: () => {
+      getActivitySummary: (): ActivitySummary => {
         const { session } = get();
         if (!session) {
           return {
@@ -156,7 +174,7 @@ export const useSessionStore = create<SessionStore>()(
           lastActivity: session.lastActivity,
         };
       },
-    }),
+    })) as SessionStoreCreator,
     { name: "SessionStore" },
   ),
 );

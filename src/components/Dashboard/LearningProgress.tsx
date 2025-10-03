@@ -374,7 +374,7 @@ export function LearningProgress({
         <CardContent className="px-0 pb-0">
           <LoadingOverlay isLoading={loading}>
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
+              <ResponsiveContainer width="100%" height="100%" as="div">
                 {activeChart === "progress" && (
                   <AreaChart data={progressData}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />

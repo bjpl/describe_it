@@ -61,7 +61,7 @@ function sendToAnalytics({ name, value, rating, delta, id }: AnalyticsData) {
         userAgent: navigator.userAgent,
         connection: (navigator as any).connection?.effectiveType,
       }),
-    }).catch(console.error);
+    }).catch(error => logger.error('Failed to send web vitals to analytics', error as Error));
   }
 
   // Development logging

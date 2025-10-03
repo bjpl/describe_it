@@ -4,9 +4,9 @@
  */
 
 // Core monitoring components
-export { logger, type LogContext, type PerformanceMetrics, type ErrorContext } from './logger';
-export { metrics, type APIMetrics, type ResourceMetrics, type ErrorMetrics } from './metrics';
-export { errorTracker, type ErrorReport, type ErrorAnalytics } from './errorTracking';
+export { structuredLogger, structuredLogger as logger, StructuredLogger, type LogContext, type PerformanceMetrics, type ErrorContext } from './logger';
+export { metrics, MetricsCollector, type APIMetrics, type ResourceMetrics, type ErrorMetrics } from './metrics';
+export { errorTracker, ErrorTracker, type ErrorReport, type ErrorAnalytics } from './errorTracking';
 
 // Middleware and integrations
 export { 
@@ -23,33 +23,39 @@ export {
   type MonitoringHooksConfig 
 } from './hooks';
 
+// Import structuredLogger for bindings
+import { structuredLogger } from './logger';
+import { metrics } from './metrics';
+import { errorTracker } from './errorTracking';
+import { monitoringHooks } from './hooks';
+
 // Convenience functions for common monitoring tasks
 export const monitoring = {
   // Quick logging
-  logRequest: logger.logRequest.bind(logger),
-  logResponse: logger.logResponse.bind(logger),
-  logError: logger.logError.bind(logger),
-  logEvent: logger.logEvent.bind(logger),
-  logSecurity: logger.logSecurity.bind(logger),
-  
+  logRequest: structuredLogger.logRequest.bind(structuredLogger),
+  logResponse: structuredLogger.logResponse.bind(structuredLogger),
+  logError: structuredLogger.logError.bind(structuredLogger),
+  logEvent: structuredLogger.logEvent.bind(structuredLogger),
+  logSecurity: structuredLogger.logSecurity.bind(structuredLogger),
+
   // Quick metrics
   startRequest: metrics.startRequest.bind(metrics),
   endRequest: metrics.endRequest.bind(metrics),
   getSystemHealth: metrics.getSystemHealth.bind(metrics),
   getEndpointSummary: metrics.getEndpointSummary.bind(metrics),
-  
+
   // Quick error tracking
   trackError: errorTracker.trackError.bind(errorTracker),
   getRecentErrors: errorTracker.getRecentErrors.bind(errorTracker),
   getErrorAnalytics: errorTracker.getErrorAnalytics.bind(errorTracker),
-  
+
   // Configuration
   getConfig: monitoringHooks.getConfig.bind(monitoringHooks),
   updateConfig: monitoringHooks.updateConfig.bind(monitoringHooks),
-  
+
   // Utilities
-  generateRequestId: logger.generateRequestId.bind(logger),
-  createLogContext: logger.createLogContext.bind(logger)
+  generateRequestId: structuredLogger.generateRequestId.bind(structuredLogger),
+  createLogContext: structuredLogger.createLogContext.bind(structuredLogger)
 };
 
 // Default monitoring middleware configuration

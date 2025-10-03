@@ -9,19 +9,21 @@ import { apiLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = safeParse(await request.text(), {});
-    
-    if (!email || !password) {
+    const body = safeParse(await request.text(), {}) as { email?: string; password?: string };
+
+    if (!body || !body.email || !body.password) {
       return NextResponse.json(
         { error: 'Email and password are required' },
         { status: 400 }
       );
     }
+
+    const { email, password } = body;
     
     // For testing: return success with auto-confirmed account
     // This is mock data - not saved to any database
-    
-    apiLogger.info('[MockAuth] Creating mock user for:', email);
+
+    apiLogger.info('[MockAuth] Creating mock user for:', { email });
     
     return NextResponse.json({
       success: true,

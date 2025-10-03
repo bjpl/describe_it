@@ -135,7 +135,10 @@ export interface FilterOperator {
 /**
  * User data types
  */
-export interface UserData extends DatabaseRecord {
+export interface UserData {
+  id: string;
+  created_at: string;
+  updated_at: string;
   email?: string;
   full_name?: string;
   username?: string;
@@ -172,7 +175,10 @@ export interface UserMetadata {
 /**
  * Session data types
  */
-export interface SessionData extends DatabaseRecord {
+export interface SessionData {
+  id: string;
+  created_at: string;
+  updated_at: string;
   user_id: string;
   session_token: string;
   expires_at: string;
@@ -425,10 +431,11 @@ export interface ResponseData {
   [key: string]: JsonValue;
 }
 
-export interface ListResponseData<T> extends ResponseData {
+export interface ListResponseData<T> {
   items: T[];
   total: number;
   has_more: boolean;
+  [key: string]: JsonValue | T[];
 }
 
 export interface CreateResponseData extends ResponseData {

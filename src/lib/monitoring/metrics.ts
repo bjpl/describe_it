@@ -3,7 +3,7 @@
  * Tracks API performance, resource usage, and system health metrics
  */
 
-import { logger } from './logger';
+import { structuredLogger as logger } from './logger';
 
 export interface APIMetrics {
   endpoint: string;

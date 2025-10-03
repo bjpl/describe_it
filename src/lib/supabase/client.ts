@@ -212,8 +212,9 @@ export const realtimeHelpers = {
    * Subscribe to user's progress
    */
   subscribeToUserProgress(userId: string, callback: (payload: any) => void) {
+    // TODO: user_progress table doesn't exist - using learning_progress instead
     return this.subscribeToTable(
-      'user_progress',
+      'learning_progress',
       `user_id=eq.${userId}`,
       callback
     )
@@ -223,6 +224,9 @@ export const realtimeHelpers = {
    * Subscribe to user's export history
    */
   subscribeToUserExports(userId: string, callback: (payload: any) => void) {
+    // TODO: export_history table doesn't exist in current Supabase schema
+    // This subscription will fail until the table is created
+    dbLogger.warn('export_history table does not exist - subscription will fail');
     return this.subscribeToTable(
       'export_history',
       `user_id=eq.${userId}`,
@@ -238,11 +242,11 @@ export const dbHelpers = {
    */
   async getUserProfile(userId: string) {
     try {
+      // TODO: user_api_keys table doesn't exist - removing from query
       const { data, error } = await supabase
         .from('users')
         .select(`
-          *,
-          user_api_keys (*)
+          *
         `)
         .eq('id', userId)
         .single()
@@ -285,11 +289,11 @@ export const dbHelpers = {
    */
   async getUserProgress(userId: string) {
     try {
+      // TODO: user_progress table doesn't exist - using learning_progress instead
       const { data, error } = await supabase
-        .from('user_progress')
+        .from('learning_progress')
         .select('*')
         .eq('user_id', userId)
-        .single()
 
       if (error) throw error
       return data
@@ -303,18 +307,26 @@ export const dbHelpers = {
    * Update user API keys
    */
   async updateUserApiKeys(userId: string, apiKeys: Record<string, string>) {
-    try {
-      const { data, error } = await supabase
-        .from('user_api_keys')
-        .upsert({
-          user_id: userId,
-          ...apiKeys,
-          updated_at: new Date().toISOString(),
-        })
-        .select()
+    // TODO: user_api_keys table doesn't exist in current Supabase schema
+    // This function will fail until the table is created
+    dbLogger.warn('user_api_keys table does not exist - update will fail');
+    dbLogger.info('API keys should be stored in localStorage or added to users table');
 
-      if (error) throw error
-      return data
+    try {
+      // Disabled until table is created
+      // const { data, error } = await supabase
+      //   .from('user_api_keys')
+      //   .upsert({
+      //     user_id: userId,
+      //     ...apiKeys,
+      //     updated_at: new Date().toISOString(),
+      //   })
+      //   .select()
+
+      // if (error) throw error
+      // return data
+
+      return null; // Return null since table doesn't exist
     } catch (error) {
       dbLogger.error('Error updating user API keys:', error)
       throw error

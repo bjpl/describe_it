@@ -712,8 +712,9 @@ class SupabaseService {
         throw new Error("Supabase client not available");
       }
 
+      // TODO: user_progress table doesn't exist - using learning_progress instead
       const { data, error } = await this.client
-        .from("user_progress")
+        .from("learning_progress")
         .upsert(progressData as never, {
           onConflict: "user_id,vocabulary_item_id",
         })
@@ -744,8 +745,9 @@ class SupabaseService {
         throw new Error("Supabase client not available");
       }
 
+      // TODO: user_progress table doesn't exist - using learning_progress instead
       let query = this.client
-        .from("user_progress")
+        .from("learning_progress")
         .select("*")
         .eq("user_id", userId)
         .order("last_reviewed", { ascending: false });

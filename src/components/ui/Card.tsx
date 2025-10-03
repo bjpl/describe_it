@@ -8,6 +8,8 @@ export interface CardProps {
   role?: string;
   'aria-label'?: string;
   'aria-labelledby'?: string;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export interface CardHeaderProps {

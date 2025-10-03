@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { logger } from '@/lib/logger';
 import { ErrorCategory, ErrorSeverity, RecoveryStrategy } from '@/lib/errorHandler';
+import type { ErrorResponse } from '@/types/api';
 
 // Request Context Interface
 interface RequestContext {
@@ -20,17 +21,18 @@ interface RequestContext {
   requestId: string;
 }
 
-// Error Response Interface
-interface ErrorResponse {
-  error: {
-    message: string;
-    code?: string;
-    category: ErrorCategory;
-    severity: ErrorSeverity;
-    requestId: string;
-    timestamp: string;
-  };
-  details?: any;
+// Extended Error Response Interface for middleware use
+interface MiddlewareErrorResponse {
+  success: false;
+  error: string;
+  message?: string;
+  details?: string | any[];
+  timestamp: string;
+  requestId?: string;
+  retry?: boolean;
+  code?: string;
+  category?: ErrorCategory;
+  severity?: ErrorSeverity;
   stack?: string;
 }
 
@@ -241,7 +243,7 @@ export class ErrorMiddleware {
     error: Error,
     context: RequestContext,
     statusCode: number = 500
-  ): Promise<NextResponse<ErrorResponse>> {
+  ): Promise<NextResponse<MiddlewareErrorResponse>> {
     const category = this.categorizeError(error, context);
     const severity = this.assessSeverity(error, category);
     const isDevelopment = process.env.NODE_ENV === 'development';
@@ -266,16 +268,16 @@ export class ErrorMiddleware {
     // Determine appropriate HTTP status code
     const httpStatusCode = this.determineStatusCode(error, category, statusCode);
 
-    // Generate error response
-    const errorResponse: ErrorResponse = {
-      error: {
-        message: this.generateUserMessage(category, isDevelopment),
-        code: error.name,
-        category,
-        severity,
-        requestId: context.requestId,
-        timestamp: context.timestamp,
-      },
+    // Generate error response - aligned with canonical ErrorResponse type
+    const errorResponse: MiddlewareErrorResponse = {
+      success: false,
+      error: this.generateUserMessage(category, isDevelopment),
+      message: isDevelopment ? error.message : undefined,
+      code: error.name,
+      category,
+      severity,
+      requestId: context.requestId,
+      timestamp: context.timestamp,
     };
 
     // Include additional details in development
@@ -289,6 +291,7 @@ export class ErrorMiddleware {
           headers: context.headers,
         },
       };
+      errorResponse.stack = error.stack;
     }
 
     // Set security headers

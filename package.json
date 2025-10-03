@@ -12,6 +12,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "lint:fix": "next lint --fix",
+    "lint:no-console": "eslint 'src/**/*.{ts,tsx}' --rule 'no-console: error'",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
@@ -63,7 +65,12 @@
     "perf:benchmark": "vitest run tests/performance/benchmark-suite.ts",
     "perf:monitor": "node scripts/performance-monitor.js",
     "perf:report": "node scripts/performance-report.js",
-    "perf:regression": "vitest run tests/performance --reporter=json > performance-results.json"
+    "perf:regression": "vitest run tests/performance --reporter=json > performance-results.json",
+    "lint:staged": "lint-staged",
+    "lint:todos": "node scripts/pre-commit/validate-todo-format.js src/**/*.{ts,tsx,js,jsx}",
+    "check:backups": "node scripts/pre-commit/check-backup-files.js .",
+    "hooks:install": "husky install",
+    "hooks:test": "npm run check:backups && npm run lint:todos"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.0.5",
@@ -118,6 +125,7 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.1",
     "@playwright/test": "^1.55.1",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",

@@ -393,7 +393,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     }
 
     // Get secure API key for OpenAI operations
-    const secureApiKey = await getSecureApiKey('OPENAI_API_KEY', params.openaiApiKey);
+    const secureApiKey = await getSecureApiKey('OPENAI_API_KEY', params.userApiKey);
     
     if (!secureApiKey) {
       securityLogger.error('Failed to retrieve secure API key');

@@ -100,6 +100,20 @@ nul
 *.tmp
 *.temp
 
+# Backup and temporary files (prevent accidental commits)
+# Added: 2025-10-03 - Cleanup operation
+*.backup       # TypeScript/code backup files
+*.fixed        # Manual fix backup files
+*.old          # Renamed old versions
+*.bak          # Generic backup extension
+*~             # Vim/Emacs backup files
+*.swp          # Vim swap files
+*.swo          # Vim swap files (alternative)
+.*.swp         # Hidden swap files
+.*.swo         # Hidden swap files (alternative)
+.#*            # Emacs lock files
+\#*\#          # Emacs auto-save files
+
 # Documentation and analysis files (keeping core functionality only)
 CACHE_IMPLEMENTATION_SUMMARY.md
 DEPLOYMENT.md

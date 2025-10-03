@@ -258,14 +258,15 @@ export class UserService {
       }
 
       // Get achievements from progress records
+      // TODO: user_progress table doesn't exist - using learning_progress instead
       const { data: achievements } = await this.client
-        .from("user_progress")
-        .select("achievements_unlocked")
-        .eq("user_id", userId)
-        .not("achievements_unlocked", "eq", "{}");
+        .from("learning_progress")
+        .select("*")
+        .eq("user_id", userId);
 
-      const allAchievements =
-        achievements?.flatMap((a: any) => a.achievements_unlocked) || [];
+      // Note: achievements_unlocked field may not exist in learning_progress table
+      const allAchievements: any[] = [];
+      // achievements?.flatMap((a: any) => a.achievements_unlocked) || [];
 
       return {
         data: {
@@ -524,8 +525,9 @@ export class AnalyticsService {
       }
 
       // Get progress data
+      // TODO: user_progress table doesn't exist - using learning_progress instead
       const { data: progressData, error: progressError } = await this.client
-        .from("user_progress")
+        .from("learning_progress")
         .select("*")
         .eq("user_id", userId);
 
@@ -646,19 +648,22 @@ export const phraseOperations = {
 };
 
 export const progressOperations = {
-  findById: (id: string) => databaseOperations.findById<UserProgress>("user_progress", id),
-  findMany: (options?: any) => databaseOperations.findMany<UserProgress>("user_progress", options),
-  create: (data: Record<string, any>) => databaseOperations.create<UserProgress>("user_progress", data),
-  update: (id: string, data: Record<string, any>) => databaseOperations.update<UserProgress>("user_progress", id, data),
-  delete: (id: string) => databaseOperations.delete("user_progress", id),
+  // TODO: user_progress table doesn't exist - using learning_progress table instead
+  findById: (id: string) => databaseOperations.findById<UserProgress>("learning_progress", id),
+  findMany: (options?: any) => databaseOperations.findMany<UserProgress>("learning_progress", options),
+  create: (data: Record<string, any>) => databaseOperations.create<UserProgress>("learning_progress", data),
+  update: (id: string, data: Record<string, any>) => databaseOperations.update<UserProgress>("learning_progress", id, data),
+  delete: (id: string) => databaseOperations.delete("learning_progress", id),
 };
 
 export const exportOperations = {
-  findById: (id: string) => databaseOperations.findById("export_history", id),
-  findMany: (options?: any) => databaseOperations.findMany("export_history", options),
-  create: (data: Record<string, any>) => databaseOperations.create("export_history", data),
-  update: (id: string, data: Record<string, any>) => databaseOperations.update("export_history", id, data),
-  delete: (id: string) => databaseOperations.delete("export_history", id),
+  // TODO: export_history table doesn't exist in current Supabase schema
+  // These operations will fail until the table is created
+  findById: (id: string) => Promise.resolve({ data: null, error: "export_history table not available" }),
+  findMany: (options?: any) => Promise.resolve({ data: [], error: "export_history table not available" }),
+  create: (data: Record<string, any>) => Promise.resolve({ data: null, error: "export_history table not available" }),
+  update: (id: string, data: Record<string, any>) => Promise.resolve({ data: null, error: "export_history table not available" }),
+  delete: (id: string) => Promise.resolve({ data: null, error: "export_history table not available" }),
 };
 
 // Utility functions

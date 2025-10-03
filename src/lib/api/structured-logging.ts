@@ -10,6 +10,9 @@ export enum LogLevel {
   FATAL = 4,
 }
 
+// Define LogContext type for logger calls
+export type LogContext = Record<string, any> | undefined;
+
 export interface LogEntry {
   timestamp: string;
   level: LogLevel;
@@ -310,7 +313,7 @@ class StructuredLogger {
   async log(
     level: LogLevel,
     message: string,
-    context?: Record<string, any>,
+    context?: LogContext,
     error?: Error,
     additionalData?: Partial<LogEntry>,
   ): Promise<void> {
@@ -361,17 +364,17 @@ class StructuredLogger {
   /**
    * Convenience methods for different log levels
    */
-  debug(message: string, context?: Record<string, any>): Promise<void> {
+  debug(message: string, context?: LogContext): Promise<void> {
     return this.log(LogLevel.DEBUG, message, context);
   }
 
-  info(message: string, context?: Record<string, any>): Promise<void> {
+  info(message: string, context?: LogContext): Promise<void> {
     return this.log(LogLevel.INFO, message, context);
   }
 
   warn(
     message: string,
-    context?: Record<string, any>,
+    context?: LogContext,
     error?: Error,
   ): Promise<void> {
     return this.log(LogLevel.WARN, message, context, error);
@@ -380,7 +383,7 @@ class StructuredLogger {
   error(
     message: string,
     error?: Error,
-    context?: Record<string, any>,
+    context?: LogContext,
   ): Promise<void> {
     return this.log(LogLevel.ERROR, message, context, error);
   }
@@ -388,7 +391,7 @@ class StructuredLogger {
   fatal(
     message: string,
     error?: Error,
-    context?: Record<string, any>,
+    context?: LogContext,
   ): Promise<void> {
     return this.log(LogLevel.FATAL, message, context, error);
   }
@@ -399,7 +402,7 @@ class StructuredLogger {
   async logRequest(
     req: Request,
     res?: Response,
-    additionalContext?: Record<string, any>,
+    additionalContext?: LogContext,
   ): Promise<void> {
     const startTime = performance.now();
 
@@ -443,7 +446,7 @@ class StructuredLogger {
     duration: number,
     memoryBefore: NodeJS.MemoryUsage,
     memoryAfter: NodeJS.MemoryUsage,
-    additionalContext?: Record<string, any>,
+    additionalContext?: LogContext,
   ): Promise<void> {
     const memoryDelta = memoryAfter.heapUsed - memoryBefore.heapUsed;
 

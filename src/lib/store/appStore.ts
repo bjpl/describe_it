@@ -1,5 +1,6 @@
-import { create } from "zustand";
+import { create, StateCreator } from "zustand";
 import { devtools, persist } from "zustand/middleware";
+import type { PersistOptions } from "zustand/middleware";
 import {
   AppState,
   Image,
@@ -9,7 +10,8 @@ import {
 } from "../../types";
 import { createShallowSelector, OptimizedMap } from "../utils/storeUtils";
 
-interface AppStore extends AppState {
+// Strongly typed actions interface
+interface AppStoreActions {
   // App state actions
   setCurrentImage: (image: Image | null) => void;
   toggleSidebar: () => void;
@@ -19,24 +21,23 @@ interface AppStore extends AppState {
   setFullscreen: (fullscreen: boolean) => void;
 
   // Preferences
-  preferences: UserPreferences;
   updatePreferences: (updates: Partial<UserPreferences>) => void;
 
   // Search history
-  searchHistory: SearchHistoryItem[];
   addToHistory: (item: Omit<SearchHistoryItem, "id">) => void;
   clearHistory: () => void;
   removeFromHistory: (id: string) => void;
 
   // UI state
-  isLoading: boolean;
   setLoading: (loading: boolean) => void;
 
   // Error handling
-  error: string | null;
   setError: (error: string | null) => void;
   clearError: () => void;
 }
+
+// Complete store type combining state and actions
+interface AppStore extends AppState, AppStoreActions {}
 
 const defaultPreferences: UserPreferences = {
   theme: "auto",
@@ -47,10 +48,18 @@ const defaultPreferences: UserPreferences = {
   exportFormat: "json",
 };
 
+// Type-safe store creator with proper generics
+type AppStoreCreator = StateCreator<
+  AppStore,
+  [["zustand/devtools", never], ["zustand/persist", AppStore]],
+  [],
+  AppStore
+>;
+
 export const useAppStore = create<AppStore>()(
   devtools(
     persist(
-      (set, get) => ({
+      ((set, get) => ({
         // Initial state
         currentImage: null,
         sidebarOpen: false,
@@ -146,16 +155,16 @@ export const useAppStore = create<AppStore>()(
         setError: (error) => set({ error }, false, "setError"),
 
         clearError: () => set({ error: null }, false, "clearError"),
-      }),
+      })) as AppStoreCreator,
       {
         name: "describe-it-app-store",
-        partialize: (state) => ({
+        partialize: (state): Partial<AppStore> => ({
           preferences: state.preferences,
           searchHistory: state.searchHistory,
           sidebarOpen: state.sidebarOpen,
           activeTab: state.activeTab,
         }),
-      },
+      } as PersistOptions<AppStore, Partial<AppStore>>,
     ),
     { name: "AppStore" },
   ),

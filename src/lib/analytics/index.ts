@@ -3,27 +3,26 @@
  * Exports all analytics functionality for easy importing
  */
 
+import React, { useEffect, useRef } from 'react';
+import { trackEvent, getSessionId } from './tracker';
+import { EventBuilders } from './events';
+import { logger } from '@/lib/logger';
+
 // Core analytics functionality
 export { default as tracker, trackEvent, setUser, clearUser, flushEvents, getSessionId } from './tracker';
 export { EventBuilders, validateEvent, serializeEvent, deserializeEvent } from './events';
 export { default as performanceMonitor, usePerformanceTracking, withPerformanceTracking } from './performance';
 
 // Type exports
-export type { 
-  AnalyticsEvent, 
-  LearningEvent, 
-  FeatureUsageEvent, 
-  ApiUsageEvent, 
-  PerformanceEvent, 
-  ErrorEvent, 
-  UserBehaviorEvent 
+export type {
+  AnalyticsEvent,
+  LearningEvent,
+  FeatureUsageEvent,
+  ApiUsageEvent,
+  PerformanceEvent,
+  ErrorEvent,
+  UserBehaviorEvent
 } from './events';
-
-// Convenience hooks and utilities
-import { useEffect, useRef } from 'react';
-import { trackEvent, getSessionId } from './tracker';
-import { EventBuilders } from './events';
-import { logger } from '@/lib/logger';
 
 /**
  * React hook for tracking component lifecycle events

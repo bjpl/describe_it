@@ -10,13 +10,19 @@ import { apiLogger } from '@/lib/logger';
 
 export async function POST(request: NextRequest) {
   try {
-    const { email, newPassword, adminKey } = safeParse(await request.text(), {});
-    
+    const body = safeParse(await request.text(), {}) as { email?: string; newPassword?: string; adminKey?: string };
+
+    if (!body || !body.email || !body.newPassword || !body.adminKey) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const { email, newPassword, adminKey } = body;
+
     // Simple admin key check (CHANGE THIS IN PRODUCTION)
     if (adminKey !== 'describe-admin-2025') {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
-    
+
     // Only allow for specific email during development
     if (email !== 'brandon.lambert87@gmail.com') {
       return NextResponse.json({ error: 'Email not allowed' }, { status: 403 });

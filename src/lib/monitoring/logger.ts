@@ -5,19 +5,10 @@
 
 import { NextRequest } from "next/server";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
-import { logger } from '@/lib/logger';
+import { logger as baseLogger, LogContext as BaseLogContext } from '@/lib/logger';
 
-export interface LogContext {
-  requestId: string;
-  userId?: string;
-  userTier?: string;
-  endpoint: string;
-  method: string;
-  userAgent?: string;
-  ip?: string;
-  timestamp: string;
-  sessionId?: string;
-}
+// Re-export LogContext from base logger to ensure consistency
+export type LogContext = BaseLogContext;
 
 export interface PerformanceMetrics {
   responseTime: number;
@@ -259,7 +250,7 @@ export class StructuredLogger {
     };
 
     if (this.enableConsole) {
-      logger.info(JSON.stringify(logEntry, null, 2));
+      baseLogger.info(JSON.stringify(logEntry, null, 2));
     }
 
     // Store in memory for analytics (could be extended to write to file/database)
@@ -303,7 +294,7 @@ export class StructuredLogger {
       }
     } catch (error) {
       // Don't let logging errors break the application
-      logger.error('Failed to send to external tracking:', error);
+      baseLogger.error('Failed to send to external tracking:', error as Error);
     }
   }
 
@@ -328,7 +319,7 @@ export class StructuredLogger {
 }
 
 // Export singleton instance
-export const logger = StructuredLogger.getInstance();
+export const structuredLogger = StructuredLogger.getInstance();
 
 // Type definitions for global log storage
 declare global {

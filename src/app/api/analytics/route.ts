@@ -253,8 +253,8 @@ async function processRealTimeAlerts(events: AnalyticsEvent[]) {
     }
 
     // Check for performance issues
-    if (event.eventName === 'api_response_time' && 
-        event.properties?.duration > 5000) {
+    if (event.eventName === 'api_response_time' &&
+        event.properties?.duration && event.properties.duration > 5000) {
       await triggerAlert({
         type: 'performance_degradation',
         message: `Slow API response: ${event.properties.duration}ms`,
@@ -263,8 +263,8 @@ async function processRealTimeAlerts(events: AnalyticsEvent[]) {
     }
 
     // Check for memory issues
-    if (event.eventName === 'memory_usage' && 
-        event.properties?.percentage > 90) {
+    if (event.eventName === 'memory_usage' &&
+        event.properties?.percentage && event.properties.percentage > 90) {
       await triggerAlert({
         type: 'memory_warning',
         message: `High memory usage: ${event.properties.percentage}%`,

@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { safeParse } from './json-safe';
 
 // Re-export json-safe utilities for convenience
 export { safeParse, safeStringify, safeDeepClone, safeParseLocalStorage, safeSetLocalStorage } from './json-safe';

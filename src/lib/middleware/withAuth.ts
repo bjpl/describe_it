@@ -7,17 +7,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { validateAuth, checkRateLimit } from './auth';
 import { authLogger } from '@/lib/logger';
 
+export interface AuthOptions {
+  requiredFeatures?: string[];
+  allowGuest?: boolean;
+  required?: boolean;
+  errorMessages?: {
+    featureRequired?: string;
+    unauthorized?: string;
+  };
+}
+
 export function withAuth(
-  handler: (request: NextRequest, context?: any) => Promise<NextResponse>
+  handler: (request: NextRequest, context?: any) => Promise<NextResponse>,
+  options?: AuthOptions
 ) {
   return async (request: NextRequest, context?: any) => {
     try {
+      // Allow guest access if specified
+      if (options?.allowGuest || options?.required === false) {
+        return handler(request, context);
+      }
+
       // Simple auth check
       const authResult = await validateAuth(request);
-      
+
       if (!authResult.authenticated) {
         return NextResponse.json(
-          { error: 'Unauthorized' },
+          { error: options?.errorMessages?.unauthorized || 'Unauthorized' },
           { status: 401 }
         );
       }

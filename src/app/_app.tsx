@@ -32,7 +32,7 @@ function sendToAnalytics(metric: any) {
         url: window.location.href,
         timestamp: Date.now(),
       }),
-    }).catch(console.error);
+    }).catch(error => logger.error('Failed to send web vitals to analytics', error as Error));
   }
 }
 

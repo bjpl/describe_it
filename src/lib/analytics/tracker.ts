@@ -84,7 +84,7 @@ class AnalyticsTracker {
         localStorage.removeItem('analytics_events');
       }
     } catch (error) {
-      logger.warn('Failed to load stored analytics events:', error);
+      logger.warn('Failed to load stored analytics events:', { error: error instanceof Error ? error.message : String(error) });
       // Clear corrupted data
       try {
         localStorage.removeItem('analytics_events');
@@ -106,7 +106,7 @@ class AnalyticsTracker {
       if (data.length > 1024 * 1024) {
         logger.warn('[Analytics] Event queue too large, truncating');
         const truncatedEvents = eventsToStore.slice(0, Math.floor(eventsToStore.length / 2));
-        localStorage.setItem('analytics_events', safeStringify(truncatedEvents));
+        localStorage.setItem('analytics_events', JSON.stringify(truncatedEvents));
       } else {
         localStorage.setItem('analytics_events', data);
       }
@@ -118,13 +118,13 @@ class AnalyticsTracker {
           localStorage.removeItem('analytics_events');
           // Try to store only the most recent 10 events
           const recentEvents = this.eventQueue.slice(-10);
-          safeSetLocalStorage('analytics_events', recentEvents);
+          localStorage.setItem('analytics_events', JSON.stringify(recentEvents));
         } catch {
           // If still failing, give up on localStorage
           logger.warn('[Analytics] Cannot use localStorage for analytics');
         }
       } else {
-        logger.warn('[Analytics] Failed to store events:', error);
+        logger.warn('[Analytics] Failed to store events:', { error: error instanceof Error ? error.message : String(error) });
       }
     }
   }
@@ -162,22 +162,22 @@ class AnalyticsTracker {
       this.eventQueue = this.eventQueue.slice(-Math.floor(this.config.maxQueueSize / 2));
     }
 
-    const fullEvent: AnalyticsEvent = {
+    const fullEvent = {
       ...event,
       sessionId: this.sessionId,
       userId: this.userId,
-      userTier: this.userTier as any,
-    };
+      userTier: this.userTier,
+    } as AnalyticsEvent;
 
     if (!validateEvent(fullEvent)) {
-      logger.warn('Invalid analytics event:', fullEvent);
+      logger.warn('Invalid analytics event:', { eventName: fullEvent.eventName, sessionId: fullEvent.sessionId });
       return;
     }
 
     this.eventQueue.push(fullEvent);
 
     if (this.config.enableConsoleLogging) {
-      logger.info('Analytics Event:', fullEvent);
+      logger.info('Analytics Event:', { eventName: fullEvent.eventName, sessionId: fullEvent.sessionId, properties: fullEvent.properties });
     }
 
     // Auto-flush if batch size reached
@@ -253,7 +253,7 @@ class AnalyticsTracker {
         }, delay);
       } else {
         // Don't throw for analytics failures - they shouldn't break the app
-        logger.warn('[Analytics] Failed to send events after retries:', error);
+        logger.warn('[Analytics] Failed to send events after retries:', { error: error instanceof Error ? error.message : String(error) });
       }
     }
   }

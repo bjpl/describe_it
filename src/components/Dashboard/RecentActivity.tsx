@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -24,7 +24,8 @@ import {
   CheckCircle,
   XCircle,
   AlertCircle,
-  Eye
+  Eye,
+  Activity
 } from "lucide-react";
 import type { StudySession, UserProgress } from "@/types/database";
 import { logger } from '@/lib/logger';

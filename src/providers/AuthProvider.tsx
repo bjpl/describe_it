@@ -20,6 +20,9 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+// Export AuthContext for debugging components
+export { AuthContext };
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [authState, setAuthState] = useState<AuthState>(authManager.getAuthState());
   const [forceUpdateCounter, forceUpdate] = useReducer(x => x + 1, 0);

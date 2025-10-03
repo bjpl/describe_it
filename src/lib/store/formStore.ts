@@ -1,5 +1,5 @@
 import React from 'react';
-import { create } from 'zustand';
+import { create, StateCreator } from 'zustand';
 import { devtools, subscribeWithSelector } from 'zustand/middleware';
 import { createShallowSelector } from '../utils/storeUtils';
 
@@ -15,13 +15,15 @@ import { createShallowSelector } from '../utils/storeUtils';
  * - Form history/undo
  */
 
-export interface ValidationRule<T = any> {
+// Generic validation rule with proper type constraints
+export interface ValidationRule<T = unknown> {
   validate: (value: T) => boolean | string | Promise<boolean | string>;
   message: string;
   debounceMs?: number;
 }
 
-export interface FieldConfig<T = any> {
+// Generic field configuration with proper type safety
+export interface FieldConfig<T = unknown> {
   name: string;
   defaultValue: T;
   validationRules?: ValidationRule<T>[];
@@ -30,7 +32,8 @@ export interface FieldConfig<T = any> {
   formatter?: (value: T) => string;
 }
 
-export interface FieldState<T = any> {
+// Field state with generic value type
+export interface FieldState<T = unknown> {
   value: T;
   error: string | null;
   isValidating: boolean;
@@ -61,45 +64,59 @@ interface FormSnapshot {
   action: 'manual' | 'auto' | 'submit' | 'reset';
 }
 
+// Form store state
 interface FormStoreState {
   forms: Record<string, FormState>;
   activeFormId: string | null;
   globalErrors: string[];
-  
+}
+
+// Form store actions with proper type signatures
+interface FormStoreActions {
   // Form management
-  createForm: (id: string, config: Record<string, FieldConfig>, options?: { autoSave?: boolean }) => void;
+  createForm: (
+    id: string,
+    config: Record<string, FieldConfig<unknown>>,
+    options?: { autoSave?: boolean }
+  ) => void;
   destroyForm: (id: string) => void;
   setActiveForm: (id: string) => void;
   resetForm: (id: string) => void;
   
   // Field operations
-  setFieldValue: (formId: string, fieldName: string, value: any) => void;
+  setFieldValue: (formId: string, fieldName: string, value: unknown) => void;
   setFieldError: (formId: string, fieldName: string, error: string | null) => void;
   setFieldTouched: (formId: string, fieldName: string, touched?: boolean) => void;
   validateField: (formId: string, fieldName: string) => Promise<boolean>;
   validateForm: (formId: string) => Promise<boolean>;
-  
-  // Form submission
-  submitForm: (formId: string, submitFn: (data: Record<string, any>) => Promise<any>) => Promise<any>;
+
+  // Form submission with proper generic typing
+  submitForm: <TData = Record<string, unknown>, TResult = unknown>(
+    formId: string,
+    submitFn: (data: TData) => Promise<TResult>
+  ) => Promise<TResult>;
   setSubmitting: (formId: string, submitting: boolean) => void;
-  
+
   // Utility
-  getFormData: (formId: string) => Record<string, any> | null;
+  getFormData: (formId: string) => Record<string, unknown> | null;
   getFormErrors: (formId: string) => Record<string, string>;
   isFormValid: (formId: string) => boolean;
   isFormDirty: (formId: string) => boolean;
-  
+
   // History/Undo
   saveSnapshot: (formId: string, action: FormSnapshot['action']) => void;
   undo: (formId: string) => void;
   redo: (formId: string) => void;
   canUndo: (formId: string) => boolean;
   canRedo: (formId: string) => boolean;
-  
+
   // Auto-save
   enableAutoSave: (formId: string, intervalMs?: number) => void;
   disableAutoSave: (formId: string) => void;
 }
+
+// Complete store type
+type FormStoreType = FormStoreState & FormStoreActions;
 
 // Validation utilities
 const validateRequired = (value: any): boolean => {
@@ -123,10 +140,18 @@ const runValidation = async (value: any, rules: ValidationRule[]): Promise<strin
   return null;
 };
 
-export const useFormStore = create<FormStoreState>()(
+// Type-safe store creator
+type FormStoreCreator = StateCreator<
+  FormStoreType,
+  [["zustand/devtools", never], ["zustand/subscribeWithSelector", never]],
+  [],
+  FormStoreType
+>;
+
+export const useFormStore = create<FormStoreType>()(
   devtools(
     subscribeWithSelector(
-      (set, get) => ({
+      ((set, get) => ({
         forms: {},
         activeFormId: null,
         globalErrors: [],
@@ -625,12 +650,12 @@ export const useFormStore = create<FormStoreState>()(
         
         disableAutoSave: (formId) => {
           if (typeof window === 'undefined') return;
-          
+
           const form = get().forms[formId];
-          if (form && (form as any).autoSaveInterval) {
-            clearInterval((form as any).autoSaveInterval);
+          if (form && (form as FormState & { autoSaveInterval?: NodeJS.Timeout }).autoSaveInterval) {
+            clearInterval((form as FormState & { autoSaveInterval?: NodeJS.Timeout }).autoSaveInterval);
           }
-          
+
           set((state) => ({
             forms: {
               ...state.forms,
@@ -642,28 +667,28 @@ export const useFormStore = create<FormStoreState>()(
             }
           }), false, 'disableAutoSave');
         }
-      })
+      })) as FormStoreCreator
     ),
     { name: 'FormStore' }
   )
 );
 
 // Optimized selectors
-const formSelector = (formId: string) => createShallowSelector((state: FormStoreState) => state.forms[formId]);
+const formSelector = (formId: string) => createShallowSelector((state: FormStoreType) => state.forms[formId]);
 
-const fieldSelector = (formId: string, fieldName: string) => 
-  createShallowSelector((state: FormStoreState) => state.forms[formId]?.fields[fieldName]);
+const fieldSelector = (formId: string, fieldName: string) =>
+  createShallowSelector((state: FormStoreType) => state.forms[formId]?.fields[fieldName]);
 
-// Hooks
-export const useForm = (formId: string) => {
+// Hooks with proper typing
+export const useForm = (formId: string): FormState | undefined => {
   return useFormStore(formSelector(formId));
 };
 
-export const useField = (formId: string, fieldName: string) => {
-  return useFormStore(fieldSelector(formId, fieldName));
+export const useField = <T = unknown>(formId: string, fieldName: string): FieldState<T> | undefined => {
+  return useFormStore(fieldSelector(formId, fieldName)) as FieldState<T> | undefined;
 };
 
-export const useFormActions = () => useFormStore((state) => ({
+export const useFormActions = (): FormStoreActions => useFormStore((state) => ({
   createForm: state.createForm,
   destroyForm: state.destroyForm,
   setActiveForm: state.setActiveForm,
