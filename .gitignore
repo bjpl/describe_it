@@ -81,9 +81,6 @@ Thumbs.db
 /playwright-report/
 
 # Development files
-/docs/
-/tests/
-/scripts/
 /memory/
 /.claude-flow/
 /.hive-mind/

@@ -1,1 +1,7 @@
-export { default as VocabularyManager } from "./DatabaseVocabularyManager";
+export { VocabularySearch } from './VocabularySearch';
+export type {
+  VocabularyWord,
+  SearchFilters,
+  SavedSearch,
+  VocabularySearchProps
+} from './VocabularySearch';
