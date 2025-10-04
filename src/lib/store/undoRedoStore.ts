@@ -478,10 +478,12 @@ export const useUndoRedoStore = create<UndoRedoState>()(
               newCurrentBranchId = 'main';
             }
             
+            const newBranch = newBranches.get(newCurrentBranchId);
+
             set({
               branches: newBranches,
               currentBranchId: newCurrentBranchId,
-              currentIndex: newBranches.get(newCurrentBranchId)?.entries.length - 1 || -1
+              currentIndex: newBranch ? newBranch.entries.length - 1 : -1
             }, false, 'deleteBranch');
           },
           

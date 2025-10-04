@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { safeStringify } from '@/lib/utils/json-safe';
 
 /**
  * Image Tracker - Prevents duplicate image usage

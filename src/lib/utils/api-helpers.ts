@@ -93,7 +93,8 @@ export class RateLimiter {
         totalRequests: requestCount,
       };
     } catch (error) {
-      apiHelperLogger.warn('Rate limiting check failed', { error: error as Error });
+      const errorDetails = error instanceof Error ? { error } : { error: String(error) };
+      apiHelperLogger.warn('Rate limiting check failed', errorDetails);
       // Allow request if rate limiting check fails
       return {
         allowed: true,
@@ -326,7 +327,8 @@ export class PerformanceMonitor {
         responseTime,
       );
     } catch (error) {
-      performanceLogger.warn('Failed to record metrics', error);
+      const errorDetails = error instanceof Error ? { error } : { error: String(error) };
+      performanceLogger.warn('Failed to record metrics', errorDetails);
     }
   }
 
@@ -368,7 +370,8 @@ export class PerformanceMonitor {
         sessionTTL: 0, // Don't cache in session
       });
     } catch (error) {
-      performanceLogger.warn('Failed to update aggregated metrics', error);
+      const errorDetails = error instanceof Error ? { error } : { error: String(error) };
+      performanceLogger.warn('Failed to update aggregated metrics', errorDetails);
     }
   }
 }

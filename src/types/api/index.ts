@@ -644,7 +644,7 @@ export function isErrorResponse(response: any): response is ErrorResponse {
 }
 
 export function isValidationErrorResponse(response: any): response is ValidationErrorResponse {
-  return isErrorResponse(response) && Array.isArray(response.errors);
+  return isErrorResponse(response) && 'errors' in response && Array.isArray(response.errors);
 }
 
 export function isApiResponse<T>(response: any): response is ApiResponse<T> {

@@ -53,25 +53,27 @@ export interface UIState {
   // Modals
   modals: Modal[];
   modalHistory: string[];
-  
+
   // Navigation
   sidebarOpen: boolean;
   sidebarCollapsed: boolean;
   breadcrumbs: BreadcrumbItem[];
   currentRoute: string;
-  
+
   // Theme and display
   theme: 'light' | 'dark' | 'auto';
   colorScheme: string;
   fontSize: 'sm' | 'md' | 'lg' | 'xl';
   reduceMotion: boolean;
   highContrast: boolean;
-  
+
   // Panels
   rightPanelOpen: boolean;
   rightPanelContent: string | null;
+  rightPanelProps?: Record<string, any>;
   bottomPanelOpen: boolean;
   bottomPanelContent: string | null;
+  bottomPanelProps?: Record<string, any>;
   
   // Loading states
   globalLoading: boolean;
@@ -197,43 +199,43 @@ export const useUIStore = create<UIState>()(
               id,
               priority: modalData.priority || 0
             };
-            
-            set((state) => ({
+
+            set((state: UIState) => ({
               modals: [...state.modals, modal].sort((a, b) => b.priority - a.priority),
               modalHistory: [...state.modalHistory, id]
             }), false, 'openModal');
-            
+
             return id;
           },
-          
+
           closeModal: (id) => {
-            set((state) => ({
-              modals: state.modals.filter(modal => modal.id !== id),
-              modalHistory: state.modalHistory.filter(modalId => modalId !== id)
+            set((state: UIState) => ({
+              modals: state.modals.filter((modal: Modal) => modal.id !== id),
+              modalHistory: state.modalHistory.filter((modalId: string) => modalId !== id)
             }), false, 'closeModal');
           },
-          
+
           closeAllModals: () => {
             set({ modals: [], modalHistory: [] }, false, 'closeAllModals');
           },
-          
+
           closeTopModal: () => {
-            set((state) => {
+            set((state: UIState) => {
               if (state.modals.length === 0) return state;
-              
+
               const topModal = state.modals[0];
               if (topModal.persistent) return state;
-              
+
               return {
                 modals: state.modals.slice(1),
-                modalHistory: state.modalHistory.filter(id => id !== topModal.id)
+                modalHistory: state.modalHistory.filter((id: string) => id !== topModal.id)
               };
             }, false, 'closeTopModal');
           },
-          
+
           updateModal: (id, updates) => {
-            set((state) => ({
-              modals: state.modals.map(modal => 
+            set((state: UIState) => ({
+              modals: state.modals.map((modal: Modal) =>
                 modal.id === id ? { ...modal, ...updates } : modal
               )
             }), false, 'updateModal');
@@ -245,19 +247,19 @@ export const useUIStore = create<UIState>()(
           },
           
           toggleSidebar: () => {
-            set((state) => ({ sidebarOpen: !state.sidebarOpen }), false, 'toggleSidebar');
+            set((state: UIState) => ({ sidebarOpen: !state.sidebarOpen }), false, 'toggleSidebar');
           },
-          
+
           setSidebarCollapsed: (collapsed) => {
             set({ sidebarCollapsed: collapsed }, false, 'setSidebarCollapsed');
           },
-          
+
           setBreadcrumbs: (breadcrumbs) => {
             set({ breadcrumbs }, false, 'setBreadcrumbs');
           },
-          
+
           addBreadcrumb: (item) => {
-            set((state) => ({
+            set((state: UIState) => ({
               breadcrumbs: [...state.breadcrumbs, item]
             }), false, 'addBreadcrumb');
           },

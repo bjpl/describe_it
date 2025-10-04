@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { safeStringify } from '@/lib/utils/json-safe';
 
 /**
  * Storage management utilities to handle localStorage quota issues
