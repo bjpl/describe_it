@@ -16,6 +16,7 @@ import { withSecurity, getSecureApiKey, type SecureRequest } from "@/lib/securit
 import { getAuditLogger } from "@/lib/security/audit-logger";
 import { safeStringify, safeParse } from "@/lib/utils/json-safe";
 import { apiLogger, securityLogger, performanceLogger } from "@/lib/logging/logger";
+import { asLogContext } from "@/lib/utils/typeGuards";
 
 const logger = getAuditLogger('description-api');
 
@@ -388,7 +389,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
           });
         }
       } catch (error) {
-        requestLogger.warn('Image proxy error, using original URL', error);
+        requestLogger.warn('Image proxy error, using original URL', asLogContext({ error: error instanceof Error ? error.message : String(error) }));
       }
     }
 

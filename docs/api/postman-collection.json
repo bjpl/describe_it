@@ -1,0 +1,739 @@
+{
+  "info": {
+    "name": "Describe It API",
+    "description": "Comprehensive API collection for the Describe It language learning platform",
+    "version": "2.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "apikey",
+    "apikey": [
+      {
+        "key": "key",
+        "value": "X-API-Key",
+        "type": "string"
+      },
+      {
+        "key": "value",
+        "value": "{{API_KEY}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "https://describe-it.vercel.app/api",
+      "type": "string",
+      "description": "API base URL"
+    },
+    {
+      "key": "DEV_URL",
+      "value": "http://localhost:3000/api",
+      "type": "string",
+      "description": "Development API URL"
+    },
+    {
+      "key": "API_KEY",
+      "value": "",
+      "type": "string",
+      "description": "Optional API key for enhanced functionality"
+    },
+    {
+      "key": "USER_ID",
+      "value": "test-user-123",
+      "type": "string",
+      "description": "Test user identifier"
+    },
+    {
+      "key": "SESSION_ID",
+      "value": "session-456",
+      "type": "string",
+      "description": "Test session identifier"
+    }
+  ],
+  "item": [
+    {
+      "name": "Images",
+      "description": "Image search and management endpoints",
+      "item": [
+        {
+          "name": "Search Images",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/images/search?query=mountain landscape&page=1&per_page=10&orientation=landscape",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "images",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "mountain landscape",
+                  "description": "Search term for images"
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": "Page number (default: 1)"
+                },
+                {
+                  "key": "per_page",
+                  "value": "10",
+                  "description": "Results per page (1-30)"
+                },
+                {
+                  "key": "orientation",
+                  "value": "landscape",
+                  "description": "Image orientation filter"
+                },
+                {
+                  "key": "color",
+                  "value": "",
+                  "description": "Color filter",
+                  "disabled": true
+                },
+                {
+                  "key": "orderBy",
+                  "value": "relevant",
+                  "description": "Sort order",
+                  "disabled": true
+                },
+                {
+                  "key": "api_key",
+                  "value": "",
+                  "description": "Your Unsplash API key",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Search for images using Unsplash API or demo images"
+          },
+          "response": [
+            {
+              "name": "Successful Search",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/images/search?query=mountain&page=1",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "images",
+                    "search"
+                  ],
+                  "query": [
+                    {
+                      "key": "query",
+                      "value": "mountain"
+                    },
+                    {
+                      "key": "page",
+                      "value": "1"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                },
+                {
+                  "key": "X-Cache",
+                  "value": "MISS"
+                },
+                {
+                  "key": "X-Demo-Mode",
+                  "value": "false"
+                }
+              ],
+              "body": "{\n  \"images\": [\n    {\n      \"id\": \"abc123\",\n      \"urls\": {\n        \"small\": \"https://images.unsplash.com/photo-123/400x300\",\n        \"regular\": \"https://images.unsplash.com/photo-123/1080x720\",\n        \"full\": \"https://images.unsplash.com/photo-123/2000x1500\"\n      },\n      \"alt_description\": \"A beautiful mountain landscape at sunset\",\n      \"user\": {\n        \"name\": \"John Photographer\",\n        \"username\": \"johnphoto\"\n      },\n      \"width\": 2000,\n      \"height\": 1500,\n      \"color\": \"#4A90E2\",\n      \"likes\": 245,\n      \"created_at\": \"2024-01-15T10:30:00Z\"\n    }\n  ],\n  \"total\": 1250,\n  \"totalPages\": 63,\n  \"currentPage\": 1,\n  \"hasNextPage\": true\n}"
+            }
+          ]
+        },
+        {
+          "name": "Image Search HEAD",
+          "request": {
+            "method": "HEAD",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/images/search?query=mountain",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "images",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "query",
+                  "value": "mountain"
+                }
+              ]
+            },
+            "description": "Prefetch headers for image search endpoint"
+          }
+        },
+        {
+          "name": "Image Search OPTIONS",
+          "request": {
+            "method": "OPTIONS",
+            "header": [
+              {
+                "key": "Origin",
+                "value": "http://localhost:3000"
+              },
+              {
+                "key": "Access-Control-Request-Method",
+                "value": "GET"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/images/search",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "images",
+                "search"
+              ]
+            },
+            "description": "CORS preflight request for image search"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Descriptions",
+      "description": "AI-powered description generation endpoints",
+      "item": [
+        {
+          "name": "Generate Descriptions",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageUrl\": \"https://images.unsplash.com/photo-1506905925346-21bda4d32df4\",\n  \"style\": \"conversacional\",\n  \"maxLength\": 200,\n  \"customPrompt\": \"Focus on the natural beauty and atmosphere\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/descriptions/generate",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "descriptions",
+                "generate"
+              ]
+            },
+            "description": "Generate AI descriptions for images in multiple languages"
+          },
+          "response": [
+            {
+              "name": "Successful Generation",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"imageUrl\": \"https://images.unsplash.com/photo-123\",\n  \"style\": \"conversacional\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/descriptions/generate",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "descriptions",
+                    "generate"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": \"1704123456789_en\",\n      \"imageId\": \"https://images.unsplash.com/photo-123\",\n      \"style\": \"conversacional\",\n      \"content\": \"This captivating landscape showcases rolling mountains bathed in golden sunlight...\",\n      \"language\": \"english\",\n      \"createdAt\": \"2024-01-01T12:00:00Z\"\n    },\n    {\n      \"id\": \"1704123456790_es\",\n      \"imageId\": \"https://images.unsplash.com/photo-123\",\n      \"style\": \"conversacional\",\n      \"content\": \"Este paisaje cautivador muestra montañas ondulantes bañadas en luz dorada...\",\n      \"language\": \"spanish\",\n      \"createdAt\": \"2024-01-01T12:00:00Z\"\n    }\n  ],\n  \"metadata\": {\n    \"responseTime\": \"2.8s\",\n    \"demoMode\": false,\n    \"requestId\": \"req-123\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Get Service Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/descriptions/generate",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "descriptions",
+                "generate"
+              ]
+            },
+            "description": "Get description generation service information"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Q&A Generation",
+      "description": "Question and answer generation endpoints",
+      "item": [
+        {
+          "name": "Generate Q&A Pairs",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"Una hermosa montaña con nieve en la cima y árboles verdes en la base. El cielo está despejado y el sol ilumina el paisaje creando sombras dramáticas.\",\n  \"language\": \"es\",\n  \"count\": 5\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/qa/generate",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "qa",
+                "generate"
+              ]
+            },
+            "description": "Generate question-answer pairs from descriptions"
+          },
+          "response": [
+            {
+              "name": "Spanish Q&A",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"description\": \"Una hermosa montaña con nieve en la cima\",\n  \"language\": \"es\",\n  \"count\": 3\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/qa/generate",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "qa",
+                    "generate"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"questions\": [\n    {\n      \"id\": \"qa-1\",\n      \"question\": \"¿Qué se puede ver en la cima de la montaña?\",\n      \"answer\": \"Se puede ver nieve en la cima de la montaña.\",\n      \"difficulty\": \"beginner\",\n      \"type\": \"comprehension\",\n      \"language\": \"es\"\n    },\n    {\n      \"id\": \"qa-2\",\n      \"question\": \"¿De qué color son los árboles en la base?\",\n      \"answer\": \"Los árboles en la base son verdes.\",\n      \"difficulty\": \"beginner\",\n      \"type\": \"detail\",\n      \"language\": \"es\"\n    }\n  ],\n  \"metadata\": {\n    \"count\": 2,\n    \"language\": \"es\",\n    \"generatedAt\": \"2024-01-01T12:00:00Z\",\n    \"source\": \"openai-gpt-4\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Generate English Q&A",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"description\": \"A beautiful mountain with snow on the peak and green trees at the base. The sky is clear and the sun illuminates the landscape creating dramatic shadows.\",\n  \"language\": \"en\",\n  \"count\": 3\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/qa/generate",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "qa",
+                "generate"
+              ]
+            },
+            "description": "Generate Q&A pairs in English"
+          }
+        },
+        {
+          "name": "Get Q&A Endpoint Info",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/qa/generate",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "qa",
+                "generate"
+              ]
+            },
+            "description": "Get endpoint information for Q&A generation"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Phrase Extraction",
+      "description": "Key phrase extraction and categorization endpoints",
+      "item": [
+        {
+          "name": "Extract Phrases",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageUrl\": \"https://images.unsplash.com/photo-1506905925346-21bda4d32df4\",\n  \"descriptionText\": \"Una montaña majestuosa se alza contra el cielo azul brillante, con nieve blanca cubriendo su pico más alto. Los árboles verdes salpican las laderas inferiores, creando un contraste hermoso con la roca gris de la montaña.\",\n  \"style\": \"conversacional\",\n  \"targetLevel\": \"intermediate\",\n  \"maxPhrases\": 12,\n  \"categories\": [\"sustantivos\", \"adjetivos\", \"verbos\"]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/phrases/extract",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "phrases",
+                "extract"
+              ]
+            },
+            "description": "Extract key phrases with categorization and definitions"
+          },
+          "response": [
+            {
+              "name": "Successful Extraction",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"imageUrl\": \"https://images.unsplash.com/photo-123\",\n  \"descriptionText\": \"Una montaña majestuosa se alza contra el cielo azul\",\n  \"targetLevel\": \"intermediate\"\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/phrases/extract",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "phrases",
+                    "extract"
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "body": "{\n  \"phrases\": [\n    {\n      \"id\": \"phrase_1704123456_1_abc123\",\n      \"phrase\": \"montaña majestuosa\",\n      \"definition\": \"A magnificent or impressive mountain\",\n      \"partOfSpeech\": \"noun phrase\",\n      \"difficulty\": \"intermediate\",\n      \"context\": \"Una montaña majestuosa domina el paisaje\",\n      \"category\": \"sustantivos\",\n      \"gender\": \"femenino\",\n      \"article\": \"la\",\n      \"createdAt\": \"2024-01-01T12:00:00Z\"\n    }\n  ],\n  \"categorizedPhrases\": {\n    \"sustantivos\": [\n      {\n        \"phrase\": \"montaña\",\n        \"definition\": \"Large natural elevation of land\",\n        \"gender\": \"femenino\",\n        \"article\": \"la\"\n      }\n    ],\n    \"adjetivos\": [\n      {\n        \"phrase\": \"majestuosa\",\n        \"definition\": \"Having impressive beauty or dignity\"\n      }\n    ]\n  },\n  \"metadata\": {\n    \"extractionMethod\": \"enhanced_categorized\",\n    \"totalPhrases\": 8,\n    \"categoryCounts\": {\n      \"sustantivos\": 3,\n      \"adjetivos\": 2,\n      \"verbos\": 3\n    },\n    \"targetLevel\": \"intermediate\",\n    \"responseTime\": \"1.2s\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Extract Advanced Phrases",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"imageUrl\": \"https://images.unsplash.com/photo-456\",\n  \"descriptionText\": \"The bustling marketplace featured artisanal goods and seasonal produce, where entrepreneurs displayed remarkable business acumen while maintaining cultural authenticity.\",\n  \"targetLevel\": \"advanced\",\n  \"maxPhrases\": 15,\n  \"categories\": [\"sustantivos\", \"adjetivos\", \"frasesClaves\"]\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/phrases/extract",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "phrases",
+                "extract"
+              ]
+            },
+            "description": "Extract advanced-level phrases with complex vocabulary"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Vocabulary Management",
+      "description": "Vocabulary storage and retrieval endpoints",
+      "item": [
+        {
+          "name": "Save Single Vocabulary",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{USER_ID}}\",\n  \"vocabulary\": {\n    \"id\": \"vocab-mountain-123\",\n    \"phrase\": \"montaña\",\n    \"definition\": \"A large natural elevation of the earth's surface rising abruptly from the surrounding level\",\n    \"category\": \"geography\",\n    \"partOfSpeech\": \"noun\",\n    \"difficulty\": \"beginner\",\n    \"context\": \"La montaña es muy alta y majestuosa\",\n    \"gender\": \"femenino\",\n    \"article\": \"la\",\n    \"examples\": [\n      \"La montaña está cubierta de nieve\",\n      \"Subimos la montaña en tres horas\",\n      \"Desde la montaña se ve todo el valle\"\n    ],\n    \"tags\": [\"nature\", \"landscape\", \"geography\"]\n  },\n  \"collectionName\": \"nature-vocabulary\",\n  \"metadata\": {\n    \"source\": \"phrase-extraction\",\n    \"confidence\": 0.95,\n    \"timestamp\": \"2024-01-01T12:00:00Z\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/vocabulary/save",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "vocabulary",
+                "save"
+              ]
+            },
+            "description": "Save a single vocabulary item with metadata"
+          },
+          "response": [
+            {
+              "name": "Successful Save",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"user123\",\n  \"vocabulary\": {\n    \"id\": \"vocab-1\",\n    \"phrase\": \"montaña\",\n    \"definition\": \"A large natural elevation\",\n    \"category\": \"geography\",\n    \"difficulty\": \"beginner\"\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/vocabulary/save",
+                  "host": [
+                    "{{BASE_URL}}"
+                  ],
+                  "path": [
+                    "vocabulary",
+                    "save"
+                  ]
+                }
+              },
+              "status": "Created",
+              "code": 201,
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"vocab-1\",\n    \"phrase\": \"montaña\",\n    \"definition\": \"A large natural elevation\",\n    \"category\": \"geography\",\n    \"difficulty\": \"beginner\",\n    \"userId\": \"user123\",\n    \"collectionName\": \"default\",\n    \"createdAt\": \"2024-01-01T12:00:00Z\",\n    \"updatedAt\": \"2024-01-01T12:00:00Z\",\n    \"metadata\": {\n      \"timestamp\": \"2024-01-01T12:00:00Z\",\n      \"saved\": true\n    }\n  },\n  \"metadata\": {\n    \"userId\": \"user123\",\n    \"collectionName\": \"default\",\n    \"responseTime\": \"45ms\",\n    \"timestamp\": \"2024-01-01T12:00:00Z\"\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Save Bulk Vocabulary",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{USER_ID}}\",\n  \"vocabularyItems\": [\n    {\n      \"phrase\": \"río\",\n      \"definition\": \"A natural watercourse, usually freshwater, flowing towards an ocean, sea, lake or another river\",\n      \"category\": \"geography\",\n      \"difficulty\": \"beginner\",\n      \"gender\": \"masculino\",\n      \"article\": \"el\",\n      \"examples\": [\"El río fluye hacia el mar\"]\n    },\n    {\n      \"phrase\": \"bosque\",\n      \"definition\": \"A large area covered chiefly with trees and undergrowth\",\n      \"category\": \"geography\",\n      \"difficulty\": \"beginner\",\n      \"gender\": \"masculino\",\n      \"article\": \"el\",\n      \"examples\": [\"El bosque está lleno de vida\"]\n    },\n    {\n      \"phrase\": \"valle\",\n      \"definition\": \"A low area of land between hills or mountains, typically with a river or stream flowing through it\",\n      \"category\": \"geography\",\n      \"difficulty\": \"intermediate\",\n      \"gender\": \"masculino\",\n      \"article\": \"el\",\n      \"examples\": [\"El valle es muy fértil\"]\n    }\n  ],\n  \"collectionName\": \"geography-basics\",\n  \"metadata\": {\n    \"source\": \"bulk-import\",\n    \"importDate\": \"2024-01-01T12:00:00Z\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/vocabulary/save",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "vocabulary",
+                "save"
+              ]
+            },
+            "description": "Save multiple vocabulary items in one request"
+          }
+        },
+        {
+          "name": "Retrieve Vocabulary",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/vocabulary/save?userId={{USER_ID}}&limit=20&sortBy=createdAt&sortOrder=desc",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "vocabulary",
+                "save"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{USER_ID}}",
+                  "description": "User identifier"
+                },
+                {
+                  "key": "collectionName",
+                  "value": "",
+                  "description": "Filter by collection",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "description": "Filter by category",
+                  "disabled": true
+                },
+                {
+                  "key": "difficulty",
+                  "value": "",
+                  "description": "Filter by difficulty",
+                  "disabled": true
+                },
+                {
+                  "key": "tags",
+                  "value": "",
+                  "description": "Filter by tags",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "20",
+                  "description": "Items per page"
+                },
+                {
+                  "key": "offset",
+                  "value": "0",
+                  "description": "Pagination offset",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "createdAt",
+                  "description": "Sort field"
+                },
+                {
+                  "key": "sortOrder",
+                  "value": "desc",
+                  "description": "Sort direction"
+                }
+              ]
+            },
+            "description": "Retrieve vocabulary with filtering and pagination"
+          }
+        },
+        {
+          "name": "Filter Vocabulary by Category",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{BASE_URL}}/vocabulary/save?userId={{USER_ID}}&category=geography&difficulty=beginner",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "vocabulary",
+                "save"
+              ],
+              "query": [
+                {
+                  "key": "userId",
+                  "value": "{{USER_ID}}"
+                },
+                {
+                  "key": "category",
+                  "value": "geography"
+                },
+                {
+                  "key": "difficulty",
+                  "value": "beginner"
+                }
+              ]
+            },
+            "description": "Get vocabulary filtered by category and difficulty"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Progress Tracking",
+      "description": "Learning progress and analytics endpoints",
+      "item": [
+        {
+          "name": "Track Vocabulary Learning",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": \"{{USER_ID}}\",\n  \"sessionId\": \"{{SESSION_ID}}\",\n  \"eventType\": \"vocabulary_learned\",\n  \"eventData\": {\n    \"vocabularyId\": \"vocab-mountain-123\",\n    \"difficulty\": \"intermediate\",\n    \"category\": \"geography\",\n    \"timeSpent\": 45,\n    \"confidence\": 0.8,\n    \"score\": 0.9,\n    \"attempts\": 2,\n    \"correct\": true,\n    \"masteryLevel\": 0.6,\n    \"tags\": [\"nature\", \"landscape\"]\n  },\n  \"timestamp\": \"2024-01-01T12:00:00Z\"\n}"
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/progress/track",
+              "host": [
+                "{{BASE_URL}}"
+              ],
+              "path": [
+                "progress",
+                "track"
+              ]
+            },
+            "description": "Track vocabulary learning progress event"
+          },
+          "response": [
+            {
+              "name": "Progress Tracked",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"userId\": \"user123\",\n  \"eventType\": \"vocabulary_learned\",\n  \"eventData\": {\n    \"vocabularyId\": \"vocab-1\",\n    \"difficulty\": \"beginner\",\n    \"score\": 0.85\n  }\n}"
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/progress/track",\n                  "host": [\n                    "{{BASE_URL}}"\n                  ],\n                  "path": [\n                    "progress",\n                    "track"\n                  ]\n                }\n              },\n              "status": "Created",\n              "code": 201,\n              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"event_1704123456_abc123\",\n    \"userId\": \"user123\",\n    \"sessionId\": null,\n    \"eventType\": \"vocabulary_learned\",\n    \"eventData\": {\n      \"vocabularyId\": \"vocab-1\",\n      \"difficulty\": \"beginner\",\n      \"score\": 0.85\n    },\n    \"timestamp\": \"2024-01-01T12:00:00Z\",\n    \"dateKey\": \"2024-01-01\"\n  },\n  \"metadata\": {\n    \"userId\": \"user123\",\n    \"eventType\": \"vocabulary_learned\",\n    \"responseTime\": \"25ms\",\n    \"timestamp\": \"2024-01-01T12:00:00Z\"\n  }\n}"\n            }\n          ]\n        },\n        {\n          "name": "Track Q&A Answer",\n          "request": {\n            "method": "POST",\n            "header": [\n              {\n                "key": "Content-Type",\n                "value": "application/json"\n              }\n            ],\n            "body": {\n              "mode": "raw",\n              "raw": "{\\n  \\\"userId\\\": \\\"{{USER_ID}}\\\",\\n  \\\"sessionId\\\": \\\"{{SESSION_ID}}\\\",\\n  \\\"eventType\\\": \\\"qa_correct\\\",\\n  \\\"eventData\\\": {\\n    \\\"questionId\\\": \\\"qa-mountain-001\\\",\\n    \\\"correct\\\": true,\\n    \\\"attempts\\\": 1,\\n    \\\"score\\\": 1.0,\\n    \\\"timeSpent\\\": 12,\\n    \\\"difficulty\\\": \\\"beginner\\\",\\n    \\\"category\\\": \\\"comprehension\\\",\\n    \\\"confidence\\\": 0.95\\n  }\\n}"\n            },\n            "url": {\n              "raw": "{{BASE_URL}}/progress/track",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "progress",\n                "track"\n              ]\n            },\n            "description": "Track correct Q&A answer"\n          }\n        },\n        {\n          "name": "Track Session Start",\n          "request": {\n            "method": "POST",\n            "header": [\n              {\n                "key": "Content-Type",\n                "value": "application/json"\n              }\n            ],\n            "body": {\n              "mode": "raw",\n              "raw": "{\\n  \\\"userId\\\": \\\"{{USER_ID}}\\\",\\n  \\\"sessionId\\\": \\\"{{SESSION_ID}}\\\",\\n  \\\"eventType\\\": \\\"session_started\\\",\\n  \\\"eventData\\\": {\\n    \\\"sessionType\\\": \\\"vocabulary_practice\\\",\\n    \\\"targetDifficulty\\\": \\\"intermediate\\\",\\n    \\\"plannedDuration\\\": 1800,\\n    \\\"categories\\\": [\\\"geography\\\", \\\"nature\\\"]\\n  }\\n}"\n            },\n            "url": {\n              "raw": "{{BASE_URL}}/progress/track",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "progress",\n                "track"\n              ]\n            },\n            "description": "Track learning session start"\n          }\n        },\n        {\n          "name": "Get User Progress",\n          "request": {\n            "method": "GET",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/progress/track?userId={{USER_ID}}",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "progress",\n                "track"\n              ],\n              "query": [\n                {\n                  "key": "userId",\n                  "value": "{{USER_ID}}",\n                  "description": "User identifier"\n                },\n                {\n                  "key": "sessionId",\n                  "value": "",\n                  "description": "Filter by session",\n                  "disabled": true\n                },\n                {\n                  "key": "eventType",\n                  "value": "",\n                  "description": "Filter by event type",\n                  "disabled": true\n                },\n                {\n                  "key": "aggregation",\n                  "value": "",\n                  "description": "Aggregation level",\n                  "disabled": true\n                }\n              ]\n            },\n            "description": "Get comprehensive progress data for user"\n          }\n        },\n        {\n          "name": "Get Daily Progress",\n          "request": {\n            "method": "GET",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/progress/track?userId={{USER_ID}}&aggregation=daily&dateFrom=2024-01-01&dateTo=2024-01-15",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "progress",\n                "track"\n              ],\n              "query": [\n                {\n                  "key": "userId",\n                  "value": "{{USER_ID}}"\n                },\n                {\n                  "key": "aggregation",\n                  "value": "daily"\n                },\n                {\n                  "key": "dateFrom",\n                  "value": "2024-01-01"\n                },\n                {\n                  "key": "dateTo",\n                  "value": "2024-01-15"\n                }\n              ]\n            },\n            "description": "Get daily aggregated progress data"\n          }\n        }\n      ]\n    },\n    {\n      "name": "User Settings",\n      "description": "User preferences and configuration endpoints",\n      "item": [\n        {\n          "name": "Save Complete Settings",\n          "request": {\n            "method": "POST",\n            "header": [\n              {\n                "key": "Content-Type",\n                "value": "application/json"\n              }\n            ],\n            "body": {\n              "mode": "raw",\n              "raw": "{\\n  \\\"userId\\\": \\\"{{USER_ID}}\\\",\\n  \\\"settings\\\": {\\n    \\\"language\\\": {\\n      \\\"primary\\\": \\\"es\\\",\\n      \\\"secondary\\\": \\\"en\\\",\\n      \\\"learningDirection\\\": \\\"primary_to_secondary\\\"\\n    },\\n    \\\"difficulty\\\": {\\n      \\\"preferred\\\": \\\"intermediate\\\",\\n      \\\"adaptive\\\": true,\\n      \\\"autoAdjust\\\": false\\n    },\\n    \\\"content\\\": {\\n      \\\"style\\\": \\\"conversacional\\\",\\n      \\\"maxPhrases\\\": 12,\\n      \\\"maxQuestions\\\": 8,\\n      \\\"includeTranslations\\\": true,\\n      \\\"includeExamples\\\": true,\\n      \\\"includeContext\\\": true,\\n      \\\"questionTypes\\\": [\\\"multiple_choice\\\", \\\"open_ended\\\", \\\"fill_blank\\\"]\\n    },\\n    \\\"interface\\\": {\\n      \\\"theme\\\": \\\"dark\\\",\\n      \\\"fontSize\\\": \\\"large\\\",\\n      \\\"animations\\\": true,\\n      \\\"soundEffects\\\": false,\\n      \\\"compactMode\\\": false,\\n      \\\"showProgress\\\": true\\n    },\\n    \\\"session\\\": {\\n      \\\"autoSave\\\": true,\\n      \\\"sessionTimeout\\\": 45,\\n      \\\"reminderIntervals\\\": [1, 3, 7, 14],\\n      \\\"goalTracking\\\": true,\\n      \\\"streakTracking\\\": true,\\n      \\\"achievementNotifications\\\": true\\n    },\\n    \\\"privacy\\\": {\\n      \\\"saveProgress\\\": true,\\n      \\\"saveVocabulary\\\": true,\\n      \\\"analytics\\\": false,\\n      \\\"shareProgress\\\": false,\\n      \\\"dataRetention\\\": 180\\n    },\\n    \\\"export\\\": {\\n      \\\"defaultFormat\\\": \\\"json\\\",\\n      \\\"includeMetadata\\\": true,\\n      \\\"includeProgress\\\": false,\\n      \\\"autoExportInterval\\\": \\\"never\\\"\\n    },\\n    \\\"advanced\\\": {\\n      \\\"cacheEnabled\\\": true,\\n      \\\"preloadContent\\\": true,\\n      \\\"debugMode\\\": false,\\n      \\\"experimentalFeatures\\\": false,\\n      \\\"apiTimeout\\\": 30,\\n      \\\"maxRetries\\\": 3\\n    }\\n  },\\n  \\\"metadata\\\": {\\n    \\\"version\\\": \\\"1.0\\\",\\n    \\\"source\\\": \\\"postman-test\\\"\\n  }\\n}"\n            },\n            "url": {\n              "raw": "{{BASE_URL}}/settings/save",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "settings",\n                "save"\n              ]\n            },\n            "description": "Save comprehensive user settings"\n          }\n        },\n        {\n          "name": "Save Language Settings Only",\n          "request": {\n            "method": "POST",\n            "header": [\n              {\n                "key": "Content-Type",\n                "value": "application/json"\n              }\n            ],\n            "body": {\n              "mode": "raw",\n              "raw": "{\\n  \\\"userId\\\": \\\"{{USER_ID}}\\\",\\n  \\\"settings\\\": {\\n    \\\"language\\\": {\\n      \\\"primary\\\": \\\"es\\\",\\n      \\\"secondary\\\": \\\"en\\\",\\n      \\\"learningDirection\\\": \\\"bidirectional\\\"\\n    },\\n    \\\"difficulty\\\": {\\n      \\\"preferred\\\": \\\"advanced\\\",\\n      \\\"adaptive\\\": true\\n    }\\n  }\\n}"\n            },\n            "url": {\n              "raw": "{{BASE_URL}}/settings/save",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "settings",\n                "save"\n              ]\n            },\n            "description": "Update specific settings sections only"\n          }\n        },\n        {\n          "name": "Get All Settings",\n          "request": {\n            "method": "GET",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/settings/save?userId={{USER_ID}}&includeDefaults=true",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "settings",\n                "save"\n              ],\n              "query": [\n                {\n                  "key": "userId",\n                  "value": "{{USER_ID}}",\n                  "description": "User identifier"\n                },\n                {\n                  "key": "section",\n                  "value": "",\n                  "description": "Specific section only",\n                  "disabled": true\n                },\n                {\n                  "key": "includeDefaults",\n                  "value": "true",\n                  "description": "Include default values"\n                }\n              ]\n            },\n            "description": "Retrieve all user settings with defaults"\n          }\n        },\n        {\n          "name": "Get Language Settings Only",\n          "request": {\n            "method": "GET",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/settings/save?userId={{USER_ID}}&section=language",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "settings",\n                "save"\n              ],\n              "query": [\n                {\n                  "key": "userId",\n                  "value": "{{USER_ID}}"\n                },\n                {\n                  "key": "section",\n                  "value": "language"\n                }\n              ]\n            },\n            "description": "Get specific settings section only"\n          }\n        },\n        {\n          "name": "Reset All Settings",\n          "request": {\n            "method": "DELETE",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/settings/save?userId={{USER_ID}}",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "settings",\n                "save"\n              ],\n              "query": [\n                {\n                  "key": "userId",\n                  "value": "{{USER_ID}}",\n                  "description": "User identifier"\n                }\n              ]\n            },\n            "description": "Reset all settings to defaults"\n          }\n        },\n        {\n          "name": "Reset Specific Sections",\n          "request": {\n            "method": "DELETE",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/settings/save?userId={{USER_ID}}&section=interface&section=privacy",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "settings",\n                "save"\n              ],\n              "query": [\n                {\n                  "key": "userId",\n                  "value": "{{USER_ID}}"\n                },\n                {\n                  "key": "section",\n                  "value": "interface"\n                },\n                {\n                  "key": "section",\n                  "value": "privacy"\n                }\n              ]\n            },\n            "description": "Reset specific settings sections only"\n          }\n        }\n      ]\n    },\n    {\n      "name": "Data Export",\n      "description": "Data export and download endpoints",\n      "item": [\n        {\n          "name": "Export Vocabulary to JSON",\n          "request": {\n            "method": "POST",\n            "header": [\n              {\n                "key": "Content-Type",\n                "value": "application/json"\n              }\n            ],\n            "body": {\n              "mode": "raw",\n              "raw": "{\\n  \\\"userId\\\": \\\"{{USER_ID}}\\\",\\n  \\\"exportType\\\": \\\"json\\\",\\n  \\\"contentType\\\": \\\"vocabulary\\\",\\n  \\\"filters\\\": {\\n    \\\"difficulty\\\": \\\"intermediate\\\",\\n    \\\"category\\\": \\\"geography\\\",\\n    \\\"includeMetadata\\\": true,\\n    \\\"includeProgress\\\": false\\n  },\\n  \\\"formatting\\\": {\\n    \\\"template\\\": \\\"detailed\\\",\\n    \\\"includeDefinitions\\\": true,\\n    \\\"includeExamples\\\": true,\\n    \\\"includeTranslations\\\": false,\\n    \\\"language\\\": \\\"es\\\"\\n  }\\n}"\n            },\n            "url": {\n              "raw": "{{BASE_URL}}/export/generate",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "export",\n                "generate"\n              ]\n            },\n            "description": "Export vocabulary data to JSON format"\n          },\n          "response": [\n            {\n              "name": "Export Generated",\n              "originalRequest": {\n                "method": "POST",\n                "header": [\n                  {\n                    "key": "Content-Type",\n                    "value": "application/json"\n                  }\n                ],\n                "body": {\n                  "mode": "raw",\n                  "raw": "{\\n  \\\"userId\\\": \\\"user123\\\",\\n  \\\"exportType\\\": \\\"json\\\",\\n  \\\"contentType\\\": \\\"vocabulary\\\"\\n}"\n                },\n                "url": {\n                  "raw": "{{BASE_URL}}/export/generate",\n                  "host": [\n                    "{{BASE_URL}}"\n                  ],\n                  "path": [\n                    "export",\n                    "generate"\n                  ]\n                }\n              },\n              "status": "OK",\n              "code": 200,\n              "body": "{\\n  \\\"success\\\": true,\\n  \\\"data\\\": {\\n    \\\"data\\\": \\\"{\\\\\\\"vocabulary\\\\\\\": [...]}\\\",\\n    \\\"filename\\\": \\\"vocabulary_export_1704123456789.json\\\",\\n    \\\"contentType\\\": \\\"application/json\\\",\\n    \\\"size\\\": 15420,\\n    \\\"downloadUrl\\\": \\\"/api/export/download/vocabulary_export_1704123456789.json\\\"\\n  },\\n  \\\"metadata\\\": {\\n    \\\"exportType\\\": \\\"json\\\",\\n    \\\"contentType\\\": \\\"vocabulary\\\",\\n    \\\"fromCache\\\": false,\\n    \\\"responseTime\\\": \\\"234ms\\\"\\n  }\\n}"\n            }\n          ]\n        },\n        {\n          "name": "Export All Data to CSV",\n          "request": {\n            "method": "POST",\n            "header": [\n              {\n                "key": "Content-Type",\n                "value": "application/json"\n              }\n            ],\n            "body": {\n              "mode": "raw",\n              "raw": "{\\n  \\\"userId\\\": \\\"{{USER_ID}}\\\",\\n  \\\"exportType\\\": \\\"csv\\\",\\n  \\\"contentType\\\": \\\"all\\\",\\n  \\\"filters\\\": {\\n    \\\"dateFrom\\\": \\\"2024-01-01\\\",\\n    \\\"dateTo\\\": \\\"2024-01-31\\\",\\n    \\\"includeMetadata\\\": false,\\n    \\\"includeProgress\\\": true\\n  },\\n  \\\"formatting\\\": {\\n    \\\"template\\\": \\\"standard\\\",\\n    \\\"includeDefinitions\\\": true,\\n    \\\"includeExamples\\\": false\\n  }\\n}"\n            },\n            "url": {\n              "raw": "{{BASE_URL}}/export/generate",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "export",\n                "generate"\n              ]\n            },\n            "description": "Export all user data to CSV format"\n          }\n        },\n        {\n          "name": "Export for Anki Flashcards",\n          "request": {\n            "method": "POST",\n            "header": [\n              {\n                "key": "Content-Type",\n                "value": "application/json"\n              }\n            ],\n            "body": {\n              "mode": "raw",\n              "raw": "{\\n  \\\"userId\\\": \\\"{{USER_ID}}\\\",\\n  \\\"exportType\\\": \\\"anki\\\",\\n  \\\"contentType\\\": \\\"vocabulary\\\",\\n  \\\"filters\\\": {\\n    \\\"category\\\": \\\"geography\\\",\\n    \\\"difficulty\\\": \\\"beginner\\\"\\n  },\\n  \\\"formatting\\\": {\\n    \\\"template\\\": \\\"minimal\\\",\\n    \\\"includeDefinitions\\\": true,\\n    \\\"includeContext\\\": true\\n  }\\n}"\n            },\n            "url": {\n              "raw": "{{BASE_URL}}/export/generate",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "export",\n                "generate"\n              ]\n            },\n            "description": "Export vocabulary for Anki flashcard import"\n          }\n        },\n        {\n          "name": "Export for Quizlet",\n          "request": {\n            "method": "POST",\n            "header": [\n              {\n                "key": "Content-Type",\n                "value": "application/json"\n              }\n            ],\n            "body": {\n              "mode": "raw",\n              "raw": "{\\n  \\\"userId\\\": \\\"{{USER_ID}}\\\",\\n  \\\"exportType\\\": \\\"quizlet\\\",\\n  \\\"contentType\\\": \\\"vocabulary\\\",\\n  \\\"filters\\\": {\\n    \\\"collectionName\\\": \\\"nature-vocabulary\\\"\\n  },\\n  \\\"formatting\\\": {\\n    \\\"template\\\": \\\"standard\\\",\\n    \\\"includeDefinitions\\\": true\\n  }\\n}"\n            },\n            "url": {\n              "raw": "{{BASE_URL}}/export/generate",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "export",\n                "generate"\n              ]\n            },\n            "description": "Export vocabulary for Quizlet import"\n          }\n        },\n        {\n          "name": "Download Export File",\n          "request": {\n            "method": "GET",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/export/generate?filename=vocabulary_export_1704123456789.json&format=attachment",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "export",\n                "generate"\n              ],\n              "query": [\n                {\n                  "key": "filename",\n                  "value": "vocabulary_export_1704123456789.json",\n                  "description": "Export filename to download"\n                },\n                {\n                  "key": "format",\n                  "value": "attachment",\n                  "description": "Download format (attachment or inline)"\n                }\n              ]\n            },\n            "description": "Download previously generated export file"\n          }\n        }\n      ]\n    },\n    {\n      "name": "System Health",\n      "description": "System health and status monitoring endpoints",\n      "item": [\n        {\n          "name": "Detailed Health Check",\n          "request": {\n            "method": "GET",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/health?detailed=true",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "health"\n              ],\n              "query": [\n                {\n                  "key": "detailed",\n                  "value": "true",\n                  "description": "Perform comprehensive health checks"\n                }\n              ]\n            },\n            "description": "Comprehensive health check with API testing"\n          },\n          "response": [\n            {\n              "name": "System Healthy",\n              "originalRequest": {\n                "method": "GET",\n                "header": [],\n                "url": {\n                  "raw": "{{BASE_URL}}/health?detailed=true",\n                  "host": [\n                    "{{BASE_URL}}"\n                  ],\n                  "path": [\n                    "health"\n                  ],\n                  "query": [\n                    {\n                      "key": "detailed",\n                      "value": "true"\n                    }\n                  ]\n                }\n              },\n              "status": "OK",\n              "code": 200,\n              "body": "{\\n  \\\"status\\\": \\\"ok\\\",\\n  \\\"healthy\\\": true,\\n  \\\"demo\\\": false,\\n  \\\"message\\\": \\\"All services configured\\\",\\n  \\\"timestamp\\\": \\\"2024-01-01T12:00:00Z\\\",\\n  \\\"services\\\": [\\n    {\\n      \\\"name\\\": \\\"Unsplash API\\\",\\n      \\\"configured\\\": true,\\n      \\\"demoMode\\\": false,\\n      \\\"status\\\": \\\"healthy\\\",\\n      \\\"responseTime\\\": \\\"45ms\\\",\\n      \\\"reason\\\": \\\"Connected to Unsplash API\\\",\\n      \\\"lastCheck\\\": \\\"2024-01-01T12:00:00Z\\\"\\n    },\\n    {\\n      \\\"name\\\": \\\"OpenAI API\\\",\\n      \\\"configured\\\": true,\\n      \\\"demoMode\\\": false,\\n      \\\"status\\\": \\\"healthy\\\",\\n      \\\"responseTime\\\": \\\"120ms\\\",\\n      \\\"reason\\\": \\\"Connected to OpenAI API\\\"\\n    },\\n    {\\n      \\\"name\\\": \\\"Supabase Database\\\",\\n      \\\"configured\\\": false,\\n      \\\"demoMode\\\": true,\\n      \\\"status\\\": \\\"degraded\\\",\\n      \\\"reason\\\": \\\"Using localStorage storage\\\"\\n    }\\n  ],\\n  \\\"overall\\\": {\\n    \\\"healthy\\\": true,\\n    \\\"status\\\": \\\"operational\\\"\\n  }\\n}"\n            }\n          ]\n        },\n        {\n          "name": "Quick Health Check",\n          "request": {\n            "method": "GET",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/health",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "health"\n              ]\n            },\n            "description": "Quick health status without detailed testing"\n          }\n        },\n        {\n          "name": "System Status",\n          "request": {\n            "method": "GET",\n            "header": [],\n            "url": {\n              "raw": "{{BASE_URL}}/status",\n              "host": [\n                "{{BASE_URL}}"\n              ],\n              "path": [\n                "status"\n              ]\n            },\n            "description": "Quick system status check"\n          }\n        }\n      ]\n    }\n  ],\n  "event": [\n    {\n      "listen": "prerequest",\n      "script": {\n        "type": "text/javascript",\n        "exec": [\n          "// Set timestamp for requests",\n          "pm.environment.set('timestamp', new Date().toISOString());",\n          "",\n          "// Generate random session ID if not set",\n          "if (!pm.environment.get('SESSION_ID')) {",\n          "    pm.environment.set('SESSION_ID', 'session-' + Date.now());",\n          "}",\n          "",\n          "// Set test user if not already set",\n          "if (!pm.environment.get('USER_ID')) {",\n          "    pm.environment.set('USER_ID', 'test-user-' + Date.now());",\n          "}"\n        ]\n      }\n    },\n    {\n      "listen": "test",\n      "script": {\n        "type": "text/javascript",\n        "exec": [\n          "// Global test for all requests",\n          "pm.test('Response time is reasonable', function () {",\n          "    pm.expect(pm.response.responseTime).to.be.below(10000);",\n          "});",\n          "",\n          "// Test for successful responses",\n          "if (pm.response.code >= 200 && pm.response.code < 300) {",\n          "    pm.test('Response is successful', function () {",\n          "        pm.response.to.be.success;",\n          "    });",\n          "    ",\n          "    pm.test('Response has correct Content-Type', function () {",\n          "        pm.expect(pm.response.headers.get('Content-Type')).to.include('application/json');",\n          "    });",\n          "}",\n          "",\n          "// Test for error responses",\n          "if (pm.response.code >= 400) {",\n          "    pm.test('Error response has proper structure', function () {",\n          "        const response = pm.response.json();",\n          "        pm.expect(response).to.have.property('error');",\n          "        pm.expect(response).to.have.property('timestamp');",\n          "    });",\n          "}",\n          "",\n          "// Test for demo mode header",\n          "pm.test('Demo mode header is present', function () {",\n          "    pm.expect(pm.response.headers.has('X-Demo-Mode')).to.be.true;",\n          "});",\n          "",\n          "// Store response data for chaining requests",\n          "if (pm.response.json() && pm.response.json().data) {",\n          "    const responseData = pm.response.json().data;",\n          "    ",\n          "    // Store IDs for use in subsequent requests",\n          "    if (responseData.id) {",\n          "        pm.environment.set('LAST_ID', responseData.id);",\n          "    }",\n          "    ",\n          "    if (responseData.filename) {",\n          "        pm.environment.set('LAST_FILENAME', responseData.filename);",\n          "    }",\n          "}"\n        ]\n      }\n    }\n  ]\n}

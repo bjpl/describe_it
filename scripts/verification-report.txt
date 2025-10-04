@@ -1,0 +1,44 @@
+Console Statement Verification Report
+Generated: Fri Oct  3 09:55:16 PDT 2025
+=====================================
+
+console.log: 15
+console.warn: 1
+console.error: 4
+console.info: 1
+console.debug: 1
+
+Total remaining: 22
+
+Files with remaining console statements:
+========================================
+../src/app/_app.tsx
+../src/components/analytics/WebVitalsReporter.tsx
+../src/lib/logger.ts
+../src/lib/utils/json-parser.test.ts
+../src/utils/batch-logger-update.ts
+
+Detailed occurrences:
+====================
+../src/app/_app.tsx:35:    }).catch(console.error);
+../src/components/analytics/WebVitalsReporter.tsx:64:    }).catch(console.error);
+../src/lib/logger.ts:286:        console.error(formattedMessage, data);
+../src/lib/utils/json-parser.test.ts:79:  console.log("🧪 Running RobustJSONParser Tests\n");
+../src/lib/utils/json-parser.test.ts:86:    console.log(`Testing: ${testCase.description}`);
+../src/lib/utils/json-parser.test.ts:87:    console.log(
+../src/lib/utils/json-parser.test.ts:97:      console.log(`✅ PASSED - Method: ${result.method}`);
+../src/lib/utils/json-parser.test.ts:98:      console.log(
+../src/lib/utils/json-parser.test.ts:103:      console.log(`❌ FAILED - Error: ${result.error}`);
+../src/lib/utils/json-parser.test.ts:106:    console.log("");
+../src/lib/utils/json-parser.test.ts:110:  console.log("Testing with Q&A schema validation:");
+../src/lib/utils/json-parser.test.ts:130:    console.log(`✅ Schema validation PASSED`);
+../src/lib/utils/json-parser.test.ts:133:    console.log(`❌ Schema validation FAILED: ${qaResult.error}`);
+../src/lib/utils/json-parser.test.ts:138:  console.log("\nTesting with Phrase Categories schema validation:");
+../src/lib/utils/json-parser.test.ts:161:    console.log(`✅ Phrase schema validation PASSED`);
+../src/lib/utils/json-parser.test.ts:164:    console.log(`❌ Phrase schema validation FAILED: ${phraseResult.error}`);
+../src/lib/utils/json-parser.test.ts:168:  console.log(
+../src/utils/batch-logger-update.ts:10:  "console.error": "logger.error",
+../src/utils/batch-logger-update.ts:11:  "console.warn": "logger.warn",
+../src/utils/batch-logger-update.ts:12:  "console.info": "logger.info",
+../src/utils/batch-logger-update.ts:15:  "console.log": "devLog",
+../src/utils/batch-logger-update.ts:16:  "console.debug": "devLog",

@@ -5,6 +5,7 @@ import { descriptionCache } from "@/lib/cache";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
 
 // Type definitions from Zod schemas
 type VocabularyItem = z.infer<typeof vocabularySaveSchema>["vocabulary"] & {
@@ -288,7 +289,7 @@ class VocabularyStorage {
         hasMore: offset + limit < items.length,
       };
     } catch (error) {
-      apiLogger.warn("Failed to get vocabulary from cache:", error);
+      apiLogger.warn("Failed to get vocabulary from cache:", asLogContext(error));
       return {
         items: [],
         total: 0,
@@ -346,7 +347,7 @@ class VocabularyStorage {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      apiLogger.warn("Failed to update collection index:", error);
+      apiLogger.warn("Failed to update collection index:", asLogContext(error));
     }
   }
 
@@ -375,7 +376,7 @@ class VocabularyStorage {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      apiLogger.warn("Failed to update user stats:", error);
+      apiLogger.warn("Failed to update user stats:", asLogContext(error));
     }
   }
 
@@ -514,7 +515,7 @@ async function handleVocabularySave(request: AuthenticatedRequest) {
       );
     }
 
-    apiLogger.error("Vocabulary save error:", error);
+    apiLogger.error("Vocabulary save error:", asLogContext(error));
 
     return NextResponse.json(
       {
@@ -620,7 +621,7 @@ async function handleVocabularyGet(request: AuthenticatedRequest) {
       );
     }
 
-    apiLogger.error("Vocabulary retrieval error:", error);
+    apiLogger.error("Vocabulary retrieval error:", asLogContext(error));
 
     return NextResponse.json(
       {

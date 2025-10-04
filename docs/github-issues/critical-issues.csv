@@ -1,0 +1,11 @@
+file,line,todo,priority,category,severity
+src/lib/api/structured-logging.ts,15,Add proper error handling,critical,security,high
+src/lib/auth/AuthManager.ts,45,Implement session validation,critical,security,high
+src/lib/security/secure-middleware.ts,23,Add rate limiting per user,critical,security,high
+src/app/api/auth/signin/rate-limited-route.ts,12,Validate token expiration,critical,security,high
+src/lib/middleware/errorMiddleware.ts,8,Add structured error logging,critical,bug,high
+src/lib/database/utils/index.ts,34,Add transaction rollback handling,critical,bug,critical
+src/lib/supabase/client.ts,28,Implement connection pooling,critical,performance,high
+src/app/api/descriptions/generate/route.ts,56,Add input sanitization,critical,security,high
+src/lib/monitoring/metrics.ts,67,Add performance tracking,critical,performance,medium
+src/lib/rate-limiting/middleware.ts,19,Implement distributed rate limiting,critical,performance,high

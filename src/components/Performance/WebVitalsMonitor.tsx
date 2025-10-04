@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState, memo } from 'react';
-import { getCLS, getFID, getFCP, getLCP, getTTFB, getINP } from 'web-vitals';
+import { onCLS, onFCP, onLCP, onTTFB, onINP } from 'web-vitals';
 import { MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
 import { Activity, AlertTriangle, CheckCircle, XCircle, TrendingUp, TrendingDown } from 'lucide-react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
@@ -100,12 +100,11 @@ export const WebVitalsMonitor = memo(() => {
     };
 
     // Initialize Web Vitals collection
-    getCLS(handleVital);
-    getFID(handleVital);
-    getFCP(handleVital);
-    getLCP(handleVital);
-    getTTFB(handleVital);
-    getINP(handleVital);
+    onCLS(handleVital);
+    onFCP(handleVital);
+    onLCP(handleVital);
+    onTTFB(handleVital);
+    onINP(handleVital); // INP replaces FID in web-vitals v4
 
     // Keyboard shortcut to toggle visibility
     const handleKeyPress = (e: KeyboardEvent) => {

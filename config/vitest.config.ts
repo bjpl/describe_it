@@ -48,7 +48,7 @@ export default defineConfig({
     // React 19 specific configuration
     isolate: false,
     // Better error reporting
-    reporter: process.env.CI ? ['basic'] : ['verbose'],
+    reporters: process.env.CI ? ['basic'] : ['verbose'],
     bail: process.env.CI ? 1 : 0,
     // React 19 and Next.js 15 compatibility
     server: {

@@ -1,0 +1,27 @@
+{
+  "name": "github-issue-automation",
+  "version": "1.0.0",
+  "description": "Automated GitHub issue creation from TODO comments",
+  "main": "create-github-issues.js",
+  "scripts": {
+    "create-issues": "node create-github-issues.js",
+    "dry-run": "node create-github-issues.js --dry-run",
+    "critical": "node create-github-issues.js --csv=../docs/github-issues/critical-issues.csv",
+    "high": "node create-github-issues.js --csv=../docs/github-issues/high-priority-issues.csv",
+    "medium": "node create-github-issues.js --csv=../docs/github-issues/medium-priority-issues.csv",
+    "low": "node create-github-issues.js --csv=../docs/github-issues/low-priority-issues.csv"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.2"
+  },
+  "devDependencies": {},
+  "keywords": [
+    "github",
+    "issues",
+    "automation",
+    "todo",
+    "technical-debt"
+  ],
+  "author": "Development Team",
+  "license": "MIT"
+}

@@ -1,0 +1,1255 @@
+openapi: 3.0.0
+info:
+  title: Describe It - Spanish Learning API
+  version: 1.0.0
+  description: |
+    A comprehensive API for visual-based Spanish learning through AI-powered image descriptions, 
+    Q&A generation, vocabulary extraction, and translation services.
+    
+    This API enables users to:
+    - Generate multi-style image descriptions in Spanish and English
+    - Create interactive Q&A sessions for comprehension testing
+    - Extract and translate vocabulary from descriptions
+    - Track learning progress and export data
+    - Search and manage images for learning content
+    
+  contact:
+    name: Describe It Support
+    email: support@describe-it.app
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://describe-it.vercel.app/api
+    description: Production server
+  - url: http://localhost:3000/api
+    description: Development server
+
+security:
+  - ApiKeyAuth: []
+  - BearerAuth: []
+
+paths:
+  /health:
+    get:
+      tags:
+        - Health & Status
+      summary: Health Check
+      description: Check API health status and service availability
+      parameters:
+        - name: detailed
+          in: query
+          description: Return detailed health information
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Service is healthy
+          headers:
+            X-Demo-Mode:
+              description: Whether the service is running in demo mode
+              schema:
+                type: string
+                enum: ['true', 'false']
+            X-Overall-Health:
+              description: Overall system health status
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/QuickHealthStatus'
+                  - $ref: '#/components/schemas/DetailedHealthStatus'
+              examples:
+                quick_status:
+                  summary: Quick health status
+                  value:
+                    status: "ok"
+                    healthy: true
+                    demo: false
+                    configuredServices: 4
+                    message: "All 4 services configured"
+                    timestamp: "2024-01-15T10:30:00Z"
+                detailed_status:
+                  summary: Detailed health status
+                  value:
+                    overall:
+                      healthy: true
+                      status: "healthy"
+                    services:
+                      - name: "OpenAI"
+                        status: "healthy"
+                        healthy: true
+                        demoMode: false
+                      - name: "Supabase"
+                        status: "healthy"
+                        healthy: true
+                        demoMode: false
+        '503':
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /descriptions/generate:
+    post:
+      tags:
+        - Descriptions
+      summary: Generate Image Descriptions
+      description: |
+        Generate AI-powered descriptions of images in multiple styles and both Spanish and English.
+        Supports 5 different narrative styles for varied learning experiences.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateDescriptionRequest'
+            examples:
+              narrativo:
+                summary: Narrative style description
+                value:
+                  imageUrl: "https://images.unsplash.com/photo-example"
+                  style: "narrativo"
+                  maxLength: 300
+              poetico:
+                summary: Poetic style description
+                value:
+                  imageUrl: "https://images.unsplash.com/photo-example"
+                  style: "poetico"
+                  customPrompt: "Focus on emotions and metaphors"
+                  maxLength: 250
+      responses:
+        '200':
+          description: Descriptions generated successfully
+          headers:
+            X-Response-Time:
+              description: API response time in milliseconds
+              schema:
+                type: string
+            X-Fallback:
+              description: Whether fallback content was used
+              schema:
+                type: string
+                enum: ['true', 'false']
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DescriptionResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ValidationErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Descriptions
+      summary: Description Service Info
+      description: Get information about the description generation service
+      responses:
+        '200':
+          description: Service information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceInfo'
+
+  /qa/generate:
+    post:
+      tags:
+        - Q&A
+      summary: Generate Q&A Pairs
+      description: Generate interactive question-answer pairs based on image descriptions for comprehension testing
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateQARequest'
+            examples:
+              spanish_qa:
+                summary: Spanish Q&A generation
+                value:
+                  description: "Una hermosa puesta de sol sobre el océano con colores vibrantes"
+                  language: "es"
+                  count: 5
+              english_qa:
+                summary: English Q&A generation
+                value:
+                  description: "A beautiful sunset over the ocean with vibrant colors"
+                  language: "en"
+                  count: 3
+      responses:
+        '200':
+          description: Q&A pairs generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QAResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Q&A generation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Q&A
+      summary: Q&A Service Info
+      description: Get information about the Q&A generation service
+      responses:
+        '200':
+          description: Service information
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  endpoint:
+                    type: string
+                    example: "/api/qa/generate"
+                  method:
+                    type: string
+                    example: "POST"
+                  description:
+                    type: string
+                    example: "Generate Q&A pairs from image descriptions"
+                  parameters:
+                    type: object
+                  response:
+                    type: object
+
+  /translate:
+    post:
+      tags:
+        - Translation
+      summary: Translate Text
+      description: |
+        Translate vocabulary words and phrases between supported languages.
+        Supports contextual translation with confidence scoring.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationRequest'
+            examples:
+              spanish_to_english:
+                summary: Spanish to English translation
+                value:
+                  text: "buenos días"
+                  sourceLanguage: "es"
+                  targetLanguage: "en"
+                  context: "greeting phrase"
+              contextual_translation:
+                summary: Translation with context
+                value:
+                  text: "banco"
+                  sourceLanguage: "es"
+                  targetLanguage: "en"
+                  context: "financial institution, not park bench"
+      responses:
+        '200':
+          description: Translation successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Translation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Translation
+      summary: Translation Service Info
+      description: Get supported languages and service capabilities
+      responses:
+        '200':
+          description: Service information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationServiceInfo'
+
+  /phrases/extract:
+    post:
+      tags:
+        - Vocabulary
+      summary: Extract Vocabulary Phrases
+      description: Extract and categorize vocabulary phrases from text descriptions
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExtractPhrasesRequest'
+      responses:
+        '200':
+          description: Phrases extracted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhrasesResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /images/search:
+    get:
+      tags:
+        - Images
+      summary: Search Images
+      description: Search for high-quality images using Unsplash API
+      parameters:
+        - name: query
+          in: query
+          required: true
+          description: Search query for images
+          schema:
+            type: string
+            example: "sunset ocean"
+        - name: page
+          in: query
+          required: false
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: per_page
+          in: query
+          required: false
+          description: Number of images per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 30
+            default: 10
+      responses:
+        '200':
+          description: Images found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageSearchResponse'
+        '400':
+          description: Invalid search parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /progress/track:
+    post:
+      tags:
+        - Progress
+      summary: Track Learning Progress
+      description: Record user learning progress and analytics
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProgressTrackingRequest'
+      responses:
+        '200':
+          description: Progress tracked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgressResponse'
+
+  /export/generate:
+    post:
+      tags:
+        - Export
+      summary: Generate Export Data
+      description: Export learning session data in various formats
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        '200':
+          description: Export generated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExportResponse'
+
+  /settings/save:
+    post:
+      tags:
+        - Settings
+      summary: Save User Settings
+      description: Save user preferences and settings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserSettings'
+      responses:
+        '200':
+          description: Settings saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettingsResponse'
+
+  /vocabulary/save:
+    post:
+      tags:
+        - Vocabulary
+      summary: Save Vocabulary
+      description: Save extracted vocabulary for user learning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VocabularyRequest'
+      responses:
+        '200':
+          description: Vocabulary saved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocabularyResponse'
+
+  /status:
+    get:
+      tags:
+        - Health & Status
+      summary: Service Status
+      description: Get overall service status and metrics
+      responses:
+        '200':
+          description: Service status information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServiceStatus'
+
+  /env-status:
+    get:
+      tags:
+        - Health & Status
+      summary: Environment Status
+      description: Get environment configuration status
+      responses:
+        '200':
+          description: Environment status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnvironmentStatus'
+
+  /cache/status:
+    get:
+      tags:
+        - Health & Status
+      summary: Cache Status
+      description: Get cache system status and statistics
+      responses:
+        '200':
+          description: Cache status information
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheStatus'
+
+components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Request Schemas
+    GenerateDescriptionRequest:
+      type: object
+      required:
+        - imageUrl
+        - style
+      properties:
+        imageUrl:
+          type: string
+          format: uri
+          description: URL of the image to describe
+          example: "https://images.unsplash.com/photo-1234567890"
+        style:
+          type: string
+          enum:
+            - narrativo
+            - poetico
+            - academico
+            - conversacional
+            - infantil
+          description: Narrative style for the description
+          example: "narrativo"
+        customPrompt:
+          type: string
+          description: Optional custom prompt for description generation
+          example: "Focus on the emotional impact of the scene"
+        maxLength:
+          type: integer
+          minimum: 50
+          maximum: 1000
+          default: 300
+          description: Maximum length of the generated description
+          example: 300
+
+    GenerateQARequest:
+      type: object
+      required:
+        - description
+      properties:
+        description:
+          type: string
+          description: The image description text to generate Q&A from
+          example: "Una hermosa puesta de sol sobre el océano con colores vibrantes"
+        language:
+          type: string
+          enum: ["es", "en"]
+          default: "es"
+          description: Language for Q&A generation
+          example: "es"
+        count:
+          type: integer
+          minimum: 1
+          maximum: 10
+          default: 5
+          description: Number of Q&A pairs to generate
+          example: 5
+
+    TranslationRequest:
+      type: object
+      required:
+        - text
+        - sourceLanguage
+        - targetLanguage
+      properties:
+        text:
+          type: string
+          description: Text to translate
+          example: "buenos días"
+        sourceLanguage:
+          type: string
+          enum: ["en", "es", "fr", "de", "it", "pt"]
+          description: Source language code
+          example: "es"
+        targetLanguage:
+          type: string
+          enum: ["en", "es", "fr", "de", "it", "pt"]
+          description: Target language code
+          example: "en"
+        context:
+          type: string
+          description: Optional context to improve translation accuracy
+          example: "greeting phrase used in the morning"
+
+    ExtractPhrasesRequest:
+      type: object
+      required:
+        - text
+      properties:
+        text:
+          type: string
+          description: Text to extract phrases from
+          example: "El gato camina por el jardín bajo la luna brillante"
+        language:
+          type: string
+          enum: ["es", "en"]
+          default: "es"
+          description: Language of the source text
+          example: "es"
+
+    ProgressTrackingRequest:
+      type: object
+      required:
+        - sessionId
+        - action
+      properties:
+        sessionId:
+          type: string
+          description: Unique session identifier
+          example: "session_123456789"
+        action:
+          type: string
+          enum: ["start", "description_generated", "qa_completed", "vocabulary_saved"]
+          description: Action being tracked
+          example: "qa_completed"
+        metadata:
+          type: object
+          description: Additional metadata for the action
+          example:
+            correctAnswers: 4
+            totalQuestions: 5
+            timeSpent: 120
+
+    ExportRequest:
+      type: object
+      required:
+        - sessionId
+        - format
+      properties:
+        sessionId:
+          type: string
+          description: Session ID to export data for
+          example: "session_123456789"
+        format:
+          type: string
+          enum: ["pdf", "json", "csv"]
+          description: Export format
+          example: "pdf"
+        includeImages:
+          type: boolean
+          default: true
+          description: Whether to include images in export
+          example: true
+
+    UserSettings:
+      type: object
+      properties:
+        preferredLanguage:
+          type: string
+          enum: ["es", "en"]
+          default: "es"
+          description: User's preferred language for learning
+          example: "es"
+        difficultyLevel:
+          type: string
+          enum: ["beginner", "intermediate", "advanced"]
+          default: "beginner"
+          description: User's learning level
+          example: "beginner"
+        autoTranslate:
+          type: boolean
+          default: true
+          description: Whether to auto-translate vocabulary
+          example: true
+        showHints:
+          type: boolean
+          default: true
+          description: Whether to show learning hints
+          example: true
+
+    VocabularyRequest:
+      type: object
+      required:
+        - phrases
+        - sessionId
+      properties:
+        phrases:
+          type: array
+          items:
+            $ref: '#/components/schemas/VocabularyPhrase'
+          description: Array of vocabulary phrases to save
+        sessionId:
+          type: string
+          description: Session identifier
+          example: "session_123456789"
+
+    # Response Schemas
+    DescriptionResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Description'
+        metadata:
+          type: object
+          properties:
+            responseTime:
+              type: string
+              example: "1250.45ms"
+            timestamp:
+              type: string
+              format: date-time
+              example: "2024-01-15T10:30:00Z"
+            demoMode:
+              type: boolean
+              example: false
+            fallback:
+              type: boolean
+              example: false
+
+    QAResponse:
+      type: object
+      properties:
+        questions:
+          type: array
+          items:
+            $ref: '#/components/schemas/QAGeneration'
+        metadata:
+          type: object
+          properties:
+            count:
+              type: integer
+              example: 5
+            language:
+              type: string
+              example: "es"
+            generatedAt:
+              type: string
+              format: date-time
+              example: "2024-01-15T10:30:00Z"
+            source:
+              type: string
+              example: "openai-gpt-4"
+
+    TranslationResponse:
+      type: object
+      properties:
+        translation:
+          type: string
+          example: "good morning"
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.95
+        detectedLanguage:
+          type: string
+          example: "es"
+
+    PhrasesResponse:
+      type: object
+      properties:
+        phrases:
+          type: array
+          items:
+            $ref: '#/components/schemas/VocabularyPhrase'
+        metadata:
+          type: object
+          properties:
+            totalPhrases:
+              type: integer
+              example: 12
+            categories:
+              type: array
+              items:
+                type: string
+              example: ["nouns", "verbs", "adjectives"]
+
+    ImageSearchResponse:
+      type: object
+      properties:
+        images:
+          type: array
+          items:
+            $ref: '#/components/schemas/ImageResult'
+        pagination:
+          type: object
+          properties:
+            page:
+              type: integer
+              example: 1
+            per_page:
+              type: integer
+              example: 10
+            total:
+              type: integer
+              example: 1000
+            total_pages:
+              type: integer
+              example: 100
+
+    ProgressResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        progress:
+          $ref: '#/components/schemas/LearningProgress'
+
+    ExportResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        downloadUrl:
+          type: string
+          format: uri
+          example: "https://api.describe-it.app/exports/session_123456789.pdf"
+        expiresAt:
+          type: string
+          format: date-time
+          example: "2024-01-16T10:30:00Z"
+
+    SettingsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        settings:
+          $ref: '#/components/schemas/UserSettings'
+
+    VocabularyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: true
+        saved:
+          type: integer
+          description: Number of vocabulary phrases saved
+          example: 8
+
+    # Health & Status Schemas
+    QuickHealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["ok", "error"]
+          example: "ok"
+        healthy:
+          type: boolean
+          example: true
+        demo:
+          type: boolean
+          description: Whether running in demo mode
+          example: false
+        configuredServices:
+          type: integer
+          description: Number of configured external services
+          example: 4
+        message:
+          type: string
+          example: "All 4 services configured"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    DetailedHealthStatus:
+      type: object
+      properties:
+        overall:
+          type: object
+          properties:
+            healthy:
+              type: boolean
+              example: true
+            status:
+              type: string
+              example: "healthy"
+        services:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+                example: "OpenAI"
+              status:
+                type: string
+                example: "healthy"
+              healthy:
+                type: boolean
+                example: true
+              demoMode:
+                type: boolean
+                example: false
+
+    ServiceStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "operational"
+        uptime:
+          type: integer
+          description: Uptime in seconds
+          example: 3600
+        version:
+          type: string
+          example: "1.0.0"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    EnvironmentStatus:
+      type: object
+      properties:
+        environment:
+          type: string
+          enum: ["development", "production", "staging"]
+          example: "production"
+        nodeVersion:
+          type: string
+          example: "20.11.0"
+        services:
+          type: object
+          properties:
+            openai:
+              type: boolean
+              example: true
+            supabase:
+              type: boolean
+              example: true
+            unsplash:
+              type: boolean
+              example: true
+            vercelKv:
+              type: boolean
+              example: true
+
+    CacheStatus:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "healthy"
+        hitRate:
+          type: number
+          format: float
+          example: 0.85
+        totalKeys:
+          type: integer
+          example: 1247
+        memoryUsage:
+          type: object
+          properties:
+            used:
+              type: string
+              example: "45MB"
+            available:
+              type: string
+              example: "100MB"
+
+    TranslationServiceInfo:
+      type: object
+      properties:
+        status:
+          type: string
+          example: "ok"
+        supportedLanguages:
+          type: array
+          items:
+            type: object
+            properties:
+              code:
+                type: string
+                example: "es"
+              name:
+                type: string
+                example: "Spanish"
+        features:
+          type: array
+          items:
+            type: string
+          example: ["vocabulary_translation", "contextual_translation"]
+        agent:
+          type: string
+          example: "gamma-3-translation-service"
+
+    ServiceInfo:
+      type: object
+      properties:
+        service:
+          type: string
+          example: "Description Generation API"
+        status:
+          type: string
+          example: "healthy"
+        version:
+          type: string
+          example: "1.0.0"
+        capabilities:
+          type: object
+          properties:
+            styles:
+              type: array
+              items:
+                type: string
+              example: ["narrativo", "poetico", "academico"]
+            languages:
+              type: array
+              items:
+                type: string
+              example: ["es", "en"]
+            demoMode:
+              type: boolean
+              example: false
+
+    # Entity Schemas
+    Description:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "1705312200000_es"
+        imageId:
+          type: string
+          description: Reference to the source image
+          example: "unsplash_abc123"
+        style:
+          type: string
+          enum: ["narrativo", "poetico", "academico", "conversacional", "infantil"]
+          example: "narrativo"
+        content:
+          type: string
+          description: The generated description text
+          example: "Una hermosa puesta de sol se extiende sobre el océano infinito..."
+        language:
+          type: string
+          enum: ["spanish", "english"]
+          example: "spanish"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    QAGeneration:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "qa_123456789"
+        question:
+          type: string
+          example: "¿Qué colores se mencionan en la descripción?"
+        answer:
+          type: string
+          example: "Los colores vibrantes del atardecer incluyen naranjas, rosas y púrpuras"
+        difficulty:
+          type: string
+          enum: ["easy", "medium", "hard"]
+          example: "medium"
+        category:
+          type: string
+          enum: ["comprehension", "vocabulary", "grammar", "culture"]
+          example: "comprehension"
+        language:
+          type: string
+          enum: ["es", "en"]
+          example: "es"
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.89
+
+    VocabularyPhrase:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "phrase_123456789"
+        text:
+          type: string
+          example: "puesta de sol"
+        translation:
+          type: string
+          example: "sunset"
+        category:
+          type: string
+          enum: ["noun", "verb", "adjective", "adverb", "phrase", "expression"]
+          example: "phrase"
+        difficulty:
+          type: string
+          enum: ["beginner", "intermediate", "advanced"]
+          example: "beginner"
+        context:
+          type: string
+          example: "Natural phenomena - time of day"
+        confidence:
+          type: number
+          format: float
+          minimum: 0
+          maximum: 1
+          example: 0.95
+        examples:
+          type: array
+          items:
+            type: string
+          example: ["La puesta de sol es hermosa", "Vimos una puesta de sol increíble"]
+
+    ImageResult:
+      type: object
+      properties:
+        id:
+          type: string
+          example: "unsplash_abc123"
+        url:
+          type: string
+          format: uri
+          example: "https://images.unsplash.com/photo-1234567890"
+        thumbnailUrl:
+          type: string
+          format: uri
+          example: "https://images.unsplash.com/photo-1234567890?w=200&h=200"
+        description:
+          type: string
+          example: "Beautiful sunset over ocean"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["sunset", "ocean", "nature"]
+        photographer:
+          type: object
+          properties:
+            name:
+              type: string
+              example: "John Doe"
+            username:
+              type: string
+              example: "johndoe"
+            profileUrl:
+              type: string
+              format: uri
+              example: "https://unsplash.com/@johndoe"
+
+    LearningProgress:
+      type: object
+      properties:
+        sessionId:
+          type: string
+          example: "session_123456789"
+        totalDescriptions:
+          type: integer
+          example: 5
+        totalQuestions:
+          type: integer
+          example: 25
+        correctAnswers:
+          type: integer
+          example: 20
+        vocabularyLearned:
+          type: integer
+          example: 45
+        timeSpent:
+          type: integer
+          description: Time spent in seconds
+          example: 1800
+        accuracy:
+          type: number
+          format: float
+          example: 0.80
+        lastActivity:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    # Error Schemas
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Error message
+          example: "Invalid request parameters"
+        code:
+          type: string
+          description: Error code
+          example: "VALIDATION_ERROR"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        details:
+          type: object
+          description: Additional error details (development only)
+
+    ValidationErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          example: "Invalid request parameters"
+        details:
+          type: array
+          items:
+            type: object
+            properties:
+              field:
+                type: string
+                example: "imageUrl"
+              message:
+                type: string
+                example: "Invalid image URL"
+              code:
+                type: string
+                example: "invalid_url"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+tags:
+  - name: Health & Status
+    description: System health and status endpoints
+  - name: Descriptions
+    description: AI-powered image description generation
+  - name: Q&A
+    description: Interactive question-answer generation
+  - name: Translation
+    description: Multi-language translation services
+  - name: Vocabulary
+    description: Vocabulary extraction and management
+  - name: Images
+    description: Image search and management
+  - name: Progress
+    description: Learning progress tracking
+  - name: Export
+    description: Data export functionality
+  - name: Settings
+    description: User preferences and settings
+
+externalDocs:
+  description: Full Documentation
+  url: https://describe-it.vercel.app/docs

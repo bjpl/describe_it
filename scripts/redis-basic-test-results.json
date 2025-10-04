@@ -1,0 +1,69 @@
+{
+  "timestamp": "2025-09-01T01:34:37.954Z",
+  "config": {
+    "REDIS_URL": "redis://default:Ff3H2oTwNmPZxLYKILwSvdi2L481mINH@redis-10486.c60.us-west-1-2.ec2.redns.redis-cloud.com:10486",
+    "TEST_PREFIX": "test_basic_redis:",
+    "TIMEOUT": 5000
+  },
+  "results": {
+    "connection": {
+      "success": true,
+      "latency": 77,
+      "serverVersion": "7.4.3",
+      "mode": "standalone",
+      "uptime": 1954,
+      "connectedClients": 0,
+      "usedMemory": "2.48 MB",
+      "maxMemory": "unlimited"
+    },
+    "basicOps": {
+      "success": true,
+      "tests": [
+        {
+          "operation": "SET",
+          "latency": 18,
+          "success": true
+        },
+        {
+          "operation": "GET",
+          "latency": 13,
+          "success": true
+        },
+        {
+          "operation": "EXISTS",
+          "latency": 12,
+          "success": true
+        },
+        {
+          "operation": "TTL",
+          "latency": 14,
+          "success": true
+        },
+        {
+          "operation": "DEL",
+          "latency": 18,
+          "success": true
+        }
+      ],
+      "avgLatency": 15,
+      "totalOperations": 5
+    },
+    "performance": {
+      "success": true,
+      "writeOpsPerSec": 3333.3333333333335,
+      "readOpsPerSec": 5263.1578947368425,
+      "writeDuration": 30,
+      "readDuration": 19,
+      "successfulReads": 100,
+      "iterations": 100
+    },
+    "overall": {
+      "success": true,
+      "totalTests": 3,
+      "passed": 3,
+      "failed": 0,
+      "passRate": 100,
+      "duration": 260
+    }
+  }
+}

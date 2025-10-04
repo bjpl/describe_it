@@ -1,0 +1,11 @@
+file,line,todo,priority,category,severity
+src/components/Dashboard/LearningProgress.tsx,42,Add loading states,high,feature,medium
+src/components/Dashboard/RecentActivity.tsx,78,Implement pagination,high,feature,medium
+src/lib/analytics/tracker.ts,91,Add event batching,high,performance,medium
+src/lib/store/appStore.ts,123,Implement state persistence,high,feature,medium
+src/lib/services/progressService.ts,56,Add progress calculation caching,high,performance,medium
+src/lib/analytics/performance.ts,34,Add web vitals tracking,high,feature,medium
+src/components/Onboarding/ApiKeySetup.tsx,67,Add key validation feedback,high,feature,low
+src/lib/monitoring/logger.ts,45,Implement log rotation,high,feature,medium
+src/app/api/analytics/route.ts,89,Add analytics aggregation,high,feature,medium
+src/lib/supabase/types.ts,12,Generate types from database,high,refactor,low

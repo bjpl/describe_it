@@ -5,6 +5,7 @@ import { descriptionCache } from "@/lib/cache";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
 
 // Input validation schemas
 const progressEventSchema = z.object({
@@ -223,7 +224,7 @@ class ProgressTracker {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      apiLogger.warn("Failed to update user progress:", error);
+      apiLogger.warn("Failed to update user progress:", asLogContext(error));
     }
   }
 
@@ -292,7 +293,7 @@ class ProgressTracker {
         sessionTTL: 7200, // 2 hours
       });
     } catch (error) {
-      apiLogger.warn("Failed to update session progress:", error);
+      apiLogger.warn("Failed to update session progress:", asLogContext(error));
     }
   }
 
@@ -342,7 +343,7 @@ class ProgressTracker {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      apiLogger.warn("Failed to update daily aggregation:", error);
+      apiLogger.warn("Failed to update daily aggregation:", asLogContext(error));
     }
   }
 
@@ -402,7 +403,7 @@ class ProgressTracker {
         sessionTTL: 1800, // 30 minutes
       });
     } catch (error) {
-      apiLogger.warn("Failed to check goal progress:", error);
+      apiLogger.warn("Failed to check goal progress:", asLogContext(error));
     }
   }
 
@@ -584,7 +585,7 @@ async function handleProgressTrack(request: AuthenticatedRequest) {
       );
     }
 
-    apiLogger.error("Progress tracking error:", error);
+    apiLogger.error("Progress tracking error:", asLogContext(error));
 
     return NextResponse.json(
       {
@@ -679,7 +680,7 @@ async function handleProgressGet(request: AuthenticatedRequest) {
       );
     }
 
-    apiLogger.error("Progress retrieval error:", error);
+    apiLogger.error("Progress retrieval error:", asLogContext(error));
 
     return NextResponse.json(
       {

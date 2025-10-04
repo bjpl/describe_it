@@ -5,6 +5,7 @@ import { descriptionCache } from "@/lib/cache";
 import { withPremiumAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
 
 // Input validation schema
 const exportRequestSchema = z.object({
@@ -116,7 +117,7 @@ class ExportService {
 
       return content;
     } catch (error) {
-      apiLogger.warn("Failed to get content for export:", error);
+      apiLogger.warn("Failed to get content for export:", asLogContext(error));
       return [];
     }
   }

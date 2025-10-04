@@ -1,0 +1,51 @@
+{
+  "timestamp": "2025-10-03T16:55:14.996Z",
+  "summary": {
+    "filesProcessed": 4,
+    "filesModified": 1,
+    "totalReplacements": 5,
+    "replacementsByCategory": {
+      "error": 1,
+      "general": 4
+    }
+  },
+  "details": {
+    "lib/logger.ts": {
+      "count": 5,
+      "replacements": [
+        {
+          "category": "error",
+          "priority": "high",
+          "original": "console.error('Failed to initialize Winston logger:', error)",
+          "replacement": "logger.error('undefined')"
+        },
+        {
+          "category": "general",
+          "priority": "low",
+          "original": "console.log(formattedMessage, data)",
+          "replacement": "logger.debug(undefined)"
+        },
+        {
+          "category": "general",
+          "priority": "low",
+          "original": "console.log(formattedMessage, data)",
+          "replacement": "logger.debug(undefined)"
+        },
+        {
+          "category": "general",
+          "priority": "low",
+          "original": "console.warn(formattedMessage, data)",
+          "replacement": "logger.warn(undefined)"
+        },
+        {
+          "category": "general",
+          "priority": "low",
+          "original": "console.info(formattedMessage, data)",
+          "replacement": "logger.info(undefined)"
+        }
+      ]
+    }
+  },
+  "errors": [],
+  "skipped": []
+}

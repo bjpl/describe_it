@@ -3,7 +3,7 @@ import { rateLimiter } from '@/lib/security/rateLimiter';
 import { inputValidator } from '@/lib/security/inputValidation';
 import { authenticator } from '@/lib/security/authentication';
 import { safeParse } from '@/lib/utils/json-safe';
-import { 
+import {
   errorReportSchema,
   validateSecurityHeaders,
   createErrorResponse,
@@ -11,6 +11,7 @@ import {
 } from '@/lib/schemas/api-validation';
 import { z } from 'zod';
 import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
 
 // Force dynamic rendering
 export const dynamic = "force-dynamic";
@@ -98,7 +99,7 @@ export async function POST(request: NextRequest) {
 
       errorData = safeParse(text);
     } catch (parseError) {
-      apiLogger.warn(`[SECURITY] Invalid JSON from ${identifier}:`, parseError);
+      apiLogger.warn(`[SECURITY] Invalid JSON from ${identifier}:`, asLogContext(parseError));
       return NextResponse.json(
         { 
           success: false, 
@@ -166,7 +167,7 @@ export async function POST(request: NextRequest) {
           );
         }
       } catch (urlError) {
-        apiLogger.warn(`[SECURITY] Invalid URL from ${identifier}:`, urlError);
+        apiLogger.warn(`[SECURITY] Invalid URL from ${identifier}:`, asLogContext(urlError));
         return NextResponse.json(
           { 
             success: false, 

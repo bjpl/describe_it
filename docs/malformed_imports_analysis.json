@@ -1,0 +1,141 @@
+{
+  "analysis_timestamp": "2025-10-02T00:00:00Z",
+  "codebase": "describe_it",
+  "total_typescript_files": 403,
+  "files_with_critical_import_issues": 2,
+  "files_with_all_issues": 69,
+  "total_issues_found": 243,
+
+  "issue_breakdown": {
+    "CRITICAL": {
+      "count": 2,
+      "type": "embedded_import_after_brace",
+      "description": "Import statement embedded inside another import block"
+    },
+    "HIGH": {
+      "count": 84,
+      "type": "unterminated_template_literal",
+      "description": "Template literals that may not be properly closed"
+    },
+    "MEDIUM": {
+      "count": 157,
+      "type": "template_expression_outside_literal",
+      "description": "Template expressions used outside template literals (false positives in strings)"
+    }
+  },
+
+  "critical_files_requiring_immediate_fix": [
+    {
+      "file": "src/components/EnhancedComponentShowcase.tsx",
+      "line": 225,
+      "issue": "embedded_import_after_brace",
+      "current_line": "import {",
+      "next_line": "import { logger } from '@/lib/logger';",
+      "fix_required": "Move the logger import to its own line before or after the existing import block"
+    },
+    {
+      "file": "src/components/Performance/BundleAnalyzer.tsx",
+      "line": 6,
+      "issue": "embedded_import_after_brace",
+      "current_line": "import {",
+      "next_line": "import { performanceLogger } from '@/lib/logger';",
+      "fix_required": "Move the performanceLogger import to its own line before or after the existing import block"
+    }
+  ],
+
+  "recommended_fixes": [
+    {
+      "file": "src/components/EnhancedComponentShowcase.tsx",
+      "line_range": "225-233",
+      "problem": "Logger import embedded inside component import block",
+      "solution": "Separate the logger import onto its own line"
+    },
+    {
+      "file": "src/components/Performance/BundleAnalyzer.tsx",
+      "line_range": "6-14",
+      "problem": "PerformanceLogger import embedded inside lucide-react import block",
+      "solution": "Separate the performanceLogger import onto its own line"
+    }
+  ],
+
+  "all_files_with_issues": [
+    "src/app/api/export/generate/route.ts",
+    "src/app/api/images/search/route.ts",
+    "src/app/api/storage/cleanup/route.ts",
+    "src/app/page.tsx",
+    "src/components/Accessibility/AccessibilityProvider.tsx",
+    "src/components/AnswerInput.tsx",
+    "src/components/ApiKeySetupWizard.tsx",
+    "src/components/ApiKeyStatus.tsx",
+    "src/components/DescriptionPanel.tsx",
+    "src/components/DescriptionTabs.tsx",
+    "src/components/EnhancedComponentShowcase.tsx",
+    "src/components/EnhancedPhrasesPanel.tsx",
+    "src/components/EnhancedVocabularyPanel.tsx",
+    "src/components/ErrorBoundary/NetworkStatusIndicator.tsx",
+    "src/components/Export/EnhancedExportManager.tsx",
+    "src/components/ExportModal.tsx",
+    "src/components/FlashcardComponent.tsx",
+    "src/components/GammaVocabularyExtractor.tsx",
+    "src/components/GammaVocabularyManager.tsx",
+    "src/components/HelpContent.tsx",
+    "src/components/ImageSearch/PaginationControls.tsx",
+    "src/components/ImageSearch/SearchFilters.tsx",
+    "src/components/ImageSearchControls.tsx",
+    "src/components/LanguageToggles.tsx",
+    "src/components/Loading/SkeletonScreens.tsx",
+    "src/components/Monitoring/ErrorDashboard.tsx",
+    "src/components/Onboarding/CompletionStep.tsx",
+    "src/components/Onboarding/OnboardingWizard.tsx",
+    "src/components/Onboarding/PreferencesSetup.tsx",
+    "src/components/Onboarding/TutorialStep.tsx",
+    "src/components/Optimized/OptimizedImage.tsx",
+    "src/components/Optimized/OptimizedImageGrid.tsx",
+    "src/components/Performance/AdvancedCaching.tsx",
+    "src/components/Performance/BundleAnalyzer.tsx",
+    "src/components/Performance/OptimizedImageLoader.tsx",
+    "src/components/Performance/PerformanceDashboard.tsx",
+    "src/components/Performance/PerformanceMonitor.tsx",
+    "src/components/Performance/WebVitalsMonitor.tsx",
+    "src/components/ProgressTracking/EnhancedProgressDashboard.tsx",
+    "src/components/QAPanel.tsx",
+    "src/components/QuestionNavigator.tsx",
+    "src/components/QuizComponent.tsx",
+    "src/components/SectionErrorBoundary.tsx",
+    "src/components/SessionReport.tsx",
+    "src/components/Settings/ApiKeyInput.tsx",
+    "src/components/Settings/ApiKeysSection.tsx",
+    "src/components/Settings/EnhancedSettingsPanel.tsx",
+    "src/components/Settings/GeneralSettings.tsx",
+    "src/components/SettingsModal.tsx",
+    "src/components/SpacedRepetition/ReviewSession.tsx",
+    "src/components/ThemeSwitcher.tsx",
+    "src/components/Toast.tsx",
+    "src/components/Vocabulary/DatabaseVocabularyManager.tsx",
+    "src/components/Vocabulary/VocabularyPracticeMode.tsx",
+    "src/components/VocabularyBuilder.tsx",
+    "src/components/analytics/UsageDashboard.tsx",
+    "src/components/ui/ComponentShowcase.tsx",
+    "src/components/ui/LoadingSpinner.tsx",
+    "src/components/ui/Modal.tsx",
+    "src/examples/PerformanceDemoApp.tsx",
+    "src/examples/StateManagementIntegration.tsx",
+    "src/hooks/useApiKeyValidation.ts",
+    "src/hooks/useOptimizedState.ts",
+    "src/lib/export/pdfExporter.ts",
+    "src/lib/i18n/index.ts",
+    "src/lib/services/phraseExtractor.ts",
+    "src/lib/utils/responsive.ts",
+    "src/lib/validation/schemas.ts",
+    "src/types/api.ts"
+  ],
+
+  "verification_command": "npx tsc --noEmit 2>&1 | grep -c 'error'",
+
+  "notes": [
+    "Only 2 files have CRITICAL import issues that prevent TypeScript compilation",
+    "The remaining 67 files have template literal/string issues that are mostly false positives",
+    "Focus on fixing EnhancedComponentShowcase.tsx and BundleAnalyzer.tsx first",
+    "After fixing critical issues, run 'npx tsc --noEmit' to verify compilation succeeds"
+  ]
+}

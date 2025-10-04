@@ -6,6 +6,7 @@ import { useDirectAuth } from './useDirectAuth';
 import { X, Mail, Lock, User, KeyRound, Github, Chrome } from 'lucide-react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 import { authLogger } from '@/lib/logger';
+import type { AuthResponse } from '@/types/api';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -39,19 +40,19 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
     authLogger.info('[AuthModal] Starting', mode, 'for', email);
 
     try {
-      let result;
-      
+      let result: AuthResponse;
+
       // Try AuthManager first with a shorter timeout
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise<AuthResponse>((_, reject) =>
         setTimeout(() => reject(new Error('Request timed out')), 5000)
       );
-      
+
       try {
-        const authPromise = mode === 'signin' 
+        const authPromise = mode === 'signin'
           ? signIn(email, password)
           : signUp(email, password, { full_name: fullName });
-        
-        result = await Promise.race([authPromise, timeoutPromise]) as any;
+
+        result = await Promise.race([authPromise, timeoutPromise]);
       } catch (authError: any) {
         authLogger.info('[AuthModal] AuthManager failed, trying direct auth');
         
@@ -66,23 +67,23 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
       if (result?.success) {
         setSuccess(true);
         setLoading(false);
-        
+
         // Set session storage flag for immediate UI feedback
         sessionStorage.setItem('recent-auth-success', Date.now().toString());
-        
+
         // Dispatch custom event immediately for all components
         window.dispatchEvent(new CustomEvent('auth-state-changed', {
           detail: {
             isAuthenticated: true,
-            user: result.user || { email },
+            user: result.user || { email, id: '' },
             profile: result.profile
           }
         }));
-        
+
         // Call success callback if provided
-        if (onAuthSuccess) {
+        if (onAuthSuccess && result.user) {
           onAuthSuccess({
-            user: result.user || { email },
+            user: result.user,
             profile: result.profile
           });
         }
@@ -124,13 +125,13 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
   const handleProviderSignIn = async (provider: 'google' | 'github' | 'discord') => {
     setLoading(true);
     setError(null);
-    
+
     try {
-      const result = await signInWithProvider(provider);
-      if (result.success) {
+      const result: AuthResponse = await signInWithProvider(provider);
+      if (result.success && result.user) {
         // Set session storage flag
         sessionStorage.setItem('recent-auth-success', Date.now().toString());
-        
+
         // Dispatch custom event
         window.dispatchEvent(new CustomEvent('auth-state-changed', {
           detail: {
@@ -139,7 +140,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
             profile: result.profile
           }
         }));
-        
+
         // Call success callback if provided
         if (onAuthSuccess) {
           onAuthSuccess({

@@ -1,0 +1,11 @@
+file,line,todo,priority,category,severity
+src/types/database.ts,45,Add JSDoc comments,low,documentation,low
+src/lib/supabase/server.ts,67,Optimize query performance,low,performance,low
+src/app/api/auth/simple-signup/route.ts,23,Add signup analytics,low,feature,low
+src/app/api/auth/admin-reset/route.ts,34,Add admin audit logging,low,feature,low
+src/app/api/auth/mock-signup/route.ts,12,Remove mock implementation before production,low,refactor,medium
+src/app/api/descriptions/generate/rate-limited-route.ts,56,Add custom rate limit headers,low,feature,low
+src/components/Dashboard/LearningProgress.tsx,123,Add accessibility labels,low,feature,low
+src/components/Dashboard/RecentActivity.tsx,145,Add empty state illustration,low,feature,low
+src/components/Onboarding/ApiKeySetup.tsx,98,Add keyboard shortcuts,low,feature,low
+src/lib/logger.ts,45,Add log level configuration,low,feature,low

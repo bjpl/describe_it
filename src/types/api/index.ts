@@ -614,6 +614,36 @@ export interface EndpointInfoResponse {
   response: Record<string, any>;
 }
 
+// Auth Types
+export interface AuthResponse {
+  success: boolean;
+  error?: string;
+  access_token?: string;
+  refresh_token?: string;
+  user?: {
+    id: string;
+    email: string;
+    email_confirmed_at?: string;
+    created_at?: string;
+  };
+  profile?: {
+    id: string;
+    email: string;
+    full_name?: string;
+    username?: string;
+    avatar_url?: string;
+    subscription_status?: 'free' | 'premium' | 'premium_plus';
+  };
+  session?: {
+    access_token: string;
+    refresh_token: string;
+    user: any;
+  };
+}
+
+export interface SignInResponse extends AuthResponse {}
+export interface SignUpResponse extends AuthResponse {}
+
 // API Client Types
 export interface ApiClientConfig {
   baseUrl?: string;

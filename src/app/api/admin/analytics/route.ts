@@ -7,6 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
 import { captureError } from '@/lib/monitoring/sentry';
 import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +35,7 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error) {
-    apiLogger.error('Admin analytics API error:', error);
+    apiLogger.error('Admin analytics API error:', asLogContext({ error: error instanceof Error ? error.message : String(error) }));
     captureError(error as Error, {
       endpoint: '/api/admin/analytics',
       method: 'GET',
@@ -129,7 +130,7 @@ async function getAnalyticsData() {
     };
 
   } catch (error) {
-    apiLogger.error('Failed to get analytics data:', error);
+    apiLogger.error('Failed to get analytics data:', asLogContext({ error: error instanceof Error ? error.message : String(error) }));
     return {
       totalUsers: 0,
       activeUsers: 0,
@@ -196,7 +197,7 @@ async function getErrorData() {
     };
 
   } catch (error) {
-    apiLogger.error('Failed to get error data:', error);
+    apiLogger.error('Failed to get error data:', asLogContext({ error: error instanceof Error ? error.message : String(error) }));
     return {
       totalErrors: 0,
       criticalErrors: 0,
@@ -242,7 +243,7 @@ async function getErrorTrends() {
     return trends;
 
   } catch (error) {
-    apiLogger.error('Failed to get error trends:', error);
+    apiLogger.error('Failed to get error trends:', asLogContext({ error: error instanceof Error ? error.message : String(error) }));
     return [];
   }
 }

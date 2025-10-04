@@ -1,0 +1,438 @@
+Title,Body,Labels,Milestone,Assignee
+"[CRITICAL] Create user_progress table in Supabase schema","# Issue Description
+
+The codebase expects a `user_progress` table but currently uses `learning_progress` as a workaround.
+
+## Affected Files (11 locations)
+- `src/lib/database/utils/index.ts:261` - getUserWithProgress query
+- `src/lib/database/utils/index.ts:528` - getUserProgress query
+- `src/lib/database/utils/index.ts:651` - progressOperations export
+- `src/lib/api/supabase.ts:715` - getUserProgress method
+- `src/lib/api/supabase.ts:748` - queryProgress method
+- `src/lib/services/progressService.ts:324` - loadProgress method
+- `src/lib/services/progressService.ts:579` - initializeProgress method
+- `src/lib/services/progressService.ts:634` - saveProgress method
+- `src/lib/supabase/client.ts:215` - subscribeToUserProgress
+- `src/lib/supabase/client.ts:292` - getUserProgress query
+- `src/lib/supabase/server.ts:100` - getUserWithRelations query
+
+## Impact
+- Data model mismatch between code and database
+- Potential data integrity issues
+- Migration complexity increasing over time
+- Using temporary workaround that may cause bugs
+
+## Tasks
+- [ ] Design user_progress table schema with proper indexes
+- [ ] Create Supabase migration scripts
+- [ ] Plan data migration from learning_progress table
+- [ ] Update all 11 query locations to use correct table
+- [ ] Add database constraints and foreign keys
+- [ ] Test all progress-related features
+- [ ] Update TypeScript types
+- [ ] Document schema changes
+
+## Estimated Effort
+8-12 hours
+
+## Priority Justification
+Critical - Affects core user progress tracking functionality across entire application","database,critical,migration,schema,technical-debt","Database Migration Sprint",""
+"[CRITICAL] Create user_api_keys table in Supabase schema","# Issue Description
+
+API keys are currently stored only in localStorage, which is insecure and prevents cross-device synchronization.
+
+## Affected Files (6 locations)
+- `src/lib/auth/AuthManager.ts:503` - initializeUserApiKeys
+- `src/lib/auth/AuthManager.ts:559` - loadSession API keys load
+- `src/lib/auth/AuthManager.ts:656` - saveApiKey method
+- `src/lib/supabase/client.ts:245` - getUserWithRelations query
+- `src/lib/supabase/client.ts:310` - updateUserApiKeys method
+- `src/lib/supabase/server.ts:216` - updateUserApiKeys query
+
+## Impact
+- **Security Risk**: API keys in localStorage are vulnerable to XSS attacks
+- No cross-device synchronization
+- Keys lost when browser data is cleared
+- Cannot audit API key usage or rotation
+- No key expiration or revocation capabilities
+
+## Tasks
+- [ ] Design secure API key storage schema with encryption
+- [ ] Implement proper key encryption at rest
+- [ ] Add API key rotation functionality
+- [ ] Create migration tool from localStorage to database
+- [ ] Implement key expiration/revocation
+- [ ] Add API key usage audit logging
+- [ ] Update all authentication flows
+- [ ] Security audit of implementation
+- [ ] User notification for migration
+
+## Estimated Effort
+6-8 hours
+
+## Priority Justification
+Critical - Security vulnerability and data loss risk","database,security,critical,api-keys,technical-debt","Database Migration Sprint",""
+"[HIGH] Create export_history table in Supabase schema","# Issue Description
+
+Export tracking and history features are non-functional due to missing database table.
+
+## Affected Files (4 locations)
+- `src/lib/database/utils/index.ts:660` - exportOperations stub
+- `src/lib/supabase/client.ts:227` - subscribeToUserExports
+- `src/lib/supabase/server.ts:189` - getExportHistory query
+
+## Current Behavior
+```typescript
+// Operations return stub responses
+findById: (id: string) => Promise.resolve({
+  data: null,
+  error: ""export_history table not available""
+})
+```
+
+## Impact
+- Export tracking completely non-functional
+- Cannot audit export operations
+- Real-time export subscriptions fail silently
+- Missing export analytics and reporting
+- Users cannot view their export history
+
+## Tasks
+- [ ] Design export_history table schema
+- [ ] Create migration scripts
+- [ ] Implement export tracking in exportManager
+- [ ] Enable real-time subscriptions
+- [ ] Build export analytics dashboard
+- [ ] Add export retention policies
+- [ ] Implement export cleanup job
+- [ ] Add export download tracking
+
+## Estimated Effort
+4-6 hours
+
+## Priority Justification
+High - Required for export feature completeness and user transparency","database,feature,export,analytics,technical-debt","Database Migration Sprint",""
+"[HIGH] Complete vocabulary service database integration","# Issue Description
+
+Vocabulary service has 8 stubbed database methods currently using only localStorage. This prevents cloud sync, sharing, and scalability.
+
+## Affected Files (8 methods in vocabularyService.ts)
+- Line 103: `getAllVocabulary()` - Get all vocabulary items
+- Line 122: `getVocabularyByCategory()` - Filter by category
+- Line 145: `getVocabularyLists()` - Get vocabulary lists
+- Line 162: `searchVocabulary()` - Search functionality
+- Line 190: `addVocabulary()` - Add new vocabulary
+- Line 219: `addVocabularyList()` - Create lists
+- Line 254: `updateVocabulary()` - Update items
+- Line 277: `deleteVocabulary()` - Delete items
+
+## Current Implementation
+```typescript
+if (this.isConnectedToDatabase) {
+  // TODO: Replace with actual database query
+  // Commented out Supabase code
+}
+// Falls back to localStorage only
+```
+
+## Impact
+- Vocabulary only persisted locally (data loss risk)
+- No cloud sync across devices
+- Cannot share vocabulary lists between users
+- Limited scalability for large vocabularies
+- Missing collaboration features
+
+## Tasks
+- [ ] Design vocabulary_items table schema
+- [ ] Design vocabulary_lists table schema
+- [ ] Design vocabulary_list_items junction table
+- [ ] Create migration scripts
+- [ ] Implement all 8 CRUD operations with Supabase
+- [ ] Add offline sync capability
+- [ ] Migrate existing localStorage data
+- [ ] Add vocabulary sharing functionality
+- [ ] Implement conflict resolution
+- [ ] Add comprehensive tests
+- [ ] Update TypeScript interfaces
+
+## Estimated Effort
+8-10 hours
+
+## Dependencies
+- Database Migration Sprint completion
+- Offline sync strategy definition
+
+## Priority Justification
+High - Core feature with significant user impact and data loss risk","feature,database,vocabulary,sync,technical-debt","Feature Completion Sprint",""
+"[HIGH] Re-enable web vitals monitoring","# Issue Description
+
+Performance monitoring is completely disabled due to missing `web-vitals` dependency. This prevents tracking of Core Web Vitals and performance regressions.
+
+## Affected Files
+- `src/lib/monitoring/web-vitals.ts:4`
+
+## Current State
+```typescript
+// Disabled due to missing web-vitals dependency
+// TODO: Re-enable when web-vitals is properly installed
+export const reportWebVitals = () => {
+  logger.info('Web vitals monitoring disabled');
+};
+```
+
+## Impact
+- No performance metrics collection
+- Cannot track Core Web Vitals (LCP, FID, CLS, FCP, TTFB)
+- Missing performance regression detection
+- No Real User Monitoring (RUM) data
+- Cannot identify performance bottlenecks
+- No data for performance optimization decisions
+
+## Tasks
+- [ ] Install web-vitals package: `npm install web-vitals`
+- [ ] Implement proper Web Vitals reporting
+- [ ] Integrate with analytics service (GA4/PostHog/etc.)
+- [ ] Set up performance budgets and thresholds
+- [ ] Add performance alerting for regressions
+- [ ] Create performance dashboard
+- [ ] Document performance monitoring setup
+- [ ] Add performance tests to CI/CD
+
+## Estimated Effort
+1-2 hours (implementation) + 2-3 hours (integration & dashboard)
+
+## Priority Justification
+High - Essential for performance optimization and user experience monitoring","performance,monitoring,dependencies,technical-debt","Performance Sprint",""
+"[MEDIUM] Implement phrase persistence in EnhancedPhrasesPanel","# Issue Description
+
+Saved phrases are lost on page refresh because persistence is not implemented.
+
+## Affected Files
+- `src/components/EnhancedPhrasesPanel.tsx:200`
+
+## Current Behavior
+```typescript
+setSavedPhrases((prev) => [...prev, updatedPhrase]);
+
+// TODO: Persist to backend/localStorage
+logger.info(""Phrase saved to vocabulary"");
+```
+
+## Impact
+- User data loss on page refresh
+- No phrase history tracking
+- Cannot sync phrases across sessions
+- Poor user experience
+
+## Tasks
+- [ ] Implement localStorage persistence as short-term fix
+- [ ] Add Supabase sync when vocabulary tables ready
+- [ ] Implement offline/online state handling
+- [ ] Add conflict resolution for sync conflicts
+- [ ] Add loading states and error handling
+- [ ] Implement optimistic updates
+- [ ] Add user feedback for save operations
+- [ ] Test edge cases (offline, network errors, etc.)
+
+## Estimated Effort
+2-3 hours
+
+## Dependencies
+- Vocabulary service database integration (for full solution)
+
+## Priority Justification
+Medium - User experience issue but has localStorage workaround available","feature,ui,persistence,technical-debt","Feature Completion Sprint",""
+"[MEDIUM] Add public API to VocabularyManager","# Issue Description
+
+Component directly accesses private storage methods, violating encapsulation principles.
+
+## Affected Files
+- `src/components/GammaVocabularyManager.tsx:156`
+
+## Current Code
+```typescript
+// Load vocabulary sets
+// TODO: Add public method to VocabularyManager to get vocabulary sets
+// const sets = vocabularyManager.storage.loadVocabularySets();
+// setVocabularySets(sets);
+```
+
+## Impact
+- Violates encapsulation and information hiding
+- Makes code harder to maintain and refactor
+- Difficult to add proper error handling
+- Harder to write unit tests
+- Cannot add caching or other optimizations
+
+## Tasks
+- [ ] Add `getVocabularySets()` public method to VocabularyManager
+- [ ] Add `getVocabularySet(id)` for single set retrieval
+- [ ] Refactor GammaVocabularyManager to use public API
+- [ ] Add proper error handling and TypeScript types
+- [ ] Update documentation
+- [ ] Add unit tests for new public methods
+- [ ] Consider adding caching layer
+
+## Estimated Effort
+1-2 hours
+
+## Priority Justification
+Medium - Code quality issue that doesn't affect functionality but impacts maintainability","refactor,code-quality,api-design,technical-debt","Code Quality Sprint",""
+"[MEDIUM] Implement export scheduling mechanism","# Issue Description
+
+Scheduled exports are saved but never executed automatically. The scheduling infrastructure is incomplete.
+
+## Affected Files
+- `src/lib/export/exportManager.ts:555`
+
+## Current Implementation
+```typescript
+this.scheduledExports.set(scheduledExport.id, scheduledExport);
+this.saveScheduledExportsToStorage();
+// TODO: Implement actual scheduling mechanism
+```
+
+## Impact
+- Scheduled exports don't execute automatically
+- Manual export process only
+- No automated backup functionality
+- Users cannot rely on scheduled exports
+- Missing important data backup feature
+
+## Tasks
+- [ ] Design cron-like scheduling system
+- [ ] Implement Web Workers for background execution
+- [ ] Add notification system for completed exports
+- [ ] Implement retry logic for failed exports
+- [ ] Add cancellation capability
+- [ ] Implement export queue management
+- [ ] Add scheduling UI for users
+- [ ] Test scheduling reliability
+- [ ] Add logging and monitoring
+- [ ] Document scheduling behavior
+
+## Estimated Effort
+4-6 hours
+
+## Dependencies
+- Export history table creation
+- Notification system
+- Background task infrastructure
+
+## Priority Justification
+Medium - Nice-to-have feature that enhances user experience but has manual workaround","feature,automation,export,technical-debt","Feature Completion Sprint",""
+"[LOW] Remove commented database code throughout codebase","# Issue Description
+
+Multiple files contain extensive commented-out database queries that should be removed or implemented.
+
+## Affected Areas
+- vocabularyService.ts (8 methods with commented code)
+- AuthManager.ts (3 locations)
+- Various Supabase client files
+
+## Example
+```typescript
+// TODO: Replace with actual database query
+// const { data, error } = await supabase.from('table').select('*');
+// if (error) throw error;
+// return { success: true, data };
+```
+
+## Impact
+- Code clutter and reduced readability
+- Confusion about intended implementation
+- Maintenance burden
+- May confuse new developers
+
+## Tasks
+- [ ] Audit all commented database code
+- [ ] Implement actual database queries where needed
+- [ ] Remove obsolete commented code
+- [ ] Update code review guidelines
+- [ ] Add linting rule to prevent commented code
+
+## Estimated Effort
+2-3 hours
+
+## Priority Justification
+Low - Code cleanliness issue with no functional impact","refactor,code-quality,cleanup,technical-debt","Code Quality Sprint",""
+"[LOW] Centralize database table name constants","# Issue Description
+
+Database table names are hardcoded as strings throughout the codebase, making refactoring difficult and error-prone.
+
+## Affected Files
+- Multiple files reference ""learning_progress"", ""users"", ""api_keys"" as magic strings
+
+## Impact
+- Hard to refactor table names
+- Typos not caught until runtime
+- No single source of truth
+- Difficult to track table usage
+
+## Tasks
+- [ ] Create database constants file
+- [ ] Define all table names as constants
+- [ ] Update all references to use constants
+- [ ] Add TypeScript enum for type safety
+- [ ] Update documentation
+- [ ] Add linting rule for table name usage
+
+## Estimated Effort
+2-3 hours
+
+## Priority Justification
+Low - Code quality improvement that doesn't affect functionality","refactor,code-quality,constants,technical-debt","Code Quality Sprint",""
+"[EPIC] Database Schema Migration Project","# Epic Description
+
+Comprehensive database schema migration to align code expectations with actual Supabase schema.
+
+## Background
+The codebase currently has significant schema drift, with multiple tables expected by code but not present in the database. This has resulted in 19 TODO comments and various workarounds.
+
+## Missing Tables
+1. `user_progress` (11 references) - Currently using learning_progress
+2. `user_api_keys` (6 references) - Currently using localStorage
+3. `export_history` (4 references) - Currently non-functional
+4. `vocabulary_items` (8 references) - Currently using localStorage
+5. `vocabulary_lists` (8 references) - Currently using localStorage
+
+## Project Goals
+- Create all missing database tables
+- Migrate data from temporary solutions
+- Update all code to use proper tables
+- Implement proper database patterns
+- Add comprehensive tests
+
+## Success Criteria
+- [ ] All 34 database-related TODOs resolved
+- [ ] Zero references to temporary table workarounds
+- [ ] All data successfully migrated
+- [ ] No data loss during migration
+- [ ] All tests passing
+- [ ] Documentation updated
+
+## Sub-Issues
+- #1: Create user_progress table
+- #2: Create user_api_keys table
+- #3: Create export_history table
+- #4: Complete vocabulary service integration
+- #9: Remove commented database code
+- #10: Centralize table name constants
+
+## Estimated Total Effort
+35-50 hours
+
+## Timeline
+Sprint 1-2 (4 weeks)
+
+## Dependencies
+- Database admin access
+- Staging environment for testing
+- Data backup procedures
+- User communication plan
+
+## Risks
+- Data migration complexity
+- Potential downtime during migration
+- User data loss if migration fails
+- Breaking changes in API contracts","database,epic,migration,critical,technical-debt","Database Migration Sprint",""

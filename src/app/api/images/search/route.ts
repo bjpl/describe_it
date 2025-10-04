@@ -7,6 +7,7 @@ import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 import { z } from "zod";
 import { getCorsHeaders, createCorsPreflightResponse, validateCorsRequest } from "@/lib/utils/cors";
 import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
 
 // Enhanced security configuration
 const ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS'] as const;
@@ -32,12 +33,29 @@ const cache = new Map<string, { data: any; timestamp: number; etag: string }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const MAX_CACHE_SIZE = 100;
 
+// Supported Unsplash color values
+const UNSPLASH_COLORS = [
+  "black_and_white",
+  "black",
+  "white",
+  "yellow",
+  "orange",
+  "red",
+  "purple",
+  "magenta",
+  "green",
+  "teal",
+  "blue"
+] as const;
+
+type UnsplashColor = typeof UNSPLASH_COLORS[number];
+
 const searchSchema = z.object({
   query: z.string().min(1).max(100),
   page: z.coerce.number().int().min(1).default(1),
   per_page: z.coerce.number().int().min(1).max(30).default(20),
   orientation: z.enum(["landscape", "portrait", "squarish"]).optional(),
-  color: z.string().optional(),
+  color: z.enum(UNSPLASH_COLORS).optional(),
   orderBy: z.enum(["relevant", "latest", "oldest", "popular"]).optional(),
 });
 
@@ -228,7 +246,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     
     unsplashConfig = await configPromise;
   } catch (error) {
-    apiLogger.warn("[API] Key provider failed, using fallback:", error);
+    apiLogger.warn("[API] Key provider failed, using fallback:", asLogContext({ error: error instanceof Error ? error.message : String(error) }));
     // Fallback to basic config
     unsplashConfig = {
       apiKey: userProvidedKey || '',
@@ -237,8 +255,8 @@ async function handleImageSearch(request: AuthenticatedRequest) {
       isDemo: !userProvidedKey
     };
   }
-  
-  apiLogger.info("[API] Key provider check:", {
+
+  apiLogger.info("[API] Key provider check:", asLogContext({
     hasKey: !!unsplashConfig.apiKey || !!userProvidedKey,
     isValid: unsplashConfig.isValid || !!userProvidedKey,
     source: userProvidedKey ? 'user-settings' : unsplashConfig.source,
@@ -249,7 +267,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
       UNSPLASH_ACCESS_KEY: process.env.UNSPLASH_ACCESS_KEY ? process.env.UNSPLASH_ACCESS_KEY.length : 0,
       NODE_ENV: process.env.NODE_ENV
     }
-  });
+  }));
 
   try {
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
@@ -416,11 +434,29 @@ async function handleImageSearch(request: AuthenticatedRequest) {
       );
     }
 
-    apiLogger.error("Image search error:", error);
+    apiLogger.error("Image search error:", asLogContext({ error: error instanceof Error ? error.message : String(error) }));
 
     // Return cached data if available during error
     const searchParams = Object.fromEntries(request.nextUrl.searchParams);
-    const cacheKey = getCacheKey(searchParams);
+    delete searchParams.api_key;
+    const parsedParams = searchSchema.safeParse(searchParams);
+    if (!parsedParams.success) {
+      const corsHeaders = getCorsHeaders(request.headers.get('origin'));
+      return NextResponse.json(
+        {
+          error: "Search failed and unable to parse cache params",
+          timestamp: new Date().toISOString(),
+        },
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "X-Response-Time": `${responseTime}ms`,
+          },
+        }
+      );
+    }
+    const cacheKey = getCacheKey(parsedParams.data);
     const cached = cache.get(cacheKey);
 
     if (cached) {
@@ -428,7 +464,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
       const transformedStale = {
         images: cached.data.results || cached.data.images || [],
         totalPages: cached.data.totalPages || 1,
-        currentPage: searchParams.page || 1,
+        currentPage: parsedParams.data.page,
         total: cached.data.total || 0,
         hasNextPage: (searchParams.page || 1) < (cached.data.totalPages || 1),
       };

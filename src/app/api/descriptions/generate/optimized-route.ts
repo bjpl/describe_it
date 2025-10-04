@@ -3,8 +3,9 @@ import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 import OpenAI from 'openai';
 import { z } from 'zod';
 
-// Import logger
+// Import logger and type guards
 import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
 
 // Import our performance optimizations
 import {
@@ -241,12 +242,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     monitor.incrementCounter('api.requests.error');
     monitor.incrementCounter('api.requests.completed');
     monitor.endTimer(timerId);
-    
-    apiLogger.error('API Error:', {
+
+    apiLogger.error('API Error:', asLogContext({
       requestId,
-      error: error.message,
-      stack: error.stack,
-    });
+      error: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    }));
     
     // Handle specific error types
     if (error instanceof z.ZodError) {
@@ -264,8 +265,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         },
       }, { status: 400 });
     }
-    
-    if (error.message.includes('Circuit breaker is OPEN')) {
+
+
+    if (error instanceof Error && error.message.includes('Circuit breaker is OPEN')) {
       monitor.incrementCounter('api.errors.circuit_breaker');
       return NextResponse.json({
         success: false,
@@ -280,8 +282,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         },
       }, { status: 503 });
     }
-    
-    if (error.message.includes('timeout')) {
+
+
+    if (error instanceof Error && error.message.includes('timeout')) {
       monitor.incrementCounter('api.errors.timeout');
       return NextResponse.json({
         success: false,
@@ -295,7 +298,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         },
       }, { status: 408 });
     }
-    
+
     // Generic error
     monitor.incrementCounter('api.errors.internal');
     return NextResponse.json({

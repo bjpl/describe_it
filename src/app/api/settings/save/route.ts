@@ -5,6 +5,7 @@ import { descriptionCache } from "@/lib/cache";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
 import type { AuthenticatedRequest } from "@/lib/middleware/auth";
 import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
 
 // Input validation schemas
 const userSettingsSchema = z.object({
@@ -314,7 +315,7 @@ class SettingsService {
 
       return settings;
     } catch (error) {
-      apiLogger.warn("Failed to get settings:", error);
+      apiLogger.warn("Failed to get settings:", asLogContext(error));
 
       if (includeDefaults) {
         return {
@@ -358,7 +359,7 @@ class SettingsService {
         sessionTTL: 3600, // 1 hour
       });
     } catch (error) {
-      apiLogger.warn("Failed to update user profile:", error);
+      apiLogger.warn("Failed to update user profile:", asLogContext(error));
     }
   }
 
@@ -571,7 +572,7 @@ async function handleSettingsSave(request: AuthenticatedRequest) {
       );
     }
 
-    apiLogger.error("Settings save error:", error);
+    apiLogger.error("Settings save error:", asLogContext(error));
 
     return NextResponse.json(
       {
@@ -651,7 +652,7 @@ async function handleSettingsGet(request: AuthenticatedRequest) {
       );
     }
 
-    apiLogger.error("Settings retrieval error:", error);
+    apiLogger.error("Settings retrieval error:", asLogContext(error));
 
     return NextResponse.json(
       {
@@ -708,7 +709,7 @@ async function handleSettingsDelete(request: AuthenticatedRequest) {
   } catch (error) {
     const responseTime = performance.now() - startTime;
 
-    apiLogger.error("Settings reset error:", error);
+    apiLogger.error("Settings reset error:", asLogContext(error));
 
     return NextResponse.json(
       {

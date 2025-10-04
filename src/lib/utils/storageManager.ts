@@ -99,21 +99,22 @@ export class StorageManager {
       localStorage.setItem(key, stringValue);
       return true;
     } catch (e) {
-      if (e.name === 'QuotaExceededError') {
+      const error = e as any;
+      if (error.name === 'QuotaExceededError') {
         logger.warn('[StorageManager] Quota exceeded, attempting cleanup...');
         this.cleanupStorage();
-        
+
         // Try again after cleanup
         try {
           const stringValue = typeof value === 'string' ? value : safeStringify(value);
           localStorage.setItem(key, stringValue);
           return true;
         } catch (e2) {
-          logger.error('[StorageManager] Save failed even after cleanup:', e2);
+          logger.error('[StorageManager] Save failed even after cleanup:', e2 as Error);
           return false;
         }
       }
-      logger.error('[StorageManager] Save error:', e);
+      logger.error('[StorageManager] Save error:', error as Error);
       return false;
     }
   }

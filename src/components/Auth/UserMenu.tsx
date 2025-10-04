@@ -7,12 +7,26 @@ import { AuthModal } from './AuthModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import { safeParse, safeStringify, safeParseLocalStorage } from '@/lib/utils/json-safe';
 import { authLogger } from '@/lib/logger';
+import type { AuthResponse } from '@/types/api';
 
 // Custom auth state interface
 interface AuthStateDetail {
   isAuthenticated: boolean;
   user?: any;
   profile?: any;
+}
+
+// Auth data from localStorage
+interface StoredAuthData {
+  access_token?: string;
+  refresh_token?: string;
+  user?: {
+    id: string;
+    email: string;
+    [key: string]: any;
+  };
+  profile?: any;
+  error?: string;
 }
 
 export function UserMenu() {
@@ -85,8 +99,8 @@ export function UserMenu() {
         const recentSignIn = sessionStorage.getItem('recent-auth-success');
         
         if (stored) {
-          const parsedData = safeParse(stored, null);
-          if (parsedData && parsedData.access_token !== undefined) {
+          const parsedData = safeParse<StoredAuthData>(stored, null);
+          if (parsedData && 'access_token' in parsedData) {
             const { access_token, user: storedUser } = parsedData;
             const hasToken = !!access_token;
             
@@ -134,8 +148,8 @@ export function UserMenu() {
         setTimeout(() => {
           const stored = localStorage.getItem('describe-it-auth');
           if (stored) {
-            const parsedData = safeParse(stored, null);
-            if (parsedData && parsedData.access_token) {
+            const parsedData = safeParse<StoredAuthData>(stored, null);
+            if (parsedData && 'access_token' in parsedData && parsedData.access_token) {
               const { access_token, user: storedUser } = parsedData;
               authLogger.info('[UserMenu] Recent auth success detected, updating UI');
               setLocalIsAuthenticated(true);
@@ -178,24 +192,24 @@ export function UserMenu() {
   // Enhanced debug logging with state divergence detection
   useEffect(() => {
     // Check for state divergence
-    const localStorage = window.localStorage.getItem('describe-it-auth');
-    let localStorageData = null;
-    
-    localStorageData = localStorage ? safeParse(localStorage, { error: 'Invalid JSON in localStorage' }) : null;
+    const localStorageStr = window.localStorage.getItem('describe-it-auth');
+    let localStorageData: StoredAuthData | { error: string } | null = null;
+
+    localStorageData = localStorageStr ? safeParse<StoredAuthData>(localStorageStr, { error: 'Invalid JSON in localStorage' }) : null;
 
     const stateComparison = {
       authProvider: { isAuthenticated, user: user?.email, profile: !!profile },
-      zustandStore: { 
-        isAuthenticated: isAuthenticated, 
-        user: user?.email, 
-        profile: !!profile 
+      zustandStore: {
+        isAuthenticated: isAuthenticated,
+        user: user?.email,
+        profile: !!profile
       },
-      localComponent: { 
-        isAuthenticated: localIsAuthenticated, 
-        user: localUser?.email, 
-        profile: !!localProfile 
+      localComponent: {
+        isAuthenticated: localIsAuthenticated,
+        user: localUser?.email,
+        profile: !!localProfile
       },
-      localStorage: localStorageData ? {
+      localStorage: localStorageData && 'access_token' in localStorageData ? {
         hasToken: !!localStorageData.access_token,
         user: localStorageData.user?.email
       } : null,
@@ -218,7 +232,7 @@ export function UserMenu() {
       divergences.push('AuthProvider vs LocalComponent: isAuthenticated mismatch');
     }
     
-    if (localStorageData?.access_token && !localIsAuthenticated) {
+    if (localStorageData && 'access_token' in localStorageData && localStorageData.access_token && !localIsAuthenticated) {
       divergences.push('localStorage has token but component shows unauthenticated');
     }
 

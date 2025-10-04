@@ -321,6 +321,10 @@ export class StructuredLogger {
 // Export singleton instance
 export const structuredLogger = StructuredLogger.getInstance();
 
+// Export as default and named export for compatibility
+export const logger = structuredLogger;
+export default structuredLogger;
+
 // Type definitions for global log storage
 declare global {
   var _apiLogs: any[] | undefined;

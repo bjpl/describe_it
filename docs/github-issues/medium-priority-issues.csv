@@ -1,0 +1,11 @@
+file,line,todo,priority,category,severity
+src/components/ui/Card.tsx,23,Add animation variants,medium,feature,low
+src/lib/analytics/events.ts,56,Add custom event validation,medium,feature,low
+src/lib/store/formStore.ts,78,Implement form state cleanup,medium,refactor,low
+src/lib/store/sessionStore.ts,34,Add session timeout handling,medium,feature,medium
+src/lib/utils/json-parser.ts,45,Add better error messages,medium,feature,low
+src/types/comprehensive.ts,123,Refactor type organization,medium,refactor,low
+src/lib/middleware/withAuth.ts,67,Add role-based access control,medium,feature,medium
+src/providers/AuthProvider.tsx,89,Add auth state persistence,medium,feature,low
+src/lib/analytics/index.ts,12,Consolidate analytics exports,medium,refactor,low
+src/lib/monitoring/index.ts,34,Add health check endpoint,medium,feature,low

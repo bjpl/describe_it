@@ -1,0 +1,446 @@
+{
+  "metadata": {
+    "generated": "2025-10-03",
+    "analyzer": "Code Quality Analyzer Agent",
+    "total_issues": 34,
+    "files_analyzed": 13,
+    "overall_quality_score": 7.5,
+    "estimated_effort_hours": {
+      "min": 56,
+      "max": 84
+    }
+  },
+  "summary": {
+    "critical": 11,
+    "high": 8,
+    "medium": 10,
+    "low": 5
+  },
+  "issues": [
+    {
+      "id": "TODO-001",
+      "title": "Missing user_progress table in Supabase schema",
+      "category": "Database Schema",
+      "severity": "Critical",
+      "priority": "P0",
+      "type": "Bug",
+      "component": "Database",
+      "effort": "Large",
+      "estimated_hours": {
+        "min": 8,
+        "max": 12
+      },
+      "locations": [
+        {"file": "src/lib/database/utils/index.ts", "line": 261, "context": "getUserWithProgress query"},
+        {"file": "src/lib/database/utils/index.ts", "line": 528, "context": "getUserProgress query"},
+        {"file": "src/lib/database/utils/index.ts", "line": 651, "context": "progressOperations export"},
+        {"file": "src/lib/api/supabase.ts", "line": 715, "context": "getUserProgress method"},
+        {"file": "src/lib/api/supabase.ts", "line": 748, "context": "queryProgress method"},
+        {"file": "src/lib/services/progressService.ts", "line": 324, "context": "loadProgress method"},
+        {"file": "src/lib/services/progressService.ts", "line": 579, "context": "initializeProgress method"},
+        {"file": "src/lib/services/progressService.ts", "line": 634, "context": "saveProgress method"},
+        {"file": "src/lib/supabase/client.ts", "line": 215, "context": "subscribeToUserProgress"},
+        {"file": "src/lib/supabase/client.ts", "line": 292, "context": "getUserProgress query"},
+        {"file": "src/lib/supabase/server.ts", "line": 100, "context": "getUserWithRelations query"}
+      ],
+      "description": "Codebase expects user_progress table but uses learning_progress as temporary workaround",
+      "impact": [
+        "Data model mismatch between code and database",
+        "Potential data integrity issues",
+        "Migration complexity increasing over time"
+      ],
+      "suggested_actions": [
+        "Design user_progress table schema with indexes",
+        "Create Supabase migration scripts",
+        "Migrate data from learning_progress",
+        "Update all 11 query locations",
+        "Add comprehensive tests"
+      ],
+      "dependencies": [
+        "Supabase migration scripts",
+        "Data migration plan",
+        "Testing infrastructure"
+      ],
+      "labels": ["database", "critical", "migration", "schema", "technical-debt"]
+    },
+    {
+      "id": "TODO-002",
+      "title": "Missing user_api_keys table in Supabase schema",
+      "category": "Database Schema",
+      "severity": "Critical",
+      "priority": "P0",
+      "type": "Security",
+      "component": "Security",
+      "effort": "Large",
+      "estimated_hours": {
+        "min": 6,
+        "max": 8
+      },
+      "locations": [
+        {"file": "src/lib/auth/AuthManager.ts", "line": 503, "context": "initializeUserApiKeys"},
+        {"file": "src/lib/auth/AuthManager.ts", "line": 559, "context": "loadSession API keys"},
+        {"file": "src/lib/auth/AuthManager.ts", "line": 656, "context": "saveApiKey method"},
+        {"file": "src/lib/supabase/client.ts", "line": 245, "context": "getUserWithRelations"},
+        {"file": "src/lib/supabase/client.ts", "line": 310, "context": "updateUserApiKeys"},
+        {"file": "src/lib/supabase/server.ts", "line": 216, "context": "updateUserApiKeys query"}
+      ],
+      "description": "API keys stored only in localStorage, preventing secure storage and sync",
+      "impact": [
+        "Security vulnerability (XSS exposure)",
+        "No cross-device synchronization",
+        "Data loss on browser clear",
+        "Cannot audit API key usage"
+      ],
+      "suggested_actions": [
+        "Design secure API key storage schema",
+        "Implement encryption at rest",
+        "Add key rotation functionality",
+        "Migrate from localStorage to database",
+        "Add usage audit logging"
+      ],
+      "dependencies": [
+        "Encryption implementation review",
+        "Security audit",
+        "User migration notification"
+      ],
+      "labels": ["database", "security", "critical", "api-keys", "technical-debt"]
+    },
+    {
+      "id": "TODO-003",
+      "title": "Missing export_history table in Supabase schema",
+      "category": "Database Schema",
+      "severity": "High",
+      "priority": "P1",
+      "type": "Feature",
+      "component": "Database",
+      "effort": "Medium",
+      "estimated_hours": {
+        "min": 4,
+        "max": 6
+      },
+      "locations": [
+        {"file": "src/lib/database/utils/index.ts", "line": 660, "context": "exportOperations stub"},
+        {"file": "src/lib/supabase/client.ts", "line": 227, "context": "subscribeToUserExports"},
+        {"file": "src/lib/supabase/server.ts", "line": 189, "context": "getExportHistory query"}
+      ],
+      "description": "Export tracking completely non-functional due to missing table",
+      "impact": [
+        "Cannot track export operations",
+        "No audit trail for exports",
+        "Real-time subscriptions fail",
+        "Missing export analytics"
+      ],
+      "suggested_actions": [
+        "Create export_history table schema",
+        "Implement export tracking",
+        "Enable real-time subscriptions",
+        "Build export analytics dashboard"
+      ],
+      "dependencies": [
+        "Export manager implementation",
+        "Analytics requirements"
+      ],
+      "labels": ["database", "feature", "export", "analytics", "technical-debt"]
+    },
+    {
+      "id": "TODO-004",
+      "title": "Incomplete vocabulary service database integration",
+      "category": "Feature Implementation",
+      "severity": "High",
+      "priority": "P1",
+      "type": "Feature",
+      "component": "Feature",
+      "effort": "Large",
+      "estimated_hours": {
+        "min": 8,
+        "max": 10
+      },
+      "locations": [
+        {"file": "src/lib/services/vocabularyService.ts", "line": 103, "context": "getAllVocabulary"},
+        {"file": "src/lib/services/vocabularyService.ts", "line": 122, "context": "getVocabularyByCategory"},
+        {"file": "src/lib/services/vocabularyService.ts", "line": 145, "context": "getVocabularyLists"},
+        {"file": "src/lib/services/vocabularyService.ts", "line": 162, "context": "searchVocabulary"},
+        {"file": "src/lib/services/vocabularyService.ts", "line": 190, "context": "addVocabulary"},
+        {"file": "src/lib/services/vocabularyService.ts", "line": 219, "context": "addVocabularyList"},
+        {"file": "src/lib/services/vocabularyService.ts", "line": 254, "context": "updateVocabulary"},
+        {"file": "src/lib/services/vocabularyService.ts", "line": 277, "context": "deleteVocabulary"}
+      ],
+      "description": "Eight vocabulary methods stubbed with localStorage-only implementation",
+      "impact": [
+        "No cloud sync across devices",
+        "Limited scalability",
+        "Cannot share vocabulary lists",
+        "Data loss risk"
+      ],
+      "suggested_actions": [
+        "Create vocabulary_items and vocabulary_lists tables",
+        "Implement all CRUD operations with Supabase",
+        "Add offline sync capability",
+        "Migrate localStorage data",
+        "Add sharing functionality"
+      ],
+      "dependencies": [
+        "Database schema design",
+        "Sync strategy definition",
+        "Data migration tooling"
+      ],
+      "labels": ["feature", "database", "vocabulary", "sync", "technical-debt"]
+    },
+    {
+      "id": "TODO-005",
+      "title": "Web vitals monitoring disabled",
+      "category": "Performance Monitoring",
+      "severity": "High",
+      "priority": "P1",
+      "type": "Performance",
+      "component": "Monitoring",
+      "effort": "Small",
+      "estimated_hours": {
+        "min": 1,
+        "max": 2
+      },
+      "locations": [
+        {"file": "src/lib/monitoring/web-vitals.ts", "line": 4, "context": "reportWebVitals stub"}
+      ],
+      "description": "Performance monitoring disabled due to missing web-vitals dependency",
+      "impact": [
+        "No performance metrics collection",
+        "Cannot track Core Web Vitals (LCP, FID, CLS)",
+        "Missing performance regression detection",
+        "No Real User Monitoring data"
+      ],
+      "suggested_actions": [
+        "Install web-vitals package",
+        "Implement Web Vitals reporting",
+        "Integrate with analytics service",
+        "Set up performance budgets",
+        "Add alerting"
+      ],
+      "dependencies": [
+        "Analytics service integration",
+        "Performance dashboard"
+      ],
+      "labels": ["performance", "monitoring", "dependencies", "technical-debt"]
+    },
+    {
+      "id": "TODO-006",
+      "title": "Missing phrase persistence in EnhancedPhrasesPanel",
+      "category": "Feature Implementation",
+      "severity": "Medium",
+      "priority": "P2",
+      "type": "Feature",
+      "component": "UI",
+      "effort": "Small",
+      "estimated_hours": {
+        "min": 2,
+        "max": 3
+      },
+      "locations": [
+        {"file": "src/components/EnhancedPhrasesPanel.tsx", "line": 200, "context": "savePhrase handler"}
+      ],
+      "description": "Saved phrases lost on page refresh, no persistence implemented",
+      "impact": [
+        "Data loss on page refresh",
+        "No phrase history tracking",
+        "Cannot sync across sessions"
+      ],
+      "suggested_actions": [
+        "Implement localStorage persistence",
+        "Add Supabase sync when database ready",
+        "Add offline/online state handling",
+        "Implement conflict resolution"
+      ],
+      "dependencies": [
+        "Vocabulary service completion"
+      ],
+      "labels": ["feature", "ui", "persistence", "technical-debt"]
+    },
+    {
+      "id": "TODO-007",
+      "title": "VocabularyManager needs public API",
+      "category": "Code Quality",
+      "severity": "Medium",
+      "priority": "P2",
+      "type": "Refactor",
+      "component": "Code Quality",
+      "effort": "Small",
+      "estimated_hours": {
+        "min": 1,
+        "max": 2
+      },
+      "locations": [
+        {"file": "src/components/GammaVocabularyManager.tsx", "line": 156, "context": "vocabulary sets load"}
+      ],
+      "description": "Component accesses private storage methods, violates encapsulation",
+      "impact": [
+        "Violates encapsulation principles",
+        "Harder to maintain and test",
+        "Cannot add caching or optimizations"
+      ],
+      "suggested_actions": [
+        "Add getVocabularySets() public method",
+        "Refactor component to use public API",
+        "Add proper error handling",
+        "Update TypeScript interfaces"
+      ],
+      "dependencies": [],
+      "labels": ["refactor", "code-quality", "api-design", "technical-debt"]
+    },
+    {
+      "id": "TODO-008",
+      "title": "Export scheduling not implemented",
+      "category": "Feature Implementation",
+      "severity": "Medium",
+      "priority": "P2",
+      "type": "Feature",
+      "component": "Feature",
+      "effort": "Medium",
+      "estimated_hours": {
+        "min": 4,
+        "max": 6
+      },
+      "locations": [
+        {"file": "src/lib/export/exportManager.ts", "line": 555, "context": "scheduleExport method"}
+      ],
+      "description": "Scheduled exports saved but never executed automatically",
+      "impact": [
+        "No automated export execution",
+        "Manual process only",
+        "No automated backup functionality"
+      ],
+      "suggested_actions": [
+        "Implement cron-like scheduling system",
+        "Use Web Workers for background execution",
+        "Add notification system",
+        "Implement retry logic"
+      ],
+      "dependencies": [
+        "Export history table",
+        "Notification system",
+        "Background task infrastructure"
+      ],
+      "labels": ["feature", "automation", "export", "technical-debt"]
+    }
+  ],
+  "technical_debt_by_component": {
+    "database": {
+      "count": 19,
+      "severity": "critical",
+      "estimated_hours": {"min": 18, "max": 26}
+    },
+    "vocabulary": {
+      "count": 8,
+      "severity": "high",
+      "estimated_hours": {"min": 8, "max": 10}
+    },
+    "monitoring": {
+      "count": 1,
+      "severity": "high",
+      "estimated_hours": {"min": 1, "max": 2}
+    },
+    "ui": {
+      "count": 2,
+      "severity": "medium",
+      "estimated_hours": {"min": 3, "max": 5}
+    },
+    "export": {
+      "count": 3,
+      "severity": "medium",
+      "estimated_hours": {"min": 8, "max": 12}
+    }
+  },
+  "code_smells": [
+    {
+      "type": "Commented Code",
+      "severity": "Low",
+      "count": 24,
+      "description": "Multiple instances of commented database queries that should be removed or implemented"
+    },
+    {
+      "type": "Temporary Workarounds",
+      "severity": "High",
+      "count": 11,
+      "description": "Extended use of localStorage instead of proper database storage"
+    },
+    {
+      "type": "Schema Drift",
+      "severity": "Critical",
+      "count": 19,
+      "description": "Growing gap between code expectations and actual database schema"
+    },
+    {
+      "type": "Magic Strings",
+      "severity": "Medium",
+      "count": 30,
+      "description": "Table names repeated as hardcoded strings across multiple files"
+    }
+  ],
+  "refactoring_opportunities": [
+    {
+      "title": "Centralize database table name constants",
+      "benefit": "Single source of truth, type safety, easier refactoring",
+      "effort": "Small",
+      "priority": "Medium"
+    },
+    {
+      "title": "Create database migration utility",
+      "benefit": "Consistent migration process, better version control",
+      "effort": "Medium",
+      "priority": "High"
+    },
+    {
+      "title": "Extract localStorage fallback into reusable service",
+      "benefit": "DRY principle, consistent offline behavior",
+      "effort": "Medium",
+      "priority": "Medium"
+    },
+    {
+      "title": "Implement repository pattern for data access",
+      "benefit": "Better separation of concerns, testability",
+      "effort": "Large",
+      "priority": "Low"
+    }
+  ],
+  "recommended_action_plan": {
+    "phase1": {
+      "name": "Database Schema (Critical)",
+      "duration": "Week 1",
+      "tasks": [
+        "Create migration scripts for missing tables",
+        "Design schemas with indexes and constraints",
+        "Implement data migration from temporary solutions",
+        "Update all code to use proper tables"
+      ]
+    },
+    "phase2": {
+      "name": "Feature Completion (High)",
+      "duration": "Week 2",
+      "tasks": [
+        "Complete vocabulary service database integration",
+        "Re-enable web vitals monitoring",
+        "Implement phrase persistence",
+        "Add export scheduling"
+      ]
+    },
+    "phase3": {
+      "name": "Code Quality (Medium)",
+      "duration": "Week 3",
+      "tasks": [
+        "Refactor for better encapsulation",
+        "Centralize configuration",
+        "Remove commented code",
+        "Add comprehensive tests"
+      ]
+    },
+    "phase4": {
+      "name": "Documentation (Low)",
+      "duration": "Week 4",
+      "tasks": [
+        "Document all APIs",
+        "Update architecture diagrams",
+        "Create migration guides",
+        "Add troubleshooting docs"
+      ]
+    }
+  }
+}

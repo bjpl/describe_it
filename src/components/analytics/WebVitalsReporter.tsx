@@ -1,6 +1,6 @@
 'use client';
 
-import { getCLS, getFID, getFCP, getLCP, getTTFB, Metric } from 'web-vitals';
+import { onCLS, onINP, onFCP, onLCP, onTTFB, Metric } from 'web-vitals';
 import { useEffect } from 'react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 import { logger } from '@/lib/logger';
@@ -16,7 +16,7 @@ interface AnalyticsData {
 // Thresholds based on Core Web Vitals recommendations
 const THRESHOLDS = {
   CLS: { good: 0.1, poor: 0.25 },
-  FID: { good: 100, poor: 300 },
+  INP: { good: 200, poor: 500 }, // Replaced FID with INP
   FCP: { good: 1800, poor: 3000 },
   LCP: { good: 2500, poor: 4000 },
   TTFB: { good: 800, poor: 1800 },
@@ -92,11 +92,11 @@ export default function WebVitalsReporter() {
     if (typeof window === 'undefined') return;
 
     // Collect all Core Web Vitals
-    getCLS(reportWebVital);
-    getFID(reportWebVital);
-    getFCP(reportWebVital);
-    getLCP(reportWebVital);
-    getTTFB(reportWebVital);
+    onCLS(reportWebVital);
+    onINP(reportWebVital); // Replaced FID with INP (new standard)
+    onFCP(reportWebVital);
+    onLCP(reportWebVital);
+    onTTFB(reportWebVital);
 
     // Report navigation type
     if ('navigation' in performance) {

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { logger } from "@/lib/monitoring/logger";
+import { structuredLogger as logger } from "@/lib/monitoring/logger";
 import { metrics } from "@/lib/monitoring/metrics";
 
 export const runtime = "nodejs";
