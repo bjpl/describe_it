@@ -1,0 +1,332 @@
+═══════════════════════════════════════════════════════════════════════════
+                    PRODUCTION DEPLOYMENT CHECKLIST
+                        Describe It Application
+═══════════════════════════════════════════════════════════════════════════
+
+Print this page and check off items as you complete them!
+Estimated Time: 1 hour | Last Updated: 2025-10-03
+
+═══════════════════════════════════════════════════════════════════════════
+
+PHASE 1: INFRASTRUCTURE SETUP (30 min - Manual)
+───────────────────────────────────────────────────────────────────────────
+
+  VERCEL (5 min)
+  ☐ Create Vercel account at https://vercel.com/signup
+  ☐ Import Git repository
+  ☐ Configure project (name: describe-it-production)
+  ☐ DO NOT deploy yet - skip for now
+  ☐ Copy Project ID: _____________________________________________
+  ☐ Copy App URL: ________________________________________________
+
+  SUPABASE DATABASE (10 min)
+  ☐ Create Supabase account at https://supabase.com/dashboard
+  ☐ Create new project (name: describe-it-prod)
+  ☐ Choose region closest to your users
+  ☐ Save database password securely
+  ☐ Wait 2-3 min for provisioning
+  ☐ Navigate to Settings → API
+  ☐ Copy Project URL: ____________________________________________
+  ☐ Copy Anon Key: _______________________________________________
+  ☐ Copy Service Role Key: _______________________________________
+  ☐ Navigate to Settings → Database
+  ☐ Copy Database URL: ___________________________________________
+
+  OPENAI API (5 min)
+  ☐ Create OpenAI account at https://platform.openai.com/signup
+  ☐ Add payment method
+  ☐ Set spending limit: $10/month (recommended)
+  ☐ Create API key (name: describe-it-production)
+  ☐ Copy API Key: ________________________________________________
+
+  UNSPLASH API (5 min)
+  ☐ Create developer account at https://unsplash.com/oauth/applications
+  ☐ Create new application
+  ☐ Accept terms & conditions
+  ☐ Name: Describe It
+  ☐ Copy Access Key: _____________________________________________
+
+  OPTIONAL SERVICES (5 min - Skip if not needed)
+  ☐ Sentry error tracking - Copy DSN: ___________________________
+  ☐ Redis Cloud caching - Copy URL: ______________________________
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+PHASE 2: CONFIGURATION (15 min - Mixed)
+───────────────────────────────────────────────────────────────────────────
+
+  GENERATE SECURITY KEYS (5 min - Claude Code)
+  ☐ Tell Claude: "Generate all security keys for production deployment"
+  ☐ Copy API_SECRET_KEY: _________________________________________
+  ☐ Copy JWT_SECRET: _____________________________________________
+  ☐ Copy SESSION_SECRET: _________________________________________
+  ☐ Copy VALID_API_KEYS: _________________________________________
+
+  ADD TO VERCEL (7 min - Manual)
+  ☐ Go to Vercel Dashboard → Settings → Environment Variables
+  ☐ Add: NODE_ENV = production
+  ☐ Add: NEXT_PUBLIC_APP_URL = [your vercel URL]
+  ☐ Add: NEXT_PUBLIC_SUPABASE_URL = [from Phase 1]
+  ☐ Add: NEXT_PUBLIC_SUPABASE_ANON_KEY = [from Phase 1]
+  ☐ Add: SUPABASE_SERVICE_ROLE_KEY = [from Phase 1]
+  ☐ Add: OPENAI_API_KEY = [from Phase 1]
+  ☐ Add: OPENAI_MODEL = gpt-4o-mini
+  ☐ Add: OPENAI_MAX_TOKENS = 1000
+  ☐ Add: OPENAI_TEMPERATURE = 0.7
+  ☐ Add: UNSPLASH_ACCESS_KEY = [from Phase 1]
+  ☐ Add: NEXT_PUBLIC_UNSPLASH_ACCESS_KEY = [from Phase 1]
+  ☐ Add: API_SECRET_KEY = [from above]
+  ☐ Add: JWT_SECRET = [from above]
+  ☐ Add: SESSION_SECRET = [from above]
+  ☐ Add: VALID_API_KEYS = [from above]
+  ☐ Add: DATABASE_URL = [from Phase 1]
+  ☐ Add: ALLOWED_ORIGINS = [your vercel URL]
+  ☐ Add: DEBUG_ENDPOINT_ENABLED = false
+  ☐ Add: LOG_LEVEL = warn
+  ☐ Add: ENABLE_REDIS_CACHE = false
+  ☐ Add: ENABLE_PERFORMANCE_MONITORING = true
+  ☐ Add: ENABLE_WEB_VITALS = true
+  ☐ Add: FORCE_HTTPS = true
+  ☐ Add: ENABLE_SECURITY_HEADERS = true
+  ☐ Add: NEXT_TELEMETRY_DISABLED = 1
+
+  VALIDATE CONFIGURATION (3 min - Claude Code)
+  ☐ Tell Claude: "Validate my production environment configuration"
+  ☐ Verify all checks pass
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+PHASE 3: DATABASE SETUP (5 min - Automated)
+───────────────────────────────────────────────────────────────────────────
+
+  APPLY MIGRATIONS (5 min - Claude Code)
+  ☐ Tell Claude: "Apply all database migrations to production database"
+  ☐ Verify 11 tables created successfully
+  ☐ Verify 35 RLS policies applied
+  ☐ Verify 50+ indexes created
+  ☐ Verify 2 analytics views created
+  ☐ Check migration report for errors
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+PHASE 4: DEPLOYMENT (5 min - Automated)
+───────────────────────────────────────────────────────────────────────────
+
+  PRE-FLIGHT CHECKS (3 min - Claude Code)
+  ☐ Tell Claude: "Run pre-deployment checks and prepare for production deploy"
+  ☐ Verify TypeCheck passes (0 errors acceptable)
+  ☐ Verify Lint passes (no critical issues)
+  ☐ Verify Unit Tests pass (2,340+ tests)
+  ☐ Verify Integration Tests pass (482+ tests)
+  ☐ Verify Security Audit (0 vulnerabilities)
+  ☐ Verify Build Test successful
+
+  GIT PUSH (2 min - Claude Code)
+  ☐ Tell Claude: "Deploy to production"
+  ☐ Verify git commit created
+  ☐ Verify tagged as v1.0.0
+  ☐ Verify pushed to main branch
+
+  MONITOR DEPLOYMENT (2 min - Manual)
+  ☐ Open Vercel Dashboard → Deployments
+  ☐ Watch deployment progress
+  ☐ Verify build completes successfully
+  ☐ Note deployment URL: _________________________________________
+  ☐ Check for any errors in logs
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+PHASE 5: VERIFICATION (5 min - Automated)
+───────────────────────────────────────────────────────────────────────────
+
+  HEALTH CHECKS (3 min - Claude Code)
+  ☐ Tell Claude: "Verify production deployment is healthy"
+  ☐ Verify /api/health returns 200 OK
+  ☐ Verify database connectivity
+  ☐ Verify all API endpoints working
+  ☐ Verify third-party APIs connected (OpenAI, Unsplash)
+  ☐ Verify performance metrics in acceptable range
+  ☐ Review health check report
+
+  SMOKE TESTS (2 min - Claude Code)
+  ☐ Tell Claude: "Run smoke tests on production"
+  ☐ Verify user registration flow
+  ☐ Verify image search works
+  ☐ Verify description generation
+  ☐ Verify Q&A generation
+  ☐ Verify vocabulary persistence
+  ☐ Verify 7/7 smoke tests pass
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+PHASE 6: MONITORING SETUP (10 min - Manual)
+───────────────────────────────────────────────────────────────────────────
+
+  VERCEL ANALYTICS (3 min)
+  ☐ Go to Vercel Dashboard → Analytics → Enable
+  ☐ Configure alert: Error rate > 1%
+  ☐ Configure alert: Response time > 1s
+  ☐ Configure alert: 4xx errors > 5%
+  ☐ Configure alert: 5xx errors > 0.1%
+  ☐ Add email notification channel
+
+  SUPABASE MONITORING (3 min)
+  ☐ Go to Supabase Dashboard → Reports → Enable
+  ☐ Configure alert: Database CPU > 80%
+  ☐ Configure alert: Connections > 80%
+  ☐ Configure alert: Disk usage > 80%
+  ☐ Add email notification
+
+  COST ALERTS (4 min)
+  ☐ OpenAI: Verify spending limit ($10/month recommended)
+  ☐ Vercel: Review usage dashboard
+  ☐ Supabase: Check DB size and API request limits
+  ☐ Set calendar reminder to check costs weekly
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+SECURITY FINAL CHECKLIST
+───────────────────────────────────────────────────────────────────────────
+
+  ☐ All production API keys are unique (not dev keys)
+  ☐ DEBUG_ENDPOINT_ENABLED is false
+  ☐ FORCE_HTTPS is true
+  ☐ Security headers enabled
+  ☐ RLS policies active on all tables
+  ☐ CORS restricted to production domain only
+  ☐ No sensitive keys committed to Git
+  ☐ Environment variable scopes set correctly
+  ☐ Rate limiting configured
+  ☐ API secret keys are 32+ bytes
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+POST-DEPLOYMENT VERIFICATION
+───────────────────────────────────────────────────────────────────────────
+
+  TEST THE LIVE APP (10 min)
+  ☐ Open production URL in browser
+  ☐ Test user registration
+  ☐ Test login/logout
+  ☐ Test image search
+  ☐ Test description generation
+  ☐ Test Q&A generation
+  ☐ Test vocabulary saving
+  ☐ Check browser console for errors
+  ☐ Test on mobile device
+  ☐ Verify all images load properly
+
+  PERFORMANCE CHECK
+  ☐ TTFB < 200ms
+  ☐ First Contentful Paint < 1.8s
+  ☐ Largest Contentful Paint < 2.5s
+  ☐ Cumulative Layout Shift < 0.1
+
+  BOOKMARK THESE URLS
+  ☐ Production App: ______________________________________________
+  ☐ Vercel Dashboard: https://vercel.com/dashboard
+  ☐ Supabase Dashboard: https://supabase.com/dashboard
+  ☐ OpenAI Usage: https://platform.openai.com/usage
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+EMERGENCY CONTACTS & ROLLBACK
+───────────────────────────────────────────────────────────────────────────
+
+  IF PRODUCTION BREAKS:
+  ☐ Option 1: Vercel rollback (fastest - 2 min)
+     → Dashboard → Deployments → Previous → Promote to Production
+
+  ☐ Option 2: Git revert (5 min)
+     → Tell Claude: "Roll back to previous production version"
+
+  ☐ Option 3: Database rollback (ONLY IF CRITICAL - deletes data!)
+     → Supabase SQL Editor → Run *_rollback.sql
+
+  ROLLBACK VERIFICATION:
+  ☐ Health check returns 200 OK
+  ☐ No errors in logs
+  ☐ Users can access the app
+  ☐ Document what went wrong
+  ☐ Schedule post-mortem meeting
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+ONGOING MAINTENANCE
+───────────────────────────────────────────────────────────────────────────
+
+  DAILY (First Week)
+  ☐ Check error logs in Vercel
+  ☐ Review Supabase metrics
+  ☐ Check OpenAI usage/costs
+  ☐ Monitor performance metrics
+
+  WEEKLY
+  ☐ Review all alerts and notifications
+  ☐ Check total costs across all services
+  ☐ Review user feedback/support tickets
+  ☐ Check for security updates
+
+  MONTHLY
+  ☐ Review and rotate API keys if needed
+  ☐ Analyze performance trends
+  ☐ Review and optimize costs
+  ☐ Update dependencies
+  ☐ Review and update documentation
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+DEPLOYMENT COMPLETED! 🎉
+───────────────────────────────────────────────────────────────────────────
+
+  Completed by: ________________________________  Date: ___________
+
+  Production URL: __________________________________________________
+
+  Deployment ID: ___________________________________________________
+
+  Notes/Issues encountered:
+
+  _____________________________________________________________________
+
+  _____________________________________________________________________
+
+  _____________________________________________________________________
+
+  _____________________________________________________________________
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+NEXT STEPS (Optional Enhancements)
+───────────────────────────────────────────────────────────────────────────
+
+  ☐ Add custom domain
+  ☐ Set up staging environment
+  ☐ Configure CI/CD pipelines
+  ☐ Enable advanced monitoring (APM)
+  ☐ Implement A/B testing
+  ☐ Set up automated backups
+  ☐ Create runbook for common issues
+  ☐ Document scaling strategy
+  ☐ Set up load testing
+
+
+═══════════════════════════════════════════════════════════════════════════
+
+For detailed instructions, see:
+- docs/deployment/PRODUCTION_DEPLOYMENT_WALKTHROUGH.md
+- docs/deployment/DEPLOYMENT_VISUAL_GUIDE.md
+- docs/deployment/ROLLBACK_GUIDE.md
+
+═══════════════════════════════════════════════════════════════════════════
