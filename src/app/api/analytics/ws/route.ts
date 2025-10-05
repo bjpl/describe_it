@@ -20,6 +20,14 @@ const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),
   password: process.env.REDIS_PASSWORD,
+  lazyConnect: true, // Don't connect during module load
+  enableOfflineQueue: false, // Fail fast if not connected
+  maxRetriesPerRequest: 0, // Don't retry during build
+});
+
+// Suppress Redis errors during build
+redis.on('error', () => {
+  // Silent fail during build - will connect on first use
 });
 
 interface WebSocketMessage {
