@@ -4,7 +4,8 @@
  */
 
 import { z } from 'zod';
-import DOMPurify from 'isomorphic-dompurify';
+// Removed: import DOMPurify from 'isomorphic-dompurify';
+// Replaced with simple sanitization to fix Vercel build issues
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 export interface ValidationResult<T = any> {
@@ -20,15 +21,14 @@ export class InputValidator {
    * Sanitize HTML content to prevent XSS attacks
    */
   sanitizeHTML(input: string): string {
-    // First remove javascript: protocol
+    // Simple sanitization without DOMPurify (fixes Vercel build issues)
     let sanitized = input.replace(/javascript:/gi, '');
-    
-    // Then use DOMPurify to sanitize HTML
-    sanitized = DOMPurify.sanitize(sanitized, {
-      ALLOWED_TAGS: [], // No HTML tags allowed
-      ALLOWED_ATTR: [],
-      KEEP_CONTENT: true
-    });
+
+    // Remove all HTML tags and keep only text content
+    sanitized = sanitized.replace(/<[^>]*>/g, '');
+
+    // Remove potentially dangerous characters and protocols
+    sanitized = sanitized.replace(/[<>'"]/g, '');
     
     return sanitized;
   }
