@@ -921,7 +921,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                 </div>
                 <div>
                   <div className="text-gray-600 dark:text-gray-400">AI</div>
-                  <div className="font-medium">OpenAI GPT-4</div>
+                  <div className="font-medium">Anthropic Claude Sonnet 4.5</div>
                 </div>
               </div>
             </div>
@@ -945,7 +945,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                     AI Technology
                   </div>
                   <div className="text-gray-600 dark:text-gray-400">
-                    OpenAI GPT-4 for natural language processing and content
+                    Anthropic Claude Sonnet 4.5 for superior multilingual descriptions
                     generation
                   </div>
                 </div>
