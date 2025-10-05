@@ -1,9 +1,18 @@
-import { logger } from '@/lib/logger';
-
 /**
  * Safe JSON parsing and stringification utilities
  * Prevents runtime crashes from malformed JSON
+ *
+ * Note: Uses console logging instead of winston to support Edge runtime
  */
+
+// Edge-compatible logger (uses console, works in both Node and Edge runtime)
+const safeLogger = {
+  error: (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV === 'development') {
+      console.error(`[json-safe] ${message}`, ...args);
+    }
+  },
+};
 
 /**
  * Safely parse JSON with error handling
@@ -18,9 +27,7 @@ export function safeParse<T = any>(
   try {
     return JSON.parse(text) as T;
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.error('[safeParse] JSON parsing failed:', error);
-    }
+    safeLogger.error('JSON parsing failed:', error);
     return fallback;
   }
 }
@@ -40,9 +47,7 @@ export function safeStringify(
   try {
     return JSON.stringify(value);
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.error(`[safeStringify${context ? ` ${context}` : ''}] JSON stringification failed:`, error);
-    }
+    safeLogger.error(`JSON stringification failed${context ? ` (${context})` : ''}:`, error);
     return fallback;
   }
 }
@@ -64,9 +69,7 @@ export function parseWithValidation<T>(
     const validated = validator(parsed);
     return validated ?? undefined;
   } catch (error) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.error('[parseWithValidation] Validation failed:', error);
-    }
+    safeLogger.error('Validation failed:', error);
     return undefined;
   }
 }
@@ -134,9 +137,7 @@ export function safeParseLimited<T = any>(
   maxLength: number = 1024 * 1024 // 1MB default
 ): T | undefined {
   if (text.length > maxLength) {
-    if (process.env.NODE_ENV === 'development') {
-      logger.error(`[safeParseLimited] JSON too large: ${text.length} > ${maxLength}`);
-    }
+    safeLogger.error(`JSON too large: ${text.length} > ${maxLength}`);
     return undefined;
   }
   return safeParse<T>(text);
