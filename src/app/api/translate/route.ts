@@ -58,21 +58,21 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // For development, use OpenAI for translation if available
-    // Otherwise, provide intelligent mock translations
+    // MIGRATED TO CLAUDE: Use Anthropic for translation
     let translation: string;
     let confidence: number = 0.95;
 
-    if (process.env.OPENAI_API_KEY) {
+    if (process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY) {
       try {
-        translation = await translateWithOpenAI(
+        // Import Claude translation function
+        const { translateWithClaude } = await import("@/lib/api/claude-server");
+        translation = await translateWithClaude(
           text,
           sourceLanguage,
           targetLanguage,
-          context,
         );
       } catch (error) {
-        logger.warn("OpenAI translation error, falling back to mock", {
+        logger.warn("Claude translation error, falling back to mock", {
           error: error instanceof Error ? error.message : String(error),
           component: "translate-api",
           sourceLanguage,

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
-import { openAIService } from "@/lib/api/openai";
+// MIGRATED TO CLAUDE: Using Anthropic Claude Sonnet 4.5
+import { generateClaudeQA } from "@/lib/api/claude-server";
 import { QAGeneration } from "@/types/api";
 import { logger } from "@/lib/logger";
 
@@ -52,10 +53,10 @@ export async function POST(request: NextRequest) {
       },
     );
 
-    // Generate Q&A pairs using OpenAI service
-    const qaData: QAGeneration[] = await openAIService.generateQA(
+    // Generate Q&A pairs using Claude Sonnet 4.5
+    const qaData = await generateClaudeQA(
       description,
-      language,
+      "medio", // Default to medium difficulty
       parsedCount,
     );
 
@@ -66,7 +67,8 @@ export async function POST(request: NextRequest) {
         count: qaData.length,
         language,
         generatedAt: new Date().toISOString(),
-        source: "openai-gpt-4",
+        source: "claude-sonnet-4-5",
+        model: "claude-sonnet-4-5-20250629",
       },
     };
 
