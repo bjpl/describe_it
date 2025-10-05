@@ -161,7 +161,14 @@ export class SettingsManager {
         const data = JSON.parse(stored);
         // Validate version and merge with defaults
         if (data.version === this.STORAGE_VERSION) {
-          return { ...DEFAULT_SETTINGS, ...data.settings };
+          // Deep merge to ensure all new fields (like anthropic) exist
+          const mergedSettings = { ...DEFAULT_SETTINGS, ...data.settings };
+          // Ensure apiKeys has all fields (migration from old schema)
+          mergedSettings.apiKeys = {
+            ...DEFAULT_SETTINGS.apiKeys,
+            ...data.settings.apiKeys
+          };
+          return mergedSettings;
         }
       }
     } catch (error) {
