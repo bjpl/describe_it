@@ -8,11 +8,17 @@ import {
   createSuccessResponse
 } from '@/lib/schemas/api-validation';
 import { z } from 'zod';
-import { apiLogger } from '@/lib/logger';
 
 // Use Edge Runtime for better performance
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
+
+// Edge runtime logger (console-based, compatible with Edge runtime)
+const edgeLogger = {
+  warn: (message: string, ...args: any[]) => console.warn(`[Image Proxy] ${message}`, ...args),
+  error: (message: string, ...args: any[]) => console.error(`[Image Proxy] ${message}`, ...args),
+  info: (message: string, ...args: any[]) => console.log(`[Image Proxy] ${message}`, ...args),
+};
 
 /**
  * Image proxy endpoint for OpenAI Vision API
@@ -90,7 +96,7 @@ export async function POST(request: NextRequest) {
       clearTimeout(timeoutId);
 
       if (!imageResponse.ok) {
-        apiLogger.error(`Failed to fetch image: ${imageResponse.status}`);
+        edgeLogger.error(`Failed to fetch image: ${imageResponse.status}`);
         return createErrorResponse(
           `Failed to fetch image: ${imageResponse.status}`,
           imageResponse.status
@@ -134,11 +140,11 @@ export async function POST(request: NextRequest) {
         return createErrorResponse("Image fetch timeout", 504);
       }
 
-      apiLogger.error('Image proxy error:', error);
+      edgeLogger.error('Image proxy error:', error);
       return createErrorResponse("Failed to process image", 500);
     }
   } catch (error) {
-    apiLogger.error('Image proxy error:', error);
+    edgeLogger.error('Image proxy error:', error);
     return createErrorResponse(
       "Internal server error",
       500,
