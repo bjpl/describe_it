@@ -25,6 +25,7 @@ export const maxDuration = 60; // 60 seconds timeout - increased for parallel pr
 
 // Rate limiting: 10 requests per 15 minutes per IP
 export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Never cache this route
 
 // Security headers for API responses
 const securityHeaders = {
