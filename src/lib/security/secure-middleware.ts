@@ -185,7 +185,15 @@ async function testApiKeyValidity(apiKey: string, provider: string): Promise<Api
 export async function getSecureApiKey(keyName: string, userProvidedKey?: string): Promise<string | null> {
   try {
     // PRIORITY 1: Always check environment variable first (most reliable)
-    const envKey = process.env[keyName];
+    // Support both OpenAI and Anthropic keys
+    let envKey = process.env[keyName];
+
+    // If looking for OPENAI_API_KEY but have ANTHROPIC_API_KEY, use that instead
+    if (!envKey && keyName === 'OPENAI_API_KEY' && process.env.ANTHROPIC_API_KEY) {
+      envKey = process.env.ANTHROPIC_API_KEY;
+      logger.securityEvent('ANTHROPIC_KEY_USED_FOR_OPENAI', { keyName, source: 'environment' });
+    }
+
     if (envKey) {
       logger.securityEvent('ENV_API_KEY_USED', { keyName, source: 'environment' });
       return envKey;

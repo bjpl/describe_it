@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { generateVisionDescription } from "@/lib/api/openai-server";
+// MIGRATED TO CLAUDE: Using Anthropic Claude Sonnet 4.5 instead of OpenAI
+import { generateClaudeVisionDescription } from "@/lib/api/claude-server";
 import { withAPIMiddleware } from "@/lib/middleware/api-middleware";
 import { withBasicAuth } from "@/lib/middleware/withAuth";
 import { withMonitoring } from "@/lib/monitoring/middleware";
@@ -92,13 +93,22 @@ async function generateParallelDescriptions(
         hasCustomPrompt: !!customPrompt
       });
       
-      const description = await generateVisionDescription({
+      // MIGRATED TO CLAUDE: Using Claude Sonnet 4.5 with 1M context
+      const descriptionText = await generateClaudeVisionDescription({
         imageUrl,
         style,
         maxLength,
         customPrompt,
         language
       }, userApiKey);
+
+      // Transform to expected format
+      const description = {
+        text: descriptionText,
+        wordCount: descriptionText.split(/\s+/).length,
+        model: 'claude-sonnet-4-5',
+        language: language
+      };
       
       apiLogger.info(`${languageLabel} vision call completed successfully`, {
         step: 'vision_call_success',
