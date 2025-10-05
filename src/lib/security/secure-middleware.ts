@@ -208,6 +208,13 @@ export async function getSecureApiKey(keyName: string, userProvidedKey?: string)
       }
     }
 
+    // Final fallback: Check environment variables directly
+    const envKey = process.env[keyName];
+    if (envKey) {
+      logger.securityEvent('ENV_API_KEY_USED', { keyName });
+      return envKey;
+    }
+
     logger.securityEvent('NO_VALID_API_KEY', { keyName }, false);
     return null;
   } catch (error) {
