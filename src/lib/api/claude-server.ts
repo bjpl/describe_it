@@ -6,7 +6,7 @@
  */
 
 import Anthropic from "@anthropic-ai/sdk";
-import { apiKeyProvider } from "./keyProvider";
+import { keyManager, getServerKey } from "@/lib/keys/keyManager";
 import { apiLogger, securityLogger, performanceLogger } from "@/lib/logging/logger";
 import type {
   DescriptionStyle,
@@ -44,32 +44,16 @@ export function getServerClaudeClient(userApiKey?: string): Anthropic | null {
 
   let apiKey: string | undefined;
 
-  // Priority 1: Environment variable (most reliable)
-  if (process.env.ANTHROPIC_API_KEY) {
-    apiKey = process.env.ANTHROPIC_API_KEY;
-    securityLogger.info('Using Anthropic API key from environment', {
-      source: 'environment'
-    });
-  }
-  // Priority 2: User-provided API key
-  else if (userApiKey && userApiKey.startsWith('sk-ant-')) {
+  // Priority 1: User-provided API key (for user-specific calls)
+  if (userApiKey && userApiKey.startsWith('sk-ant-')) {
     apiKey = userApiKey;
-    securityLogger.info('Using user-provided Anthropic API key', {
-      source: 'user-header'
-    });
+    securityLogger.info('Using user-provided Anthropic API key');
   }
-  // Priority 3: Config/provider fallback
+  // Priority 2: Server environment variable (Vercel)
   else {
-    try {
-      const config = apiKeyProvider.getServiceConfig('anthropic' as any);
-      if (config && config.apiKey && config.isValid) {
-        apiKey = config.apiKey;
-        securityLogger.info('Using server config API key', {
-          source: config.source
-        });
-      }
-    } catch (configError) {
-      apiLogger.warn('Failed to get Anthropic service config', configError);
+    apiKey = getServerKey('anthropic');
+    if (apiKey) {
+      securityLogger.info('Using server environment Anthropic API key');
     }
   }
 
