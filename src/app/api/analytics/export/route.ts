@@ -9,6 +9,10 @@ import { recordApiRequest } from '@/lib/monitoring/prometheus';
 import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 import { apiLogger } from '@/lib/logger';
 
+// Prevent prerendering during build (Redis not available)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 const redis = new Redis({
   host: process.env.REDIS_HOST || 'localhost',
   port: parseInt(process.env.REDIS_PORT || '6379'),

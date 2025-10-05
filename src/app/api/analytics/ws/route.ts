@@ -10,6 +10,10 @@ import Redis from 'ioredis';
 import { recordApiRequest } from '@/lib/monitoring/prometheus';
 import { apiLogger } from '@/lib/logger';
 
+// Prevent prerendering during build (Redis not available)
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 // Global WebSocket server instance
 let wss: WebSocketServer | null = null;
 const redis = new Redis({
