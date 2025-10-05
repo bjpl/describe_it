@@ -1,10 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-import { apiLogger } from '@/lib/logger';
-import { asLogContext } from '@/lib/utils/typeGuards';
 
 // Use Edge Runtime for faster cold starts and better performance
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
+
+// Edge runtime logger (console-based, compatible with Edge runtime)
+const edgeLogger = {
+  warn: (message: string, ...args: any[]) => console.warn(`[Edge API] ${message}`, ...args),
+  error: (message: string, ...args: any[]) => console.error(`[Edge API] ${message}`, ...args),
+  info: (message: string, ...args: any[]) => console.log(`[Edge API] ${message}`, ...args),
+};
 
 // Simple in-memory cache for Edge Runtime
 const cache = new Map<string, { data: any; timestamp: number }>();
@@ -114,7 +119,7 @@ export async function GET(request: NextRequest) {
           });
         }
       } catch (error) {
-        apiLogger.warn("[Edge API] Unsplash fetch failed or timed out, using demo:", asLogContext(error));
+        edgeLogger.warn("Unsplash fetch failed or timed out, using demo:", error);
         // Fall through to demo mode
       }
     }
@@ -134,8 +139,8 @@ export async function GET(request: NextRequest) {
       },
     });
   } catch (error) {
-    apiLogger.error("[Edge API] Error:", error);
-    
+    edgeLogger.error("Error:", error);
+
     // Return minimal fallback
     return NextResponse.json(
       {
