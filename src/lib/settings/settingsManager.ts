@@ -2,9 +2,11 @@ import { logger } from '@/lib/logger';
 
 export interface AppSettings {
   // API Configuration
+  // MIGRATED TO CLAUDE: Added anthropic as primary AI provider
   apiKeys: {
-    unsplash: string;
-    openai: string;
+    anthropic: string; // Claude Sonnet 4.5 (Primary)
+    openai: string;    // Legacy/fallback
+    unsplash: string;  // Image search
   };
 
   // Language Settings
@@ -73,8 +75,9 @@ export interface AppSettings {
 
 export const DEFAULT_SETTINGS: AppSettings = {
   apiKeys: {
-    unsplash: "",
-    openai: "",
+    anthropic: "", // Claude Sonnet 4.5 (Primary AI)
+    openai: "",    // Legacy fallback
+    unsplash: "",  // Image search
   },
   language: {
     ui: "en",
