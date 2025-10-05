@@ -170,7 +170,8 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
               placeholder="Search for images (e.g., &apos;mountain sunset&apos;, &apos;city street&apos;, &apos;happy people&apos;)..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-12 pr-12 py-4 text-lg border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+              className="w-full pl-12 pr-12 py-4 text-lg text-gray-900 placeholder-gray-500 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-all duration-200 bg-white shadow-sm hover:shadow-md"
+              autoComplete="off"
             />
             <AnimatePresence>
               {searchQuery && (
