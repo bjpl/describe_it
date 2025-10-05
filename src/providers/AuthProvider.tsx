@@ -23,43 +23,66 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 // Export AuthContext for debugging components
 export { AuthContext };
 
+// Synchronously initialize state from localStorage before React renders
+function getInitialAuthState(): AuthState {
+  if (typeof window === 'undefined') {
+    return { isAuthenticated: false, user: null, profile: null, loading: false };
+  }
+
+  try {
+    const storedSession = localStorage.getItem('describe-it-auth');
+    if (storedSession) {
+      const sessionData = safeParse<{ access_token?: string; user?: any; profile?: any }>(storedSession);
+      if (sessionData?.access_token && sessionData?.user) {
+        authLogger.info('[AuthProvider] Initializing with stored session');
+        return {
+          isAuthenticated: true,
+          user: sessionData.user,
+          profile: sessionData.profile || null,
+          loading: false
+        };
+      }
+    }
+  } catch (error) {
+    authLogger.error('[AuthProvider] Error reading initial state:', error);
+  }
+
+  return authManager.getAuthState();
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [authState, setAuthState] = useState<AuthState>(authManager.getAuthState());
+  // Initialize with localStorage data immediately (no delay!)
+  const [authState, setAuthState] = useState<AuthState>(getInitialAuthState());
   const [forceUpdateCounter, forceUpdate] = useReducer(x => x + 1, 0);
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
-    // Check for existing session on mount
+    // Verify session with Supabase (async validation)
     const checkSession = async () => {
       const currentState = authManager.getAuthState();
-      authLogger.info('[AuthProvider] Initial auth check:', {
+      authLogger.info('[AuthProvider] Verifying session:', {
         isAuthenticated: currentState.isAuthenticated,
         hasUser: !!currentState.user
       });
-      
-      // Check localStorage directly for session
+
+      // If we have a stored session but authManager doesn't know about it
       const storedSession = localStorage.getItem('describe-it-auth');
       if (storedSession && !currentState.isAuthenticated) {
-        authLogger.info('[AuthProvider] Found session in localStorage but auth not initialized');
-        const sessionData = safeParse<{ access_token?: string }>(storedSession);
-        if (sessionData && sessionData.access_token) {
-          // Initialize auth manager with the stored session
-          await authManager.initialize();
-          const newState = authManager.getAuthState();
-          if (newState.isAuthenticated) {
-            setAuthState(newState);
-            setVersion(v => v + 1);
-            forceUpdate();
-            return;
-          }
-        } else {
-          authLogger.error('[AuthProvider] Failed to restore session from localStorage: Invalid JSON');
-        }
+        authLogger.info('[AuthProvider] Syncing authManager with localStorage');
+        await authManager.initialize();
+        const newState = authManager.getAuthState();
+        setAuthState(newState);
+        setVersion(v => v + 1);
+        forceUpdate();
+        return;
       }
-      
-      setAuthState(currentState);
-      setVersion(v => v + 1);
-      forceUpdate();
+
+      // Update state if needed
+      if (currentState.isAuthenticated !== authState.isAuthenticated) {
+        setAuthState(currentState);
+        setVersion(v => v + 1);
+        forceUpdate();
+      }
       
       // Also check Supabase directly
       const { authHelpers } = await import('@/lib/supabase/client');
