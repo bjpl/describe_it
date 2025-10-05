@@ -38,15 +38,14 @@ const nextConfig = {
   },
 
   // Webpack configuration to fix DOMPurify bundling issues
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
     if (isServer) {
-      // Fix isomorphic-dompurify CSS loading issue
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        // Prevent DOMPurify from trying to load browser stylesheets on server
-        './default-stylesheet.css': false,
-        './browser/default-stylesheet.css': false,
-      };
+      // Ignore DOMPurify's browser-specific stylesheets
+      config.plugins.push(
+        new webpack.IgnorePlugin({
+          resourceRegExp: /default-stylesheet\.css$/,
+        })
+      );
 
       // Add fallback for missing modules
       config.resolve.fallback = {
