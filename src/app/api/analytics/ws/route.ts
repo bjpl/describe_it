@@ -60,7 +60,10 @@ export async function GET(request: NextRequest) {
 /**
  * Initialize WebSocket server (called externally)
  * This would typically be called from your server setup
+ *
+ * NOTE: Moved to @/lib/websocket/analytics-ws-utils to comply with Next.js route rules
  */
+/* REMOVED - Invalid Next.js route export
 export function initWebSocketServer(server?: any) {
   if (wss) return wss;
 
@@ -345,35 +348,13 @@ function cleanupStaleConnections() {
 
 /**
  * Utility functions for external use
+ *
+ * NOTE: Moved to @/lib/websocket/analytics-ws-utils to comply with Next.js route rules
+ * Import from there instead of this route file
  */
-export function broadcastAlert(alert: any) {
-  if (wss) {
-    broadcast({
-      type: 'alert',
-      payload: alert,
-      timestamp: Date.now(),
-    }, 'alerts');
-  }
-}
-
-export function broadcastFraudEvent(event: any) {
-  if (wss) {
-    broadcast({
-      type: 'fraud_event',
-      payload: event,
-      timestamp: Date.now(),
-    }, 'fraud');
-  }
-}
-
-export function getConnectedClientsCount(): number {
-  return connectedClients.size;
-}
-
-export function closeWebSocketServer() {
-  if (wss) {
-    wss.close();
-    wss = null;
-    apiLogger.info('Analytics WebSocket server closed');
-  }
-}
+/* REMOVED - Invalid Next.js route exports - use @/lib/websocket/analytics-ws-utils instead
+export function broadcastAlert(alert: any) { ... }
+export function broadcastFraudEvent(event: any) { ... }
+export function getConnectedClientsCount(): number { ... }
+export function closeWebSocketServer() { ... }
+*/
