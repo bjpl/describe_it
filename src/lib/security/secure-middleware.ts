@@ -184,35 +184,30 @@ async function testApiKeyValidity(apiKey: string, provider: string): Promise<Api
  */
 export async function getSecureApiKey(keyName: string, userProvidedKey?: string): Promise<string | null> {
   try {
-    await initializeSecurityManagers();
-    
-    // If user provided their own key, validate and use it
-    if (userProvidedKey) {
-      const validation = await validateApiKey(userProvidedKey);
-      if (validation.isValid) {
-        logger.securityEvent('USER_API_KEY_USED', { keyName });
-        return userProvidedKey;
-      } else {
-        logger.securityEvent('USER_API_KEY_INVALID', { keyName }, false);
-        return null;
-      }
+    // PRIORITY 1: Always check environment variable first (most reliable)
+    const envKey = process.env[keyName];
+    if (envKey) {
+      logger.securityEvent('ENV_API_KEY_USED', { keyName, source: 'environment' });
+      return envKey;
     }
 
-    // Fallback to server-side key from secrets manager
-    const serverKey = await secretsManager?.getSecret(keyName);
-    if (serverKey) {
-      const validation = await validateApiKey(serverKey);
-      if (validation.isValid) {
+    // PRIORITY 2: If user provided their own key, validate and use it
+    if (userProvidedKey) {
+      logger.securityEvent('USER_API_KEY_PROVIDED', { keyName, keyLength: userProvidedKey.length });
+      // Skip validation - trust user's key (we'll handle errors from OpenAI if invalid)
+      return userProvidedKey;
+    }
+
+    // PRIORITY 3: Try secrets manager (complex, requires initialization)
+    try {
+      await initializeSecurityManagers();
+      const serverKey = await secretsManager?.getSecret(keyName);
+      if (serverKey) {
         logger.securityEvent('SERVER_API_KEY_USED', { keyName });
         return serverKey;
       }
-    }
-
-    // Final fallback: Check environment variables directly
-    const envKey = process.env[keyName];
-    if (envKey) {
-      logger.securityEvent('ENV_API_KEY_USED', { keyName });
-      return envKey;
+    } catch (managerError) {
+      logger.warn('[getSecureApiKey] Secrets manager failed:', managerError);
     }
 
     logger.securityEvent('NO_VALID_API_KEY', { keyName }, false);
