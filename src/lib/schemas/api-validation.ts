@@ -594,7 +594,15 @@ export const errorReportSchema = baseRequestSchema.extend({
 export const testVisionSchema = baseRequestSchema.extend({
   imageUrl: imageUrlSchema.optional(),
   prompt: z.string().max(500, "Prompt too long").optional(),
-  model: z.enum(["gpt-4-vision-preview", "gpt-4o", "gpt-4o-mini"]).default("gpt-4o"),
+  // MIGRATED TO CLAUDE: Updated model options
+  model: z.enum([
+    "claude-sonnet-4-5-20250629",
+    "claude-sonnet-3-5-20240229",
+    "claude-opus-4-20250514",
+    "gpt-4-vision-preview", // Legacy support
+    "gpt-4o",
+    "gpt-4o-mini"
+  ]).default("claude-sonnet-4-5-20250629"),
 });
 
 export const testKeyVerificationSchema = baseRequestSchema.extend({
