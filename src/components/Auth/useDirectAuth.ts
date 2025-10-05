@@ -50,9 +50,10 @@ export function useDirectAuth() {
 
   const directSignUp = async (email: string, password: string, metadata: any) => {
     setLoading(true);
-    
+
     try {
-      const response = await fetch('/api/auth/signup', {
+      // Use simple-signup endpoint (no complex password requirements)
+      const response = await fetch('/api/auth/simple-signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: safeStringify({ email, password, metadata })
