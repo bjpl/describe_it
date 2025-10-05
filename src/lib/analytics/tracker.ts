@@ -228,13 +228,25 @@ class AnalyticsTracker {
         body: JSON.stringify({ events }),
       });
 
-      const result = await response.json();
-      
+      // Parse response safely
+      let result;
+      try {
+        result = await response.json();
+      } catch (parseError) {
+        // If we can't parse response but got 200, consider it success
+        if (response.ok) {
+          logger.info('[Analytics] Response OK but unparseable - considering success');
+          return;
+        }
+        logger.warn('[Analytics] Failed to parse analytics response:', parseError);
+        throw new Error(`Analytics API error: ${response.status}`);
+      }
+
       // Check if the response indicates success (even with fallback storage)
       if (result.success) {
         // Events were processed successfully (even if not persisted)
-        if (result.storage === 'fallback' || result.storage === 'rate-limited') {
-          logger.info('[Analytics] Events processed with fallback storage');
+        if (result.storage === 'fallback' || result.storage === 'rate-limited' || result.storage === 'error') {
+          logger.info('[Analytics] Events processed with fallback storage:', result.storage);
         }
         return; // Don't retry on success
       }

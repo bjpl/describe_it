@@ -169,8 +169,19 @@ export function useDescriptions(imageId: string) {
       // Parse response body once to avoid "body locked" error
       let data;
       try {
-        data = await response.json();
+        const text = await response.text();
+        logger.info('[useDescriptions] Raw response:', {
+          status: response.status,
+          textLength: text.length,
+          textPreview: text.substring(0, 200)
+        });
+        data = safeParse(text);
+        if (!data) {
+          logger.error('[useDescriptions] Failed to parse JSON from response:', { textPreview: text.substring(0, 500) });
+          throw new Error("Invalid JSON response from server");
+        }
       } catch (parseError) {
+        logger.error('[useDescriptions] Parse error:', parseError);
         const error = createDescriptionError(parseError, response);
         error.message = "Failed to parse response from description service";
         throw error;
