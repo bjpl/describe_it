@@ -36,6 +36,28 @@ const nextConfig = {
   eslint: {
     ignoreDuringBuilds: true, // TODO: Fix ESLint errors and re-enable
   },
+
+  // Webpack configuration to fix DOMPurify bundling issues
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      // Fix isomorphic-dompurify CSS loading issue
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        // Prevent DOMPurify from trying to load browser stylesheets on server
+        './default-stylesheet.css': false,
+        './browser/default-stylesheet.css': false,
+      };
+
+      // Add fallback for missing modules
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    return config;
+  },
 };
 
 export default withSentryConfig(nextConfig, {
