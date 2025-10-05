@@ -6,8 +6,9 @@ const keyProviderLogger = createLogger('KeyProvider');
 
 /**
  * Supported API service types
+ * MIGRATED: Added 'anthropic' as primary AI provider
  */
-export type ServiceType = 'openai' | 'unsplash';
+export type ServiceType = 'anthropic' | 'openai' | 'unsplash';
 
 /**
  * Key source information
@@ -31,18 +32,20 @@ export type KeyUpdateListener = (keys: Record<ServiceType, string>) => void;
 
 /**
  * Environment variable mapping for API keys
+ * MIGRATED: Added Anthropic as primary, OpenAI as fallback
  */
 const ENV_KEY_MAP: Record<ServiceType, string[]> = {
-  openai: ['OPENAI_API_KEY'],
+  anthropic: ['ANTHROPIC_API_KEY', 'OPENAI_API_KEY'], // Fallback to OpenAI if Anthropic not set
+  openai: ['OPENAI_API_KEY', 'ANTHROPIC_API_KEY'], // Fallback to Anthropic (preferred)
   unsplash: ['NEXT_PUBLIC_UNSPLASH_ACCESS_KEY', 'UNSPLASH_ACCESS_KEY'],
 };
 
 /**
  * API Key validation patterns
- * Updated to support modern OpenAI key formats (sk- and sk-proj-)
- * Fixed pattern to properly validate project keys of any length
+ * MIGRATED: Added Anthropic key pattern (sk-ant-)
  */
 const KEY_PATTERNS: Record<ServiceType, RegExp> = {
+  anthropic: /^sk-ant-[a-zA-Z0-9_-]{20,}$/,
   openai: /^sk-(proj-)?[a-zA-Z0-9_-]{20,}$/,
   unsplash: /^[a-zA-Z0-9_-]{20,}$/,
 };
@@ -54,6 +57,7 @@ const KEY_PATTERNS: Record<ServiceType, RegExp> = {
 export class ApiKeyProvider {
   private listeners: KeyUpdateListener[] = [];
   private cachedKeys: Record<ServiceType, string> = {
+    anthropic: '',
     openai: '',
     unsplash: '',
   };
@@ -93,7 +97,8 @@ export class ApiKeyProvider {
       });
       
       this.cachedKeys = {
-        openai: this.resolveKey('openai', settings?.apiKeys?.openai || ''),
+        anthropic: this.resolveKey('anthropic', settings?.apiKeys?.anthropic || settings?.apiKeys?.openai || ''),
+        openai: this.resolveKey('openai', settings?.apiKeys?.anthropic || settings?.apiKeys?.openai || ''),
         unsplash: this.resolveKey('unsplash', settings?.apiKeys?.unsplash || ''),
       };
       
