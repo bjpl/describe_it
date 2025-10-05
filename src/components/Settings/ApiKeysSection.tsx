@@ -47,23 +47,23 @@ export function ApiKeysSection() {
 
   const apiKeys: ApiKeyConfig[] = [
     {
+      id: 'anthropic',
+      name: 'Anthropic API Key (Claude)',
+      icon: <Sparkles className="h-5 w-5 text-purple-500" />,
+      value: settings.apiKeys.anthropic || settings.apiKeys.openai || '',
+      placeholder: 'sk-ant-api03-...',
+      description: 'Claude Sonnet 4.5 for AI descriptions, Q&A, and translations (Primary)',
+      testEndpoint: '/api/ai/test',
+      required: true
+    },
+    {
       id: 'unsplash',
       name: 'Unsplash API Key',
-      icon: <Camera className="h-5 w-5" />,
+      icon: <Camera className="h-5 w-5 text-blue-500" />,
       value: settings.apiKeys.unsplash || '',
       placeholder: 'Enter your Unsplash access key',
       description: 'High-quality stock photos for image search',
       testEndpoint: '/api/images/test',
-      required: false
-    },
-    {
-      id: 'openai',
-      name: 'OpenAI API Key',
-      icon: <Sparkles className="h-5 w-5" />,
-      value: settings.apiKeys.openai || '',
-      placeholder: 'sk-...',
-      description: 'AI-powered descriptions and translations',
-      testEndpoint: '/api/ai/test',
       required: false
     }
   ];
@@ -136,7 +136,9 @@ export function ApiKeysSection() {
     }
 
     // Auto-test if key looks complete
-    if (keyId === 'openai' && value.startsWith('sk-') && value.length > 20) {
+    if (keyId === 'anthropic' && value.startsWith('sk-ant-') && value.length > 40) {
+      setTimeout(() => testApiKey(keyId, value, testEndpoint), 500);
+    } else if (keyId === 'openai' && value.startsWith('sk-') && value.length > 20) {
       setTimeout(() => testApiKey(keyId, value, testEndpoint), 500);
     } else if (keyId === 'unsplash' && value.length > 20) {
       setTimeout(() => testApiKey(keyId, value, testEndpoint), 500);
@@ -373,7 +375,8 @@ export function ApiKeysSection() {
               <li>• Your API keys are stored locally and encrypted</li>
               <li>• Keys are never shared or sent to third parties</li>
               <li>• You can use the app without API keys (demo mode)</li>
-              <li>• Get free API keys from <a href="https://unsplash.com/developers" target="_blank" rel="noopener noreferrer" className="underline">Unsplash</a> and <a href="https://platform.openai.com" target="_blank" rel="noopener noreferrer" className="underline">OpenAI</a></li>
+              <li>• Get API keys from <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer" className="underline">Anthropic</a> (Claude) and <a href="https://unsplash.com/developers" target="_blank" rel="noopener noreferrer" className="underline">Unsplash</a></li>
+              <li>• <strong>Anthropic Claude</strong> is now the primary AI provider (better Spanish!)</li>
             </ul>
           </div>
         </div>
