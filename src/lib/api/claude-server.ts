@@ -13,6 +13,16 @@ import type {
   DescriptionRequest,
   GeneratedDescription
 } from "../../types/api";
+import * as Sentry from "@sentry/nextjs";
+import {
+  trackClaudeAPICall,
+  trackClaudeError,
+  startClaudeSpan,
+  calculateClaudeCost,
+  ClaudePerformanceTracker,
+  checkPerformanceThreshold,
+  trackEndpointErrorRate
+} from "@/lib/monitoring/claude-metrics";
 
 // Singleton Claude client instance for memory optimization
 let claudeClientInstance: Anthropic | null = null;
@@ -159,19 +169,25 @@ export async function generateClaudeVisionDescription(
   userApiKey?: string
 ): Promise<string> {
   const startTime = performance.now();
+  const performanceTracker = new ClaudePerformanceTracker('/api/descriptions/generate');
+  const span = startClaudeSpan('vision', 'Generate image description with Claude vision');
 
   try {
     const client = getServerClaudeClient(userApiKey);
 
     if (!client) {
+      trackEndpointErrorRate('/api/descriptions/generate', true);
       throw new Error("Claude client not initialized - missing API key");
     }
 
     const { imageUrl, style, maxLength = 500, customPrompt, language = "en" } = request;
 
     if (!imageUrl) {
+      trackEndpointErrorRate('/api/descriptions/generate', true);
       throw new Error("Image URL is required");
     }
+
+    performanceTracker.mark('client_initialized');
 
     performanceLogger.info('Starting Claude vision description', {
       step: 'vision_start',
@@ -233,6 +249,8 @@ export async function generateClaudeVisionDescription(
         ? `Describe esta imagen de manera ${style}. Máximo ${maxLength} palabras. Usa español natural y expresivo.`
         : `Describe this image in a ${style} style. Maximum ${maxLength} words. Use natural and expressive English.`);
 
+    performanceTracker.mark('image_prepared');
+
     performanceLogger.info('Calling Claude API', {
       step: 'claude_api_call',
       model: CLAUDE_MODEL,
@@ -240,6 +258,8 @@ export async function generateClaudeVisionDescription(
       systemPromptLength: systemPrompt.length,
       userPromptLength: userPrompt.length
     });
+
+    performanceTracker.mark('api_call_start');
 
     // Call Claude with vision
     const response = await client.messages.create({
@@ -261,6 +281,8 @@ export async function generateClaudeVisionDescription(
       temperature: 0.7,
     });
 
+    performanceTracker.mark('api_call_complete');
+
     const endTime = performance.now();
     const duration = endTime - startTime;
 
@@ -271,15 +293,43 @@ export async function generateClaudeVisionDescription(
       .join('\n');
 
     if (!description) {
+      trackEndpointErrorRate('/api/descriptions/generate', true);
       throw new Error("No text content in Claude response");
     }
+
+    performanceTracker.mark('response_processed');
+
+    // Track metrics in Sentry
+    const inputTokens = response.usage?.input_tokens || 0;
+    const outputTokens = response.usage?.output_tokens || 0;
+    const totalTokens = inputTokens + outputTokens;
+    const estimatedCost = calculateClaudeCost(CLAUDE_MODEL, inputTokens, outputTokens);
+
+    trackClaudeAPICall({
+      endpoint: '/api/descriptions/generate',
+      model: CLAUDE_MODEL,
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      responseTime: duration,
+      estimatedCost,
+      success: true,
+    });
+
+    trackEndpointErrorRate('/api/descriptions/generate', false);
+    checkPerformanceThreshold('/api/descriptions/generate', duration, 2000);
+
+    performanceTracker.finish();
+    span?.finish();
 
     performanceLogger.info('Claude vision description complete', {
       step: 'vision_complete',
       duration: `${duration.toFixed(2)}ms`,
       model: response.model,
-      inputTokens: response.usage?.input_tokens,
-      outputTokens: response.usage?.output_tokens,
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      estimatedCost: `$${estimatedCost.toFixed(4)}`,
       stopReason: response.stop_reason,
       descriptionLength: description.length,
       language,
@@ -291,6 +341,18 @@ export async function generateClaudeVisionDescription(
   } catch (error: any) {
     const endTime = performance.now();
     const duration = endTime - startTime;
+
+    performanceTracker.finish();
+    span?.finish();
+
+    // Track error in Sentry
+    trackClaudeError(error, {
+      endpoint: '/api/descriptions/generate',
+      model: CLAUDE_MODEL,
+      requestDuration: duration,
+    });
+
+    trackEndpointErrorRate('/api/descriptions/generate', true);
 
     apiLogger.error('Claude vision description failed', {
       error: error.message,
@@ -325,15 +387,19 @@ export async function generateClaudeCompletion(
     maxTokens?: number;
     temperature?: number;
     stopSequences?: string[];
+    endpoint?: string;
   } = {},
   userApiKey?: string
 ): Promise<string> {
   const startTime = performance.now();
+  const endpoint = options.endpoint || '/api/claude/completion';
+  const span = startClaudeSpan('completion', 'Generate text completion with Claude');
 
   try {
     const client = getServerClaudeClient(userApiKey);
 
     if (!client) {
+      trackEndpointErrorRate(endpoint, true);
       throw new Error("Claude client not initialized - missing API key");
     }
 
@@ -374,11 +440,35 @@ export async function generateClaudeCompletion(
       .map(block => ('text' in block ? block.text : ''))
       .join('\n');
 
+    // Track metrics in Sentry
+    const inputTokens = response.usage?.input_tokens || 0;
+    const outputTokens = response.usage?.output_tokens || 0;
+    const totalTokens = inputTokens + outputTokens;
+    const estimatedCost = calculateClaudeCost(CLAUDE_MODEL, inputTokens, outputTokens);
+
+    trackClaudeAPICall({
+      endpoint,
+      model: CLAUDE_MODEL,
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      responseTime: duration,
+      estimatedCost,
+      success: true,
+    });
+
+    trackEndpointErrorRate(endpoint, false);
+    checkPerformanceThreshold(endpoint, duration, 1500);
+
+    span?.finish();
+
     performanceLogger.info('Claude completion finished', {
       step: 'completion_complete',
       duration: `${duration.toFixed(2)}ms`,
-      inputTokens: response.usage?.input_tokens,
-      outputTokens: response.usage?.output_tokens,
+      inputTokens,
+      outputTokens,
+      totalTokens,
+      estimatedCost: `$${estimatedCost.toFixed(4)}`,
       stopReason: response.stop_reason,
       completionLength: completion.length
     });
@@ -388,6 +478,17 @@ export async function generateClaudeCompletion(
   } catch (error: any) {
     const endTime = performance.now();
     const duration = endTime - startTime;
+
+    span?.finish();
+
+    // Track error in Sentry
+    trackClaudeError(error, {
+      endpoint,
+      model: CLAUDE_MODEL,
+      requestDuration: duration,
+    });
+
+    trackEndpointErrorRate(endpoint, true);
 
     apiLogger.error('Claude completion failed', {
       error: error.message,
@@ -441,7 +542,7 @@ Return ONLY valid JSON array in this exact format:
     const completion = await generateClaudeCompletion(
       userPrompt,
       systemPrompt,
-      { maxTokens: 2048, temperature: 0.8 },
+      { maxTokens: 2048, temperature: 0.8, endpoint: '/api/qa/generate' },
       userApiKey
     );
 
@@ -481,7 +582,7 @@ ${text}`;
   return await generateClaudeCompletion(
     userPrompt,
     systemPrompt,
-    { maxTokens: text.length * 3, temperature: 0.3 }, // Lower temp for accurate translation
+    { maxTokens: text.length * 3, temperature: 0.3, endpoint: '/api/translate' }, // Lower temp for accurate translation
     userApiKey
   );
 }

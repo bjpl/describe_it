@@ -16,4 +16,37 @@ Sentry.init({
 
   // Setting this option to true will print useful information to the console while you're setting up Sentry.
   debug: false,
+
+  // Custom tags for edge runtime Claude API monitoring
+  initialScope: {
+    tags: {
+      'ai.provider': 'anthropic',
+      'ai.model': 'claude-sonnet-4-5',
+      'runtime': 'edge',
+    },
+  },
+
+  // Custom trace sampler for edge routes
+  tracesSampler: (samplingContext) => {
+    // Always sample Claude API routes in edge runtime
+    if (samplingContext.name?.includes('/api/')) {
+      return 1.0;
+    }
+
+    // Sample middleware at lower rate
+    return 0.1;
+  },
+
+  // Before sending events, enrich with edge-specific context
+  beforeSend: (event, hint) => {
+    // Add edge runtime context
+    if (event.contexts) {
+      event.contexts.runtime = {
+        name: 'edge',
+        version: process.env.NEXT_RUNTIME || 'unknown',
+      };
+    }
+
+    return event;
+  },
 });

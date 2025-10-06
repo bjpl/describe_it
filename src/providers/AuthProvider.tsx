@@ -26,7 +26,7 @@ export { AuthContext };
 // Synchronously initialize state from localStorage before React renders
 function getInitialAuthState(): AuthState {
   if (typeof window === 'undefined') {
-    return { isAuthenticated: false, user: null, profile: null, loading: false };
+    return { isAuthenticated: false, user: null, profile: null, session: null, isLoading: false, error: null };
   }
 
   try {
@@ -39,7 +39,9 @@ function getInitialAuthState(): AuthState {
           isAuthenticated: true,
           user: sessionData.user,
           profile: sessionData.profile || null,
-          loading: false
+          session: null,
+          isLoading: false,
+          error: null
         };
       }
     }

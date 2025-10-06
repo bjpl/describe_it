@@ -61,12 +61,12 @@ export function isLogContext(value: unknown): value is LogContext {
  * @returns A merged LogContext object
  */
 export function mergeLogContexts(...contexts: Array<LogContext | unknown>): LogContext {
-  return contexts.reduce((acc, ctx) => {
+  return contexts.reduce<LogContext>((acc, ctx) => {
     if (isLogContext(ctx)) {
       return { ...acc, ...ctx };
     }
     return acc;
-  }, {} as LogContext);
+  }, {});
 }
 
 /**

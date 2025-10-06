@@ -58,8 +58,10 @@ export type {
   AuthError,
   RealtimePayload,
   SubscriptionOptions,
-  SupabaseClient,
 } from './types'
+
+// Export SupabaseClient type from client instead
+export type { SupabaseClient } from './client'
 
 // Re-export Supabase types for convenience
 export type { SupabaseClient as SupabaseClientType } from '@supabase/supabase-js'

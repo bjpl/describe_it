@@ -89,7 +89,6 @@ function getBatchProcessor(apiKey: string): VisionDescriptionBatchProcessor {
   return batchProcessors.get(apiKey)!;
 }
 
-@withPerformanceTracking('api.descriptions.generate')
 async function generateDescription(request: {
   imageUrl: string;
   prompt: string;
@@ -108,19 +107,19 @@ async function generateDescription(request: {
   };
 }> {
   const startTime = Date.now();
-  
+
   // Generate cache key
   const cacheKey = cache.generateKey(
     'vision_description',
     cache.generateImageHash(request.imageUrl + request.prompt + request.model)
   );
-  
+
   // Check cache first
   const cached = await cache.get(cacheKey);
-  if (cached) {
+  if (cached && typeof cached === 'object' && 'description' in cached && 'confidence' in cached && 'metadata' in cached) {
     monitor.incrementCounter('cache.hits', { type: 'vision_description' });
     return {
-      ...cached,
+      ...(cached as { description: string; confidence: number; metadata: { model: string; tokens: number; batchId?: string } }),
       cached: true,
       processingTime: Date.now() - startTime,
     };

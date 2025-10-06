@@ -1,0 +1,256 @@
+{
+  "title": "Claude API Performance Dashboard",
+  "description": "Comprehensive monitoring dashboard for Claude Sonnet 4.5 API performance, token usage, costs, and error rates",
+  "widgets": [
+    {
+      "id": "response-time-overview",
+      "title": "Claude API Response Time (p50, p95, p99)",
+      "displayType": "line",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "p50 Response Time",
+          "fields": ["p50(claude.response_time)"],
+          "aggregates": ["p50(claude.response_time)"],
+          "conditions": "has:claude.response_time",
+          "orderby": "-time"
+        },
+        {
+          "name": "p95 Response Time",
+          "fields": ["p95(claude.response_time)"],
+          "aggregates": ["p95(claude.response_time)"],
+          "conditions": "has:claude.response_time",
+          "orderby": "-time"
+        },
+        {
+          "name": "p99 Response Time",
+          "fields": ["p99(claude.response_time)"],
+          "aggregates": ["p99(claude.response_time)"],
+          "conditions": "has:claude.response_time",
+          "orderby": "-time"
+        }
+      ],
+      "interval": "5m",
+      "thresholds": {
+        "warning": 2000,
+        "critical": 5000
+      }
+    },
+    {
+      "id": "token-usage",
+      "title": "Claude Token Usage (Input vs Output)",
+      "displayType": "area",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "Input Tokens",
+          "fields": ["sum(claude.tokens.input)"],
+          "aggregates": ["sum(claude.tokens.input)"],
+          "conditions": "has:claude.tokens.input",
+          "orderby": "-time"
+        },
+        {
+          "name": "Output Tokens",
+          "fields": ["sum(claude.tokens.output)"],
+          "aggregates": ["sum(claude.tokens.output)"],
+          "conditions": "has:claude.tokens.output",
+          "orderby": "-time"
+        }
+      ],
+      "interval": "1h"
+    },
+    {
+      "id": "cost-tracking",
+      "title": "Estimated Claude API Costs (USD)",
+      "displayType": "line",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "Total Cost",
+          "fields": ["sum(claude.cost.estimated)"],
+          "aggregates": ["sum(claude.cost.estimated)"],
+          "conditions": "has:claude.cost.estimated",
+          "orderby": "-time"
+        },
+        {
+          "name": "Average Cost per Request",
+          "fields": ["avg(claude.cost.estimated)"],
+          "aggregates": ["avg(claude.cost.estimated)"],
+          "conditions": "has:claude.cost.estimated",
+          "orderby": "-time"
+        }
+      ],
+      "interval": "1h"
+    },
+    {
+      "id": "endpoint-breakdown",
+      "title": "Response Time by Endpoint",
+      "displayType": "bar",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "By Endpoint",
+          "fields": ["claude.endpoint", "avg(claude.response_time)"],
+          "aggregates": ["avg(claude.response_time)"],
+          "conditions": "has:claude.endpoint",
+          "orderby": "-avg(claude.response_time)",
+          "groupBy": ["claude.endpoint"]
+        }
+      ]
+    },
+    {
+      "id": "error-rate",
+      "title": "Claude API Error Rate",
+      "displayType": "line",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "Error Rate %",
+          "fields": ["equation|count_if(claude.success,equals,false) / count() * 100"],
+          "conditions": "has:claude.success",
+          "orderby": "-time"
+        }
+      ],
+      "interval": "15m",
+      "thresholds": {
+        "warning": 1,
+        "critical": 5
+      }
+    },
+    {
+      "id": "throughput",
+      "title": "Claude API Request Throughput",
+      "displayType": "area",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "Requests per Minute",
+          "fields": ["count()"],
+          "aggregates": ["count()"],
+          "conditions": "has:claude.endpoint",
+          "orderby": "-time"
+        }
+      ],
+      "interval": "1m"
+    },
+    {
+      "id": "token-distribution",
+      "title": "Token Usage Distribution",
+      "displayType": "world_map",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "Total Tokens",
+          "fields": ["p50(claude.tokens.total)", "p95(claude.tokens.total)", "p99(claude.tokens.total)"],
+          "aggregates": ["p50(claude.tokens.total)", "p95(claude.tokens.total)", "p99(claude.tokens.total)"],
+          "conditions": "has:claude.tokens.total",
+          "orderby": "-time"
+        }
+      ]
+    },
+    {
+      "id": "streaming-performance",
+      "title": "Streaming Performance (when applicable)",
+      "displayType": "line",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "Chunks per Response",
+          "fields": ["avg(claude.streaming.chunks)"],
+          "aggregates": ["avg(claude.streaming.chunks)"],
+          "conditions": "claude.streaming:true",
+          "orderby": "-time"
+        }
+      ],
+      "interval": "5m"
+    },
+    {
+      "id": "model-usage",
+      "title": "Model Usage Distribution",
+      "displayType": "table",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "By Model",
+          "fields": ["claude.model", "count()", "sum(claude.tokens.total)", "sum(claude.cost.estimated)"],
+          "aggregates": ["count()", "sum(claude.tokens.total)", "sum(claude.cost.estimated)"],
+          "conditions": "has:claude.model",
+          "groupBy": ["claude.model"],
+          "orderby": "-count()"
+        }
+      ]
+    },
+    {
+      "id": "error-types",
+      "title": "Error Type Distribution",
+      "displayType": "table",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "By Error Type",
+          "fields": ["claude.error_type", "count()"],
+          "aggregates": ["count()"],
+          "conditions": "claude.success:false",
+          "groupBy": ["claude.error_type"],
+          "orderby": "-count()"
+        }
+      ]
+    },
+    {
+      "id": "top-endpoints",
+      "title": "Top 5 Endpoints by Request Count",
+      "displayType": "top_n",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "Top Endpoints",
+          "fields": ["claude.endpoint", "count()"],
+          "aggregates": ["count()"],
+          "conditions": "has:claude.endpoint",
+          "groupBy": ["claude.endpoint"],
+          "orderby": "-count()",
+          "limit": 5
+        }
+      ]
+    },
+    {
+      "id": "performance-over-time",
+      "title": "Daily Performance Trends",
+      "displayType": "area",
+      "widgetType": "discover",
+      "queries": [
+        {
+          "name": "Avg Response Time",
+          "fields": ["avg(claude.response_time)"],
+          "aggregates": ["avg(claude.response_time)"],
+          "conditions": "has:claude.response_time",
+          "orderby": "-time"
+        },
+        {
+          "name": "Avg Token Count",
+          "fields": ["avg(claude.tokens.total)"],
+          "aggregates": ["avg(claude.tokens.total)"],
+          "conditions": "has:claude.tokens.total",
+          "orderby": "-time"
+        }
+      ],
+      "interval": "1d"
+    }
+  ],
+  "layout": {
+    "rows": [
+      {"widgets": ["response-time-overview"], "height": 300},
+      {"widgets": ["token-usage", "cost-tracking"], "height": 250},
+      {"widgets": ["endpoint-breakdown", "error-rate"], "height": 250},
+      {"widgets": ["throughput", "streaming-performance"], "height": 250},
+      {"widgets": ["model-usage", "error-types"], "height": 300},
+      {"widgets": ["top-endpoints", "token-distribution"], "height": 250},
+      {"widgets": ["performance-over-time"], "height": 300}
+    ]
+  },
+  "filters": {
+    "environment": ["production", "development"],
+    "timeRange": "24h"
+  },
+  "refreshInterval": "1m"
+}

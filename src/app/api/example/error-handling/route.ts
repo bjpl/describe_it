@@ -58,7 +58,7 @@ async function handleRequest(request: NextRequest): Promise<NextResponse> {
   
   try {
     // Log the incoming request
-    logger.apiCall(request.method, request.url, {
+    logger.info(`API Call: ${request.method} ${request.url}`, {
       userAgent: request.headers.get('user-agent'),
       requestId: request.headers.get('x-request-id'),
     });
@@ -150,7 +150,7 @@ async function handleRequest(request: NextRequest): Promise<NextResponse> {
 
     // Log successful response
     const duration = Date.now() - startTime;
-    logger.apiResponse(request.method, request.url, 200, {
+    logger.info(`API Response: ${request.method} ${request.url} - 200`, {
       requestId: request.headers.get('x-request-id'),
       duration,
       userId,

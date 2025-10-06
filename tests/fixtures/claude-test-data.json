@@ -1,0 +1,121 @@
+{
+  "sampleImages": [
+    {
+      "id": "test-image-1",
+      "url": "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
+      "description": "A scenic mountain landscape",
+      "type": "landscape"
+    },
+    {
+      "id": "test-image-2",
+      "url": "https://images.unsplash.com/photo-1574158622682-e40e69881006",
+      "description": "A black and white cat",
+      "type": "animal"
+    },
+    {
+      "id": "test-image-3",
+      "url": "https://images.unsplash.com/photo-1480074568708-e7b720bb3f09",
+      "description": "Modern architecture building",
+      "type": "architecture"
+    },
+    {
+      "id": "test-base64",
+      "url": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      "description": "1x1 red pixel (for quick tests)",
+      "type": "minimal"
+    }
+  ],
+  "descriptionStyles": [
+    "narrativo",
+    "poetico",
+    "academico",
+    "conversacional",
+    "infantil",
+    "creativo",
+    "tecnico"
+  ],
+  "languages": {
+    "pairs": [
+      { "source": "en", "target": "es", "label": "English to Spanish" },
+      { "source": "es", "target": "en", "label": "Spanish to English" },
+      { "source": "en", "target": "fr", "label": "English to French" },
+      { "source": "fr", "target": "en", "label": "French to English" },
+      { "source": "es", "target": "fr", "label": "Spanish to French" }
+    ]
+  },
+  "testTexts": {
+    "english": "The beautiful mountain landscape stretches across the horizon with snow-capped peaks.",
+    "spanish": "Una casa grande con jardín verde y flores coloridas bajo el sol brillante.",
+    "french": "Le chat noir dort paisiblement sur le canapé confortable.",
+    "long": "This is a very long text that will be used to test performance and edge cases. It contains multiple sentences and various punctuation marks! Does it handle questions? Yes, it does. It also includes special characters: áéíóú, ñ, ç, ü. The text continues with more details to ensure we're testing realistic scenarios that users might encounter when using the application for language learning purposes.",
+    "special_chars": "¿Cómo estás? ¡Muy bien! Ñoño, pingüino, café, résumé, naïve, coöperate"
+  },
+  "sampleDescriptions": {
+    "narrativo": "En las alturas de una montaña nevada, donde el viento susurra historias antiguas, se encuentra un paisaje que parece sacado de un cuento de hadas. Los picos cubiertos de nieve brillan bajo el sol de la tarde.",
+    "poetico": "Montañas que tocan el cielo, / nieve que besa las cumbres, / el viento canta poesía, / y el sol pinta de oro la tarde.",
+    "academico": "Este paisaje montañoso presenta características geológicas típicas de formaciones alpinas, con elevaciones superiores a 3000 metros sobre el nivel del mar.",
+    "conversacional": "¡Mira qué montañas tan increíbles! La nieve en las cimas se ve súper bonita con la luz del sol. Me encantaría estar allí."
+  },
+  "mockResponses": {
+    "qa_pairs": [
+      {
+        "question": "¿Qué se describe en la imagen?",
+        "answer": "Se describe un paisaje montañoso con picos nevados.",
+        "difficulty": "facil"
+      },
+      {
+        "question": "¿Cuál es la característica principal del paisaje?",
+        "answer": "La característica principal son las montañas cubiertas de nieve.",
+        "difficulty": "medio"
+      },
+      {
+        "question": "¿Qué elementos geológicos y climáticos interactúan en este entorno alpino?",
+        "answer": "Los elementos incluyen formaciones rocosas, precipitación nival, y patrones de erosión glacial.",
+        "difficulty": "dificil"
+      }
+    ]
+  },
+  "errorScenarios": [
+    {
+      "name": "invalid_image_url",
+      "input": { "imageUrl": "not-a-url", "style": "narrativo" },
+      "expectedStatus": 400,
+      "expectedError": "Image URL must be a valid data URI or HTTP URL"
+    },
+    {
+      "name": "missing_description",
+      "input": { "language": "es", "count": 5 },
+      "expectedStatus": 400,
+      "expectedError": "Description is required"
+    },
+    {
+      "name": "invalid_language",
+      "input": { "text": "test", "sourceLanguage": "xx", "targetLanguage": "yy" },
+      "expectedStatus": 400,
+      "expectedError": "Unsupported language code"
+    },
+    {
+      "name": "count_too_high",
+      "input": { "description": "test", "count": 15 },
+      "expectedStatus": 400,
+      "expectedError": "Count must be a number between 1 and 10"
+    }
+  ],
+  "performanceBenchmarks": {
+    "description_generation": {
+      "target": 15000,
+      "acceptable": 20000,
+      "parallel": true
+    },
+    "qa_generation": {
+      "target": 3000,
+      "acceptable": 5000,
+      "parallel": false
+    },
+    "translation": {
+      "target": 2000,
+      "acceptable": 3000,
+      "parallel": false
+    }
+  }
+}
