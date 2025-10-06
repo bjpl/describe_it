@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 
 import React, { useState } from 'react';
 import { Mail, ArrowLeft, AlertCircle, CheckCircle } from 'lucide-react';
@@ -97,7 +98,7 @@ export function ForgotPasswordForm({
       }
 
     } catch (err: any) {
-      console.error('Forgot password error:', err);
+      logger.error('Forgot password error', err, { context: 'ForgotPasswordForm' });
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
         setError('Network error. Please check your connection');
       } else {

@@ -49,7 +49,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.group("🔥 React Error Boundary - PRODUCTION DEBUG");
+    // Production error logging - "🔥 React Error Boundary - PRODUCTION DEBUG"
     logger.error("[PRODUCTION ERROR] Error:", error);
     logger.error("[PRODUCTION ERROR] Error Message:", undefined, { message: error.message });
     logger.error("[PRODUCTION ERROR] Error Stack:", undefined, { stack: error.stack });
@@ -63,7 +63,7 @@ class ErrorBoundaryClass extends Component<Props, State> {
       timestamp: new Date().toISOString(),
       errorCount: this.state.errorCount + 1
     });
-    console.groupEnd();
+    // End error logging
 
     this.setState({
       errorInfo,

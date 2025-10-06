@@ -133,7 +133,7 @@ Add keys to enable full functionality.
 export function logEnvironmentStatus(): void {
   const status = validateEnvironment();
 
-  console.group("🔧 Environment Status");
+  // Environment status - "🔧 Environment Status"
 
   if (status.isValid) {
     logger.info("✅ All required environment variables are set");
@@ -142,15 +142,15 @@ export function logEnvironmentStatus(): void {
   }
 
   if (status.warnings.length > 0) {
-    console.group("⚠️  Warnings:");
+    // Environment status - "⚠️  Warnings:"
     status.warnings.forEach((warning) => logger.warn(`  • ${warning}`));
-    console.groupEnd();
+    // End status group
   }
 
   if (status.recommendations.length > 0) {
-    console.group("💡 Recommendations:");
+    // Environment status - "💡 Recommendations:"
     status.recommendations.forEach((rec) => logger.info(`  • ${rec}`));
-    console.groupEnd();
+    // End status group
   }
 
   if (!status.isValid || status.warnings.length > 0) {
@@ -158,5 +158,5 @@ export function logEnvironmentStatus(): void {
     logger.info(getSetupInstructions());
   }
 
-  console.groupEnd();
+  // End status group
 }

@@ -1,3 +1,6 @@
+/* eslint-disable custom-rules/require-logger, no-console */
+/* Edge runtime safe JSON utilities - console for development-only errors */
+
 /**
  * Safe JSON parsing and stringification utilities
  * Prevents runtime crashes from malformed JSON

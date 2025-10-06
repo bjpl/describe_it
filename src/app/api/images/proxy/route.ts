@@ -13,11 +13,26 @@ import { z } from 'zod';
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-// Edge runtime logger (console-based, compatible with Edge runtime)
+// Edge runtime logger (development-only logging for edge runtime)
+// Edge runtime does not support Winston logger, console is necessary here
 const edgeLogger = {
-  warn: (message: string, ...args: any[]) => console.warn(`[Image Proxy] ${message}`, ...args),
-  error: (message: string, ...args: any[]) => console.error(`[Image Proxy] ${message}`, ...args),
-  info: (message: string, ...args: any[]) => console.log(`[Image Proxy] ${message}`, ...args),
+  warn: (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line custom-rules/require-logger, no-console
+      console.warn(`[Image Proxy] ${message}`, ...args);
+    }
+  },
+  error: (message: string, ...args: any[]) => {
+    // Always log errors, even in production
+    // eslint-disable-next-line custom-rules/require-logger, no-console
+    console.error(`[Image Proxy] ${message}`, ...args);
+  },
+  info: (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line custom-rules/require-logger, no-console
+      console.log(`[Image Proxy] ${message}`, ...args);
+    }
+  },
 };
 
 /**

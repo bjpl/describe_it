@@ -4,11 +4,26 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "edge";
 export const dynamic = "force-dynamic";
 
-// Edge runtime logger (console-based, compatible with Edge runtime)
+// Edge runtime logger (development-only logging for edge runtime)
+// Edge runtime does not support Winston logger, console is necessary here
 const edgeLogger = {
-  warn: (message: string, ...args: any[]) => console.warn(`[Edge API] ${message}`, ...args),
-  error: (message: string, ...args: any[]) => console.error(`[Edge API] ${message}`, ...args),
-  info: (message: string, ...args: any[]) => console.log(`[Edge API] ${message}`, ...args),
+  warn: (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line custom-rules/require-logger, no-console
+      console.warn(`[Edge API] ${message}`, ...args);
+    }
+  },
+  error: (message: string, ...args: any[]) => {
+    // Always log errors, even in production
+    // eslint-disable-next-line custom-rules/require-logger, no-console
+    console.error(`[Edge API] ${message}`, ...args);
+  },
+  info: (message: string, ...args: any[]) => {
+    if (process.env.NODE_ENV !== 'production') {
+      // eslint-disable-next-line custom-rules/require-logger, no-console
+      console.log(`[Edge API] ${message}`, ...args);
+    }
+  },
 };
 
 // Simple in-memory cache for Edge Runtime

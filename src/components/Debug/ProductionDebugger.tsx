@@ -111,7 +111,7 @@ export const ProductionDebugger: React.FC = () => {
     setDebugInfo(info);
 
     // Log comprehensive debug information
-    console.group('[PRODUCTION DEBUGGER] Environment Information');
+    // Debug group: '[PRODUCTION DEBUGGER] Environment Information'
     debugLogger.debug('Debug information collected', {
       timestamp: info.timestamp,
       hasEnvironment: !!info.environment,
@@ -119,7 +119,7 @@ export const ProductionDebugger: React.FC = () => {
       hasUserAgent: !!info.userAgent,
       hasScreen: !!info.screen
     });
-    console.groupEnd();
+    // End debug group
 
     // Update debug info periodically
     const interval = setInterval(() => {
@@ -242,9 +242,9 @@ export const logProductionDebugInfo = () => {
     })(),
   };
 
-  console.group('[PRODUCTION DEBUG] Manual Debug Report');
+  // Debug group: '[PRODUCTION DEBUG] Manual Debug Report'
   debugLogger.debug('Debug info', { hasDebugInfo: !!debugInfo });
-  console.groupEnd();
+  // End debug group
 
   return debugInfo;
 };

@@ -1,3 +1,6 @@
+/* eslint-disable custom-rules/require-logger, no-console */
+/* Console replacement utilities - console usage is intentional for compatibility */
+
 /**
  * Console Replacement Utilities
  * Drop-in replacements for console.log/warn/error with structured logging

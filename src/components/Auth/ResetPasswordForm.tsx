@@ -1,4 +1,5 @@
 'use client';
+import { logger } from '@/lib/logger';
 
 import React, { useState, useEffect } from 'react';
 import { Lock, Eye, EyeOff, AlertCircle, CheckCircle, X } from 'lucide-react';
@@ -68,7 +69,7 @@ export function ResetPasswordForm({
         setTokenValid(true);
       }
     } catch (err) {
-      console.error('Token validation error:', err);
+      logger.error('Token validation error', err, { context: 'ResetPasswordForm', action: 'validateToken' });
       setError('Network error. Please check your connection');
       setTokenValid(false);
     }
@@ -221,7 +222,7 @@ export function ResetPasswordForm({
       }
 
     } catch (err: any) {
-      console.error('Reset password error:', err);
+      logger.error('Reset password error', err, { context: 'ResetPasswordForm', action: 'submit' });
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
         setError('Network error. Please check your connection');
       } else {
