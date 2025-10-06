@@ -25,49 +25,37 @@ export function initSentry() {
     dsn: SENTRY_DSN,
     environment: SENTRY_ENVIRONMENT,
     release: SENTRY_RELEASE,
-    
+
     // Performance monitoring
     tracesSampleRate: ENVIRONMENT === 'production' ? 0.1 : 1.0,
-    
-    // Session tracking
-    autoSessionTracking: true,
-    
+
     // Error filtering
     beforeSend(event, hint) {
       // Filter out common non-critical errors
       if (event.exception) {
         const error = hint.originalException;
-        
+
         // Skip network errors in development
-        if (ENVIRONMENT === 'development' && 
+        if (ENVIRONMENT === 'development' &&
             (error instanceof TypeError && error.message.includes('Failed to fetch'))) {
           return null;
         }
-        
+
         // Skip cancelled requests
         if (error instanceof Error && error.name === 'AbortError') {
           return null;
         }
       }
-      
+
       return event;
     },
-    
-    // Integrations
+
+    // Integrations - v10 uses function-based integrations
     integrations: [
-      new Sentry.BrowserTracing({
-        // Track page loads and navigation
-        routingInstrumentation: Sentry.nextRouterInstrumentation,
-        
-        // Track specific operations
-        tracingOrigins: [
-          'localhost',
-          /^https:\/\/.*\.vercel\.app$/,
-          /^https:\/\/.*\.yourdomain\.com$/,
-        ],
-      }),
+      // Browser tracing is automatically included in @sentry/nextjs
+      // Custom integrations can be added here
     ],
-    
+
     // User context
     initialScope: {
       tags: {
@@ -176,37 +164,39 @@ export function clearUserContext() {
 }
 
 /**
- * Start performance transaction
+ * Start performance transaction (v10 uses startSpan)
  */
 export function startTransaction(name: string, op: string) {
-  return Sentry.startTransaction({
+  // In v10, use startSpan instead of startTransaction
+  return Sentry.startSpan({
     name,
     op,
-  });
+  }, (span) => span);
 }
 
 /**
- * Profile function execution
+ * Profile function execution (v10 uses startSpan)
  */
 export function profileFunction<T>(
   name: string,
   fn: () => T | Promise<T>
 ): Promise<T> {
-  const transaction = startTransaction(name, 'function');
-  
-  return Promise.resolve(fn())
-    .then((result) => {
-      transaction.setStatus('ok');
-      return result;
-    })
-    .catch((error) => {
-      transaction.setStatus('internal_error');
-      captureError(error, { function: name });
-      throw error;
-    })
-    .finally(() => {
-      transaction.finish();
-    });
+  // In v10, use startSpan with a callback
+  return Sentry.startSpan(
+    {
+      name,
+      op: 'function',
+    },
+    async () => {
+      try {
+        const result = await Promise.resolve(fn());
+        return result;
+      } catch (error) {
+        captureError(error as Error, { function: name });
+        throw error;
+      }
+    }
+  );
 }
 
 export { Sentry };

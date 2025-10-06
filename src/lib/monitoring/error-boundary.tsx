@@ -6,6 +6,7 @@
 'use client';
 
 import React, { Component, ErrorInfo, ReactNode } from 'react';
+import * as Sentry from '@sentry/nextjs';
 import { captureError } from './sentry';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/Button';
