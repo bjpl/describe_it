@@ -90,27 +90,32 @@ export function ResetPasswordForm({
     return { score, label: 'Strong', color: 'bg-green-500' };
   };
 
+  /**
+   * Modern password validation (NIST guidelines)
+   * Focus on LENGTH over COMPLEXITY
+   */
   const validatePassword = (password: string): string[] => {
     const errors: string[] = [];
 
+    // Minimum length check
     if (password.length < 8) {
-      errors.push('Password must be at least 8 characters long');
+      errors.push('Password must be at least 8 characters | Mínimo 8 caracteres');
     }
 
-    if (!/[a-z]/.test(password)) {
-      errors.push('Password must contain at least one lowercase letter');
+    // Maximum length check
+    if (password.length > 128) {
+      errors.push('Password too long (max 128) | Máximo 128 caracteres');
     }
 
-    if (!/[A-Z]/.test(password)) {
-      errors.push('Password must contain at least one uppercase letter');
+    // Prevent spaces-only passwords
+    if (password.trim().length < 8) {
+      errors.push('Password cannot be only spaces | No puede ser solo espacios');
     }
 
-    if (!/[0-9]/.test(password)) {
-      errors.push('Password must contain at least one number');
-    }
-
-    if (!/[^a-zA-Z0-9]/.test(password)) {
-      errors.push('Password must contain at least one special character');
+    // Optional: Warn about very weak passwords (but don't block them)
+    if (password.length < 12) {
+      // This is just a suggestion, not a hard requirement
+      // errors.push('Tip: 12+ characters recommended for better security');
     }
 
     return errors;
@@ -374,10 +379,12 @@ export function ResetPasswordForm({
                 Password meets all requirements
               </p>
             ) : (
-              <ul className="list-disc list-inside space-y-1">
-                <li>At least 8 characters</li>
-                <li>One uppercase and one lowercase letter</li>
-                <li>One number and one special character</li>
+              <ul className="list-disc list-inside space-y-1 text-sm">
+                <li>Minimum 8 characters | Mínimo 8 caracteres</li>
+                <li>Maximum 128 characters | Máximo 128 caracteres</li>
+                <li className="text-gray-500 dark:text-gray-400 italic">
+                  💡 Longer passwords are more secure | Las contraseñas largas son más seguras
+                </li>
               </ul>
             )}
           </div>

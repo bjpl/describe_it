@@ -120,6 +120,17 @@ export const descriptionStyleSchema = z.enum([
 /**
  * Authentication validation schemas
  */
+/**
+ * MODERN PASSWORD VALIDATION (NIST SP 800-63B Guidelines)
+ *
+ * Modern approach focuses on LENGTH over COMPLEXITY:
+ * - Minimum 8 characters (reasonable for individual use)
+ * - No character composition rules (no forced special chars)
+ * - Allows spaces and Unicode for passphrases
+ * - Length is the primary security factor
+ *
+ * Why: Research shows "correct horse battery staple" beats "P@ssw0rd!"
+ */
 export const authSignupSchema = baseRequestSchema.extend({
   email: z.string()
     .email("Invalid email format")
@@ -128,10 +139,12 @@ export const authSignupSchema = baseRequestSchema.extend({
     .toLowerCase()
     .trim(),
   password: z.string()
-    .min(8, "Password must be at least 8 characters")
-    .max(128, "Password too long")
-    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/, 
-      "Password must contain uppercase, lowercase, number and special character"),
+    .min(8, "Password must be at least 8 characters | La contraseña debe tener al menos 8 caracteres")
+    .max(128, "Password too long (max 128 characters) | Contraseña demasiado larga (máximo 128 caracteres)")
+    .refine(
+      (pwd) => pwd.trim().length >= 8,
+      "Password cannot be only spaces | La contraseña no puede ser solo espacios"
+    ),
   confirmPassword: z.string().optional(),
   firstName: z.string()
     .min(1, "First name is required")
@@ -146,7 +159,7 @@ export const authSignupSchema = baseRequestSchema.extend({
     .trim()
     .optional(),
 }).refine((data) => !data.confirmPassword || data.password === data.confirmPassword, {
-  message: "Passwords don't match",
+  message: "Passwords don't match | Las contraseñas no coinciden",
   path: ["confirmPassword"],
 });
 
