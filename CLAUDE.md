@@ -261,46 +261,96 @@ npx claude-flow sparc tdd "<feature>"          # TDD workflow
 
 ---
 
-## 🔗 Reference Documentation
+## 🚀 Available Agents - Quick Reference
 
-**For detailed information, see:**
-- **`AGENTS.md`** - Complete reference of all 54 available agents with usage guidelines
-- **`EXAMPLES.md`** - Practical swarm coordination patterns and real-world examples
-- **`docs/PASSWORD_POLICY.md`** - Modern password validation standards (NIST)
-- **`docs/DEPLOY_STAGING.md`** - Deployment guide and testing checklist
-- **`docs/reports/`** - Swarm execution reports and analysis
+**Core Development (Most Used):**
+- `coder` - Implementation, refactoring, feature development
+- `tester` - Unit tests, integration tests, E2E tests, QA
+- `reviewer` - Code review, quality checks, production validation
+- `backend-dev` - API endpoints, database, server-side logic
+- `researcher` - Analysis, documentation review, best practices
+
+**Specialized:**
+- `system-architect` - Architecture design, technical decisions
+- `cicd-engineer` - CI/CD pipelines, deployment automation
+- `api-docs` - OpenAPI/Swagger documentation
+- `code-analyzer` - Code quality analysis, refactoring suggestions
+- `production-validator` - Final production readiness checks
+
+**Coordinators (for complex multi-agent tasks):**
+- `hierarchical-coordinator` - Queen-led swarm with worker delegation
+- `mesh-coordinator` - Peer-to-peer collaborative swarm
+- `smart-agent` - Adaptive agent spawning and coordination
+
+**See `AGENTS.md` for complete list of all 54 agents with detailed usage guidelines.**
 
 ---
 
-## 🚀 Quick Start for Agent Coordination
+## 🚀 Swarm Coordination - Essential Pattern
 
 ### **Simple Task (Single Agent)**
 ```javascript
-Task("Fix bug", "Debug and resolve authentication timeout issue", "coder")
+Task("Fix bug", "Debug and resolve authentication timeout", "coder")
 ```
 
 ### **Complex Task (Multiple Agents)**
 ```javascript
-[Single Message - All Agents]:
-  Task("Backend", "Build API endpoints", "backend-dev")
-  Task("Frontend", "Create UI components", "coder")
-  Task("Tests", "Comprehensive test suite", "tester")
-  Task("Review", "Quality assurance", "reviewer")
+// Single message with ALL agents spawned concurrently
+[Message - Parallel Execution]:
+  Task("Backend", "Build REST API with auth. Use hooks for coordination.", "backend-dev")
+  Task("Frontend", "Create React UI. Coordinate via memory.", "coder")
+  Task("Database", "Design schema. Share in memory.", "code-analyzer")
+  Task("Tests", "Write comprehensive tests. 90% coverage.", "tester")
+  Task("Review", "QA all work. Approve or identify blockers.", "reviewer")
 
-  TodoWrite { todos: [...10 todos...] }
+  // Batch ALL todos in ONE call
+  TodoWrite { todos: [
+    {content: "Design API", status: "in_progress"},
+    {content: "Build UI", status: "in_progress"},
+    {content: "Database schema", status: "in_progress"},
+    {content: "Write tests", status: "pending"},
+    {content: "Final review", status: "pending"},
+    ...8-10 total todos
+  ]}
 ```
 
-### **With MCP Coordination (Advanced)**
-```javascript
-// Message 1: Setup coordination
-mcp__claude-flow__swarm_init { topology: "mesh", maxAgents: 6 }
+### **Agent Coordination Protocol (Required for Each Agent)**
 
-// Message 2: Execute with Task tool
-Task("Agent 1", "Work 1", "type1")
-Task("Agent 2", "Work 2", "type2")
+**Before work:**
+```bash
+npx claude-flow@alpha hooks pre-task --description "[task]"
 ```
 
-**See `EXAMPLES.md` for detailed patterns and real execution examples.**
+**During work:**
+```bash
+npx claude-flow@alpha hooks post-edit --file "[file]" --memory-key "swarm/[agent]/[step]"
+```
+
+**After work:**
+```bash
+npx claude-flow@alpha hooks post-task --task-id "[task]"
+```
+
+### **Performance Metrics (Real Data from Oct 6)**
+- 13 agents executed in parallel
+- 16 tasks completed with 100% success rate
+- 49 files, 14,908 lines generated in ~90 minutes
+- 2.8-4.4x faster than sequential execution
+
+**See `EXAMPLES.md` for detailed patterns, anti-patterns, and 6 real-world swarm examples.**
+
+---
+
+## 🔗 Reference Documentation
+
+**These files contain detailed information (read when needed):**
+- **`AGENTS.md`** - Complete reference of all 54 agents with categories and usage guidelines
+- **`EXAMPLES.md`** - Practical swarm patterns with real code from production deployments
+- **`docs/PASSWORD_POLICY.md`** - Modern password validation (NIST standards, bilingual)
+- **`docs/DEPLOY_STAGING.md`** - Deployment guide and manual testing checklist
+- **`docs/reports/`** - Swarm execution reports and production readiness assessments
+
+**Note**: Claude Code auto-reads CLAUDE.md only. Other files are human reference or can be read explicitly via Read tool.
 
 ---
 
