@@ -139,7 +139,9 @@ export class TranslationService {
 
         return response;
       } catch (error) {
-        logger.warn("OpenAI translation failed, using fallback:", error);
+        logger.warn("OpenAI translation failed, using fallback", {
+          error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+        });
       }
     }
 
@@ -247,7 +249,9 @@ export class TranslationService {
           return { language: detected, confidence: 0.9 };
         }
       } catch (error) {
-        logger.warn("Language detection failed:", error);
+        logger.warn("Language detection failed", {
+          error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+        });
       }
     }
 

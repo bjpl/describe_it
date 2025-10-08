@@ -1,4 +1,5 @@
-import { logger } from '@/lib/logger';
+import { logger, LogContext } from '@/lib/logger';
+import { safeStringify, toLogContext } from '@/lib/utils/json-safe';
 
 export interface AppSettings {
   // API Configuration
@@ -172,7 +173,7 @@ export class SettingsManager {
         }
       }
     } catch (error) {
-      logger.warn("Failed to load settings from localStorage:", error);
+      logger.warn("Failed to load settings from localStorage:", toLogContext(error));
     }
     return { ...DEFAULT_SETTINGS };
   }
@@ -388,7 +389,7 @@ export class SettingsManager {
         : { unsplash: "", openai: "" },
     };
 
-    return safeStringify(
+    return JSON.stringify(
       {
         version: this.STORAGE_VERSION,
         timestamp: new Date().toISOString(),

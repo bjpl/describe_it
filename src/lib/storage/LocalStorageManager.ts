@@ -3,8 +3,8 @@
  * Handles quota issues, monitoring, cleanup, and optimization
  */
 
-import { logger } from '../logger';
-import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger, LogContext } from '../logger';
+import { safeParse, safeStringify, toLogContext } from "@/lib/utils/json-safe";
 
 export interface StorageEntry {
   key: string;
@@ -101,7 +101,7 @@ class LocalStorageManager {
         };
       }
     } catch (error) {
-      logger.warn('Storage quota API not available:', error);
+      logger.warn('Storage quota API not available:', toLogContext(error));
     }
 
     // Fallback: Calculate from localStorage
@@ -461,7 +461,7 @@ class LocalStorageManager {
     });
 
     // Show user-friendly message
-    if (typeof window !== 'undefined' && window.alert) {
+    if (typeof window !== 'undefined') {
       alert(
         'Storage space is full. Some data could not be saved. ' +
         'Please clear your browser cache or remove old data from settings.'

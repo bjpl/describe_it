@@ -249,11 +249,9 @@ export class ErrorMiddleware {
     const isDevelopment = process.env.NODE_ENV === 'development';
 
     // Log error with context
-    logger.errorWithCategory(
+    logger.error(
       error.message,
       error,
-      category,
-      severity,
       {
         requestId: context.requestId,
         method: context.method,
@@ -262,6 +260,8 @@ export class ErrorMiddleware {
         ip: context.ip,
         userId: context.userId,
         sessionId: context.sessionId,
+        category,
+        severity,
       }
     );
 
@@ -282,15 +282,7 @@ export class ErrorMiddleware {
 
     // Include additional details in development
     if (isDevelopment) {
-      errorResponse.details = {
-        originalMessage: error.message,
-        stack: error.stack,
-        context: {
-          method: context.method,
-          url: context.url,
-          headers: context.headers,
-        },
-      };
+      errorResponse.details = error.message;
       errorResponse.stack = error.stack;
     }
 
@@ -357,9 +349,9 @@ export class ErrorMiddleware {
           context.method,
           context.url,
           response.status,
+          Date.now() - startTime,
           {
             requestId: context.requestId,
-            duration: Date.now() - startTime,
           }
         );
 

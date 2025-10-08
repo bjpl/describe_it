@@ -372,7 +372,7 @@ export class ExportService {
       data: processedData,
     };
 
-    const jsonContent = safeStringify(exportObject, null, 2);
+    const jsonContent = JSON.stringify(exportObject, null, 2);
     const blob = new Blob([jsonContent], { type: "application/json" });
     const filename = this.generateFilename("json", options);
     const downloadUrl = URL.createObjectURL(blob);

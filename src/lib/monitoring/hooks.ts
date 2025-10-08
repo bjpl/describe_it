@@ -3,7 +3,7 @@
  * Provides centralized monitoring configuration sharing and coordination hooks
  */
 
-import { logger } from './logger';
+import { logger as monitoringLogger } from './logger';
 import { metrics } from './metrics';
 import { errorTracker } from './errorTracking';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
@@ -108,8 +108,8 @@ export class MonitoringHooks {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     
     if (this.config.enableLogging) {
-      logger.logEvent(
-        { 
+      monitoringLogger.logEvent(
+        {
           requestId: sessionId,
           endpoint: context?.endpoint || 'unknown',
           method: context?.method || 'unknown',
@@ -141,7 +141,7 @@ export class MonitoringHooks {
 
     if (this.config.enableLogging) {
       if (error) {
-        logger.logError(
+        monitoringLogger.logError(
           {
             requestId: sessionId,
             endpoint: session.context?.endpoint || 'unknown',
@@ -156,7 +156,7 @@ export class MonitoringHooks {
           }
         );
       } else {
-        logger.logEvent(
+        monitoringLogger.logEvent(
           {
             requestId: sessionId,
             endpoint: session.context?.endpoint || 'unknown',
@@ -188,9 +188,9 @@ export class MonitoringHooks {
    */
   async postEdit(filePath: string, memoryKey?: string, changes?: any): Promise<void> {
     if (this.config.enableLogging) {
-      logger.logEvent(
+      monitoringLogger.logEvent(
         {
-          requestId: logger.generateRequestId(),
+          requestId: monitoringLogger.generateRequestId(),
           endpoint: 'file_operation',
           method: 'EDIT',
           timestamp: new Date().toISOString()
@@ -216,7 +216,7 @@ export class MonitoringHooks {
   async notify(message: string, level: 'info' | 'warn' | 'error' = 'info', context?: any): Promise<void> {
     if (this.config.enableLogging) {
       const logContext = {
-        requestId: logger.generateRequestId(),
+        requestId: monitoringLogger.generateRequestId(),
         endpoint: 'notification',
         method: 'NOTIFY',
         timestamp: new Date().toISOString()
@@ -224,17 +224,17 @@ export class MonitoringHooks {
 
       switch (level) {
         case 'error':
-          logger.logError(logContext, new Error(message), {
+          monitoringLogger.logError(logContext, new Error(message), {
             category: 'system',
             severity: 'medium',
             code: 'NOTIFICATION_ERROR'
           });
           break;
         case 'warn':
-          logger.logEvent(logContext, 'warning_notification', { message, context });
+          monitoringLogger.logEvent(logContext, 'warning_notification', { message, context });
           break;
         default:
-          logger.logEvent(logContext, 'info_notification', { message, context });
+          monitoringLogger.logEvent(logContext, 'info_notification', { message, context });
       }
     }
 
@@ -249,11 +249,11 @@ export class MonitoringHooks {
    */
   async sessionRestore(sessionId: string): Promise<any> {
     const data = this.sessionData.get(sessionId);
-    
+
     if (this.config.enableLogging && data) {
-      logger.logEvent(
+      monitoringLogger.logEvent(
         {
-          requestId: logger.generateRequestId(),
+          requestId: monitoringLogger.generateRequestId(),
           endpoint: 'session',
           method: 'RESTORE',
           timestamp: new Date().toISOString()
@@ -285,9 +285,9 @@ export class MonitoringHooks {
     }
 
     if (this.config.enableLogging) {
-      logger.logEvent(
+      monitoringLogger.logEvent(
         {
-          requestId: logger.generateRequestId(),
+          requestId: monitoringLogger.generateRequestId(),
           endpoint: 'session',
           method: 'END',
           timestamp: new Date().toISOString()
@@ -326,9 +326,9 @@ export class MonitoringHooks {
     });
 
     if (this.config.enableLogging) {
-      logger.logEvent(
+      monitoringLogger.logEvent(
         {
-          requestId: logger.generateRequestId(),
+          requestId: monitoringLogger.generateRequestId(),
           endpoint: 'config',
           method: 'UPDATE',
           timestamp: new Date().toISOString()
@@ -358,9 +358,9 @@ export class MonitoringHooks {
    */
   private async triggerAlert(type: string, data: any): Promise<void> {
     if (this.config.enableLogging) {
-      logger.logEvent(
+      monitoringLogger.logEvent(
         {
-          requestId: logger.generateRequestId(),
+          requestId: monitoringLogger.generateRequestId(),
           endpoint: 'alert',
           method: 'TRIGGER',
           timestamp: new Date().toISOString()

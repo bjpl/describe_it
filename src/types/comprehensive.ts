@@ -1864,8 +1864,19 @@ export const VALIDATION_PATTERNS = {
 // =============================================================================
 
 // Export everything from modules, resolving conflicts manually
-export * from './api';
-export * from './export';
+// Note: Some types (ExportData, ExportTemplate, VocabularyItem) are exported from multiple modules
+// We explicitly re-export from the preferred module to resolve ambiguity
 
-// Export from unified (preferred version of VocabularyStats and Database)
+// Export from api (excluding conflicting types)
+export type {
+  TranslationRequest,
+} from './api';
+
+// Export from export (excluding conflicting types)
+export type {
+  ExportOptions,
+  ExportFormat as ExportFormatType,
+} from './export';
+
+// Export from unified (preferred versions of VocabularyItem, ExportData, ExportTemplate, Database)
 export * from './unified';

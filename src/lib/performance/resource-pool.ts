@@ -75,12 +75,18 @@ export class ResourcePool<T extends PooledResource> extends EventEmitter {
 
   private async warmUp(): Promise<void> {
     const promises: Promise<void>[] = [];
-    
+
     for (let i = 0; i < this.config.minSize; i++) {
-      promises.push(this.createResource().catch(error => {
-        this.emit('error', error);
-        this.stats.errors++;
-      }));
+      promises.push(
+        this.createResource()
+          .then(() => {
+            // Resource created successfully
+          })
+          .catch(error => {
+            this.emit('error', error);
+            this.stats.errors++;
+          })
+      );
     }
 
     await Promise.allSettled(promises);

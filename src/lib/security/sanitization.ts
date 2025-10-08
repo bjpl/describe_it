@@ -4,7 +4,7 @@
  */
 
 import DOMPurify from 'isomorphic-dompurify';
-import { securityLogger } from '@/lib/logger';
+import { securityLogger, type LogContext } from '@/lib/logger';
 
 /**
  * Sanitization options interface
@@ -407,9 +407,10 @@ export class DataSanitizer {
       if (sanitizers[key]) {
         try {
           result[key] = sanitizers[key](value);
-        } catch (error) {
+        } catch (error: unknown) {
           // Log error and use fallback sanitization
-          securityLogger.warn(`Failed to sanitize ${key}:`, error);
+          const logContext: LogContext = error instanceof Error ? { error: error.message } : { error: String(error) };
+          securityLogger.warn(`Failed to sanitize ${key}:`, logContext);
           result[key] = this.sanitizeText(String(value));
         }
       } else {

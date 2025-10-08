@@ -17,7 +17,7 @@ export const apiKeySchema = z.string().min(10).max(200).regex(/^[a-zA-Z0-9_-]+$/
 
 export const sqlInjectionPatterns = [
   /(\s|^)(union|select|insert|update|delete|drop|create|alter|exec|execute|truncate|grant|revoke)\s/i,
-  /('|(\\')|(;)|(\*)|(%)|(--)|(\/\*)/,
+  /('|(\\')|(;)|(\*)|(%)|(--)|(\/\*))/,
   /\b(or|and)\s+[\d\w]+\s*=\s*[\d\w]+/i,
   /\b(script|javascript|vbscript|onload|onerror|onclick)/i
 ];

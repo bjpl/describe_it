@@ -9,12 +9,14 @@ export { metrics, MetricsCollector, type APIMetrics, type ResourceMetrics, type 
 export { errorTracker, ErrorTracker, type ErrorReport, type ErrorAnalytics } from './errorTracking';
 
 // Middleware and integrations
-export { 
-  withMonitoring, 
+export {
+  withMonitoring,
   withRateLimit,
-  type MonitoringConfig, 
-  type AuthenticatedRequest 
+  type AuthenticatedRequest
 } from './middleware';
+
+// Re-export MonitoringConfig from middleware for external use
+export type { MonitoringConfig } from './middleware';
 
 // Hooks and configuration
 export { 
@@ -28,6 +30,7 @@ import { structuredLogger } from './logger';
 import { metrics } from './metrics';
 import { errorTracker } from './errorTracking';
 import { monitoringHooks } from './hooks';
+import type { MonitoringConfig as MonitoringConfigType } from './middleware';
 
 // Convenience functions for common monitoring tasks
 export const monitoring = {
@@ -59,7 +62,7 @@ export const monitoring = {
 };
 
 // Default monitoring middleware configuration
-export const defaultMonitoringConfig: MonitoringConfig = {
+export const defaultMonitoringConfig: MonitoringConfigType = {
   enableRequestLogging: true,
   enableResponseLogging: true,
   enablePerformanceTracking: true,

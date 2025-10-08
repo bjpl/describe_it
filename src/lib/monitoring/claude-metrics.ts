@@ -65,12 +65,15 @@ export function calculateClaudeCost(
  * Track Claude API call performance in Sentry
  */
 export function trackClaudeAPICall(metrics: ClaudeMetrics): void {
-  const transaction = Sentry.getCurrentScope().getTransaction();
+  const scope = Sentry.getCurrentScope();
+  const span = Sentry.getActiveSpan();
 
-  if (!transaction) {
-    if (process.env.NODE_ENV !== 'production') console.warn('[Sentry] No active transaction for Claude API metrics');
+  if (!span) {
+    if (process.env.NODE_ENV !== 'production') console.warn('[Sentry] No active span for Claude API metrics');
     return;
   }
+
+  const transaction = span as any; // Type assertion for compatibility
 
   // Add custom measurements to transaction
   transaction.setMeasurement('claude.tokens.input', metrics.inputTokens, 'none');
@@ -134,19 +137,19 @@ export function startClaudeSpan(
   operation: string,
   description: string
 ): Sentry.Span | undefined {
-  const transaction = Sentry.getCurrentScope().getTransaction();
+  const activeSpan = Sentry.getActiveSpan();
 
-  if (!transaction) {
-    if (process.env.NODE_ENV !== 'production') console.warn('[Sentry] No active transaction for Claude span');
+  if (!activeSpan) {
+    if (process.env.NODE_ENV !== 'production') console.warn('[Sentry] No active span for Claude span');
     return undefined;
   }
 
-  const span = transaction.startChild({
+  const span = Sentry.startInactiveSpan({
     op: `claude.${operation}`,
-    description,
+    name: description,
   });
 
-  return span;
+  return span as any;
 }
 
 /**
@@ -232,9 +235,9 @@ export class ClaudePerformanceTracker {
   }
 
   finish(): void {
-    const span = Sentry.getCurrentScope().getTransaction();
+    const activeSpan = Sentry.getActiveSpan();
 
-    if (span) {
+    if (activeSpan) {
       // Add all markers as breadcrumbs
       this.getMarkersWithDurations().forEach((marker) => {
         Sentry.addBreadcrumb({
@@ -248,12 +251,15 @@ export class ClaudePerformanceTracker {
         });
       });
 
-      // Set total duration
-      span.setMeasurement(
-        'claude.total_duration',
-        this.getDuration(),
-        'millisecond'
-      );
+      // Set total duration on the active span
+      const span = activeSpan as any;
+      if (span.setMeasurement) {
+        span.setMeasurement(
+          'claude.total_duration',
+          this.getDuration(),
+          'millisecond'
+        );
+      }
     }
   }
 }

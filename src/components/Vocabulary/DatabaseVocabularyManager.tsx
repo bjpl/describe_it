@@ -356,8 +356,11 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
                 if (value === "all") {
                   setFilter("difficulty", "all");
                 } else {
+                  // Map numeric difficulty to DifficultyLevel
                   const numValue = parseInt(value);
-                  setFilter("difficulty", numValue as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10);
+                  const difficultyLevel: "beginner" | "intermediate" | "advanced" =
+                    numValue <= 3 ? "beginner" : numValue <= 6 ? "intermediate" : "advanced";
+                  setFilter("difficulty", difficultyLevel);
                 }
               }}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"

@@ -833,7 +833,7 @@ export const createValidationMiddleware = <T>(schema: z.ZodSchema<T>) => {
                 field: err.path.join("."),
                 message: err.message,
                 code: err.code,
-                value: err.input,
+                // ZodIssue doesn't have an 'input' property, use 'path' instead
               })),
             },
             { status: 400 }

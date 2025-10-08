@@ -224,8 +224,9 @@ class SupabaseService {
         this.client = supabase;
       } catch (error) {
         apiLogger.warn(
-          "Failed to initialize Supabase client. Falling back to demo mode.",
-          error,
+          "Failed to initialize Supabase client. Falling back to demo mode.", {
+            error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+          }
         );
         this.isDemo = true;
         this.client = null;

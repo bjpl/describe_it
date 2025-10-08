@@ -308,8 +308,9 @@ class TranslatorService {
         translatedText = translatedText.replace(/^["']|["']$/g, "").trim();
       } catch (openAIError) {
         apiLogger.warn(
-          "OpenAI translation failed, trying fallback:",
-          openAIError,
+          "OpenAI translation failed, trying fallback", {
+            error: openAIError instanceof Error ? { message: openAIError.message, stack: openAIError.stack } : openAIError
+          }
         );
 
         // Try fallback translation

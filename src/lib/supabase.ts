@@ -219,7 +219,12 @@ export class DatabaseService {
   static async saveDescription(
     descriptionData: Omit<SavedDescription, "id" | "created_at" | "updated_at">,
   ): Promise<SavedDescription | null> {
-    const result = await databaseService.saveDescription(descriptionData);
+    // Ensure description_style is properly typed
+    const sanitizedData = {
+      ...descriptionData,
+      description_style: descriptionData.description_style as "narrativo" | "poetico" | "academico" | "conversacional" | "infantil" | undefined,
+    };
+    const result = await databaseService.saveDescription(sanitizedData);
     return result.success ? convertServiceSavedDescriptionToDatabase(result.data) : null;
   }
 

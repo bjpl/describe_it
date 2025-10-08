@@ -75,10 +75,10 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
 
   // Trigger search when debounced query changes and apply filters
   React.useEffect(() => {
-    logger.info("[ImageSearch] useEffect triggered - debouncedQuery:", debouncedQuery, "filters:", filters);
+    logger.info("[ImageSearch] useEffect triggered", { debouncedQuery, filters });
     if (debouncedQuery.trim()) {
-      logger.info("[ImageSearch] Calling searchImages with:", { query: debouncedQuery });
-      searchImages(debouncedQuery, 1, filters);
+      logger.info("[ImageSearch] Calling searchImages", { query: debouncedQuery });
+      searchImages(debouncedQuery, 1);
     } else {
       logger.info("[ImageSearch] No query, clearing results");
       clearResults();

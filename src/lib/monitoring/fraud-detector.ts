@@ -580,6 +580,9 @@ export class FraudDetector {
       
       if (!data.identifier) return null;
 
+      const commonEndpoints = safeParse(data.commonEndpoints || '[]');
+      const typicalDays = safeParse(data.typicalDays || '[]');
+
       return {
         identifier: data.identifier,
         firstSeen: parseInt(data.firstSeen),
@@ -587,10 +590,10 @@ export class FraudDetector {
         totalRequests: parseInt(data.totalRequests),
         avgRequestsPerHour: parseFloat(data.avgRequestsPerHour),
         peakHour: parseInt(data.peakHour),
-        commonEndpoints: safeParse(data.commonEndpoints || '[]'),
+        commonEndpoints: Array.isArray(commonEndpoints) ? commonEndpoints : [],
         avgResponseTime: parseFloat(data.avgResponseTime),
         errorRate: parseFloat(data.errorRate),
-        typicalDays: safeParse(data.typicalDays || '[]'),
+        typicalDays: Array.isArray(typicalDays) ? typicalDays : [],
         suspiciousFlags: parseInt(data.suspiciousFlags),
         riskScore: parseFloat(data.riskScore),
       };
@@ -733,7 +736,10 @@ export class FraudDetector {
   async getRecentEvents(identifier: string, limit: number = 10): Promise<FraudEvent[]> {
     const key = `fraud:events:${identifier}`;
     const data = await this.redis.lrange(key, 0, limit - 1);
-    return data.map(item => safeParse(item));
+    return data.map(item => {
+      const parsed = safeParse(item);
+      return parsed as FraudEvent;
+    }).filter((event): event is FraudEvent => event !== null && typeof event === 'object');
   }
 
   onFraudAlert(callback: (event: FraudEvent) => void): void {

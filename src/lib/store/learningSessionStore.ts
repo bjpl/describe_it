@@ -512,7 +512,8 @@ export const useLearningSessionStore = create<LearningSessionStore>()(
               version: "1.0",
             };
 
-            return safeStringify(exportData, null, 2);
+            const stringified = safeStringify(exportData);
+            return stringified !== null ? stringified : '';
           },
 
           importSessionData: (data) => {

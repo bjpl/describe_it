@@ -95,7 +95,9 @@ class OptimizedSupabaseClient {
       // Simple query to establish connection
       await this.client.from("user_preferences").select("count").limit(1);
     } catch (error) {
-      apiLogger.debug("Connection warming failed:", error);
+      apiLogger.debug("Connection warming failed", {
+        error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+      });
     }
   }
 
@@ -106,10 +108,10 @@ class OptimizedSupabaseClient {
       const latency = performance.now() - start;
 
       if (latency > 2000) {
-        apiLogger.warn("High database latency detected:", latency, "ms");
+        apiLogger.warn("High database latency detected", { latency, unit: "ms" });
       }
     } catch (error) {
-      apiLogger.error("Database health check failed:", error);
+      apiLogger.error("Database health check failed", error instanceof Error ? error : new Error(String(error)));
     }
   }
 

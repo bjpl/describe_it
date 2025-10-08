@@ -192,7 +192,9 @@ export class ServiceRegistry {
         try {
           service.clearCache();
         } catch (error) {
-          logger.warn(`Failed to clear cache for service ${name}:`, error);
+          logger.warn(`Failed to clear cache for service ${name}`, {
+          error: error instanceof Error ? { message: error.message, stack: error.stack } : error
+        });
         }
       }
     }

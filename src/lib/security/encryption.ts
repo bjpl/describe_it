@@ -372,7 +372,9 @@ export class CryptoUtils {
    */
   static hash(data: string, options: HashingOptions = {}): string {
     const { algorithm = 'sha256', encoding = 'hex' } = options;
-    return createHash(algorithm).update(data, 'utf8').digest(encoding);
+    // Only use BinaryToTextEncoding types that are compatible with digest()
+    const validEncoding = (encoding === 'hex' || encoding === 'base64' || encoding === 'base64url') ? encoding : 'hex';
+    return createHash(algorithm).update(data, 'utf8').digest(validEncoding);
   }
 
   /**
@@ -411,7 +413,9 @@ export class CryptoUtils {
    * In production, use a proper TOTP library like @otplib/totp
    */
   static generateTotpSecret(): string {
-    return randomBytes(20).toString('base32').toUpperCase();
+    // base32 encoding is not supported by Node.js Buffer.toString()
+    // Using hex encoding instead for compatibility
+    return randomBytes(20).toString('hex').toUpperCase();
   }
 }
 

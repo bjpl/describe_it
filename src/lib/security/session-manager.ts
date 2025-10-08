@@ -84,7 +84,6 @@ export class SessionManager {
         password: this.config.redis.password,
         db: this.config.redis.db || 0,
         keyPrefix: this.config.redis.keyPrefix || 'session:',
-        retryDelayOnFailover: 100,
         maxRetriesPerRequest: 3,
       });
     }

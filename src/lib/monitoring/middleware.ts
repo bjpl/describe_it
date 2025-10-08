@@ -98,9 +98,16 @@ export function withMonitoring<T extends NextRequest>(
     const responseTime = performance.now() - startTime;
     const responseSize = await getResponseSize(response);
     
+    const memoryMetrics = logger.getMemoryMetrics();
     const performanceMetrics: PerformanceMetrics = {
       responseTime,
-      memoryUsage: logger.getMemoryMetrics(),
+      memoryUsage: memoryMetrics ? {
+        used: memoryMetrics.heapUsed,
+        total: memoryMetrics.heapTotal,
+        external: memoryMetrics.external,
+        heapUsed: memoryMetrics.heapUsed,
+        heapTotal: memoryMetrics.heapTotal
+      } : undefined,
       cpuUsage: logger.getCPUMetrics(),
       requestSize,
       responseSize
@@ -110,8 +117,8 @@ export function withMonitoring<T extends NextRequest>(
     if (monitoringConfig.enablePerformanceTracking) {
       metrics.endRequest(
         requestId,
-        logContext.endpoint,
-        logContext.method,
+        logContext.endpoint || '/unknown',
+        logContext.method || 'GET',
         response.status,
         requestTracking.startTime,
         requestSize,

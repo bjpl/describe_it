@@ -71,7 +71,6 @@ export class KeyRotationManager {
         port: config.redis.port,
         password: config.redis.password,
         db: config.redis.db || 0,
-        retryDelayOnFailover: 100,
         maxRetriesPerRequest: 3,
       });
     }
@@ -85,7 +84,6 @@ export class KeyRotationManager {
       this.cronJob = cron.schedule(this.config.schedule, async () => {
         await this.runRotationCycle();
       }, {
-        scheduled: false,
         timezone: 'UTC',
       });
 

@@ -1,4 +1,5 @@
 import { securityLogger } from '@/lib/logger';
+import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 
 /**
  * Rate Limiting Security Utilities
@@ -118,7 +119,9 @@ class RedisRateLimitStore implements RateLimitStore {
   async get(key: string): Promise<{ count: number; resetTime: number } | null> {
     try {
       const data = await this.client.get(key);
-      return data ? safeParse(data) : null;
+      if (!data) return null;
+      const parsed = safeParse(data);
+      return parsed || null;
     } catch (error) {
       securityLogger.error('Redis rate limit get error:', error);
       return null;

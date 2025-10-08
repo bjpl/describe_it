@@ -366,18 +366,19 @@ export const useAPIKeysStore = create<APIKeysState>()(
             try {
               const decoded = atob(encryptedData);
               const data = safeParse(decoded, null);
-              if (data) {
+              if (data && typeof data === 'object') {
+                const parsedData = data as { keys?: Record<string, APIKey>; activeKeys?: Record<string, string> };
                 set({
-                  keys: data.keys || {},
-                  activeKeys: data.activeKeys || {},
+                  keys: parsedData.keys || {},
+                  activeKeys: parsedData.activeKeys || {},
                   error: null
                 }, false, 'importKeys');
               } else {
                 throw new Error('Invalid key data format');
               }
             } catch (error) {
-              set({ 
-                error: `Import failed: ${error instanceof Error ? error.message : 'Invalid data'}` 
+              set({
+                error: `Import failed: ${error instanceof Error ? error.message : 'Invalid data'}`
               }, false, 'importKeys:error');
             }
           }
@@ -453,7 +454,7 @@ export const useAPIKeyValidation = () => {
         try {
           await validateKey(keyId);
         } catch (error) {
-          logger.warn(`Failed to validate key ${keyId}:`, error);
+          logger.warn(`Failed to validate key ${keyId}`, { error });
         }
       }
     };

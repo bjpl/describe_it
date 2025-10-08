@@ -125,13 +125,15 @@ async function testApiKeyValidity(apiKey: string, provider: string): Promise<Api
   try {
     switch (provider) {
       case 'openai':
+        const controller1 = new AbortController();
+        const timeoutId1 = setTimeout(() => controller1.abort(), 5000);
         const openaiResponse = await fetch('https://api.openai.com/v1/models', {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'User-Agent': 'DescribeIt/2.0.0',
           },
-          timeout: 5000,
-        });
+          signal: controller1.signal,
+        }).finally(() => clearTimeout(timeoutId1));
         
         if (openaiResponse.ok) {
           const data = await openaiResponse.json();
@@ -144,6 +146,8 @@ async function testApiKeyValidity(apiKey: string, provider: string): Promise<Api
         break;
 
       case 'anthropic':
+        const controller2 = new AbortController();
+        const timeoutId2 = setTimeout(() => controller2.abort(), 5000);
         const anthropicResponse = await fetch('https://api.anthropic.com/v1/messages', {
           method: 'POST',
           headers: {
@@ -157,8 +161,8 @@ async function testApiKeyValidity(apiKey: string, provider: string): Promise<Api
             max_tokens: 1,
             messages: [{ role: 'user', content: 'test' }],
           }),
-          timeout: 5000,
-        });
+          signal: controller2.signal,
+        }).finally(() => clearTimeout(timeoutId2));
         
         // Even a 400 response indicates the key is valid but request was malformed
         if (anthropicResponse.status === 400 || anthropicResponse.ok) {
@@ -214,8 +218,8 @@ export async function getSecureApiKey(keyName: string, userProvidedKey?: string)
         logger.securityEvent('SERVER_API_KEY_USED', { keyName });
         return serverKey;
       }
-    } catch (managerError) {
-      logger.warn('[getSecureApiKey] Secrets manager failed:', managerError);
+    } catch (managerError: unknown) {
+      logger.warn('[getSecureApiKey] Secrets manager failed:', managerError instanceof Error ? { error: managerError.message } : {});
     }
 
     logger.securityEvent('NO_VALID_API_KEY', { keyName }, false);
