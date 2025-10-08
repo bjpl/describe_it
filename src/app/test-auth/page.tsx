@@ -6,6 +6,7 @@
  */
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { authLogger } from '@/lib/logger';
 
 export default function TestAuthPage() {
@@ -141,17 +142,17 @@ export default function TestAuthPage() {
             <h3 className="font-semibold text-blue-900 mb-2">📝 Testing Instructions:</h3>
             <ul className="text-sm text-blue-800 space-y-1">
               <li>1. Enter an email and password (min 6 chars)</li>
-              <li>2. Click "Test Signup" to create a new account</li>
+              <li>2. Click {'"Test Signup"'} to create a new account</li>
               <li>3. Check your email for confirmation link</li>
-              <li>4. After confirming, use "Test Signin" to log in</li>
+              <li>4. After confirming, use {'"Test Signin"'} to log in</li>
               <li>5. Check browser console for detailed logs</li>
             </ul>
           </div>
 
           <div className="mt-4 text-center">
-            <a href="/" className="text-blue-600 hover:text-blue-800 underline">
+            <Link href="/" className="text-blue-600 hover:text-blue-800 underline">
               ← Back to Home
-            </a>
+            </Link>
           </div>
         </div>
       </div>

@@ -348,7 +348,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({
       status: 'unhealthy',
       timestamp: new Date().toISOString(),
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 503 });
   }
 }
@@ -377,7 +377,7 @@ export async function OPTIONS(request: NextRequest): Promise<NextResponse> {
   } catch (error) {
     return NextResponse.json({
       error: 'Failed to generate metrics',
-      message: error.message,
+      message: error instanceof Error ? error.message : 'Unknown error',
     }, { status: 500 });
   }
 }

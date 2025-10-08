@@ -74,7 +74,7 @@ async function getAnalyticsData() {
     const { data: sessionData } = await supabase
       .from('analytics_events')
       .select('session_id, timestamp, properties')
-      .eq('event_name', 'learning_session_ended');
+      .eq('event_name' as any, 'learning_session_ended');
 
     const totalSessions = Array.isArray(sessionData) ? sessionData.length : 0;
     const avgSessionDuration = Array.isArray(sessionData) && totalSessions > 0
@@ -87,7 +87,7 @@ async function getAnalyticsData() {
     const { data: featureData } = await supabase
       .from('analytics_events')
       .select('properties')
-      .eq('event_name', 'feature_used');
+      .eq('event_name' as any, 'feature_used');
 
     const featureUsage = Array.isArray(featureData)
       ? featureData.reduce((acc, event) => {
@@ -148,7 +148,7 @@ async function getErrorData() {
     const { data: errorEvents } = await supabase
       .from('analytics_events')
       .select('timestamp, properties')
-      .eq('event_name', 'error_occurred');
+      .eq('event_name' as any, 'error_occurred');
 
     const totalErrors = Array.isArray(errorEvents) ? errorEvents.length : 0;
     const criticalErrors = Array.isArray(errorEvents)
@@ -159,7 +159,7 @@ async function getErrorData() {
     const { data: requestEvents } = await supabase
       .from('analytics_events')
       .select('timestamp')
-      .eq('event_name', 'api_request');
+      .eq('event_name' as any, 'api_request');
 
     const totalRequests = Array.isArray(requestEvents) ? requestEvents.length : 1;
     const errorRate = (totalErrors / totalRequests) * 100;
@@ -215,7 +215,7 @@ async function getErrorTrends() {
     const { data: errors } = await supabase
       .from('analytics_events')
       .select('timestamp')
-      .eq('event_name', 'error_occurred')
+      .eq('event_name' as any, 'error_occurred')
       .gte('timestamp', last7Days);
 
     // Group errors by date
@@ -254,7 +254,7 @@ async function getPerformanceData() {
     const { data: apiEvents } = await supabase
       .from('analytics_events')
       .select('properties')
-      .eq('event_name', 'api_request');
+      .eq('event_name' as any, 'api_request');
 
     const responseTimes = Array.isArray(apiEvents)
       ? apiEvents
@@ -269,7 +269,7 @@ async function getPerformanceData() {
     const { data: apiErrors } = await supabase
       .from('analytics_events')
       .select('timestamp')
-      .eq('event_name', 'api_error');
+      .eq('event_name' as any, 'api_error');
 
     const totalApiRequests = Array.isArray(apiEvents) ? apiEvents.length : 1;
     const totalApiErrors = Array.isArray(apiErrors) ? apiErrors.length : 0;
@@ -279,7 +279,7 @@ async function getPerformanceData() {
     const { data: vitalsEvents } = await supabase
       .from('analytics_events')
       .select('properties')
-      .eq('event_name', 'web_vitals')
+      .eq('event_name' as any, 'web_vitals')
       .order('timestamp', { ascending: false })
       .limit(10);
 

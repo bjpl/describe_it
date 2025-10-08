@@ -206,10 +206,10 @@ async function handleImageSearch(request: AuthenticatedRequest) {
   const userId = request.user?.id;
   const userTier = request.user?.subscription_status || 'free';
 
-  apiLogger.info("[API] Image search endpoint called at", new Date().toISOString(), { userId, userTier });
+  apiLogger.info("[API] Image search endpoint called", { timestamp: new Date().toISOString(), userId, userTier });
   
   // Check if user provided an API key in the request
-  const userProvidedKey = request.nextUrl.searchParams.get('api_key');
+  const userProvidedKey = request.nextUrl.searchParams.get('api_key') || undefined;
   
   // If user provided a key, temporarily set it for this request
   if (userProvidedKey) {
@@ -226,7 +226,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
   }
   
   // Use the key provider to check API key status (with timeout to prevent blocking)
-  let unsplashConfig;
+  let unsplashConfig: any;
   try {
     // Add timeout to prevent blocking
     const configPromise = new Promise((resolve, reject) => {
@@ -327,7 +327,7 @@ async function handleImageSearch(request: AuthenticatedRequest) {
       setTimeout(() => reject(new Error('Search timeout - using demo mode')), 4000); // 4 seconds max for Vercel hobby
     });
     
-    let results;
+    let results: any;
     try {
       results = await Promise.race([searchPromise, timeoutPromise]);
     } catch (timeoutError) {

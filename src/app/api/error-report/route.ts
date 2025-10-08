@@ -188,7 +188,7 @@ export async function POST(request: NextRequest) {
       requestId,
       timestamp: new Date().toISOString(),
       level: sanitizedData.level,
-      message: sanitizedData.message.substring(0, 200), // Truncate for logs
+      message: (sanitizedData.message || '').substring(0, 200), // Truncate for logs
       url: sanitizedData.url,
       userAgent: sanitizedData.userAgent?.substring(0, 100),
       clientIdentifier: identifier.substring(0, 50),

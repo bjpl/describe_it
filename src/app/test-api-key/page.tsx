@@ -111,7 +111,7 @@ export default function TestAPIKey() {
         <ol className="list-decimal list-inside text-sm text-yellow-700 space-y-1">
           <li>Go to Settings and add your OpenAI API key</li>
           <li>Click "Test API Key Flow" above</li>
-          <li>Check if "keyReceived" is true and "keySource" is "user"</li>
+          <li>Check if {'"keyReceived"'} is true and {'"keySource"'} is {'"user"'}</li>
           <li>Verify that descriptions are NOT in demo mode</li>
         </ol>
       </div>

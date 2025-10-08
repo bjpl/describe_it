@@ -205,7 +205,7 @@ class ExportService {
     };
 
     return {
-      data: safeStringify(exportData, '{}', 'export-data-stringify', null, 2),
+      data: JSON.stringify(exportData, null, 2),
       filename: `export_${Date.now()}.json`,
       contentType: "application/json",
     };
@@ -592,7 +592,7 @@ export const POST = withPremiumAuth(
     requiredFeatures: ['all_exports'],
     errorMessages: {
       featureRequired: 'Advanced export generation requires a premium subscription. Upgrade to access PDF, Anki, and bulk export features.',
-      tierRequired: 'Export generation is a premium feature. Please upgrade your subscription.',
+      unauthorized: 'Export generation is a premium feature. Please upgrade your subscription.',
     },
   }
 );
@@ -603,7 +603,7 @@ export const GET = withPremiumAuth(
     requiredFeatures: ['all_exports'],
     errorMessages: {
       featureRequired: 'Export download requires a premium subscription. Upgrade to access your generated exports.',
-      tierRequired: 'Export download is a premium feature. Please upgrade your subscription.',
+      unauthorized: 'Export download is a premium feature. Please upgrade your subscription.',
     },
   }
 );

@@ -138,9 +138,8 @@ async function getAlertsData(startTime: number, endTime: number) {
         const alerts = await redis.lrange(key, 0, 9); // Get last 10 alerts per key
         for (const alertStr of alerts) {
           const alert = safeParse<{ timestamp: number; [key: string]: any }>(
-            alertStr, 
-            null, 
-            `alerts-processing-${key}`
+            alertStr,
+            null
           );
           if (alert && alert.timestamp >= startTime && alert.timestamp <= endTime) {
             allAlerts.push(alert);

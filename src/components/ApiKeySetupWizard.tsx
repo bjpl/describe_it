@@ -153,13 +153,13 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
                 </div>
                 <h3 className="text-2xl font-bold mb-2">Welcome to Describe It!</h3>
                 <p className="text-gray-600 dark:text-gray-400">
-                  Let's set up your API keys to unlock all features
+                  Let&apos;s set up your API keys to unlock all features
                 </p>
               </div>
 
               <div className="grid gap-4">
                 <div className="flex items-start gap-4 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-                  <Image className="w-8 h-8 text-purple-600 dark:text-purple-400 mt-1" />
+                  <Image className="w-8 h-8 text-purple-600 dark:text-purple-400 mt-1" aria-label="Image search icon" />
                   <div>
                     <h4 className="font-semibold mb-1">Image Search</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -173,7 +173,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
                   <div>
                     <h4 className="font-semibold mb-1">AI Descriptions</h4>
                     <p className="text-sm text-gray-600 dark:text-gray-400">
-                      Generate intelligent descriptions with OpenAI's GPT models
+                      Generate intelligent descriptions with OpenAI&apos;s GPT models
                     </p>
                   </div>
                 </div>
@@ -195,7 +195,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
             <div className="space-y-6">
               <div className="text-center mb-6">
                 <div className="w-16 h-16 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <Image className="w-8 h-8 text-purple-600 dark:text-purple-400" />
+                  <Image className="w-8 h-8 text-purple-600 dark:text-purple-400" aria-label="Unsplash API icon" />
                 </div>
                 <h3 className="text-xl font-bold mb-2">Unsplash API Key</h3>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -223,7 +223,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
                 </h4>
                 <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>1. Go to <a href="https://unsplash.com/developers" target="_blank" rel="noopener" className="text-blue-600 hover:underline">Unsplash Developers</a></li>
-                  <li>2. Click "New Application"</li>
+                  <li>2. Click {'"New Application"'}</li>
                   <li>3. Accept the terms and guidelines</li>
                   <li>4. Enter your application name and description</li>
                   <li>5. Copy your Access Key and paste it above</li>
@@ -265,7 +265,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
                 <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>1. Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" className="text-blue-600 hover:underline">OpenAI Platform</a></li>
                   <li>2. Sign in or create an account</li>
-                  <li>3. Click "Create new secret key"</li>
+                  <li>3. Click {'"Create new secret key"'}</li>
                   <li>4. Name your key (optional)</li>
                   <li>5. Copy the key immediately (it won't be shown again)</li>
                 </ol>

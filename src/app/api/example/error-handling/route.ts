@@ -59,8 +59,8 @@ async function handleRequest(request: NextRequest): Promise<NextResponse> {
   try {
     // Log the incoming request
     logger.info(`API Call: ${request.method} ${request.url}`, {
-      userAgent: request.headers.get('user-agent'),
-      requestId: request.headers.get('x-request-id'),
+      userAgent: request.headers.get('user-agent') || undefined,
+      requestId: request.headers.get('x-request-id') || undefined,
     });
 
     // Parse request body
@@ -151,7 +151,7 @@ async function handleRequest(request: NextRequest): Promise<NextResponse> {
     // Log successful response
     const duration = Date.now() - startTime;
     logger.info(`API Response: ${request.method} ${request.url} - 200`, {
-      requestId: request.headers.get('x-request-id'),
+      requestId: request.headers.get('x-request-id') || undefined,
       duration,
       userId,
     });
@@ -165,7 +165,7 @@ async function handleRequest(request: NextRequest): Promise<NextResponse> {
         timestamp: new Date().toISOString(),
         processingTime: duration,
       }
-    }, { 
+    }, {
       status: 200,
       headers: {
         'X-Processing-Time': duration.toString(),
@@ -177,11 +177,11 @@ async function handleRequest(request: NextRequest): Promise<NextResponse> {
     // Log the error with context
     const duration = Date.now() - startTime;
     logger.error('API request failed', error as Error, {
-      requestId: request.headers.get('x-request-id'),
+      requestId: request.headers.get('x-request-id') || undefined,
       method: request.method,
       url: request.url,
       duration,
-      userAgent: request.headers.get('user-agent'),
+      userAgent: request.headers.get('user-agent') || undefined,
     });
 
     // Re-throw to be handled by error middleware
@@ -222,7 +222,7 @@ export const HEAD = withErrorHandling(async (request: NextRequest) => {
   };
 
   logger.info('Health check performed', {
-    requestId: request.headers.get('x-request-id'),
+    requestId: request.headers.get('x-request-id') || undefined,
     responseTime: health.responseTime,
   });
 
@@ -301,7 +301,7 @@ export const PATCH = withErrorHandling(async (request: NextRequest) => {
 
     // Log batch completion
     logger.info('Batch operation completed', {
-      requestId: request.headers.get('x-request-id'),
+      requestId: request.headers.get('x-request-id') || undefined,
       totalOperations: operations.length,
       successCount,
       errorCount,
