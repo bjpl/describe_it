@@ -341,16 +341,51 @@ npx claude-flow@alpha hooks post-task --task-id "[task]"
 
 ---
 
-## 🔗 Reference Documentation
+## 🔗 REQUIRED READING - Reference Documentation
 
-**These files contain detailed information (read when needed):**
-- **`AGENTS.md`** - Complete reference of all 54 agents with categories and usage guidelines
-- **`EXAMPLES.md`** - Practical swarm patterns with real code from production deployments
-- **`docs/PASSWORD_POLICY.md`** - Modern password validation (NIST standards, bilingual)
-- **`docs/DEPLOY_STAGING.md`** - Deployment guide and manual testing checklist
-- **`docs/reports/`** - Swarm execution reports and production readiness assessments
+### **📖 MANDATORY: Read These Files When Needed**
 
-**Note**: Claude Code auto-reads CLAUDE.md only. Other files are human reference or can be read explicitly via Read tool.
+**Session Start (if using swarm coordination):**
+```
+→ Read AGENTS.md - Get complete list of all 54 available agents
+→ Read EXAMPLES.md - Load proven swarm coordination patterns
+```
+
+**When to Read Each:**
+
+**`AGENTS.md` - READ WHEN:**
+- Planning to use agents beyond the 15 core agents listed above
+- Unsure which agent type to use for a specific task
+- Need detailed agent descriptions and capabilities
+- Setting up complex multi-agent coordination
+
+**`EXAMPLES.md` - READ WHEN:**
+- Coordinating 3+ agents in a swarm
+- Need proven patterns for specific scenarios (full-stack, migration, security, etc.)
+- First time using swarm coordination
+- Debugging swarm coordination issues
+
+**`docs/PASSWORD_POLICY.md` - READ WHEN:**
+- Working on authentication or password validation
+- Need to understand modern NIST password standards
+
+**`docs/DEPLOY_STAGING.md` - READ WHEN:**
+- Deploying to Vercel staging or production
+- Need deployment checklist and testing scenarios
+
+**`docs/reports/` - READ WHEN:**
+- Need production readiness assessment
+- Reviewing swarm execution results
+- Understanding test coverage and quality metrics
+
+### **⚠️ CRITICAL: These Files Are NOT Auto-Loaded**
+
+Claude Code only auto-reads `CLAUDE.md`. You must **explicitly use the Read tool** to load:
+- `AGENTS.md`
+- `EXAMPLES.md`
+- Any files in `docs/`
+
+**Don't assume you have this information - read the files when you need them.**
 
 ---
 
