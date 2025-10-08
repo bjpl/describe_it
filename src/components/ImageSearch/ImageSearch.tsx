@@ -83,7 +83,8 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
       logger.info("[ImageSearch] No query, clearing results");
       clearResults();
     }
-  }, [debouncedQuery, filters]); // Removed searchImages and clearResults from deps to prevent infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQuery, filters]); // searchImages and clearResults are stable but excluded to prevent potential loops
 
   // Memoize stable callbacks
   const handleImageClick = useCallback(
@@ -105,7 +106,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
       setFilters(newFilters);
       // Re-search with new filters if we have a query
       if (debouncedQuery.trim()) {
-        searchImages(debouncedQuery, 1, newFilters);
+        searchImages(debouncedQuery, 1);
       }
     },
     [debouncedQuery, searchImages],

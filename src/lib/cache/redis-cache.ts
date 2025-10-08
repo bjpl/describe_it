@@ -78,7 +78,6 @@ export class RedisCache {
       db: this.config.db,
       keyPrefix: this.config.keyPrefix,
       maxRetriesPerRequest: this.config.maxRetries,
-      retryDelayOnFailover: this.config.retryDelayOnFailover,
       enableOfflineQueue: this.config.enableOfflineQueue,
       lazyConnect: this.config.lazyConnect,
     });
@@ -429,14 +428,14 @@ export class CacheWarmer {
     const promises = imageUrls.map(async (url) => {
       const hash = this.cache.generateImageHash(url);
       const key = this.cache.generateKey('image_description', hash);
-      
+
       const cached = await this.cache.get(key);
       if (!cached) {
         try {
           const description = await fetcher(url);
           await this.cache.set(key, description, 3600, ['image_descriptions']);
         } catch (error) {
-          logger.warn('Cache warming failed for', url, error);
+          logger.warn('Cache warming failed for URL', { url, error: error instanceof Error ? error.message : String(error) });
         }
       }
     });
@@ -447,14 +446,14 @@ export class CacheWarmer {
   async warmPopularContent(contentIds: string[], fetcher: (id: string) => Promise<any>): Promise<void> {
     const promises = contentIds.map(async (id) => {
       const key = this.cache.generateKey('popular_content', id);
-      
+
       const cached = await this.cache.get(key);
       if (!cached) {
         try {
           const content = await fetcher(id);
           await this.cache.set(key, content, 7200, ['popular_content']); // 2 hours TTL
         } catch (error) {
-          logger.warn('Cache warming failed for content', id, error);
+          logger.warn('Cache warming failed for content', { id, error: error instanceof Error ? error.message : String(error) });
         }
       }
     });

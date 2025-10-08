@@ -42,7 +42,7 @@ export class SessionPersistence {
 
       logger.debug("Session data saved:", { sessionId });
     } catch (error) {
-      logger.error("Failed to save session data:", error);
+      logger.error("Failed to save session data:", error instanceof Error ? error : undefined, { sessionId });
 
       // Try to clear old data if storage is full
       if (this.isStorageQuotaExceeded(error)) {
@@ -56,7 +56,8 @@ export class SessionPersistence {
         } catch (retryError) {
           logger.error(
             "Failed to save session data after cleanup:",
-            retryError,
+            retryError instanceof Error ? retryError : undefined,
+            { sessionId }
           );
         }
       }
@@ -79,7 +80,7 @@ export class SessionPersistence {
       logger.debug("Session data loaded:", { sessionId });
       return decompressed;
     } catch (error) {
-      logger.error("Failed to load session data:", error);
+      logger.error("Failed to load session data:", error instanceof Error ? error : undefined, { sessionId });
       return null;
     }
   }
@@ -95,7 +96,7 @@ export class SessionPersistence {
 
       logger.debug("Session data cleared:", { sessionId });
     } catch (error) {
-      logger.error("Failed to clear session data:", error);
+      logger.error("Failed to clear session data:", error instanceof Error ? error : undefined, { sessionId });
     }
   }
 
@@ -128,7 +129,7 @@ export class SessionPersistence {
 
       logger.debug("Session summary saved:", { sessionId });
     } catch (error) {
-      logger.error("Failed to save session summary:", error);
+      logger.error("Failed to save session summary:", error instanceof Error ? error : undefined, { sessionId });
     }
   }
 
@@ -142,9 +143,9 @@ export class SessionPersistence {
         return null;
       }
 
-      return safeParse(stored);
+      return safeParse<SessionSummary>(stored) ?? null;
     } catch (error) {
-      logger.error("Failed to load session summary:", error);
+      logger.error("Failed to load session summary:", error instanceof Error ? error : undefined, { sessionId });
       return null;
     }
   }
@@ -164,7 +165,7 @@ export class SessionPersistence {
       // Sort by start time (most recent first)
       return summaries.sort((a, b) => b.startTime - a.startTime);
     } catch (error) {
-      logger.error("Failed to load all summaries:", error);
+      logger.error("Failed to load all summaries:", error instanceof Error ? error : undefined);
       return [];
     }
   }
@@ -205,16 +206,16 @@ export class SessionPersistence {
 
       switch (format) {
         case "json":
-          return safeStringify(report, null, 2);
+          return JSON.stringify(report, null, 2);
         case "text":
           return this.formatAsText(report);
         case "csv":
           return this.formatAsCSV(report);
         default:
-          return safeStringify(report, null, 2);
+          return JSON.stringify(report, null, 2);
       }
     } catch (error) {
-      logger.error("Failed to export session:", error);
+      logger.error("Failed to export session:", error instanceof Error ? error : undefined, { sessionId });
       throw error;
     }
   }
@@ -228,30 +229,32 @@ export class SessionPersistence {
       for (const sessionId of sessionIds) {
         try {
           const reportData = await this.export(sessionId, "json");
-          const report: SessionReport = safeParse(reportData);
-          allReports.push(report);
+          const report = safeParse<SessionReport>(reportData);
+          if (report) {
+            allReports.push(report);
+          }
         } catch (error) {
-          logger.warn(`Failed to export session ${sessionId}:`, error);
+          logger.warn(`Failed to export session ${sessionId}:`, { error: error instanceof Error ? error.message : String(error), sessionId });
         }
       }
 
       switch (format) {
         case "json":
-          return safeStringify(
+          return JSON.stringify(
             {
               exportedAt: Date.now(),
               sessionCount: allReports.length,
               sessions: allReports,
             },
             null,
-            2,
+            2
           );
         case "text":
           return this.formatAllAsText(allReports);
         case "csv":
           return this.formatAllAsCSV(allReports);
         default:
-          return safeStringify(allReports, null, 2);
+          return JSON.stringify(allReports, null, 2);
       }
     } catch (error) {
       logger.error("Failed to export all sessions:", error);
@@ -278,7 +281,7 @@ export class SessionPersistence {
         return null;
       }
 
-      return safeParse(stored);
+      return safeParse<T>(stored) ?? null;
     } catch (error) {
       logger.error("Failed to load settings:", error);
       return null;

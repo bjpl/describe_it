@@ -623,7 +623,7 @@ class OpenAIService {
       error.constructor &&
       error.constructor.name === "APIError"
     ) {
-      return error;
+      return error as APIError;
     }
 
     let code = "OPENAI_ERROR";
@@ -635,10 +635,17 @@ class OpenAIService {
       message = error;
     } else if (error && typeof error === "object") {
       const errorObj = error as Record<string, unknown>;
-      message = (errorObj.message as string) || 
-                (errorObj.error && typeof errorObj.error === "object" && 
-                 (errorObj.error as Record<string, unknown>).message as string) || 
-                message;
+      const errorMessage = errorObj.message;
+      const nestedError = errorObj.error;
+
+      if (typeof errorMessage === "string") {
+        message = errorMessage;
+      } else if (nestedError && typeof nestedError === "object") {
+        const nestedMessage = (nestedError as Record<string, unknown>).message;
+        if (typeof nestedMessage === "string") {
+          message = nestedMessage;
+        }
+      }
 
       // Handle status codes
       if (typeof errorObj.status === "number") {
@@ -665,13 +672,15 @@ class OpenAIService {
       }
     }
 
+    const details = error && typeof error === "object"
+      ? ((error as Record<string, unknown>).error as Record<string, unknown>) || (error as Record<string, unknown>)
+      : {};
+
     return new APIError({
       code,
       message,
       status,
-      details: error && typeof error === "object" 
-        ? ((error as Record<string, unknown>).error as Record<string, unknown>) || (error as Record<string, unknown>) 
-        : undefined,
+      details: details as Record<string, unknown>,
     });
   }
 
@@ -1043,9 +1052,11 @@ class OpenAIService {
 
         return qaData;
       } catch (parseError) {
-        throw new APIError("Failed to parse Q&A response", "PARSE_ERROR", 500, {
-          content,
-          parseError,
+        throw new APIError({
+          code: "PARSE_ERROR",
+          message: "Failed to parse Q&A response",
+          status: 500,
+          details: { content, parseError },
         });
       }
     } catch (error) {
@@ -1159,12 +1170,12 @@ class OpenAIService {
 
         return result;
       } catch (parseError) {
-        throw new APIError(
-          "Failed to parse phrases response",
-          "PARSE_ERROR",
-          500,
-          { content, parseError },
-        );
+        throw new APIError({
+          code: "PARSE_ERROR",
+          message: "Failed to parse phrases response",
+          status: 500,
+          details: { content, parseError },
+        });
       }
     } catch (error) {
       throw this.transformError(error);

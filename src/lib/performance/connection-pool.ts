@@ -1,4 +1,4 @@
-import { createPool, Pool, PoolOptions } from 'generic-pool';
+import { createPool, Pool } from 'generic-pool';
 import OpenAI from 'openai';
 import { performanceLogger } from '@/lib/logger';
 
@@ -75,11 +75,13 @@ export class OpenAIConnectionPool {
         // OpenAI client doesn't have explicit cleanup, but we can clear internal state
         try {
           // @ts-ignore - accessing internal properties for cleanup
-          if (client._httpAgent) {
-            client._httpAgent.destroy?.();
+          if (client.httpAgent) {
+            client.httpAgent.destroy?.();
           }
         } catch (error) {
-          performanceLogger.warn('Error during client cleanup:', error);
+          performanceLogger.warn('Error during client cleanup:', {
+            error: error instanceof Error ? error.message : String(error)
+          });
         }
       },
 
@@ -96,10 +98,7 @@ export class OpenAIConnectionPool {
       min: this.config.min,
       max: this.config.max,
       acquireTimeoutMillis: this.config.acquireTimeoutMillis,
-      createTimeoutMillis: this.config.createTimeoutMillis,
-      destroyTimeoutMillis: this.config.destroyTimeoutMillis,
       idleTimeoutMillis: this.config.idleTimeoutMillis,
-      reapIntervalMillis: this.config.reapIntervalMillis,
       autostart: true,
     });
   }
@@ -108,15 +107,17 @@ export class OpenAIConnectionPool {
     try {
       // Simple validation - attempt to list models (lightweight operation)
       const response = await Promise.race([
-        client.models.list({ limit: 1 }),
-        new Promise((_, reject) => 
+        client.models.list(),
+        new Promise((_, reject) =>
           setTimeout(() => reject(new Error('Health check timeout')), 5000)
         ),
       ]);
-      
+
       return Boolean(response);
     } catch (error) {
-      performanceLogger.warn('Client validation failed:', error);
+      performanceLogger.warn('Client validation failed:', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       return false;
     }
   }
@@ -179,7 +180,6 @@ export class OpenAIConnectionPool {
       size: this.pool.size,
       available: this.pool.available,
       borrowed: this.pool.borrowed,
-      invalid: this.pool.invalid,
       pending: this.pool.pending,
       max: this.pool.max,
       min: this.pool.min,

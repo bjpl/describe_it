@@ -15,8 +15,11 @@ interface OptimizedImageProps {
   onClick?: () => void;
 }
 
-export const OptimizedImage = memo(forwardRef<HTMLImageElement, OptimizedImageProps>(
-  ({ src, alt, className = '', width, height, priority = false, onLoad, onError, onClick }, ref) => {
+export const OptimizedImage = memo(
+  forwardRef<HTMLImageElement, OptimizedImageProps>(function OptimizedImageComponent(
+    { src, alt, className = '', width, height, priority = false, onLoad, onError, onClick },
+    ref
+  ) {
     const { ref: lazyRef, loaded, error, inView } = useLazyImage(src);
     
     const handleLoad = usePerformanceCallback(() => {
@@ -36,7 +39,7 @@ export const OptimizedImage = memo(forwardRef<HTMLImageElement, OptimizedImagePr
       if (typeof ref === 'function') {
         ref(node);
       } else if (ref) {
-        ref.current = node;
+        (ref as React.MutableRefObject<HTMLImageElement | null>).current = node;
       }
       if (lazyRef.current !== node) {
         (lazyRef as React.MutableRefObject<HTMLImageElement | null>).current = node;
@@ -79,10 +82,8 @@ export const OptimizedImage = memo(forwardRef<HTMLImageElement, OptimizedImagePr
         onClick={handleClick}
       />
     );
-  }
-));
-
-OptimizedImage.displayName = 'OptimizedImage';
+  })
+);
 
 // Optimized List Component with virtual scrolling support
 interface OptimizedListProps<T> {
@@ -164,9 +165,7 @@ export const OptimizedList = memo(<T,>({
       ))}
     </div>
   );
-}) as <T>(props: OptimizedListProps<T>) => JSX.Element;
-
-OptimizedList.displayName = 'OptimizedList';
+}) as <T>(props: OptimizedListProps<T>) => React.ReactElement;
 
 // Optimized Search Input with debouncing
 interface OptimizedSearchInputProps {
@@ -178,16 +177,16 @@ interface OptimizedSearchInputProps {
   onClear?: () => void;
 }
 
-export const OptimizedSearchInput = memo<OptimizedSearchInputProps>(({
+export const OptimizedSearchInput = memo<OptimizedSearchInputProps>(function OptimizedSearchInputComponent({
   value,
   onChange,
   placeholder = 'Search...',
   className = '',
   debounceMs = 300,
   onClear
-}) => {
+}) {
   const [localValue, setLocalValue] = React.useState(value);
-  const timeoutRef = React.useRef<NodeJS.Timeout>();
+  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   React.useEffect(() => {
     setLocalValue(value);
@@ -243,8 +242,6 @@ export const OptimizedSearchInput = memo<OptimizedSearchInputProps>(({
   );
 });
 
-OptimizedSearchInput.displayName = 'OptimizedSearchInput';
-
 // Optimized Modal with proper focus management and performance
 interface OptimizedModalProps {
   isOpen: boolean;
@@ -254,13 +251,13 @@ interface OptimizedModalProps {
   overlay?: boolean;
 }
 
-export const OptimizedModal = memo<OptimizedModalProps>(({
+export const OptimizedModal = memo<OptimizedModalProps>(function OptimizedModalComponent({
   isOpen,
   onClose,
   children,
   className = '',
   overlay = true
-}) => {
+}) {
   const modalRef = React.useRef<HTMLDivElement>(null);
   const previousFocusRef = React.useRef<HTMLElement | null>(null);
 
@@ -325,8 +322,6 @@ export const OptimizedModal = memo<OptimizedModalProps>(({
   );
 });
 
-OptimizedModal.displayName = 'OptimizedModal';
-
 // Optimized Button with proper event handling
 interface OptimizedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'danger';
@@ -335,7 +330,7 @@ interface OptimizedButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElem
   children: React.ReactNode;
 }
 
-export const OptimizedButton = memo<OptimizedButtonProps>(({
+export const OptimizedButton = memo<OptimizedButtonProps>(function OptimizedButtonComponent({
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -344,7 +339,7 @@ export const OptimizedButton = memo<OptimizedButtonProps>(({
   onClick,
   disabled,
   ...props
-}) => {
+}) {
   const handleClick = usePerformanceCallback((e: React.MouseEvent<HTMLButtonElement>) => {
     if (loading || disabled) {
       e.preventDefault();
@@ -390,5 +385,3 @@ export const OptimizedButton = memo<OptimizedButtonProps>(({
     </button>
   );
 });
-
-OptimizedButton.displayName = 'OptimizedButton';

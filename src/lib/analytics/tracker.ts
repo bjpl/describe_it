@@ -238,7 +238,9 @@ class AnalyticsTracker {
           logger.info('[Analytics] Response OK but unparseable - considering success');
           return;
         }
-        logger.warn('[Analytics] Failed to parse analytics response:', parseError);
+        logger.warn('[Analytics] Failed to parse analytics response:', {
+          error: parseError instanceof Error ? parseError.message : String(parseError)
+        });
         throw new Error(`Analytics API error: ${response.status}`);
       }
 

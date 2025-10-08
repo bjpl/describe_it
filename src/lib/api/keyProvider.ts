@@ -87,7 +87,7 @@ export class ApiKeyProvider {
         hasOpenAIKey: !!settings?.apiKeys?.openai
       });
     } catch (error) {
-      keyProviderLogger.warn('Failed to get settings during initialization', error);
+      keyProviderLogger.warn('Failed to get settings during initialization', error as Record<string, any>);
     }
 
     try {
@@ -120,6 +120,7 @@ export class ApiKeyProvider {
       // Fallback to environment-only keys
       try {
         this.cachedKeys = {
+          anthropic: this.getEnvironmentKey('anthropic'),
           openai: this.getEnvironmentKey('openai'),
           unsplash: this.getEnvironmentKey('unsplash'),
         };
@@ -128,6 +129,7 @@ export class ApiKeyProvider {
         keyProviderLogger.error('Fallback initialization also failed', fallbackError);
         // Ultimate fallback to empty keys
         this.cachedKeys = {
+          anthropic: '',
           openai: '',
           unsplash: '',
         };
@@ -165,7 +167,7 @@ export class ApiKeyProvider {
       try {
         settings = settingsManager.getSettings();
       } catch (settingsError) {
-        keyProviderLogger.warn('Failed to get settings from settingsManager', settingsError);
+        keyProviderLogger.warn('Failed to get settings from settingsManager', settingsError as Record<string, any>);
         return this.getLocalStorageBackup();
       }
       
@@ -185,7 +187,7 @@ export class ApiKeyProvider {
       
       return settings;
     } catch (error) {
-      keyProviderLogger.warn('Error getting settings with timeout', error);
+      keyProviderLogger.warn('Error getting settings with timeout', error as Record<string, any>);
       return this.getLocalStorageBackup();
     }
   }
@@ -214,7 +216,7 @@ export class ApiKeyProvider {
       
       return { apiKeys: backupKeys };
     } catch (error) {
-      keyProviderLogger.warn('Failed to parse localStorage backup', error);
+      keyProviderLogger.warn('Failed to parse localStorage backup', error as Record<string, any>);
       return null;
     }
   }
@@ -232,7 +234,8 @@ export class ApiKeyProvider {
       
       settingsManager.addListener((settings) => {
         const newKeys = {
-          openai: this.resolveKey('openai', settings?.apiKeys?.openai || ''),
+          anthropic: this.resolveKey('anthropic', settings?.apiKeys?.anthropic || settings?.apiKeys?.openai || ''),
+          openai: this.resolveKey('openai', settings?.apiKeys?.anthropic || settings?.apiKeys?.openai || ''),
           unsplash: this.resolveKey('unsplash', settings?.apiKeys?.unsplash || ''),
         };
 
@@ -247,7 +250,7 @@ export class ApiKeyProvider {
         }
       });
     } catch (error) {
-      keyProviderLogger.warn('Failed to setup settings listener', error);
+      keyProviderLogger.warn('Failed to setup settings listener', error as Record<string, any>);
     }
   }
 
@@ -294,7 +297,7 @@ export class ApiKeyProvider {
           return trimmedValue;
         }
       } catch (error) {
-        keyProviderLogger.warn(`Error reading environment variable ${envKey}`, error);
+        keyProviderLogger.warn(`Error reading environment variable ${envKey}`, error as Record<string, any>);
       }
     }
     
@@ -547,8 +550,10 @@ export class ApiKeyProvider {
 
     try {
       const settings = this.getSettingsWithTimeout();
-      const settingsKey = service === 'openai' 
-        ? settings?.apiKeys?.openai 
+      const settingsKey = service === 'anthropic'
+        ? (settings?.apiKeys?.anthropic || settings?.apiKeys?.openai)
+        : service === 'openai'
+        ? (settings?.apiKeys?.anthropic || settings?.apiKeys?.openai)
         : settings?.apiKeys?.unsplash;
 
       if (settingsKey && settingsKey.trim() === key) {
@@ -621,6 +626,7 @@ export class ApiKeyProvider {
    */
   public getValidationStatus(): Record<ServiceType, boolean> {
     return {
+      anthropic: this.validateKey('anthropic', this.cachedKeys.anthropic),
       openai: this.validateKey('openai', this.cachedKeys.openai),
       unsplash: this.validateKey('unsplash', this.cachedKeys.unsplash),
     };

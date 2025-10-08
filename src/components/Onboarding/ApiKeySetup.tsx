@@ -134,7 +134,8 @@ export default function ApiKeySetup({
     if (hasKeys) {
       const keysToSave = {
         unsplash: apiKeys.unsplash.trim(),
-        openai: apiKeys.openai.trim()
+        openai: apiKeys.openai.trim(),
+        anthropic: '' // Default empty string for required field
       };
 
       if (saveToAccount && authManager.getCurrentUser()) {

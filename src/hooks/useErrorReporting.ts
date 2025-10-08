@@ -436,19 +436,19 @@ export function usePerformanceMonitor(componentName: string) {
   const mountTime = useRef(performance.now());
 
   useEffect(() => {
-    logger.componentMount(componentName, {
+    logger.info(`Component mounted: ${componentName}`, {
       mountTime: mountTime.current,
     });
 
     return () => {
       const unmountTime = performance.now();
       const componentLifetime = unmountTime - mountTime.current;
-      
-      logger.componentUnmount(componentName, {
+
+      logger.info(`Component unmounted: ${componentName}`, {
         unmountTime,
         componentLifetime,
       });
-      
+
       // Report components that stayed mounted too long (potential memory leaks)
       if (componentLifetime > 300000) { // 5 minutes
         logger.warn(`Component ${componentName} had long lifetime`, {

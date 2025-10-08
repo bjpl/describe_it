@@ -14,8 +14,10 @@ import { logger } from '@/lib/logger';
  * - Version migration support
  */
 
-interface SSRPersistOptions<T> extends Omit<PersistOptions<T, T>, 'storage'> {
+interface SSRPersistOptions<T, U = T> {
+  name: string;
   storage?: StateStorage;
+  partialize?: (state: T) => U;
   encryption?: {
     encrypt: (value: string) => string;
     decrypt: (value: string) => string;
@@ -26,7 +28,7 @@ interface SSRPersistOptions<T> extends Omit<PersistOptions<T, T>, 'storage'> {
   onRehydrationError?: (error: Error) => void;
 }
 
-interface StorageEvent {
+interface CustomStorageEvent {
   key: string;
   oldValue: string | null;
   newValue: string | null;
@@ -78,22 +80,38 @@ export const createSecureStorage = (
   encryption?: { encrypt: (value: string) => string; decrypt: (value: string) => string }
 ): StateStorage => {
   return {
-    getItem: (name: string) => {
+    getItem: (name: string): string | null | Promise<string | null> => {
       const value = baseStorage.getItem(name);
+
+      // Handle promise-based storage
+      if (value instanceof Promise) {
+        return value.then(val => {
+          if (!val || !encryption) return val;
+          try {
+            return encryption.decrypt(val);
+          } catch (error) {
+            logger.warn(`Failed to decrypt storage item: ${name}`, { error: error instanceof Error ? error.message : 'Unknown error' });
+            return null;
+          }
+        });
+      }
+
+      // Handle synchronous storage
       if (!value || !encryption) return value;
-      
+
       try {
-        return encryption.decrypt(value);
+        const decrypted = encryption.decrypt(value);
+        return decrypted;
       } catch (error) {
         logger.warn(`Failed to decrypt storage item: ${name}`, { error: error instanceof Error ? error.message : 'Unknown error' });
         return null;
       }
     },
-    setItem: (name: string, value: string) => {
+    setItem: (name: string, value: string): void => {
       const finalValue = encryption ? encryption.encrypt(value) : value;
       baseStorage.setItem(name, finalValue);
     },
-    removeItem: (name: string) => {
+    removeItem: (name: string): void => {
       baseStorage.removeItem(name);
     }
   };
@@ -127,14 +145,14 @@ class TabSyncManager {
     window.removeEventListener('storage', this.handleStorageChange);
   }
 
-  private handleStorageChange = (event: StorageEvent) => {
+  private handleStorageChange = (event: globalThis.StorageEvent) => {
     if (!event.key || !event.newValue) return;
-    
+
     try {
       const newValue = safeParse(event.newValue);
       this.notifyListeners(event.key, newValue);
     } catch (error) {
-      logger.warn('Failed to parse storage change event', error);
+      logger.warn('Failed to parse storage change event', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   };
 
@@ -173,9 +191,9 @@ class TabSyncManager {
 const globalTabSyncManager = new TabSyncManager();
 
 // Create enhanced persist middleware with SSR support
-export const ssrPersist = <T>(
+export const ssrPersist = <T, U = T>(
   config: (set: any, get: any, api: any) => T,
-  options: SSRPersistOptions<T>
+  options: SSRPersistOptions<T, U>
 ): ((set: any, get: any, api: any) => T) => {
   return (set, get, api) => {
     const storage = createSecureStorage(
@@ -202,18 +220,22 @@ export const ssrPersist = <T>(
     // SSR-safe rehydration
     const rehydrate = async () => {
       if (hasHydrated || isHydrating || typeof window === 'undefined') return;
-      
+
       isHydrating = true;
 
       try {
-        const storedValue = storage.getItem(name);
+        const storedValueOrPromise = storage.getItem(name);
+        const storedValue = storedValueOrPromise instanceof Promise
+          ? await storedValueOrPromise
+          : storedValueOrPromise;
+
         if (!storedValue) {
           hasHydrated = true;
           isHydrating = false;
           return;
         }
 
-        const parsed = JSON.parse(storedValue);
+        const parsed = safeParse(storedValue);
         let state = parsed.state;
 
         // Handle version migration
@@ -229,7 +251,7 @@ export const ssrPersist = <T>(
         set(mergedState, false, 'rehydrate');
         hasHydrated = true;
       } catch (error) {
-        logger.warn(`Failed to rehydrate ${name}:`, error);
+        logger.warn(`Failed to rehydrate ${name}:`, { error: error instanceof Error ? error.message : 'Unknown error' });
         if (onRehydrationError) {
           onRehydrationError(error as Error);
         }
@@ -258,7 +280,7 @@ export const ssrPersist = <T>(
           globalTabSyncManager.broadcast(name, stateToStore);
         }
       } catch (error) {
-        logger.warn(`Failed to persist ${name}:`, error);
+        logger.warn(`Failed to persist ${name}:`, { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     };
 
@@ -336,9 +358,9 @@ export const ssrPersist = <T>(
 };
 
 // Hydration guard hook
-export const useHydration = <T>(useStore: (selector?: (state: T) => any) => any) => {
+export const useHydration = <T>(useStore: { getState: () => any } & ((selector?: (state: T) => any) => any)) => {
   const [hasHydrated, setHasHydrated] = React.useState(false);
-  
+
   React.useEffect(() => {
     const store = useStore.getState();
     if (store && typeof store._hasHydrated === 'function') {
@@ -378,13 +400,19 @@ export const storageAdapters = {
   indexedDB: {
     getItem: async (name: string) => {
       if (typeof window === 'undefined' || !window.indexedDB) return null;
-      
+
       try {
         const db = await openDB();
         const transaction = db.transaction(['zustand'], 'readonly');
         const store = transaction.objectStore('zustand');
-        const result = await store.get(name);
-        return result?.value || null;
+        const request = store.get(name);
+        return new Promise<string | null>((resolve, reject) => {
+          request.onsuccess = () => {
+            const result = request.result;
+            resolve(result?.value || null);
+          };
+          request.onerror = () => reject(request.error);
+        });
       } catch (error) {
         logger.warn('IndexedDB getItem failed:', { error: error instanceof Error ? error.message : 'Unknown error' });
         return null;

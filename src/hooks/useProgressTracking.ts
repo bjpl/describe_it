@@ -53,7 +53,7 @@ function getStorageItem<T>(key: string, defaultValue: T): T {
   if (typeof window === "undefined") return defaultValue;
   try {
     const item = localStorage.getItem(key);
-    return item ? safeParse(item) : defaultValue;
+    return item ? (safeParse(item) as T) : defaultValue;
   } catch {
     return defaultValue;
   }

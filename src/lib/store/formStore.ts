@@ -91,7 +91,7 @@ interface FormStoreActions {
   validateForm: (formId: string) => Promise<boolean>;
 
   // Form submission with proper generic typing
-  submitForm: <TData = Record<string, unknown>, TResult = unknown>(
+  submitForm: <TData extends Record<string, unknown> = Record<string, unknown>, TResult = unknown>(
     formId: string,
     submitFn: (data: TData) => Promise<TResult>
   ) => Promise<TResult>;
@@ -420,10 +420,13 @@ export const useFormStore = create<FormStoreType>()(
           return validationResults.every(result => result);
         },
         
-        submitForm: async (formId, submitFn) => {
+        submitForm: async <TData extends Record<string, unknown> = Record<string, unknown>, TResult = unknown>(
+          formId: string,
+          submitFn: (data: TData) => Promise<TResult>
+        ): Promise<TResult> => {
           const form = get().forms[formId];
           if (!form) throw new Error('Form not found');
-          
+
           set((state) => ({
             forms: {
               ...state.forms,
@@ -434,18 +437,18 @@ export const useFormStore = create<FormStoreType>()(
               }
             }
           }), false, 'submitForm:start');
-          
+
           try {
             // Validate form before submission
             const isValid = await get().validateForm(formId);
             if (!isValid) {
               throw new Error('Form validation failed');
             }
-            
+
             const formData = get().getFormData(formId);
             if (!formData) throw new Error('Unable to get form data');
-            
-            const result = await submitFn(formData);
+
+            const result = await submitFn(formData as TData);
             
             set((state) => ({
               forms: {
@@ -673,19 +676,13 @@ export const useFormStore = create<FormStoreType>()(
   )
 );
 
-// Optimized selectors
-const formSelector = (formId: string) => createShallowSelector((state: FormStoreType) => state.forms[formId]);
-
-const fieldSelector = (formId: string, fieldName: string) =>
-  createShallowSelector((state: FormStoreType) => state.forms[formId]?.fields[fieldName]);
-
 // Hooks with proper typing
 export const useForm = (formId: string): FormState | undefined => {
-  return useFormStore(formSelector(formId));
+  return useFormStore((state) => state.forms[formId]);
 };
 
 export const useField = <T = unknown>(formId: string, fieldName: string): FieldState<T> | undefined => {
-  return useFormStore(fieldSelector(formId, fieldName)) as FieldState<T> | undefined;
+  return useFormStore((state) => state.forms[formId]?.fields[fieldName]) as FieldState<T> | undefined;
 };
 
 export const useFormActions = (): FormStoreActions => useFormStore((state) => ({
@@ -699,8 +696,16 @@ export const useFormActions = (): FormStoreActions => useFormStore((state) => ({
   validateField: state.validateField,
   validateForm: state.validateForm,
   submitForm: state.submitForm,
+  setSubmitting: state.setSubmitting,
+  getFormData: state.getFormData,
+  getFormErrors: state.getFormErrors,
+  isFormValid: state.isFormValid,
+  isFormDirty: state.isFormDirty,
+  saveSnapshot: state.saveSnapshot,
   undo: state.undo,
   redo: state.redo,
+  canUndo: state.canUndo,
+  canRedo: state.canRedo,
   enableAutoSave: state.enableAutoSave,
   disableAutoSave: state.disableAutoSave
 }));

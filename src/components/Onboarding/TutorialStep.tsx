@@ -151,7 +151,7 @@ export default function TutorialStep({
   const [activeFeature, setActiveFeature] = useState(0);
   const [completedFeatures, setCompletedFeatures] = useState<Set<string>>(new Set());
   const [isPlaying, setIsPlaying] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout>();
+  const intervalRef = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
   const features: TutorialFeature[] = [
     {
@@ -247,7 +247,7 @@ export default function TutorialStep({
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [activeFeature, currentFeature.id]);
+  }, [activeFeature, currentFeature.id, markFeatureComplete]);
 
   useEffect(() => {
     return () => {

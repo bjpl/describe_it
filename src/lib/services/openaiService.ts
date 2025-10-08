@@ -59,7 +59,9 @@ export class OpenAIService {
         });
       }
     } catch (error) {
-      serviceLogger.warn('OpenAI client initialization failed', error);
+      serviceLogger.warn('OpenAI client initialization failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
       this.client = null;
     }
   }
@@ -142,7 +144,9 @@ export class OpenAIService {
         return description;
       }
     } catch (error) {
-      serviceLogger.warn('OpenAI description generation failed', error);
+      serviceLogger.warn('OpenAI description generation failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
 
     return this.getDemoDescription(params);
@@ -270,7 +274,9 @@ export class OpenAIService {
         return qaData;
       }
     } catch (error) {
-      serviceLogger.warn('OpenAI Q&A generation failed', error);
+      serviceLogger.warn('OpenAI Q&A generation failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
 
     return this.getDemoQA(description, language, count);
@@ -333,7 +339,9 @@ export class OpenAIService {
         return processedResult;
       }
     } catch (error) {
-      serviceLogger.warn('OpenAI phrase extraction failed', error);
+      serviceLogger.warn('OpenAI phrase extraction failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
 
     return this.getDemoPhrases(language);
@@ -385,7 +393,9 @@ export class OpenAIService {
         return translation;
       }
     } catch (error) {
-      serviceLogger.warn('OpenAI translation failed', error);
+      serviceLogger.warn('OpenAI translation failed', {
+        error: error instanceof Error ? error.message : String(error)
+      });
     }
 
     return `${params.text} [translation not available]`;

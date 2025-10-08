@@ -48,18 +48,10 @@ const defaultPreferences: UserPreferences = {
   exportFormat: "json",
 };
 
-// Type-safe store creator with proper generics
-type AppStoreCreator = StateCreator<
-  AppStore,
-  [["zustand/devtools", never], ["zustand/persist", AppStore]],
-  [],
-  AppStore
->;
-
 export const useAppStore = create<AppStore>()(
   devtools(
     persist(
-      ((set, get) => ({
+      (set, get) => ({
         // Initial state
         currentImage: null,
         sidebarOpen: false,
@@ -155,7 +147,7 @@ export const useAppStore = create<AppStore>()(
         setError: (error) => set({ error }, false, "setError"),
 
         clearError: () => set({ error: null }, false, "clearError"),
-      })) as AppStoreCreator,
+      }),
       {
         name: "describe-it-app-store",
         partialize: (state): Partial<AppStore> => ({

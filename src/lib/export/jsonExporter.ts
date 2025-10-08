@@ -44,11 +44,9 @@ export class JSONExporter {
       this.validateExportData(exportData);
 
       // Generate JSON string
-      const jsonString = safeStringify(
-        exportData,
-        undefined,
-        this.options.pretty ? 2 : undefined
-      );
+      const jsonString = this.options.pretty
+        ? JSON.stringify(exportData, null, 2)
+        : safeStringify(exportData);
       
       if (!jsonString) {
         throw new Error('Failed to serialize export data to JSON');
@@ -63,6 +61,18 @@ export class JSONExporter {
     } catch (error) {
       logger.error("Error generating JSON export:", error);
       throw new Error("Failed to generate JSON export");
+    }
+  }
+
+  /**
+   * Safe stringify with formatting support
+   */
+  private safeStringifyWithFormat(value: any, spaces?: number): string {
+    try {
+      return JSON.stringify(value, null, spaces);
+    } catch (error) {
+      logger.error("Error stringifying JSON:", error instanceof Error ? error : undefined);
+      return safeStringify(value);
     }
   }
 
@@ -284,7 +294,7 @@ export class JSONExporter {
    * Calculate simple checksum for data integrity
    */
   private calculateChecksum(data: ExportData): string {
-    const content = safeStringify(data, undefined, 0);
+    const content = safeStringify(data);
     if (!content) {
       throw new Error('Failed to serialize data for compression');
     }
@@ -432,7 +442,7 @@ export function downloadJSON(blob: Blob, filename: string): void {
  */
 export function parseImportedJSON(jsonString: string): ExportData {
   try {
-    const data = safeParse(jsonString, null);
+    const data = safeParse<ExportData>(jsonString);
     if (!data) {
       throw new Error('Invalid JSON format in import data');
     }
@@ -446,7 +456,7 @@ export function parseImportedJSON(jsonString: string): ExportData {
       throw new Error("Invalid export file: missing export ID");
     }
 
-    return data as ExportData;
+    return data;
   } catch (error) {
     if (error instanceof SyntaxError) {
       throw new Error("Invalid JSON format");

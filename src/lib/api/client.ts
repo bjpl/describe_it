@@ -94,7 +94,7 @@ export class ApiClient {
    */
   private async request<T>(
     endpoint: string,
-    options: RequestOptions & ApiClientOptions = {}
+    options: Partial<RequestOptions & ApiClientOptions> = {}
   ): Promise<T> {
     const {
       method = 'GET',
@@ -233,7 +233,9 @@ export class ApiClient {
     // Limit cache size
     if (this.cache.size > 100) {
       const oldestKey = this.cache.keys().next().value;
-      this.cache.delete(oldestKey);
+      if (oldestKey !== undefined) {
+        this.cache.delete(oldestKey);
+      }
     }
   }
 

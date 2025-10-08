@@ -8,7 +8,9 @@ import axios from 'axios';
 
 export async function POST(request: NextRequest) {
   try {
-    const { apiKey } = safeParse(await request.text(), {});
+    const body = await request.text();
+    const parsed = safeParse<{ apiKey?: string }>(body, {});
+    const apiKey = parsed?.apiKey;
     
     if (!apiKey) {
       return NextResponse.json({ 

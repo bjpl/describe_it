@@ -320,7 +320,6 @@ export async function generateClaudeVisionDescription(
     checkPerformanceThreshold('/api/descriptions/generate', duration, 2000);
 
     performanceTracker.finish();
-    span?.finish();
 
     performanceLogger.info('Claude vision description complete', {
       step: 'vision_complete',
@@ -343,7 +342,6 @@ export async function generateClaudeVisionDescription(
     const duration = endTime - startTime;
 
     performanceTracker.finish();
-    span?.finish();
 
     // Track error in Sentry
     trackClaudeError(error, {
@@ -460,8 +458,6 @@ export async function generateClaudeCompletion(
     trackEndpointErrorRate(endpoint, false);
     checkPerformanceThreshold(endpoint, duration, 1500);
 
-    span?.finish();
-
     performanceLogger.info('Claude completion finished', {
       step: 'completion_complete',
       duration: `${duration.toFixed(2)}ms`,
@@ -478,8 +474,6 @@ export async function generateClaudeCompletion(
   } catch (error: any) {
     const endTime = performance.now();
     const duration = endTime - startTime;
-
-    span?.finish();
 
     // Track error in Sentry
     trackClaudeError(error, {

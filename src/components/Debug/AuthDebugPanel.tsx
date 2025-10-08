@@ -111,7 +111,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
     let unsubscribe = () => {};
     try {
       const { authManager } = require('../../lib/auth/authManager');
-      unsubscribe = authManager.subscribe((state) => {
+      unsubscribe = authManager.subscribe((state: any) => {
         authLogger.info('[AUTH_DEBUG] Zustand state changed:', state);
         setDebugState(captureDebugState());
       });

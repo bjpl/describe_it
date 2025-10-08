@@ -134,7 +134,7 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({
         onRemoveFromList(item.id, listName);
       }
     },
-    [item.id, onRemoveFromList]
+    [item.id, onRemoveFromList],
   );
 
   const handleReportIssue = useCallback(() => {
@@ -152,7 +152,7 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({
         handleFlip();
       }
     },
-    [handleFlip]
+    [handleFlip],
   );
 
   const formatDate = (date: Date | undefined) => {
@@ -173,13 +173,14 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({
   };
 
   return (
-    <Card
+    <div
       className={`vocabulary-card ${mode} ${isFlipped ? "flipped" : ""} ${className}`}
       role="article"
       aria-label={`Vocabulary card for ${item.word}`}
       onKeyDown={handleKeyDown}
       tabIndex={0}
     >
+    <Card>
       <CardHeader>
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -466,6 +467,7 @@ export const VocabularyCard: React.FC<VocabularyCardProps> = ({
         </div>
       </CardFooter>
     </Card>
+    </div>
   );
 };
 

@@ -7,7 +7,7 @@ import { AuthModal } from './AuthModal';
 import { SettingsModal } from '@/components/SettingsModal';
 import { safeParse, safeStringify, safeParseLocalStorage } from '@/lib/utils/json-safe';
 import { authLogger } from '@/lib/logger';
-import type { AuthResponse } from '@/types/api';
+import type { AuthResponse } from '@/types/api/index';
 
 // Custom auth state interface
 interface AuthStateDetail {
@@ -97,19 +97,19 @@ export function UserMenu() {
       try {
         const stored = localStorage.getItem('describe-it-auth');
         const recentSignIn = sessionStorage.getItem('recent-auth-success');
-        
+
         if (stored) {
           const parsedData = safeParse<StoredAuthData>(stored, undefined);
-          if (parsedData && 'access_token' in parsedData) {
+          if (parsedData && parsedData !== undefined && 'access_token' in parsedData) {
             const { access_token, user: storedUser } = parsedData;
             const hasToken = !!access_token;
-            
+
             // Only update if there's a meaningful change
             if (hasToken !== localIsAuthenticated) {
               authLogger.info('[UserMenu] Polling detected auth change:', { hasToken });
               setLocalIsAuthenticated(hasToken);
               setLocalUser(storedUser as any || null);
-              
+
               if (hasToken && recentSignIn) {
                 // Clear the recent sign-in flag
                 sessionStorage.removeItem('recent-auth-success');
@@ -195,7 +195,10 @@ export function UserMenu() {
     const localStorageStr = window.localStorage.getItem('describe-it-auth');
     let localStorageData: StoredAuthData | { error: string } | null = null;
 
-    localStorageData = localStorageStr ? safeParse<StoredAuthData>(localStorageStr, undefined) : null;
+    if (localStorageStr) {
+      const parsed = safeParse<StoredAuthData>(localStorageStr, undefined);
+      localStorageData = parsed !== undefined ? parsed : null;
+    }
 
     const stateComparison = {
       authProvider: { isAuthenticated, user: user?.email, profile: !!profile },

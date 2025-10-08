@@ -187,7 +187,7 @@ const defaultUIState = {
 export const useUIStore = create<UIState>()(
   devtools(
     subscribeWithSelector(
-      ssrPersist(
+      ssrPersist<UIState, Partial<UIState>>(
         (set, get) => ({
           ...defaultUIState,
           
@@ -303,25 +303,25 @@ export const useUIStore = create<UIState>()(
           },
           
           toggleReduceMotion: () => {
-            set((state) => {
+            set((state: UIState) => {
               const newValue = !state.reduceMotion;
-              
+
               if (typeof window !== 'undefined') {
                 document.documentElement.setAttribute('data-reduce-motion', String(newValue));
               }
-              
+
               return { reduceMotion: newValue };
             }, false, 'toggleReduceMotion');
           },
-          
+
           toggleHighContrast: () => {
-            set((state) => {
+            set((state: UIState) => {
               const newValue = !state.highContrast;
-              
+
               if (typeof window !== 'undefined') {
                 document.documentElement.setAttribute('data-high-contrast', String(newValue));
               }
-              
+
               return { highContrast: newValue };
             }, false, 'toggleHighContrast');
           },
@@ -344,38 +344,38 @@ export const useUIStore = create<UIState>()(
           },
           
           toggleRightPanel: () => {
-            set((state) => ({ rightPanelOpen: !state.rightPanelOpen }), false, 'toggleRightPanel');
+            set((state: UIState) => ({ rightPanelOpen: !state.rightPanelOpen }), false, 'toggleRightPanel');
           },
-          
+
           openBottomPanel: (content, props) => {
-            set({ 
-              bottomPanelOpen: true, 
+            set({
+              bottomPanelOpen: true,
               bottomPanelContent: content,
-              bottomPanelProps: props 
+              bottomPanelProps: props
             }, false, 'openBottomPanel');
           },
-          
+
           closeBottomPanel: () => {
-            set({ 
-              bottomPanelOpen: false, 
+            set({
+              bottomPanelOpen: false,
               bottomPanelContent: null,
-              bottomPanelProps: undefined 
+              bottomPanelProps: undefined
             }, false, 'closeBottomPanel');
           },
-          
+
           toggleBottomPanel: () => {
-            set((state) => ({ bottomPanelOpen: !state.bottomPanelOpen }), false, 'toggleBottomPanel');
+            set((state: UIState) => ({ bottomPanelOpen: !state.bottomPanelOpen }), false, 'toggleBottomPanel');
           },
-          
+
           // Loading
           setGlobalLoading: (loading) => {
             set({ globalLoading: loading }, false, 'setGlobalLoading');
           },
-          
+
           setLoadingState: (key, loading, message) => {
-            set((state) => ({
+            set((state: UIState) => ({
               loadingStates: { ...state.loadingStates, [key]: loading },
-              loadingMessages: message 
+              loadingMessages: message
                 ? { ...state.loadingMessages, [key]: message }
                 : state.loadingMessages
             }), false, 'setLoadingState');
@@ -393,29 +393,29 @@ export const useUIStore = create<UIState>()(
               id,
               timestamp: new Date()
             };
-            
-            set((state) => {
+
+            set((state: UIState) => {
               const newNotifications = [notification, ...state.notifications];
-              
+
               // Keep only maxNotifications
               const trimmedNotifications = newNotifications.slice(0, state.maxNotifications);
-              
+
               return { notifications: trimmedNotifications };
             }, false, 'addNotification');
-            
+
             // Auto-remove notification if duration is set
             if (notification.duration && notification.duration > 0) {
               setTimeout(() => {
                 get().removeNotification(id);
               }, notification.duration);
             }
-            
+
             return id;
           },
-          
+
           removeNotification: (id) => {
-            set((state) => ({
-              notifications: state.notifications.filter(notification => notification.id !== id)
+            set((state: UIState) => ({
+              notifications: state.notifications.filter((notification: Notification) => notification.id !== id)
             }), false, 'removeNotification');
           },
           
@@ -429,14 +429,14 @@ export const useUIStore = create<UIState>()(
           },
           
           announce: (message) => {
-            set((state) => ({
+            set((state: UIState) => ({
               announcements: [...state.announcements, message]
             }), false, 'announce');
-            
+
             // Clear announcement after a short delay
             setTimeout(() => {
-              set((state) => ({
-                announcements: state.announcements.filter(ann => ann !== message)
+              set((state: UIState) => ({
+                announcements: state.announcements.filter((ann: string) => ann !== message)
               }), false, 'clearAnnouncement');
             }, 1000);
           },
@@ -447,13 +447,13 @@ export const useUIStore = create<UIState>()(
           
           // Keyboard shortcuts
           registerShortcut: (key, handler) => {
-            set((state) => ({
+            set((state: UIState) => ({
               activeShortcuts: { ...state.activeShortcuts, [key]: handler }
             }), false, 'registerShortcut');
           },
-          
+
           unregisterShortcut: (key) => {
-            set((state) => {
+            set((state: UIState) => {
               const { [key]: removed, ...remaining } = state.activeShortcuts;
               return { activeShortcuts: remaining };
             }, false, 'unregisterShortcut');
@@ -482,7 +482,7 @@ export const useUIStore = create<UIState>()(
         }),
         {
           name: 'describe-it-ui-store',
-          partialize: (state) => ({
+          partialize: (state: UIState): Partial<UIState> => ({
             theme: state.theme,
             colorScheme: state.colorScheme,
             fontSize: state.fontSize,
@@ -546,24 +546,31 @@ export const useUIActions = () => useUIStore((state) => ({
   closeModal: state.closeModal,
   closeAllModals: state.closeAllModals,
   closeTopModal: state.closeTopModal,
-  
+
   // Navigation
   setSidebarOpen: state.setSidebarOpen,
   toggleSidebar: state.toggleSidebar,
   setBreadcrumbs: state.setBreadcrumbs,
-  
+
   // Theme
   setTheme: state.setTheme,
   setColorScheme: state.setColorScheme,
   setFontSize: state.setFontSize,
-  
+
   // Notifications
   addNotification: state.addNotification,
   removeNotification: state.removeNotification,
-  
+
   // Loading
   setLoadingState: state.setLoadingState,
-  setGlobalLoading: state.setGlobalLoading
+  setGlobalLoading: state.setGlobalLoading,
+
+  // Keyboard shortcuts
+  registerShortcut: state.registerShortcut,
+  unregisterShortcut: state.unregisterShortcut,
+
+  // Focus
+  setFocusTrap: state.setFocusTrap
 }));
 
 // Keyboard shortcut hook

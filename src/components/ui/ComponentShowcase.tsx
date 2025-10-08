@@ -22,11 +22,11 @@ import {
   useFormValidation,
   ToastProvider,
   useToast,
-  LoadingOverlay,
   EnhancedSkeleton,
   TextSkeleton,
   ProfileSkeleton,
 } from "./index";
+import { LoadingOverlay } from "./LoadingStates";
 import { Search, Settings, Heart, Download, Plus, Trash2 } from "lucide-react";
 
 // Example data for data table
@@ -68,11 +68,26 @@ export function ComponentShowcase() {
   const [modalOpen, setModalOpen] = useState(false);
   const [confirmModalOpen, setConfirmModalOpen] = useState(false);
   const [selectedValue, setSelectedValue] = useState("");
-  const [selectedRows, setSelectedRows] = useState([]);
+  const [selectedRows, setSelectedRows] = useState<typeof sampleData>([]);
   const [loading, setLoading] = useState(false);
   const [showSkeletons, setShowSkeletons] = useState(false);
 
-  const { toast } = useToast();
+  const { toast: toastFn } = useToast();
+  const toast = {
+    success: (message: string, options?: { title?: string }) => toastFn({ type: "success", description: message, ...options }),
+    error: (message: string, options?: { title?: string; action?: { label: string; onClick: () => void } }) => toastFn({ type: "error", description: message, duration: 0, ...options }),
+    warning: (message: string, options?: { title?: string }) => toastFn({ type: "warning", description: message, ...options }),
+    info: (message: string) => toastFn({ type: "info", description: message }),
+    promise: <T,>(promise: Promise<T>, msgs: { loading: string; success: string; error: string }) => {
+      const id = toastFn({ type: "info", description: msgs.loading, duration: 0, dismissible: false });
+      promise.then(() => {
+        toastFn({ type: "success", description: msgs.success });
+      }).catch(() => {
+        toastFn({ type: "error", description: msgs.error, duration: 0 });
+      });
+      return promise;
+    }
+  };
 
   // Form validation example
   const {

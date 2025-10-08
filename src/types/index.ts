@@ -192,6 +192,10 @@ export interface AppState {
   sidebarOpen: boolean;
   activeTab: "search" | "descriptions" | "qa" | "phrases" | "export";
   isFullscreen: boolean;
+  preferences: UserPreferences;
+  searchHistory: SearchHistoryItem[];
+  isLoading: boolean;
+  error: string | null;
 }
 
 // Multi-style Description Types

@@ -404,6 +404,3 @@ const envConfig = {
 };
 
 export default envConfig;
-
-// Re-export types for convenience
-export type { ClientEnv, ServerEnv, Env };

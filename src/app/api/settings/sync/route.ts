@@ -8,7 +8,9 @@ import { apiLogger } from '@/lib/logger';
  */
 export async function POST(request: NextRequest) {
   try {
-    const { apiKeys } = safeParse(await request.text(), {});
+    const body = await request.text();
+    const parsed = safeParse<{ apiKeys?: unknown }>(body, {});
+    const apiKeys = parsed?.apiKeys;
     
     // For now, just return success
     // Cookie handling can be added once build is stable

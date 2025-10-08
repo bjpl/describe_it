@@ -23,7 +23,7 @@ export type { Toast } from "./Toast";
 export {
   ToastProvider,
   useToast,
-  toast,
+  useToastHelpers,
 } from "./Toast";
 
 export {

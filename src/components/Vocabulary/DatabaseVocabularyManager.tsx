@@ -61,7 +61,7 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
   const [searchQuery, setSearchQuery] = useState("");
   const [isRealTimeEnabled, setIsRealTimeEnabled] = useState(true);
   const [lastUpdate, setLastUpdate] = useState<Date>(new Date());
-  const realTimeIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const realTimeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   // Real-time update effect
   useEffect(() => {
@@ -144,20 +144,16 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
       switch (action) {
         case "study":
           // Implement study session with selected items
-          dbLogger.info(
-            "Starting study session with",
-            selectedItems.length,
-            "items",
-          );
+          dbLogger.info(`Starting study session with ${selectedItems.length} items`);
           break;
         case "export":
           // Implement export functionality for selected items
-          dbLogger.info("Exporting", selectedItems.length, "items");
+          dbLogger.info(`Exporting ${selectedItems.length} items`);
           break;
         case "delete":
           // Implement delete functionality for selected items
           if (confirm(`Delete ${selectedItems.length} selected items?`)) {
-            dbLogger.info("Deleting", selectedItems.length, "items");
+            dbLogger.info(`Deleting ${selectedItems.length} items`);
             setSelectedItems([]);
           }
           break;
@@ -354,8 +350,16 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
             </select>
 
             <select
-              value={filters.difficulty || "all"}
-              onChange={(e) => setFilter("difficulty", e.target.value as any)}
+              value={filters.difficulty?.toString() || "all"}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "all") {
+                  setFilter("difficulty", "all");
+                } else {
+                  const numValue = parseInt(value);
+                  setFilter("difficulty", numValue as 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10);
+                }
+              }}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Difficulty Levels</option>
@@ -373,7 +377,14 @@ export const DatabaseVocabularyManager: React.FC<VocabularyManagerProps> = ({
 
             <select
               value={filters.partOfSpeech || "all"}
-              onChange={(e) => setFilter("partOfSpeech", e.target.value as any)}
+              onChange={(e) => {
+                const value = e.target.value;
+                if (value === "all") {
+                  setFilter("partOfSpeech", "all");
+                } else {
+                  setFilter("partOfSpeech", value as "noun" | "verb" | "adjective" | "adverb" | "other");
+                }
+              }}
               className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500"
             >
               <option value="all">All Parts of Speech</option>

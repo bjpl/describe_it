@@ -109,7 +109,6 @@ export class RateLimiter {
           db: parseInt(process.env.REDIS_DB || '1'), // Use DB 1 for rate limiting
           keyPrefix: this.keyPrefix,
           maxRetriesPerRequest: 3,
-          retryDelayOnFailover: 100,
           enableOfflineQueue: false,
           lazyConnect: true,
           connectTimeout: 5000,
@@ -138,7 +137,7 @@ export class RateLimiter {
         logger.info('[Rate Limiter] No Redis configuration found, using memory-only mode');
       }
     } catch (error) {
-      logger.warn('[Rate Limiter] Failed to connect to Redis, using memory fallback:', error);
+      logger.warn('[Rate Limiter] Failed to connect to Redis, using memory fallback:', { error: error instanceof Error ? error.message : String(error) });
       this.redisAvailable = false;
       this.redis = null;
     }
@@ -161,9 +160,8 @@ export class RateLimiter {
                   'anonymous';
     
     // Get IP address from various headers
-    const ip = req.headers.get('x-forwarded-for') || 
-              req.headers.get('x-real-ip') || 
-              req.ip || 
+    const ip = req.headers.get('x-forwarded-for') ||
+              req.headers.get('x-real-ip') ||
               'unknown';
     
     return `${userId}:${ip}`;

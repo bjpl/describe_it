@@ -239,13 +239,13 @@ export class RawDataExporter {
   private formatData(data: any): string {
     switch (this.options.format) {
       case "json":
-        return safeStringify(data, null, 2);
+        return JSON.stringify(data, null, 2);
       case "csv":
         return this.convertToCSV(data);
       case "xml":
         return this.convertToXML(data);
       default:
-        return safeStringify(data, null, 2);
+        return JSON.stringify(data, null, 2);
     }
   }
 
@@ -345,8 +345,8 @@ export class RawDataExporter {
     // Summary
     xml += "  <summary>\n";
     Object.entries(data.sessionSummary || {}).forEach(([key, value]) => {
-      if (typeof value === "object") {
-        xml += `    <${key}>${safeStringify(value)}</${key}>\n`;
+      if (typeof value === "object" && value !== null) {
+        xml += `    <${key}>${escape(safeStringify(value))}</${key}>\n`;
       } else {
         xml += `    <${key}>${escape(String(value))}</${key}>\n`;
       }

@@ -45,7 +45,8 @@ export interface ErrorCategory {
 // Winston logger instance (server-side only)
 let winstonLogger: any = null;
 
-// Detect Edge Runtime
+// Detect Edge Runtime - EdgeRuntime is a global in edge runtime
+declare const EdgeRuntime: string | undefined;
 const isEdgeRuntime = typeof EdgeRuntime !== 'undefined' || process.env.NEXT_RUNTIME === 'edge';
 
 // Initialize Winston on Node.js runtime only (not Edge Runtime)
@@ -252,7 +253,7 @@ class Logger {
   private writeLog(level: LogLevel, message: string, context?: LogContext): void {
     const logData = this.formatLogData(message, context);
 
-    // Detect Edge Runtime
+    // Detect Edge Runtime - use the declared global
     const isEdge = typeof EdgeRuntime !== 'undefined' || process.env.NEXT_RUNTIME === 'edge';
 
     if (winstonLogger && !this.isClient && !isEdge) {

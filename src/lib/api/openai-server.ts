@@ -346,7 +346,7 @@ export async function generateVisionDescription(
       style: validatedStyle,
       language: validatedLanguage as "es" | "en",
       wordCount: description.split(/\s+/).length,
-      timestamp: new Date().toISOString(),
+      generatedAt: new Date().toISOString(),
     };
     
     // Clear any large variables to help with garbage collection
@@ -429,7 +429,7 @@ function generateDemoDescription(
       style,
       language: language as "es" | "en",
       wordCount: fallbackText.split(/\s+/).length,
-      timestamp: new Date().toISOString(),
+      generatedAt: new Date().toISOString(),
     };
   }
 
@@ -438,6 +438,6 @@ function generateDemoDescription(
     style,
     language: language as "es" | "en",
     wordCount: text.split(/\s+/).length,
-    timestamp: new Date().toISOString(),
+    generatedAt: new Date().toISOString(),
   };
 }

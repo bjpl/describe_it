@@ -69,7 +69,7 @@ class UnsplashService {
       this.isDemo = false;
       this.initializeClient();
     } catch (error) {
-      apiLogger.warn("[UnsplashService] KeyProvider failed, falling back to demo mode:", error);
+      apiLogger.warn("[UnsplashService] KeyProvider failed, falling back to demo mode:", error as Record<string, any>);
       this.accessKey = "demo";
       this.client = null;
       this.initializeDemoMode();
@@ -148,14 +148,14 @@ class UnsplashService {
       this.initializeClient();
             }
           } catch (error) {
-            apiLogger.warn("[UnsplashService] Failed to reinitialize after key update:", error);
+            apiLogger.warn("[UnsplashService] Failed to reinitialize after key update:", error as Record<string, any>);
             this.accessKey = "demo";
             this.initializeDemoMode();
           }
         }
       });
     } catch (error) {
-      apiLogger.warn("[UnsplashService] Failed to setup key update listener:", error);
+      apiLogger.warn("[UnsplashService] Failed to setup key update listener:", error as Record<string, any>);
     }
   }
 
@@ -179,7 +179,9 @@ class UnsplashService {
           code: "RATE_LIMIT_EXCEEDED",
           message: "Rate limit exceeded. Please try again later.",
           status: 429,
-          retryAfter: Math.ceil((this.rateLimitInfo.reset - Date.now()) / 1000),
+          details: {
+            retryAfter: Math.ceil((this.rateLimitInfo.reset - Date.now()) / 1000),
+          },
         });
       }
       return config;
@@ -558,7 +560,8 @@ class UnsplashService {
         };
       } catch (timeoutError) {
         clearTimeout(timeoutId);
-        if (timeoutError.name === 'CanceledError' || timeoutError.code === 'ECONNABORTED') {
+        const err = timeoutError as { name?: string; code?: string };
+        if (err.name === 'CanceledError' || err.code === 'ECONNABORTED') {
           apiLogger.warn('[UnsplashService] Request timed out, using demo mode');
           return this.generateDemoImages(params);
         }
@@ -566,10 +569,11 @@ class UnsplashService {
       }
     } catch (error) {
       // Always fallback to demo data on any error for reliability
+      const err = error as { message?: string; code?: string; response?: { status?: number } };
       apiLogger.warn("[UnsplashService] API error, falling back to demo mode:", {
-        error: error.message || error,
-        code: error.code,
-        status: error.response?.status
+        error: err.message || error,
+        code: err.code,
+        status: err.response?.status
       });
       return this.generateDemoImages(params);
     }

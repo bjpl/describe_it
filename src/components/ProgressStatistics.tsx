@@ -9,7 +9,7 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
+  Tooltip as RechartsTooltip,
   ResponsiveContainer,
   PieChart,
   Pie,
@@ -285,7 +285,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
           </h3>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={studyProgressData}>
+              <AreaChart data={studyProgressData as any}>
                 <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                 <XAxis
                   dataKey="name"
@@ -296,7 +296,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
                   tick={{ fontSize: 12 }}
                   className="text-gray-600 dark:text-gray-400"
                 />
-                <Tooltip
+                <RechartsTooltip
                   contentStyle={{
                     backgroundColor: "rgba(0, 0, 0, 0.8)",
                     border: "none",
@@ -351,7 +351,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
                   tick={{ fontSize: 12 }}
                   className="text-gray-600 dark:text-gray-400"
                 />
-                <Tooltip
+                <RechartsTooltip
                   contentStyle={{
                     backgroundColor: "rgba(0, 0, 0, 0.8)",
                     border: "none",
@@ -382,7 +382,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={masteryData}
+                  data={masteryData as any}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -397,7 +397,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
                     />
                   ))}
                 </Pie>
-                <Tooltip
+                <RechartsTooltip
                   contentStyle={{
                     backgroundColor: "rgba(0, 0, 0, 0.8)",
                     border: "none",
@@ -441,7 +441,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
                   tick={{ fontSize: 12 }}
                   className="text-gray-600 dark:text-gray-400"
                 />
-                <Tooltip
+                <RechartsTooltip
                   contentStyle={{
                     backgroundColor: "rgba(0, 0, 0, 0.8)",
                     border: "none",
@@ -486,7 +486,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
                   className="text-gray-600 dark:text-gray-400"
                   width={100}
                 />
-                <Tooltip
+                <RechartsTooltip
                   contentStyle={{
                     backgroundColor: "rgba(0, 0, 0, 0.8)",
                     border: "none",

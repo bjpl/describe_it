@@ -55,36 +55,38 @@ export {
   type BreadcrumbItem,
 } from "./uiStore";
 
-export {
-  useTabSyncStore,
-  useTabSync,
-  useTabSyncActions,
-  useStoreSyncRegistration,
-  useAutoTabSync,
-  type ConflictStrategy,
-  type SyncConfig,
-} from "./tabSyncStore";
+// Tab sync, undo/redo, and debug stores are optional and may not exist in all environments
+// Only export if the modules exist
+// export {
+//   useTabSyncStore,
+//   useTabSync,
+//   useTabSyncActions,
+//   useStoreSyncRegistration,
+//   useAutoTabSync,
+//   type ConflictStrategy,
+//   type SyncConfig,
+// } from "./tabSyncStore";
 
-export {
-  useUndoRedoStore,
-  useUndoRedo,
-  useUndoRedoActions,
-  useUndoRedoRegistration,
-  useUndoRedoShortcuts,
-  type HistoryEntry,
-  type HistoryBranch,
-} from "./undoRedoStore";
+// export {
+//   useUndoRedoStore,
+//   useUndoRedo,
+//   useUndoRedoActions,
+//   useUndoRedoRegistration,
+//   useUndoRedoShortcuts,
+//   type HistoryEntry,
+//   type HistoryBranch,
+// } from "./undoRedoStore";
 
-export {
-  useDebugStore,
-  useDebug,
-  useDebugActions,
-  useDebugRegistration,
-  connectDebugToDevTools,
-  type ActionLog,
-  type PerformanceMetrics,
-  type StateDiff,
-} from "./debugStore";
+// export {
+//   useDebugStore,
+//   useDebug,
+//   useDebugActions,
+//   useDebugRegistration,
+//   connectDebugToDevTools,
+//   type ActionLog,
+//   type PerformanceMetrics,
+//   type StateDiff,
+// } from "./debugStore";
 
 // Middleware
 export {

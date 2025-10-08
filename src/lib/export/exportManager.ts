@@ -664,7 +664,7 @@ export class ExportManager implements IExportManager {
       const templates = Array.from(this.templates.values());
       safeSetLocalStorage("describe-it-export-templates", templates);
     } catch (error) {
-      logger.warn("Failed to save templates to storage:", error);
+      logger.warn("Failed to save templates to storage:", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -677,7 +677,7 @@ export class ExportManager implements IExportManager {
         });
       }
     } catch (error) {
-      logger.warn("Failed to load templates from storage:", error);
+      logger.warn("Failed to load templates from storage:", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -686,7 +686,7 @@ export class ExportManager implements IExportManager {
       const scheduled = Array.from(this.scheduledExports.values());
       safeSetLocalStorage("describe-it-scheduled-exports", scheduled);
     } catch (error) {
-      logger.warn("Failed to save scheduled exports to storage:", error);
+      logger.warn("Failed to save scheduled exports to storage:", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -699,7 +699,7 @@ export class ExportManager implements IExportManager {
         });
       }
     } catch (error) {
-      logger.warn("Failed to load scheduled exports from storage:", error);
+      logger.warn("Failed to load scheduled exports from storage:", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -707,7 +707,7 @@ export class ExportManager implements IExportManager {
     try {
       safeSetLocalStorage("describe-it-export-history", this.exportHistory);
     } catch (error) {
-      logger.warn("Failed to save export history to storage:", error);
+      logger.warn("Failed to save export history to storage:", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -718,7 +718,7 @@ export class ExportManager implements IExportManager {
         this.exportHistory = stored;
       }
     } catch (error) {
-      logger.warn("Failed to load export history from storage:", error);
+      logger.warn("Failed to load export history from storage:", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 

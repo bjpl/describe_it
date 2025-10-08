@@ -126,7 +126,7 @@ export class SessionLogger {
       this.saveToStorage();
     }
 
-    logger.debug("Session interaction logged:", { type, data });
+    logger.debug("Session interaction logged:", { type, interactionData: data });
   }
 
   // Specific logging methods for better type safety
@@ -267,7 +267,7 @@ export class SessionLogger {
       (i) => i.type === "search_query",
     );
     const uniqueQueries = [
-      ...new Set(searchInteractions.map((i) => i.data.searchQuery).filter((query): query is string => query != null)),
+      ...new Set(searchInteractions.map((i) => i.data.searchQuery).filter((query): query is string => typeof query === 'string')),
     ];
     const averageSearchTime =
       searchInteractions.length > 0
@@ -282,7 +282,7 @@ export class SessionLogger {
       (i) => i.type === "image_selected",
     );
     const uniqueImages = [
-      ...new Set(imageInteractions.map((i) => i.data.imageId).filter((id): id is string => id != null)),
+      ...new Set(imageInteractions.map((i) => i.data.imageId).filter((id): id is string => typeof id === 'string')),
     ];
     const averageSelectionTime =
       imageInteractions.length > 0
@@ -536,7 +536,7 @@ export class SessionLogger {
         safeStringify(storage),
       );
     } catch (error) {
-      logger.warn("Failed to save session to storage:", error);
+      logger.warn("Failed to save session to storage:", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -546,12 +546,14 @@ export class SessionLogger {
     try {
       const stored = localStorage.getItem(`session_${this.sessionId}`);
       if (stored) {
-        const storage: SessionStorage = safeParse(stored);
-        this.interactions = storage.interactions || [];
-        this.settings = { ...this.settings, ...storage.settings };
+        const storage = safeParse<SessionStorage>(stored);
+        if (storage) {
+          this.interactions = storage.interactions || [];
+          this.settings = { ...this.settings, ...storage.settings };
+        }
       }
     } catch (error) {
-      logger.warn("Failed to load session from storage:", error);
+      logger.warn("Failed to load session from storage:", { error: error instanceof Error ? error.message : String(error) });
     }
   }
 
@@ -626,13 +628,13 @@ export class SessionLogger {
 
     switch (format) {
       case "json":
-        return safeStringify(report, null, 2);
+        return JSON.stringify(report, null, 2);
       case "text":
         return this.formatAsText(report);
       case "csv":
         return this.formatAsCSV(report);
       default:
-        return safeStringify(report, null, 2);
+        return JSON.stringify(report, null, 2);
     }
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -95,12 +95,7 @@ export function LearningProgress({
   const [error, setError] = useState<string | null>(null);
   const [activeChart, setActiveChart] = useState<"progress" | "accuracy" | "time">("progress");
 
-  useEffect(() => {
-    fetchProgressData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, timeRange]); // fetchProgressData is stable
-
-  const fetchProgressData = async () => {
+  const fetchProgressData = useCallback(async () => {
     if (!userId) return;
     
     try {
@@ -143,7 +138,11 @@ export function LearningProgress({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, timeRange]);
+
+  useEffect(() => {
+    fetchProgressData();
+  }, [fetchProgressData]);
 
   const generateDailyProgressData = (
     progress: UserProgress[],
@@ -375,8 +374,8 @@ export function LearningProgress({
         <CardContent className="px-0 pb-0">
           <LoadingOverlay isLoading={loading}>
             <div className="h-80">
-              <ResponsiveContainer width="100%" height="100%" as="div">
-                {activeChart === "progress" && (
+              {activeChart === "progress" && (
+                <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={progressData}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis 
@@ -400,9 +399,11 @@ export function LearningProgress({
                       fillOpacity={0.3}
                     />
                   </AreaChart>
-                )}
-                
-                {activeChart === "accuracy" && (
+                </ResponsiveContainer>
+              )}
+
+              {activeChart === "accuracy" && (
+                <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={progressData}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis 
@@ -426,9 +427,11 @@ export function LearningProgress({
                       dot={{ fill: CHART_COLORS.secondary, strokeWidth: 2, r: 4 }}
                     />
                   </LineChart>
-                )}
-                
-                {activeChart === "time" && (
+                </ResponsiveContainer>
+              )}
+
+              {activeChart === "time" && (
+                <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={progressData}>
                     <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
                     <XAxis 
@@ -447,8 +450,8 @@ export function LearningProgress({
                       radius={[2, 2, 0, 0]}
                     />
                   </BarChart>
-                )}
-              </ResponsiveContainer>
+                </ResponsiveContainer>
+              )}
             </div>
           </LoadingOverlay>
         </CardContent>
@@ -493,12 +496,12 @@ export function LearningProgress({
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={categoryProgress}
+                      data={categoryProgress as any}
                       cx="50%"
                       cy="50%"
                       outerRadius={80}
                       dataKey="mastered"
-                      label={({ category, mastered }) => `${category}: ${mastered}`}
+                      label={({ category, mastered }: any) => `${category}: ${mastered}`}
                       labelLine={false}
                     >
                       {categoryProgress.map((entry, index) => (

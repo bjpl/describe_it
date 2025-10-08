@@ -1,11 +1,23 @@
 import { logger } from '@/lib/logger';
+import {
+  RateLimiter,
+  getRateLimiter,
+  ExponentialBackoff,
+  RateLimitConfigs,
+} from './rate-limiter';
+import {
+  withRateLimit,
+  withRateLimitStatus,
+  checkRateLimitStatus,
+  RateLimitMiddleware,
+} from './middleware';
 
 /**
  * Rate Limiting Module
- * 
+ *
  * Comprehensive rate limiting system for the Describe-It application
  * with Redis-backed sliding window algorithm and memory fallback.
- * 
+ *
  * Features:
  * - Sliding window rate limiting algorithm
  * - Redis-based distributed rate limiting with memory fallback
@@ -16,21 +28,21 @@ import { logger } from '@/lib/logger';
  * - Multiple predefined configurations for different endpoint types
  */
 
-// Core rate limiting classes and functions
+// Re-export core rate limiting classes and functions
 export {
   RateLimiter,
   getRateLimiter,
   ExponentialBackoff,
   RateLimitConfigs,
-} from './rate-limiter';
+};
 
-// Middleware and utilities
+// Re-export middleware and utilities
 export {
   withRateLimit,
   withRateLimitStatus,
   checkRateLimitStatus,
   RateLimitMiddleware,
-} from './middleware';
+};
 
 // Types and interfaces
 export type {

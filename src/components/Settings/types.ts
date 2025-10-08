@@ -32,13 +32,15 @@ export interface ExportSettingsProps extends BaseSettingsProps {
 
 export interface NotificationSettingsProps extends BaseSettingsProps {}
 
-export type TabType = 
+export type TabType =
   | "general"
+  | "apikeys"
   | "api"
   | "language"
   | "study"
   | "theme"
   | "accessibility"
+  | "privacy"
   | "cache"
   | "backup";
 

@@ -578,7 +578,7 @@ class AuthManager {
         authLogger.debug('No API keys found for user');
       }
 
-      this.currentProfile = profile as UserProfile;
+      this.currentProfile = profile as unknown as UserProfile;
       authLogger.info('User profile loaded successfully');
     } catch (error) {
       authLogger.error('Failed to load user profile', error);
@@ -639,7 +639,7 @@ class AuthManager {
     
     try {
       // Save to localStorage immediately (unencrypted for local use)
-      await hybridStorage.save('api-keys', userId, keys);
+      await hybridStorage.save('api-keys', userId, keys as Record<string, any>);
       securityLogger.info('Saved API keys to localStorage');
       
       // If user is authenticated, try to save to Supabase
@@ -679,7 +679,9 @@ class AuthManager {
           securityLogger.info('API keys stored locally - create user_api_keys table for cloud storage');
         } catch (supabaseError) {
           // Supabase save failed, but localStorage succeeded
-          authLogger.warn('Supabase operation failed, but localStorage succeeded', supabaseError);
+          authLogger.warn('Supabase operation failed, but localStorage succeeded', {
+            error: supabaseError instanceof Error ? supabaseError.message : String(supabaseError)
+          });
         }
       }
       
@@ -722,13 +724,13 @@ class AuthManager {
     // In production, use proper encryption
     // For now, just base64 encode as a placeholder
     const encrypted: Partial<UserApiKeys> = {};
-    
+
     for (const [key, value] of Object.entries(keys)) {
-      if (value && key !== 'encrypted') {
-        encrypted[key as keyof UserApiKeys] = btoa(value);
+      if (value && typeof value === 'string' && key !== 'encrypted') {
+        (encrypted as any)[key] = btoa(value);
       }
     }
-    
+
     return encrypted;
   }
 
@@ -739,17 +741,17 @@ class AuthManager {
     // In production, use proper decryption
     // For now, just base64 decode as a placeholder
     const decrypted: UserApiKeys = { encrypted: false };
-    
+
     for (const [key, value] of Object.entries(keys)) {
-      if (value && key !== 'encrypted') {
+      if (value && typeof value === 'string' && key !== 'encrypted') {
         try {
-          decrypted[key as keyof UserApiKeys] = atob(value);
+          (decrypted as any)[key] = atob(value);
         } catch {
-          decrypted[key as keyof UserApiKeys] = value;
+          (decrypted as any)[key] = value;
         }
       }
     }
-    
+
     return decrypted;
   }
 
@@ -762,10 +764,10 @@ class AuthManager {
     // Load user-specific data from Supabase
     await hybridStorage.load('user-data', session.user.id);
     
-    // Track sign in
+    // Track sign in - update last_login timestamp
     await supabase
       .from('users')
-      .update({ last_active_at: new Date().toISOString() })
+      .update({ last_login: new Date().toISOString() })
       .eq('id', session.user.id);
   }
 
@@ -912,11 +914,12 @@ class AuthManager {
     }
 
     try {
-      // Soft delete in database first
+      // Mark user as inactive instead of soft delete (since deleted_at column doesn't exist)
       const { error: dbError } = await supabase
         .from('users')
-        .update({ 
-          deleted_at: new Date().toISOString() 
+        .update({
+          is_authenticated: false,
+          updated_at: new Date().toISOString()
         })
         .eq('id', this.currentUser.id);
 

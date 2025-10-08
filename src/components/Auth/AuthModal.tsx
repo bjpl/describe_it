@@ -6,7 +6,7 @@ import { useDirectAuth } from './useDirectAuth';
 import { X, Mail, Lock, User, KeyRound, Github, Chrome } from 'lucide-react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 import { authLogger } from '@/lib/logger';
-import type { AuthResponse } from '@/types/api';
+import type { AuthResponse } from '@/types/api/index';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -37,7 +37,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
     setLoading(true);
     setError(null);
     
-    authLogger.info('[AuthModal] Starting', mode, 'for', email);
+    authLogger.info('[AuthModal] Starting', { mode, email });
 
     try {
       let result: AuthResponse;

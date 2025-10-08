@@ -56,18 +56,23 @@ export abstract class BaseSecretProvider {
   abstract list(filter?: SecretFilter): Promise<string[]>;
   abstract exists(key: string): Promise<boolean>;
 
-  protected encryptValue(value: string): string | any {
+  protected encryptValue(value: string): string {
     if (!this.encryptionKey) {
       return value;
     }
     return CryptoUtils.encrypt(value, this.encryptionKey);
   }
 
-  protected decryptValue(value: string | any): string {
-    if (!this.encryptionKey || typeof value === 'string') {
-      return value as string;
+  protected decryptValue(value: string): string {
+    if (!this.encryptionKey) {
+      return value;
     }
-    return CryptoUtils.decrypt(value, this.encryptionKey);
+    try {
+      return CryptoUtils.decrypt(value, this.encryptionKey);
+    } catch {
+      // If decryption fails, return original value
+      return value;
+    }
   }
 }
 
@@ -97,9 +102,9 @@ export class VaultSecretProvider extends BaseSecretProvider {
       logger.securityEvent('PROVIDER_INIT', { provider: 'vault' });
       return true;
     } catch (error) {
-      logger.securityEvent('PROVIDER_INIT', { 
-        provider: 'vault', 
-        error: error.message 
+      logger.securityEvent('PROVIDER_INIT', {
+        provider: 'vault',
+        error: error instanceof Error ? error.message : String(error)
       }, false);
       return false;
     }
@@ -122,7 +127,7 @@ export class VaultSecretProvider extends BaseSecretProvider {
           created: new Date(vaultSecret.metadata?.created_time || Date.now()),
           updated: new Date(vaultSecret.metadata?.created_time || Date.now()),
           version: vaultSecret.metadata?.version || 1,
-          tags: vaultSecret.data.tags as string[] || [],
+          tags: Array.isArray(vaultSecret.data.tags) ? vaultSecret.data.tags as string[] : [],
         },
       };
     } catch (error) {
@@ -232,7 +237,7 @@ export class EnvironmentSecretProvider extends BaseSecretProvider {
     try {
       const encryptedValue = this.encryptValue(value);
       this.secrets.set(key, {
-        value: encryptedValue as string,
+        value: encryptedValue,
         metadata: {
           created: new Date(),
           updated: new Date(),
@@ -240,7 +245,7 @@ export class EnvironmentSecretProvider extends BaseSecretProvider {
           tags: metadata?.tags || [],
         },
       });
-      
+
       logger.accessEvent(key, 'WRITE', undefined, true);
       return true;
     } catch (error) {
@@ -278,14 +283,14 @@ export class MemorySecretProvider extends BaseSecretProvider {
 
   constructor(config: SecretManagerConfig) {
     super(config);
-    
+
     if (config.redis) {
       this.redis = new Redis({
         host: config.redis.host,
         port: config.redis.port,
         password: config.redis.password,
         db: config.redis.db || 0,
-        retryDelayOnFailover: 100,
+        retryStrategy: (times: number) => Math.min(times * 100, 3000),
         maxRetriesPerRequest: 3,
       });
     }
@@ -329,7 +334,7 @@ export class MemorySecretProvider extends BaseSecretProvider {
     try {
       const encryptedValue = this.encryptValue(value);
       const secret: Secret = {
-        value: encryptedValue as string,
+        value: encryptedValue,
         metadata: {
           created: new Date(),
           updated: new Date(),
@@ -339,7 +344,7 @@ export class MemorySecretProvider extends BaseSecretProvider {
       };
 
       this.secrets.set(key, secret);
-      
+
       // Store in Redis if available
       if (this.redis) {
         const ttl = this.config.cache?.ttl || 3600;
@@ -453,7 +458,7 @@ export class SecretsManager {
 
       return secret.value;
     } catch (error) {
-      logger.error('Failed to get secret', { key, error: error.message });
+      logger.error('Failed to get secret', { key, error: error instanceof Error ? error.message : String(error) });
       return null;
     }
   }
@@ -469,7 +474,7 @@ export class SecretsManager {
 
       return success;
     } catch (error) {
-      logger.error('Failed to set secret', { key, error: error.message });
+      logger.error('Failed to set secret', { key, error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -485,7 +490,7 @@ export class SecretsManager {
 
       return success;
     } catch (error) {
-      logger.error('Failed to delete secret', { key, error: error.message });
+      logger.error('Failed to delete secret', { key, error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }
@@ -494,7 +499,7 @@ export class SecretsManager {
     try {
       return await this.provider.list(filter);
     } catch (error) {
-      logger.error('Failed to list secrets', { filter, error: error.message });
+      logger.error('Failed to list secrets', { filter, error: error instanceof Error ? error.message : String(error) });
       return [];
     }
   }
@@ -503,7 +508,7 @@ export class SecretsManager {
     try {
       return await this.provider.exists(key);
     } catch (error) {
-      logger.error('Failed to check secret existence', { key, error: error.message });
+      logger.error('Failed to check secret existence', { key, error: error instanceof Error ? error.message : String(error) });
       return false;
     }
   }

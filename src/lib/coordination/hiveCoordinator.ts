@@ -1,4 +1,5 @@
 import { logger } from '@/lib/logger';
+import { safeParse } from '@/lib/utils/json-safe';
 
 /**
  * Hive-Mind Coordination System - Agent Gamma-3 Implementation
@@ -455,7 +456,9 @@ export class HiveCoordinator {
 
     try {
       const storedData = window.sessionStorage.getItem("gamma3-coordination");
-      return storedData ? safeParse(storedData) : null;
+      if (!storedData) return null;
+      const parsed = safeParse<VocabularyCoordinationData>(storedData, null as any);
+      return parsed ?? null;
     } catch (error) {
       logger.error("Error extracting stored vocabulary data:", error);
       return null;

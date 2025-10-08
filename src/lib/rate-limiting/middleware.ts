@@ -19,9 +19,9 @@ export interface RateLimitMiddlewareOptions {
 /**
  * Enhanced error response for rate limiting - extends canonical ErrorResponse
  */
-export interface RateLimitErrorResponse extends ErrorResponse {
+export interface RateLimitErrorResponse extends Omit<ErrorResponse, 'details'> {
   code?: 'RATE_LIMIT_EXCEEDED';
-  details?: {
+  details: {
     limit: number;
     remaining: number;
     resetTime: string;
@@ -217,7 +217,6 @@ function getRequestIdentifier(req: NextRequest): string {
             req.headers.get('x-real-ip') ||
             req.headers.get('cf-connecting-ip') ||
             req.headers.get('x-client-ip') ||
-            req.ip ||
             'unknown';
   
   return `${userId}:${ip}`;
@@ -246,7 +245,7 @@ function extractUserFromAuth(req: NextRequest): string | null {
       return username;
     }
   } catch (error) {
-    logger.warn('[Rate Limit] Error extracting user from auth header:', error);
+    logger.warn('[Rate Limit] Error extracting user from auth header:', { error: error instanceof Error ? error.message : String(error) });
   }
 
   return null;

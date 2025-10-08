@@ -60,20 +60,28 @@ export const securityConfig: SecurityConfig = {
 export const developmentConfig: SecurityConfig = {
   ...securityConfig,
   vault: {
-    ...securityConfig.vault,
-    enabled: false, // Use environment variables in development
+    enabled: false,
+    endpoint: securityConfig.vault?.endpoint || 'http://localhost:8200',
+    token: securityConfig.vault?.token,
+    roleId: securityConfig.vault?.roleId,
+    secretId: securityConfig.vault?.secretId,
+    namespace: securityConfig.vault?.namespace,
   },
   keyRotation: {
-    ...securityConfig.keyRotation,
-    enabled: false, // Disable rotation in development
+    enabled: false,
+    schedule: securityConfig.keyRotation?.schedule || '0 2 * * 0',
+    maxAge: securityConfig.keyRotation?.maxAge || 90,
+    gracePeriod: securityConfig.keyRotation?.gracePeriod || 7,
   },
   sessions: {
-    ...securityConfig.sessions,
-    secure: false, // Allow HTTP in development
+    maxAge: securityConfig.sessions?.maxAge || 24 * 60 * 60 * 1000,
+    secure: false,
+    rolling: securityConfig.sessions?.rolling ?? true,
   },
   audit: {
-    ...securityConfig.audit,
-    level: 'debug', // Verbose logging in development
+    enabled: securityConfig.audit?.enabled ?? true,
+    level: 'debug',
+    filename: securityConfig.audit?.filename,
   },
 };
 
@@ -81,21 +89,28 @@ export const developmentConfig: SecurityConfig = {
 export const productionConfig: SecurityConfig = {
   ...securityConfig,
   vault: {
-    ...securityConfig.vault,
-    enabled: true, // Always use Vault in production
+    enabled: true,
+    endpoint: securityConfig.vault?.endpoint || 'https://vault.production.com',
+    token: securityConfig.vault?.token,
+    roleId: securityConfig.vault?.roleId,
+    secretId: securityConfig.vault?.secretId,
+    namespace: securityConfig.vault?.namespace,
   },
   keyRotation: {
-    ...securityConfig.keyRotation,
-    enabled: true, // Enable automatic rotation
+    enabled: true,
+    schedule: securityConfig.keyRotation?.schedule || '0 2 * * 0',
+    maxAge: securityConfig.keyRotation?.maxAge || 90,
+    gracePeriod: securityConfig.keyRotation?.gracePeriod || 7,
   },
   sessions: {
-    ...securityConfig.sessions,
-    secure: true, // HTTPS only
-    maxAge: 8 * 60 * 60 * 1000, // Shorter sessions (8 hours) in production
+    maxAge: 8 * 60 * 60 * 1000,
+    secure: true,
+    rolling: securityConfig.sessions?.rolling ?? true,
   },
   encryption: {
-    ...securityConfig.encryption,
-    enabled: true, // Always encrypt in production
+    enabled: true,
+    algorithm: securityConfig.encryption?.algorithm || 'AES-GCM',
+    keySize: securityConfig.encryption?.keySize || 256,
   },
 };
 
@@ -126,11 +141,11 @@ export function validateSecurityConfig(config: SecurityConfig): { valid: boolean
   }
 
   // Redis validation for production
-  if (process.env.NODE_ENV === 'production' && config.redis) {
-    if (!config.redis.host) {
+  if (process.env.NODE_ENV === 'production') {
+    if (config.redis && !config.redis.host) {
       errors.push('Redis host is required in production');
     }
-    if (!config.redis.password) {
+    if (config.redis && !config.redis.password) {
       errors.push('Redis password is required in production');
     }
   }

@@ -244,7 +244,11 @@ export function useImageSearch() {
 
         // Don't retry if error is not retryable or we've exceeded max retries
         if (!searchError.retryable || attempt === MAX_RETRIES) {
-          logger.info("[useImageSearch] Not retrying - retryable:", searchError.retryable, "attempt:", attempt, "MAX_RETRIES:", MAX_RETRIES);
+          logger.info("[useImageSearch] Not retrying", {
+            retryable: searchError.retryable,
+            attempt,
+            maxRetries: MAX_RETRIES
+          });
           throw error;
         }
 
@@ -302,18 +306,13 @@ export function useImageSearch() {
         logger.info("[useImageSearch] Search successful, clearing loading state");
         setLoading({ isLoading: false, message: "" });
       } catch (error) {
-        logger.error("[useImageSearch] Search failed with error:", error);
-        
-        logger.error(
-          "Image search failed",
-          error instanceof Error ? error : new Error(String(error)),
-          {
-            component: "useImageSearch",
-            query,
-            page,
-            function: "searchImages",
-          },
-        );
+        logger.error("[useImageSearch] Search failed with error:", {
+          error: error instanceof Error ? error.message : String(error),
+          component: "useImageSearch",
+          query,
+          page,
+          function: "searchImages",
+        });
 
         const searchError = createSearchError(error);
 

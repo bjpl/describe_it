@@ -2,21 +2,9 @@
 > describe-it@0.1.0 typecheck
 > tsc --noEmit
 
-src/components/Dashboard/LearningProgress.tsx(377,16): error TS2746: This JSX tag's 'children' prop expects a single child of type 'ReactElement<unknown, string | JSXElementConstructor<any>>', but multiple children were provided.
 src/components/ImageSearch/ImageSearch.tsx(78,88): error TS2554: Expected 1-2 arguments, but got 4.
-src/components/Onboarding/ApiKeySetup.tsx(146,11): error TS2741: Property 'anthropic' is missing in type '{ unsplash: string; openai: string; }' but required in type '{ anthropic: string; openai: string; unsplash: string; }'.
-src/components/Onboarding/TutorialStep.tsx(154,23): error TS2554: Expected 1 arguments, but got 0.
-src/components/Optimized/OptimizedComponents.tsx(168,44): error TS2503: Cannot find namespace 'JSX'.
-src/components/Optimized/OptimizedComponents.tsx(170,15): error TS2339: Property 'displayName' does not exist on type '<T>(props: OptimizedListProps<T>) => JSX.Element'.
-src/components/Optimized/OptimizedComponents.tsx(191,28): error TS2554: Expected 1 arguments, but got 0.
-src/components/ProgressStatistics.tsx(385,19): error TS2322: Type 'ChartData[]' is not assignable to type 'ChartDataInput[]'.
-  Type 'ChartData' is not assignable to type 'ChartDataInput'.
-    Index signature for type 'string' is missing in type 'ChartData'.
 src/components/Vocabulary/DatabaseVocabularyManager.tsx(360,43): error TS2345: Argument of type '1 | 10 | 5 | 3 | 2 | 4 | 6 | 9 | 7 | 8' is not assignable to parameter of type 'DifficultyLevel | "all" | undefined'.
   Type '1' is not assignable to type 'DifficultyLevel | "all" | undefined'.
-src/components/Vocabulary/VocabularyCard.tsx(180,7): error TS2322: Type '{ children: Element[]; className: string; role: string; "aria-label": string; onKeyDown: (e: KeyboardEvent<Element>) => void; tabIndex: number; }' is not assignable to type 'IntrinsicAttributes & CardProps'.
-  Property 'onKeyDown' does not exist on type 'IntrinsicAttributes & CardProps'.
-src/lib/api/openai.ts(638,7): error TS2322: Type '{}' is not assignable to type 'string'.
 src/lib/api/optimizedSupabase.ts(98,53): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LogContext | undefined'.
 src/lib/api/optimizedSupabase.ts(109,68): error TS2554: Expected 1-2 arguments, but got 3.
 src/lib/api/supabase.ts(228,11): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LogContext | undefined'.
@@ -92,43 +80,12 @@ src/lib/settings/settingsManager.ts(175,65): error TS2345: Argument of type 'unk
 src/lib/settings/settingsManager.ts(197,50): error TS2304: Cannot find name 'safeStringify'.
 src/lib/settings/settingsManager.ts(224,46): error TS2304: Cannot find name 'safeStringify'.
 src/lib/settings/settingsManager.ts(391,12): error TS2304: Cannot find name 'safeStringify'.
-src/lib/storage/HybridStorageManager.ts(291,10): error TS2769: No overload matches this call.
-  Overload 1 of 2, '(values: { id?: string | undefined; unsplash_id?: string | null | undefined; url: string; thumbnail_url?: string | null | undefined; description?: string | null | undefined; alt_description?: string | ... 1 more ... | undefined; ... 12 more ...; updated_at?: string | undefined; }, options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error.
-    Object literal may only specify known properties, and 'user_id' does not exist in type '{ id?: string | undefined; unsplash_id?: string | null | undefined; url: string; thumbnail_url?: string | null | undefined; description?: string | null | undefined; alt_description?: string | ... 1 more ... | undefined; ... 12 more ...; updated_at?: string | undefined; }'.
-  Overload 2 of 2, '(values: { id?: string | undefined; unsplash_id?: string | null | undefined; url: string; thumbnail_url?: string | null | undefined; description?: string | null | undefined; alt_description?: string | ... 1 more ... | undefined; ... 12 more ...; updated_at?: string | undefined; }[], options?: { ...; } | undefined): PostgrestFilterBuilder<...>', gave the following error.
-    Object literal may only specify known properties, and 'id' does not exist in type '{ id?: string | undefined; unsplash_id?: string | null | undefined; url: string; thumbnail_url?: string | null | undefined; description?: string | null | undefined; alt_description?: string | ... 1 more ... | undefined; ... 12 more ...; updated_at?: string | undefined; }[]'.
-src/lib/storage/HybridStorageManager.ts(331,14): error TS2352: Conversion of type '{ id: string; unsplash_id: string | null; url: string; thumbnail_url: string | null; description: string | null; alt_description: string | null; width: number | null; height: number | null; ... 10 more ...; updated_at: string; }[]' to type 'ImageHistoryEntry[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
-  Type '{ id: string; unsplash_id: string | null; url: string; thumbnail_url: string | null; description: string | null; alt_description: string | null; width: number | null; height: number | null; ... 10 more ...; updated_at: string; }' is missing the following properties from type 'ImageHistoryEntry': image_url, source, viewed_at
-src/lib/storage/HybridStorageManager.ts(485,21): error TS2769: No overload matches this call.
-  Overload 1 of 2, '(relation: "sessions" | "descriptions" | "images" | "phrases" | "users" | "vocabulary_lists" | "vocabulary_items" | "learning_progress" | "questions" | "answers" | "analytics_events"): PostgrestQueryBuilder<...>', gave the following error.
-    Argument of type '"error_logs"' is not assignable to parameter of type '"sessions" | "descriptions" | "images" | "phrases" | "users" | "vocabulary_lists" | "vocabulary_items" | "learning_progress" | "questions" | "answers" | "analytics_events"'.
-  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: "12"; }, { Tables: { users: { Row: { id: string; email: string; username: string | null; full_name: string | null; avatar_url: string | null; spanish_level: "beginner" | ... 1 more ... | "advanced"; ... 10 more ...; last_login: string | null; }; Insert: { ...; }; Update: { ...; }; Relationships: []; }; ... 9 more ...; analytics_events: { ...; }; }; Views: {}; Functions: {}; Enums: { ...; }; CompositeTypes: {}; }, never, never, never>', gave the following error.
-    Argument of type '"error_logs"' is not assignable to parameter of type 'never'.
-src/lib/storage/HybridStorageManager.ts(515,17): error TS2769: No overload matches this call.
-  Overload 1 of 2, '(relation: "sessions" | "descriptions" | "images" | "phrases" | "users" | "vocabulary_lists" | "vocabulary_items" | "learning_progress" | "questions" | "answers" | "analytics_events"): PostgrestQueryBuilder<...>', gave the following error.
-    Argument of type '"image_history"' is not assignable to parameter of type '"sessions" | "descriptions" | "images" | "phrases" | "users" | "vocabulary_lists" | "vocabulary_items" | "learning_progress" | "questions" | "answers" | "analytics_events"'.
-  Overload 2 of 2, '(relation: never): PostgrestQueryBuilder<{ PostgrestVersion: "12"; }, { Tables: { users: { Row: { id: string; email: string; username: string | null; full_name: string | null; avatar_url: string | null; spanish_level: "beginner" | ... 1 more ... | "advanced"; ... 10 more ...; last_login: string | null; }; Insert: { ...; }; Update: { ...; }; Relationships: []; }; ... 9 more ...; analytics_events: { ...; }; }; Views: {}; Functions: {}; Enums: { ...; }; CompositeTypes: {}; }, never, never, never>', gave the following error.
-    Argument of type '"image_history"' is not assignable to parameter of type 'never'.
 src/lib/storage/LocalStorageManager.ts(104,55): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LogContext | undefined'.
 src/lib/storage/LocalStorageManager.ts(464,42): error TS2774: This condition will always return true since this function is always defined. Did you mean to call it instead?
 src/lib/store/apiKeysStore.ts(371,30): error TS2339: Property 'keys' does not exist on type 'never'.
 src/lib/store/apiKeysStore.ts(372,36): error TS2339: Property 'activeKeys' does not exist on type 'never'.
 src/lib/store/apiKeysStore.ts(456,59): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'LogContext | undefined'.
-src/lib/store/formStore.ts(688,23): error TS2345: Argument of type '(useStore: (selector: (state: FormStoreType) => FormState) => FormState) => FormState' is not assignable to parameter of type '(state: FormStoreType) => FormState'.
-  Types of parameters 'useStore' and 'state' are incompatible.
-    Type 'FormStoreType' is not assignable to type '(selector: (state: FormStoreType) => FormState) => FormState'.
-      Type 'FormStoreType' provides no match for the signature '(selector: (state: FormStoreType) => FormState): FormState'.
-src/lib/store/formStore.ts(693,23): error TS2345: Argument of type '(useStore: (selector: (state: FormStoreType) => FieldState<unknown>) => FieldState<unknown>) => FieldState<unknown>' is not assignable to parameter of type '(state: FormStoreType) => FieldState<unknown>'.
-  Types of parameters 'useStore' and 'state' are incompatible.
-    Type 'FormStoreType' is not assignable to type '(selector: (state: FormStoreType) => FieldState<unknown>) => FieldState<unknown>'.
-      Type 'FormStoreType' provides no match for the signature '(selector: (state: FormStoreType) => FieldState<unknown>): FieldState<unknown>'.
 src/lib/store/learningSessionStore.ts(515,46): error TS2345: Argument of type 'null' is not assignable to parameter of type 'string | undefined'.
-src/lib/store/middleware/ssrPersist.ts(86,46): error TS2345: Argument of type 'string | Promise<string | null>' is not assignable to parameter of type 'string'.
-  Type 'Promise<string | null>' is not assignable to type 'string'.
-src/lib/store/middleware/ssrPersist.ts(217,34): error TS2345: Argument of type 'string | Promise<string | null>' is not assignable to parameter of type 'string'.
-  Type 'Promise<string | null>' is not assignable to type 'string'.
-src/lib/store/uiStore.ts(485,11): error TS2322: Type '(state: UIState) => { theme: "light" | "dark" | "auto"; colorScheme: string; fontSize: "xl" | "sm" | "md" | "lg"; reduceMotion: boolean; highContrast: boolean; sidebarCollapsed: boolean; layout: "default" | ... 2 more ... | "presentation"; }' is not assignable to type '(state: UIState) => UIState'.
-  Type '{ theme: "light" | "dark" | "auto"; colorScheme: string; fontSize: "xl" | "sm" | "md" | "lg"; reduceMotion: boolean; highContrast: boolean; sidebarCollapsed: boolean; layout: "default" | "fullscreen" | "focused" | "presentation"; }' is missing the following properties from type 'UIState': modals, modalHistory, sidebarOpen, breadcrumbs, and 53 more.
 src/lib/supabase.ts(222,58): error TS2345: Argument of type 'Omit<DescriptionRecord, "id" | "created_at" | "updated_at">' is not assignable to parameter of type 'Partial<SavedDescription>'.
   Types of property 'description_style' are incompatible.
     Type 'string | undefined' is not assignable to type '"narrativo" | "poetico" | "academico" | "conversacional" | "infantil" | undefined'.

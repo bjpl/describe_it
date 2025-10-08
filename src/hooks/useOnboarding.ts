@@ -289,11 +289,13 @@ export function useOnboarding(): OnboardingState & OnboardingActions {
         }
         
         // Update user profile to include onboarding completion
+        const currentPrefs = authManager.getCurrentProfile()?.preferences || {};
         await authManager.updateProfile({
           preferences: {
-            ...authManager.getCurrentProfile()?.preferences,
-            ...preferencesToSave
-          }
+            ...currentPrefs,
+            onboarding_completed: true,
+            onboarding_completed_at: new Date().toISOString()
+          } as any
         });
       } else {
         // For guest users, just save to local settings

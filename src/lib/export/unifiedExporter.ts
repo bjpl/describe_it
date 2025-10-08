@@ -97,7 +97,7 @@ export class UnifiedExporter {
       this.getSessionLogger().logError(
         `Export failed: ${error instanceof Error ? error.message : "Unknown error"}`,
         error instanceof Error ? error.stack : undefined,
-        "export_error",
+        "export_error"
       );
       throw error;
     }
@@ -210,7 +210,7 @@ export class UnifiedExporter {
       hiveMindAgent: "Epsilon-5 Integration Controller",
     };
 
-    const jsonString = safeStringify(exportData, null, 2);
+    const jsonString = safeStringify(exportData) || JSON.stringify(exportData, null, 2);
     this.downloadFile(`${baseFilename}.json`, jsonString, "application/json");
   }
 

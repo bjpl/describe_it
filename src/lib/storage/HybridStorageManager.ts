@@ -4,6 +4,7 @@
  */
 
 import { supabase, DatabaseService } from '../supabase';
+import type { ImageInsert, Image as SupabaseImage } from '../supabase/types';
 import { localStorageManager } from './LocalStorageManager';
 import { logger } from '../logger';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
@@ -52,7 +53,7 @@ class HybridStorageManager {
       supabaseFields: ['preferences', 'customization'], // Sync across devices
     },
     'image-history': {
-      type: 'supabase', // Heavy data goes to Supabase
+      type: 'local', // Store locally - Supabase images table doesn't have required fields
     },
     'vocabulary': {
       type: 'supabase', // Learning data needs persistence
@@ -181,17 +182,9 @@ class HybridStorageManager {
           return await this.saveDescription(data);
         
         default:
-          // Generic save to a catch-all table
-          const { error } = await supabase
-            .from('user_data')
-            .upsert({
-              category,
-              key,
-              data: data,
-              updated_at: new Date().toISOString()
-            });
-          
-          return !error;
+          // For unrecognized categories, fall back to localStorage only
+          logger.warn(`Unknown category "${category}", saving to localStorage only`);
+          return this.saveToLocal(`${category}_${key}`, data);
       }
     } catch (error) {
       logger.error('Supabase save error:', error);
@@ -222,15 +215,9 @@ class HybridStorageManager {
           return await this.loadDescriptions() as any;
         
         default:
-          // Generic load from catch-all table
-          const { data, error } = await supabase
-            .from('user_data')
-            .select('data')
-            .eq('category', category)
-            .eq('key', key)
-            .single();
-          
-          return error ? null : data?.data as T;
+          // For unrecognized categories, try localStorage only
+          logger.warn(`Unknown category "${category}", loading from localStorage only`);
+          return this.loadFromLocal<T>(`${category}_${key}`);
       }
     } catch (error) {
       logger.error('Supabase load error:', error);
@@ -296,26 +283,17 @@ class HybridStorageManager {
   }
 
   /**
-   * Save image history to Supabase
+   * Save image history to localStorage
+   * Note: Supabase images table doesn't have required fields (user_id, tags, source, etc.)
+   * so we store this data locally only
    */
   private async saveImageHistory(entry: ImageHistoryEntry): Promise<boolean> {
     try {
-      const { error } = await supabase
-        .from('image_history')
-        .insert({
-          ...entry,
-          viewed_at: entry.viewed_at || new Date().toISOString()
-        });
-      
-      if (error) throw error;
-      
-      // Keep only last 10 in localStorage for quick access
+      // Store in localStorage
       const recentKey = 'recent_images';
       const recent = this.loadFromLocal<ImageHistoryEntry[]>(recentKey) || [];
       recent.unshift(entry);
-      this.saveToLocal(recentKey, recent.slice(0, 10));
-      
-      return true;
+      return this.saveToLocal(recentKey, recent.slice(0, 50)); // Keep last 50
     } catch (error) {
       logger.error('Failed to save image history:', error);
       return false;
@@ -323,22 +301,16 @@ class HybridStorageManager {
   }
 
   /**
-   * Load image history from Supabase
+   * Load image history from localStorage
+   * Note: Supabase images table doesn't have required fields for history tracking
    */
   private async loadImageHistory(limit: number = 50): Promise<ImageHistoryEntry[]> {
     try {
-      const { data, error } = await supabase
-        .from('image_history')
-        .select('*')
-        .order('viewed_at', { ascending: false })
-        .limit(limit);
-      
-      if (error) throw error;
-      return data || [];
+      const recent = this.loadFromLocal<ImageHistoryEntry[]>('recent_images') || [];
+      return recent.slice(0, limit);
     } catch (error) {
       logger.error('Failed to load image history:', error);
-      // Fallback to localStorage recent items
-      return this.loadFromLocal<ImageHistoryEntry[]>('recent_images') || [];
+      return [];
     }
   }
 
@@ -437,15 +409,11 @@ class HybridStorageManager {
     // Count Supabase records (simplified)
     let supabaseCount = 0;
     try {
-      const { count: imageCount } = await supabase
-        .from('image_history')
-        .select('*', { count: 'exact', head: true });
-      
       const { count: descCount } = await supabase
-        .from('saved_descriptions')
+        .from('descriptions')
         .select('*', { count: 'exact', head: true });
-      
-      supabaseCount = (imageCount || 0) + (descCount || 0);
+
+      supabaseCount = descCount || 0;
     } catch (error) {
       logger.error('Failed to get Supabase metrics:', error);
     }
@@ -472,23 +440,14 @@ class HybridStorageManager {
       if (strategy?.type === 'supabase' || strategy?.type === 'hybrid') {
         switch (category) {
           case 'image-history':
-            const { error: imgError } = await supabase
-              .from('image_history')
-              .delete()
-              .match({ user_id: (await supabase.auth.getUser()).data.user?.id });
-            if (imgError) throw imgError;
+            // Clear from localStorage
+            localStorageManager.removeItem('recent_images');
             break;
           
           case 'error-logs':
-            // Keep only last 7 days
-            const sevenDaysAgo = new Date();
-            sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-            
-            const { error: logError } = await supabase
-              .from('error_logs')
-              .delete()
-              .lt('created_at', sevenDaysAgo.toISOString());
-            if (logError) throw logError;
+            // Error logs table does not exist in current schema
+            // Just clear from localStorage
+            logger.warn('error_logs table does not exist in current schema');
             break;
         }
       }
@@ -506,24 +465,24 @@ class HybridStorageManager {
   async performCleanup(): Promise<void> {
     // Clean localStorage
     localStorageManager.performCleanup();
-    
-    // Clean old Supabase data
-    if (this.isOnline) {
-      // Clean old image history (> 30 days)
+
+    // Clean old image history from localStorage (> 30 days)
+    try {
+      const recent = this.loadFromLocal<ImageHistoryEntry[]>('recent_images') || [];
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-      
-      try {
-        await supabase
-          .from('image_history')
-          .delete()
-          .lt('viewed_at', thirtyDaysAgo.toISOString())
-          .eq('is_favorite', false);
-        
-        logger.info('Cleaned old Supabase data');
-      } catch (error) {
-        logger.error('Supabase cleanup failed:', error);
+
+      const filtered = recent.filter(entry => {
+        const viewedDate = new Date(entry.viewed_at);
+        return viewedDate > thirtyDaysAgo || entry.is_favorite;
+      });
+
+      if (filtered.length !== recent.length) {
+        this.saveToLocal('recent_images', filtered);
+        logger.info(`Cleaned ${recent.length - filtered.length} old image history entries`);
       }
+    } catch (error) {
+      logger.error('Image history cleanup failed:', error);
     }
   }
 

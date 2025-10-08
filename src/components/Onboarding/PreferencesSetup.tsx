@@ -91,7 +91,7 @@ export default function PreferencesSetup({
       language: {
         ...prev.language,
         [field]: value
-      }
+      } as any
     }));
   };
 
@@ -101,7 +101,7 @@ export default function PreferencesSetup({
       study: {
         ...prev.study,
         [field]: value
-      }
+      } as any
     }));
     
     if (field === 'dailyGoal') {
@@ -118,7 +118,7 @@ export default function PreferencesSetup({
       theme: {
         ...prev.theme,
         [field]: value
-      }
+      } as any
     }));
   };
 
@@ -128,7 +128,7 @@ export default function PreferencesSetup({
       accessibility: {
         ...prev.accessibility,
         [field]: value
-      }
+      } as any
     }));
   };
 

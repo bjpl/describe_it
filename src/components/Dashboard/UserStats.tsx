@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
@@ -136,12 +136,7 @@ export function UserStats({
   const [error, setError] = useState<string | null>(null);
   const [selectedView, setSelectedView] = useState<"overview" | "achievements" | "analytics">("overview");
 
-  useEffect(() => {
-    fetchUserStats();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, timeRange]); // fetchUserStats is stable
-
-  const fetchUserStats = async () => {
+  const fetchUserStats = useCallback(async () => {
     if (!userId) {
       // Create mock data for demo
       setTimeout(() => {
@@ -189,7 +184,11 @@ export function UserStats({
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, timeRange]);
+
+  useEffect(() => {
+    fetchUserStats();
+  }, [fetchUserStats]);
 
   const generateMockStats = (): StatsData => ({
     overview: {
@@ -475,12 +474,12 @@ export function UserStats({
                         <ResponsiveContainer width="100%" height="100%">
                           <PieChart>
                             <Pie
-                              data={statsData.categoryBreakdown}
+                              data={statsData.categoryBreakdown as any}
                               cx="50%"
                               cy="50%"
                               outerRadius={80}
                               dataKey="count"
-                              label={({ category, count }) => `${category}: ${count}`}
+                              label={({ category, count }: any) => `${category}: ${count}`}
                               labelLine={false}
                             >
                               {statsData.categoryBreakdown.map((entry, index) => (
