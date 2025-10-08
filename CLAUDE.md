@@ -1,9 +1,26 @@
 # Claude Code Configuration - SPARC Development Environment
 
-════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
     AGENT OPERATING INSTRUCTIONS
     ALL DIRECTIVES ARE MANDATORY - STRICT COMPLIANCE
-════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
+
+╔═══════════════════════════════════════════════════════╗
+║ ⚠️  CRITICAL: SWARM ORCHESTRATION ARCHITECTURE  ⚠️     ║
+║                                                       ║
+║ MANDATORY COORDINATION PATTERN:                      ║
+║ → Topology Setup: Use Claude Flow's MCP (Model       ║
+║   Context Protocol) coordination for establishing    ║
+║   agent topology and communication patterns          ║
+║ → Agent Execution: Use Task tool for actual agent    ║
+║   execution, following guidelines in CLAUDE.md       ║
+║ → Separation of Concerns: ALWAYS distinguish between ║
+║   orchestration layer (Flow/MCP) and execution       ║
+║   layer (Task tool)                                  ║
+║                                                       ║
+║ This pattern must be followed for ALL multi-agent    ║
+║ coordination and swarm operations without exception. ║
+╚═══════════════════════════════════════════════════════╝
 
 [MANDATORY-1] COMMUNICATION & TRANSPARENCY
 → Explain every action in detail as you perform it
@@ -38,10 +55,10 @@
   • Insufficient information for intelligent decisions
   • Multiple valid paths exist
 
-[MANDATORY-6] SWARM ORCHESTRATION
-→ Topology: Use Claude Flow's MCP for agent topology and communication
-→ Execution: Use Task tool per CLAUDE.md guidelines
-→ Separation: Distinguish orchestration layer (Flow/MCP) from execution layer (Task tool)
+[MANDATORY-6] SWARM ORCHESTRATION APPROACH
+→ Topology setup: Use Claude Flow's MCP (Model Context Protocol) coordination for establishing agent topology and communication patterns
+→ Agent execution: Use Task tool for actual agent execution, following guidelines specified in CLAUDE.md
+→ Separation of concerns: Distinguish between orchestration layer (Flow/MCP) and execution layer (Task tool)
 
 [MANDATORY-7] ERROR HANDLING & RESILIENCE
 → Implement graceful error handling with clear error messages
@@ -78,12 +95,11 @@
 → Iterate based on feedback and learnings
 
 [MANDATORY-12] DOCUMENTATION STANDARDS
-→ Create documentation when it adds value (setup guides, API docs, architecture decisions)
+→ Update README.md as features are added
 → Document "why" decisions were made, not just "what"
 → Include setup instructions, dependencies, and usage examples
 → Maintain API documentation for all public interfaces
 → Document known limitations and future considerations
-→ Note: Don't create docs just for documentation's sake; ensure each doc serves a purpose
 
 [MANDATORY-13] DEPENDENCY MANAGEMENT
 → Minimize external dependencies; evaluate necessity
@@ -173,9 +189,9 @@
 → Document intentional shortcuts and their trade-offs
 → Prevent debt from compounding unchecked
 
-════════════════════════════════════════════════════════════
-    END MANDATORY INSTRUCTIONS
-════════════════════════════════════════════════════════════
+═══════════════════════════════════════════════════════
+    END INSTRUCTIONS - COMPLIANCE REQUIRED
+═══════════════════════════════════════════════════════
 
 ---
 
