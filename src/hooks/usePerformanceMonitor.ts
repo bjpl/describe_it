@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { performanceLogger } from '@/lib/logger';
+import { toLogContext } from '@/lib/utils/json-safe';
 
 interface PerformanceMetrics {
   renderTime: number;
@@ -65,7 +66,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
         }
       }
     } catch (error) {
-      performanceLogger.warn('[PERFORMANCE] Failed to track render end:', error);
+      performanceLogger.warn('[PERFORMANCE] Failed to track render end:', { error: error instanceof Error ? error.message : String(error) });
     }
   }, [componentName, isBrowser]);
 
@@ -156,11 +157,11 @@ export const usePerformanceMonitor = (componentName?: string) => {
           fidObserver.disconnect();
           performanceLogger.info('[PERFORMANCE] Web Vitals observers disconnected');
         } catch (error) {
-          performanceLogger.warn('[PERFORMANCE] Failed to disconnect observers:', error);
+          performanceLogger.warn('[PERFORMANCE] Failed to disconnect observers:', toLogContext(error));
         }
       };
     } catch (error) {
-      performanceLogger.warn('[PERFORMANCE] Failed to start Web Vitals monitoring:', error);
+      performanceLogger.warn('[PERFORMANCE] Failed to start Web Vitals monitoring:', toLogContext(error));
       return () => {}; // Return empty cleanup function
     }
   }, [isBrowser]);
@@ -187,7 +188,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
         }
       }
     } catch (error) {
-      performanceLogger.warn('[PERFORMANCE] Failed to track memory usage:', error);
+      performanceLogger.warn('[PERFORMANCE] Failed to track memory usage:', toLogContext(error));
     }
   }, [isBrowser]);
 

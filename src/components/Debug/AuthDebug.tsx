@@ -116,7 +116,7 @@ export function AuthDebug() {
           </button>
           {connectionResult && (
             <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
-              {safeStringify(connectionResult, null, 2)}
+              {safeStringify(connectionResult, '{}')}
             </pre>
           )}
         </div>
@@ -145,7 +145,7 @@ export function AuthDebug() {
           </button>
           {signupResult && (
             <pre className="mt-2 text-xs bg-gray-100 p-2 rounded overflow-auto">
-              {safeStringify(signupResult, null, 2)}
+              {safeStringify(signupResult, '{}')}
             </pre>
           )}
         </div>

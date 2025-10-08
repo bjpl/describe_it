@@ -151,8 +151,8 @@ MotionLi.displayName = 'MotionLi';
 // Aliases for backward compatibility
 export const MotionLink = MotionA;
 
-// Export all as default for easy importing
-export default {
+// Export all as named object for easy importing
+const MotionComponents = {
   Div: MotionDiv,
   Button: MotionButton,
   Span: MotionSpan,
@@ -181,3 +181,5 @@ export default {
   Ol: MotionOl,
   Li: MotionLi,
 };
+
+export default MotionComponents;

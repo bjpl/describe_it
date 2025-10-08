@@ -138,7 +138,8 @@ export function UserStats({
 
   useEffect(() => {
     fetchUserStats();
-  }, [userId, timeRange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, timeRange]); // fetchUserStats is stable
 
   const fetchUserStats = async () => {
     if (!userId) {

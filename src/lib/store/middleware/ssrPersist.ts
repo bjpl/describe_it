@@ -1,4 +1,7 @@
+import React from 'react';
 import { StateStorage, PersistOptions } from 'zustand/middleware';
+import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
 
 /**
  * SSR-Safe Persistence Middleware for Zustand
@@ -48,7 +51,7 @@ export const createSSRStorage = (storage?: StateStorage): StateStorage => {
       try {
         return actualStorage.getItem(name);
       } catch (error) {
-        logger.warn(`Failed to get item from storage: ${name}`, error);
+        logger.warn(`Failed to get item from storage: ${name}`, { error: error instanceof Error ? error.message : 'Unknown error' });
         return null;
       }
     },
@@ -56,14 +59,14 @@ export const createSSRStorage = (storage?: StateStorage): StateStorage => {
       try {
         actualStorage.setItem(name, value);
       } catch (error) {
-        logger.warn(`Failed to set item in storage: ${name}`, error);
+        logger.warn(`Failed to set item in storage: ${name}`, { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     },
     removeItem: (name: string) => {
       try {
         actualStorage.removeItem(name);
       } catch (error) {
-        logger.warn(`Failed to remove item from storage: ${name}`, error);
+        logger.warn(`Failed to remove item from storage: ${name}`, { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
   };
@@ -82,7 +85,7 @@ export const createSecureStorage = (
       try {
         return encryption.decrypt(value);
       } catch (error) {
-        logger.warn(`Failed to decrypt storage item: ${name}`, error);
+        logger.warn(`Failed to decrypt storage item: ${name}`, { error: error instanceof Error ? error.message : 'Unknown error' });
         return null;
       }
     },
@@ -383,34 +386,34 @@ export const storageAdapters = {
         const result = await store.get(name);
         return result?.value || null;
       } catch (error) {
-        logger.warn('IndexedDB getItem failed:', error);
+        logger.warn('IndexedDB getItem failed:', { error: error instanceof Error ? error.message : 'Unknown error' });
         return null;
       }
     },
-    
+
     setItem: async (name: string, value: string) => {
       if (typeof window === 'undefined' || !window.indexedDB) return;
-      
+
       try {
         const db = await openDB();
         const transaction = db.transaction(['zustand'], 'readwrite');
         const store = transaction.objectStore('zustand');
         await store.put({ key: name, value, timestamp: Date.now() });
       } catch (error) {
-        logger.warn('IndexedDB setItem failed:', error);
+        logger.warn('IndexedDB setItem failed:', { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     },
-    
+
     removeItem: async (name: string) => {
       if (typeof window === 'undefined' || !window.indexedDB) return;
-      
+
       try {
         const db = await openDB();
         const transaction = db.transaction(['zustand'], 'readwrite');
         const store = transaction.objectStore('zustand');
         await store.delete(name);
       } catch (error) {
-        logger.warn('IndexedDB removeItem failed:', error);
+        logger.warn('IndexedDB removeItem failed:', { error: error instanceof Error ? error.message : 'Unknown error' });
       }
     }
   }
@@ -432,7 +435,3 @@ const openDB = (): Promise<IDBDatabase> => {
     };
   });
 };
-
-import React from 'react';
-import { safeParse, safeStringify } from "@/lib/utils/json-safe";
-import { logger } from '@/lib/logger';

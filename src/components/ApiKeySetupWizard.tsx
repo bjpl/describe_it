@@ -223,7 +223,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
                 </h4>
                 <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>1. Go to <a href="https://unsplash.com/developers" target="_blank" rel="noopener" className="text-blue-600 hover:underline">Unsplash Developers</a></li>
-                  <li>2. Click {'"New Application"'}</li>
+                  <li>2. Click &quot;New Application&quot;</li>
                   <li>3. Accept the terms and guidelines</li>
                   <li>4. Enter your application name and description</li>
                   <li>5. Copy your Access Key and paste it above</li>
@@ -265,9 +265,9 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
                 <ol className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
                   <li>1. Go to <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener" className="text-blue-600 hover:underline">OpenAI Platform</a></li>
                   <li>2. Sign in or create an account</li>
-                  <li>3. Click {'"Create new secret key"'}</li>
+                  <li>3. Click &quot;Create new secret key&quot;</li>
                   <li>4. Name your key (optional)</li>
-                  <li>5. Copy the key immediately (it won't be shown again)</li>
+                  <li>5. Copy the key immediately (it won&apos;t be shown again)</li>
                 </ol>
               </div>
             </div>
@@ -288,7 +288,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
               <div className="space-y-3">
                 <div className="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-900/50 rounded-lg">
                   <div className="flex items-center">
-                    <Image className="w-5 h-5 mr-3 text-purple-600" />
+                    <Image className="w-5 h-5 mr-3 text-purple-600" aria-label="Unsplash icon" />
                     <span className="font-medium">Unsplash API</span>
                   </div>
                   {validation.unsplash ? (
@@ -323,7 +323,7 @@ export function ApiKeySetupWizard({ isOpen, onClose, onComplete }: ApiKeySetupWi
 
               <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
                 <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">
-                  What's Next?
+                  What&apos;s Next?
                 </h4>
                 <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
                   <li>• Search for images using the search tab</li>

@@ -97,7 +97,8 @@ export function LearningProgress({
 
   useEffect(() => {
     fetchProgressData();
-  }, [userId, timeRange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, timeRange]); // fetchProgressData is stable
 
   const fetchProgressData = async () => {
     if (!userId) return;

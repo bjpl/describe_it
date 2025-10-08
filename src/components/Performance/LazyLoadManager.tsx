@@ -143,16 +143,19 @@ export function createLazyComponent<P extends object>(
 ): ComponentType<P & { lazyLoadOptions?: LazyLoadOptions }> {
   const LazyComponent = lazy(importFunction);
   
-  return (props: P & { lazyLoadOptions?: LazyLoadOptions }) => {
+  const WrapperComponent = (props: P & { lazyLoadOptions?: LazyLoadOptions }) => {
     const mergedOptions = { ...options, ...props.lazyLoadOptions };
     const { lazyLoadOptions, ...componentProps } = props;
-    
+
     return (
       <LazyLoadManager {...mergedOptions}>
         <LazyComponent {...(componentProps as P)} />
       </LazyLoadManager>
     );
   };
+
+  WrapperComponent.displayName = `LazyLoaded(${importFunction.name || 'Component'})`;
+  return WrapperComponent;
 }
 
 /**

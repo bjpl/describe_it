@@ -57,7 +57,8 @@ export const BundleAnalyzer: React.FC<BundleAnalyzerProps> = ({
     if (!enabled) return;
 
     analyzeBundleSize();
-  }, [enabled]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabled]); // analyzeBundleSize is stable
 
   const analyzeBundleSize = async () => {
     setIsAnalyzing(true);

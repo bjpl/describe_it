@@ -1,8 +1,8 @@
 import { SecretsManager, SecretManagerConfig } from './secrets-manager';
-import CryptoUtils from './encryption';
+import CryptoUtils, { SymmetricEncryption, AsymmetricEncryption } from './encryption';
 import { getAuditLogger } from './audit-logger';
 import { Redis } from 'ioredis';
-import cron from 'node-cron';
+import * as cron from 'node-cron';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 
 const logger = getAuditLogger('key-rotation');
@@ -97,7 +97,7 @@ export class KeyRotationManager {
       return true;
     } catch (error) {
       logger.securityEvent('ROTATION_MANAGER_INIT', {
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       }, false);
       return false;
     }
@@ -133,7 +133,7 @@ export class KeyRotationManager {
       await this.cleanupExpiredKeys();
       logger.info('Key rotation cycle completed');
     } catch (error) {
-      logger.error('Key rotation cycle failed', { error: error.message });
+      logger.error('Key rotation cycle failed', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -149,7 +149,7 @@ export class KeyRotationManager {
         const metadataJson = await this.secretsManager.getSecret(metadataPath);
         
         if (metadataJson) {
-          const metadata: KeyMetadata = safeParse(metadataJson);
+          const metadata = safeParse(metadataJson) as KeyMetadata;
           const keyAge = Date.now() - metadata.rotated.getTime();
           
           if (keyAge > maxAgeMs && metadata.status === 'active') {
@@ -158,7 +158,7 @@ export class KeyRotationManager {
         }
       }
     } catch (error) {
-      logger.error('Failed to identify keys for rotation', { error: error.message });
+      logger.error('Failed to identify keys for rotation', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
 
     return keys;
@@ -228,21 +228,21 @@ export class KeyRotationManager {
       job.completed = new Date();
 
       logger.keyOperationEvent('ROTATION_COMPLETE', keyMetadata.id);
-      
+
       // Send notification
       await this.sendRotationNotification(keyMetadata, newMetadata);
 
       return true;
     } catch (error) {
       job.status = 'failed';
-      job.error = error.message;
-      
+      job.error = error instanceof Error ? error.message : 'Unknown error';
+
       logger.keyOperationEvent('ROTATION_FAILED', keyMetadata.id, false);
       logger.error('Key rotation failed', {
         keyId: keyMetadata.id,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
-      
+
       return false;
     } finally {
       await this.releaseRotationLock(keyMetadata.id);
@@ -259,7 +259,7 @@ export class KeyRotationManager {
         return safeStringify(keyPair);
       }
     } catch (error) {
-      logger.error('Key generation failed', { type, algorithm, error: error.message });
+      logger.error('Key generation failed', { type, algorithm, error: error instanceof Error ? error.message : 'Unknown error' });
       throw error;
     }
   }
@@ -277,7 +277,7 @@ export class KeyRotationManager {
       const result = await this.redis.set(lockKey, lockValue, 'EX', lockTtl, 'NX');
       return result === 'OK';
     } catch (error) {
-      logger.error('Failed to acquire rotation lock', { keyId, error: error.message });
+      logger.error('Failed to acquire rotation lock', { keyId, error: error instanceof Error ? error.message : 'Unknown error' });
       return false;
     }
   }
@@ -291,7 +291,7 @@ export class KeyRotationManager {
       const lockKey = `rotation-lock:${keyId}`;
       await this.redis.del(lockKey);
     } catch (error) {
-      logger.error('Failed to release rotation lock', { keyId, error: error.message });
+      logger.error('Failed to release rotation lock', { keyId, error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -332,7 +332,7 @@ export class KeyRotationManager {
         }
       }
     } catch (error) {
-      logger.error('Failed to cleanup expired keys', { error: error.message });
+      logger.error('Failed to cleanup expired keys', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 
@@ -352,7 +352,7 @@ export class KeyRotationManager {
     } catch (error) {
       logger.error('Failed to delete expired key', {
         keyId: deletionJob.keyId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -388,7 +388,7 @@ export class KeyRotationManager {
     } catch (error) {
       logger.error('Failed to send rotation notification', {
         keyId: oldKey.id,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
       });
     }
   }
@@ -402,10 +402,10 @@ export class KeyRotationManager {
         throw new Error('Key metadata not found');
       }
 
-      const metadata: KeyMetadata = safeParse(metadataJson);
+      const metadata = safeParse(metadataJson) as KeyMetadata;
       return await this.rotateKey(metadata);
     } catch (error) {
-      logger.error('Manual rotation failed', { keyId, error: error.message });
+      logger.error('Manual rotation failed', { keyId, error: error instanceof Error ? error.message : 'Unknown error' });
       return false;
     }
   }

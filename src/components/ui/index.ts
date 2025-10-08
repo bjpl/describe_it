@@ -19,8 +19,8 @@ export {
   TableSkeleton,
 } from "./Skeleton";
 
+export type { Toast } from "./Toast";
 export {
-  Toast,
   ToastProvider,
   useToast,
   toast,
@@ -64,23 +64,56 @@ export {
   useFormValidation,
 } from "./FormField";
 
-// Motion Components
-export { MotionComponents } from "./MotionComponents";
-export { MotionWrappers } from "./MotionWrappers";
-export { MotionFallback } from "./MotionFallback";
+// Motion Components - Export individual components from MotionComponents
+export {
+  MotionDiv,
+  MotionButton,
+  MotionSpan,
+  MotionP,
+  MotionH1,
+  MotionH2,
+  MotionH3,
+  MotionH4,
+  MotionH5,
+  MotionH6,
+  MotionForm,
+  MotionInput,
+  MotionTextarea,
+  MotionSelect,
+  MotionHeader,
+  MotionSection,
+  MotionArticle,
+  MotionAside,
+  MotionNav,
+  MotionMain,
+  MotionFooter,
+  MotionA,
+  MotionImg,
+  MotionUl,
+  MotionOl,
+  MotionLi,
+  MotionLink,
+} from "./MotionComponents";
 
-// Types
+// Fallback components (if needed for compatibility)
+export {
+  MotionDiv as FallbackMotionDiv,
+  MotionButton as FallbackMotionButton,
+  MotionSpan as FallbackMotionSpan,
+  FallbackAnimatePresence,
+} from "./MotionFallback";
+
+// Types - Export from their respective source files
+export type { ButtonProps } from "./Button";
 export type {
-  ButtonProps,
   CardProps,
-  ModalProps,
-  TooltipProps,
-  PopoverProps,
-  DropdownProps,
-  DropdownItem,
-  DataTableProps,
-  Column,
-  CheckboxProps,
+} from "./Card";
+export type { ModalProps } from "./Modal";
+export type { TooltipProps, PopoverProps } from "./Tooltip";
+export type { DropdownProps, DropdownItem } from "./Dropdown";
+export type { DataTableProps, Column } from "./DataTable";
+export type { CheckboxProps } from "./Checkbox";
+export type {
   FormFieldProps,
   FormLabelProps,
   FormMessageProps,

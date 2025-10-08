@@ -156,7 +156,7 @@ export const OptimizedImage = memo(
           </AnimatePresence>
 
           {/* Optimized Next.js Image */}
-          <Image {...imageProps} />
+          <Image {...imageProps} alt={imageProps.alt || ''} />
         </div>
       );
     },

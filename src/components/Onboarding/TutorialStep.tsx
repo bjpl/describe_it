@@ -1,14 +1,14 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Play, 
-  Pause, 
-  RotateCcw, 
-  Camera, 
-  Search, 
-  BookOpen, 
+import { motion, AnimatePresence, Variants } from 'framer-motion';
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Camera,
+  Search,
+  BookOpen,
   Download,
   Zap,
   ArrowRight,
@@ -33,7 +33,7 @@ interface TutorialFeature {
   completed?: boolean;
 }
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -43,13 +43,13 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring',
+      type: "spring" as const,
       stiffness: 400,
       damping: 25
     }
@@ -287,7 +287,7 @@ export default function TutorialStep({
             variants={itemVariants}
             className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-6"
           >
-            Let's explore the key features that will help you master your target language efficiently.
+            Let&apos;s explore the key features that will help you master your target language efficiently.
           </motion.p>
 
           {/* Tour Controls */}
@@ -458,7 +458,7 @@ export default function TutorialStep({
               >
                 <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
                 <p className="text-green-600 dark:text-green-400 font-medium">
-                  Great! You've explored all the key features.
+                  Great! You&apos;ve explored all the key features.
                 </p>
                 <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                   Ready to start your learning journey?

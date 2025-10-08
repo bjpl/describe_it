@@ -134,17 +134,11 @@ class VocabularyService {
         if (filters.category) {
           query = query.eq('category', filters.category);
         }
-        if (filters.difficulty_level) {
-          query = query.eq('difficulty_level', filters.difficulty_level);
+        if (filters.difficulty && filters.difficulty !== 'all') {
+          query = query.eq('difficulty_level', filters.difficulty);
         }
-        if (filters.part_of_speech) {
-          query = query.eq('part_of_speech', filters.part_of_speech);
-        }
-        if (filters.frequency_min !== undefined) {
-          query = query.gte('frequency_score', filters.frequency_min);
-        }
-        if (filters.frequency_max !== undefined) {
-          query = query.lte('frequency_score', filters.frequency_max);
+        if (filters.partOfSpeech && filters.partOfSpeech !== 'all') {
+          query = query.eq('part_of_speech', filters.partOfSpeech);
         }
       }
 
@@ -414,43 +408,54 @@ class VocabularyService {
 
       // Calculate statistics
       const stats: VocabularyStats = {
-        total_words: allItems?.length || 0,
-        mastered_words: progressData.filter(p => p.learning_phase === 'mastered').length,
-        learning_words: progressData.filter(p => p.learning_phase === 'learning').length,
-        new_words: progressData.filter(p => p.learning_phase === 'new').length,
-        by_category: {},
-        by_difficulty: {},
-        by_part_of_speech: {},
-        mastery_distribution: {
-          'new': 0,
-          'learning': 0,
-          'review': 0,
-          'mastered': 0,
+        total: allItems?.length || 0,
+        byCategory: {},
+        byDifficulty: {
+          beginner: 0,
+          intermediate: 0,
+          advanced: 0,
         },
+        byPartOfSpeech: {
+          noun: 0,
+          verb: 0,
+          adjective: 0,
+          adverb: 0,
+          preposition: 0,
+          article: 0,
+          pronoun: 0,
+          conjunction: 0,
+          interjection: 0,
+          other: 0,
+        },
+        averageDifficulty: 0,
+        averageFrequency: 0,
+        masteryDistribution: {},
+        withAudio: 0,
+        withContext: 0,
       };
 
       // Count by category
       allItems?.forEach(item => {
         const category = item.category || 'uncategorized';
-        stats.by_category[category] = (stats.by_category[category] || 0) + 1;
+        stats.byCategory[category] = (stats.byCategory[category] || 0) + 1;
       });
 
       // Count by difficulty
       allItems?.forEach(item => {
         const difficulty = item.difficulty_level;
-        stats.by_difficulty[difficulty] = (stats.by_difficulty[difficulty] || 0) + 1;
+        stats.byDifficulty[difficulty] = (stats.byDifficulty[difficulty] || 0) + 1;
       });
 
       // Count by part of speech
       allItems?.forEach(item => {
         const pos = item.part_of_speech;
-        stats.by_part_of_speech[pos] = (stats.by_part_of_speech[pos] || 0) + 1;
+        stats.byPartOfSpeech[pos] = (stats.byPartOfSpeech[pos] || 0) + 1;
       });
 
       // Count mastery distribution
       progressData.forEach(progress => {
-        const phase = progress.learning_phase;
-        stats.mastery_distribution[phase] = (stats.mastery_distribution[phase] || 0) + 1;
+        const masteryLevel = Math.floor(progress.mastery_level * 10);
+        stats.masteryDistribution[masteryLevel] = (stats.masteryDistribution[masteryLevel] || 0) + 1;
       });
 
       // Cache results

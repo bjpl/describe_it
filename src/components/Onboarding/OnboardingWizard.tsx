@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 import { X, ChevronLeft, ChevronRight, SkipForward } from 'lucide-react';
 import useOnboarding from '../../hooks/useOnboarding';
 import WelcomeStep from './WelcomeStep';
@@ -27,7 +27,7 @@ const stepComponents = {
 };
 
 // Animation variants
-const modalVariants = {
+const modalVariants: Variants = {
   hidden: {
     opacity: 0,
     scale: 0.8,
@@ -38,7 +38,7 @@ const modalVariants = {
     scale: 1,
     y: 0,
     transition: {
-      type: 'spring',
+      type: "spring" as const,
       stiffness: 300,
       damping: 30
     }
@@ -76,7 +76,7 @@ const progressVariants = {
     width: `${progress}%`,
     transition: {
       duration: 0.5,
-      ease: 'easeInOut'
+      ease: "easeInOut"
     }
   })
 };
@@ -249,7 +249,7 @@ export default function OnboardingWizard({
             {/* Progress Bar */}
             <div className="h-2 bg-gray-200 dark:bg-gray-700">
               <motion.div
-                variants={progressVariants}
+                variants={progressVariants as any}
                 initial="hidden"
                 animate="visible"
                 custom={progress}

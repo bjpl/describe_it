@@ -299,7 +299,7 @@ export function logSecureError(error: any, context: string): void {
   }
 }
 
-export default {
+const apiSecurity = {
   rateLimit,
   withApiSecurity,
   apiKeyManager,
@@ -308,3 +308,5 @@ export default {
   sanitizeInput,
   logSecureError,
 };
+
+export default apiSecurity;

@@ -56,8 +56,8 @@ export function PasswordRequirements({
       <div className="mt-3 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-700 dark:text-blue-300">
         <p className="font-medium">Why the change? | ¿Por qué el cambio?</p>
         <p className="mt-1">
-          Modern security research shows that longer passwords (like "my dog loves tacos")
-          are more secure than short complex ones (like "P@ss1").
+          Modern security research shows that longer passwords (like &quot;my dog loves tacos&quot;)
+          are more secure than short complex ones (like &quot;P@ss1&quot;).
         </p>
         <p className="mt-1 italic">
           La investigación muestra que contraseñas largas son más seguras que contraseñas cortas y complejas.

@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  CheckCircle, 
-  Sparkles, 
-  Rocket, 
-  BookOpen, 
-  Camera, 
+import { motion, Variants } from 'framer-motion';
+import {
+  CheckCircle,
+  Sparkles,
+  Rocket,
+  BookOpen,
+  Camera,
   TrendingUp,
   Gift,
   ArrowRight,
@@ -26,7 +26,7 @@ interface CompletionStepProps {
   className?: string;
 }
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -37,27 +37,27 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 30, scale: 0.8 },
   visible: {
     opacity: 1,
     y: 0,
     scale: 1,
     transition: {
-      type: 'spring',
+      type: "spring" as const,
       stiffness: 400,
       damping: 25
     }
   }
 };
 
-const confettiVariants = {
+const confettiVariants: Variants = {
   hidden: { opacity: 0, scale: 0 },
   visible: {
     opacity: 1,
     scale: 1,
     transition: {
-      type: 'spring',
+      type: "spring" as const,
       stiffness: 600,
       damping: 20,
       staggerChildren: 0.1
@@ -70,9 +70,9 @@ const floatAnimation = {
   transition: {
     duration: 3,
     repeat: Infinity,
-    ease: "easeInOut"
+    ease: "easeInOut" as const
   }
-};
+} as const;
 
 export default function CompletionStep({
   onNext,
@@ -187,7 +187,7 @@ export default function CompletionStep({
         <div className="text-center mb-12">
           <motion.div
             variants={itemVariants}
-            animate={floatAnimation}
+            animate={floatAnimation as any}
             className="mb-6"
           >
             <div className="w-32 h-32 mx-auto bg-gradient-to-br from-green-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-6 relative">
@@ -213,8 +213,8 @@ export default function CompletionStep({
             variants={itemVariants}
             className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed"
           >
-            You've successfully set up your personalized learning environment. 
-            You're now ready to embark on an exciting language learning journey!
+            You&apos;ve successfully set up your personalized learning environment.
+            You&apos;re now ready to embark on an exciting language learning journey!
           </motion.p>
         </div>
 
@@ -280,7 +280,7 @@ export default function CompletionStep({
           className="max-w-4xl mx-auto mb-8"
         >
           <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-6 text-center">
-            What's Next?
+            What&apos;s Next?
           </h3>
           
           <div className="grid md:grid-cols-3 gap-6">

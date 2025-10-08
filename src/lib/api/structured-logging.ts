@@ -140,7 +140,7 @@ class StructuredLogger {
     let output = `[${timestamp}] ${levelName}: ${entry.message}`;
 
     if (entry.context) {
-      output += `\nContext: ${safeStringify(entry.context, null, 2)}`;
+      output += `\nContext: ${safeStringify(entry.context, '{}')}`;
     }
 
     if (entry.request) {

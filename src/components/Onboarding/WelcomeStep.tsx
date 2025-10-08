@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 import { BookOpen, Camera, Brain, Sparkles } from 'lucide-react';
 
 interface WelcomeStepProps {
@@ -12,7 +12,7 @@ interface WelcomeStepProps {
   className?: string;
 }
 
-const containerVariants = {
+const containerVariants: Variants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
@@ -22,13 +22,13 @@ const containerVariants = {
   }
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      type: 'spring',
+      type: "spring" as const,
       stiffness: 400,
       damping: 25
     }
@@ -83,7 +83,7 @@ export default function WelcomeStep({
         <div className="text-center mb-12">
           <motion.div
             variants={itemVariants}
-            animate={floatingAnimation}
+            animate={floatingAnimation as any}
             className="mb-6"
           >
             <div className="w-24 h-24 mx-auto bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4">
@@ -102,8 +102,8 @@ export default function WelcomeStep({
             variants={itemVariants}
             className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto leading-relaxed"
           >
-            Transform your language learning with AI-powered visual descriptions. 
-            Let's set up your personalized learning environment in just a few steps.
+            Transform your language learning with AI-powered visual descriptions.
+            Let&apos;s set up your personalized learning environment in just a few steps.
           </motion.p>
         </div>
 
@@ -154,10 +154,10 @@ export default function WelcomeStep({
             </div>
             <div>
               <h4 className="text-lg font-medium text-blue-900 dark:text-blue-100 mb-2">
-                What's Next?
+                What&apos;s Next?
               </h4>
               <p className="text-blue-800 dark:text-blue-200 mb-4 leading-relaxed">
-                We'll guide you through setting up your API keys (optional), configuring your learning preferences, 
+                We&apos;ll guide you through setting up your API keys (optional), configuring your learning preferences,
                 and taking a quick tour of the key features. The entire process takes just 2-3 minutes!
               </p>
               <div className="flex flex-wrap gap-2">

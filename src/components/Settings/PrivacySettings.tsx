@@ -114,7 +114,7 @@ export const PrivacySettings = memo<PrivacySettingsProps>(function PrivacySettin
             <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
               <li className="flex items-start">
                 <span className="mr-2">•</span>
-                <span>Keys are stored locally in your browser's storage</span>
+                <span>Keys are stored locally in your browser&apos;s storage</span>
               </li>
               <li className="flex items-start">
                 <span className="mr-2">•</span>

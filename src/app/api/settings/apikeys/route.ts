@@ -37,8 +37,8 @@ export async function POST(req: NextRequest) {
 export async function GET(req: NextRequest) {
   try {
     const userId = req.nextUrl.searchParams.get('userId');
-    
-    apiLogger.info('[API Keys Settings] Get request for user:', userId);
+
+    apiLogger.info('[API Keys Settings] Get request for user:', { userId: userId || undefined });
     
     // For now, return empty settings
     // In production, this would fetch from a database

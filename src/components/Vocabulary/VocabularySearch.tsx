@@ -266,6 +266,7 @@ export const VocabularySearch = memo<VocabularySearchProps>(function VocabularyS
           aria-label="Search vocabulary"
           aria-autocomplete="list"
           aria-controls="search-results"
+          role="combobox"
           aria-expanded={showResults && searchResults.length > 0}
         />
 

@@ -158,7 +158,7 @@ export function useImageSearch() {
               logger.info('[useImageSearch] Using API key from backup');
             }
           } catch (e) {
-            logger.warn('[useImageSearch] Failed to parse api-keys-backup:', e);
+            logger.warn('[useImageSearch] Failed to parse api-keys-backup:', { error: e instanceof Error ? e.message : String(e) });
           }
         }
         
@@ -173,7 +173,7 @@ export function useImageSearch() {
                 logger.info('[useImageSearch] Using API key from settings');
               }
             } catch (e) {
-              logger.warn('[useImageSearch] Failed to parse app-settings:', e);
+              logger.warn('[useImageSearch] Failed to parse app-settings:', { error: e instanceof Error ? e.message : String(e) });
             }
           }
         }

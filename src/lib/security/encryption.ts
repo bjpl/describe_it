@@ -361,6 +361,39 @@ export class CryptoUtils {
   }
 
   /**
+   * Generate a secure random string
+   */
+  static generateRandomString(length: number): string {
+    return randomBytes(Math.ceil(length / 2)).toString('hex').slice(0, length);
+  }
+
+  /**
+   * Generic hash function
+   */
+  static hash(data: string, options: HashingOptions = {}): string {
+    const { algorithm = 'sha256', encoding = 'hex' } = options;
+    return createHash(algorithm).update(data, 'utf8').digest(encoding);
+  }
+
+  /**
+   * Encrypt data (simple wrapper for compatibility)
+   */
+  static encrypt(data: string, key: string): string {
+    return this.encryptForStorage(data, key);
+  }
+
+  /**
+   * Decrypt data (simple wrapper for compatibility)
+   */
+  static decrypt(encryptedData: string, key: string): string {
+    const decrypted = this.decryptFromStorage(encryptedData, key);
+    if (!decrypted) {
+      throw new Error('Decryption failed');
+    }
+    return decrypted;
+  }
+
+  /**
    * Generate a secure backup code
    */
   static generateBackupCode(): string {
@@ -416,5 +449,63 @@ export const SecurityConfig = {
   DEFAULT_HASH_ALGORITHM: 'sha256',
   SECURE_HASH_ALGORITHM: 'sha512',
 };
+
+/**
+ * Symmetric Encryption Utilities
+ */
+export class SymmetricEncryption {
+  /**
+   * Generate a symmetric encryption key
+   */
+  generateKey(): string {
+    return randomBytes(32).toString('hex');
+  }
+
+  /**
+   * Encrypt data using symmetric key
+   */
+  encrypt(data: string, key: string): string {
+    return CryptoUtils.encrypt(data, key);
+  }
+
+  /**
+   * Decrypt data using symmetric key
+   */
+  decrypt(encryptedData: string, key: string): string {
+    return CryptoUtils.decrypt(encryptedData, key);
+  }
+}
+
+/**
+ * Asymmetric Encryption Utilities
+ */
+export class AsymmetricEncryption {
+  /**
+   * Generate an asymmetric key pair (placeholder - would use RSA in production)
+   */
+  generateKeyPair(): { publicKey: string; privateKey: string } {
+    // Simplified key pair generation
+    const publicKey = randomBytes(64).toString('hex');
+    const privateKey = randomBytes(64).toString('hex');
+
+    return { publicKey, privateKey };
+  }
+
+  /**
+   * Encrypt data using public key (simplified)
+   */
+  encrypt(data: string, publicKey: string): string {
+    // This is a placeholder - in production use actual RSA encryption
+    return CryptoUtils.encrypt(data, publicKey);
+  }
+
+  /**
+   * Decrypt data using private key (simplified)
+   */
+  decrypt(encryptedData: string, privateKey: string): string {
+    // This is a placeholder - in production use actual RSA decryption
+    return CryptoUtils.decrypt(encryptedData, privateKey);
+  }
+}
 
 export default CryptoUtils;

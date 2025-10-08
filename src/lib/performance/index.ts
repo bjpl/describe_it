@@ -70,6 +70,12 @@ export {
   type CacheStats,
 } from '../cache/redis-cache';
 
+// Import for internal use
+import { getPerformanceMonitor } from './performance-monitor';
+import { getCache } from '../cache/redis-cache';
+import { poolManager } from './connection-pool';
+import { circuitBreakerRegistry, type CircuitBreakerConfig } from './circuit-breaker';
+
 // Performance utilities and helpers
 export class PerformanceOptimizer {
   private static instance: PerformanceOptimizer;
@@ -136,7 +142,7 @@ export class PerformanceOptimizer {
         overallHealth = 'degraded';
       }
     } catch (error) {
-      components.monitor = { status: 'unhealthy', error: error.message };
+      components.monitor = { status: 'unhealthy', error: (error as Error).message };
       overallHealth = 'unhealthy';
     }
 
@@ -146,12 +152,13 @@ export class PerformanceOptimizer {
       
       // Check if any pools are unhealthy
       for (const [poolName, stats] of Object.entries(components.pools)) {
-        if (stats.available === 0 && stats.borrowed === 0) {
+        const poolStats = stats as any;
+        if (poolStats.available === 0 && poolStats.borrowed === 0) {
           overallHealth = 'degraded';
         }
       }
     } catch (error) {
-      components.pools = { status: 'unhealthy', error: error.message };
+      components.pools = { status: 'unhealthy', error: (error as Error).message };
       overallHealth = 'unhealthy';
     }
 
@@ -159,11 +166,12 @@ export class PerformanceOptimizer {
       // Check circuit breakers
       components.circuits = circuitBreakerRegistry.getHealthStatus();
       
-      if (components.circuits.unhealthy.length > 0) {
+      const circuitHealth = components.circuits as any;
+      if (circuitHealth.unhealthy && circuitHealth.unhealthy.length > 0) {
         overallHealth = 'degraded';
       }
     } catch (error) {
-      components.circuits = { status: 'unhealthy', error: error.message };
+      components.circuits = { status: 'unhealthy', error: (error as Error).message };
       overallHealth = 'unhealthy';
     }
 
@@ -171,12 +179,13 @@ export class PerformanceOptimizer {
       // Check cache if available
       const cache = getCache();
       components.cache = await cache.getStats();
-      
-      if (components.cache.hitRate < 0.5) { // Less than 50% hit rate
+
+      const cacheStats = components.cache as any;
+      if (cacheStats.hitRate && cacheStats.hitRate < 0.5) { // Less than 50% hit rate
         overallHealth = 'degraded';
       }
     } catch (error) {
-      components.cache = { status: 'unavailable', error: error.message };
+      components.cache = { status: 'unavailable', error: (error as Error).message };
       // Cache is optional, don't fail overall health
     }
 

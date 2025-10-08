@@ -39,7 +39,7 @@ export const SectionErrorBoundary = memo<SectionErrorBoundaryProps>(
       switch (sectionType) {
         case "image-gallery":
           return {
-            icon: <Image className="h-8 w-8 text-blue-500" />,
+            icon: <Image className="h-8 w-8 text-blue-500" aria-label="Image gallery error" />,
             title: "Image Gallery Error",
             description:
               "The image gallery failed to load. This might be due to network issues or problems with the image service.",

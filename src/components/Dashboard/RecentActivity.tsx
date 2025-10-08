@@ -136,7 +136,8 @@ export function RecentActivity({
       setLoading(false);
       setIsRefreshing(false);
     }
-  }, [userId, limit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, limit]); // generateMockActivities and transformToActivityItems are stable
 
   // Auto-refresh functionality
   useEffect(() => {

@@ -52,7 +52,8 @@ export function SavedDescriptions({
   // Fetch saved descriptions
   useEffect(() => {
     fetchDescriptions();
-  }, [userId, limit]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, limit]); // fetchDescriptions is stable
 
   const fetchDescriptions = async () => {
     try {
@@ -147,7 +148,7 @@ export function SavedDescriptions({
       imageUrl: description.image_url
     };
     
-    const blob = new Blob([safeStringify(content, null, 2)], { type: 'application/json' });
+    const blob = new Blob([safeStringify(content, '{}')], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
@@ -244,7 +245,7 @@ export function SavedDescriptions({
           </div>
         ) : filteredDescriptions.length === 0 ? (
           <div className="text-center p-8 border rounded-lg">
-            <Image className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+            <Image className="h-12 w-12 mx-auto text-muted-foreground mb-4" aria-label="No descriptions" />
             <p className="text-sm text-muted-foreground mb-2">
               {searchTerm || selectedStyle || favoriteOnly
                 ? "No descriptions match your filters"

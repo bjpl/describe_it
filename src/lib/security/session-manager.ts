@@ -18,6 +18,7 @@ export interface SessionConfig {
   encryption?: {
     enabled: boolean;
     algorithm?: 'AES-GCM' | 'AES-CBC';
+    key?: string;
   };
   redis?: {
     host: string;
@@ -167,7 +168,7 @@ export class SessionManager {
       logger.auditEvent({
         action: 'SESSION_ACCESS',
         success: false,
-        metadata: { sessionId, error: error.message },
+        metadata: { sessionId, error: error instanceof Error ? error.message : 'Unknown error' },
       });
       return null;
     }
@@ -197,7 +198,7 @@ export class SessionManager {
       logger.auditEvent({
         action: 'SESSION_UPDATE',
         success: false,
-        metadata: { sessionId, error: error.message },
+        metadata: { sessionId, error: error instanceof Error ? error.message : 'Unknown error' },
       });
       return false;
     }
@@ -227,7 +228,7 @@ export class SessionManager {
       logger.auditEvent({
         action: 'SESSION_DESTROY',
         success: false,
-        metadata: { sessionId, error: error.message },
+        metadata: { sessionId, error: error instanceof Error ? error.message : 'Unknown error' },
       });
       return false;
     }
@@ -273,7 +274,7 @@ export class SessionManager {
         action: 'SESSION_DESTROY_ALL',
         userId,
         success: false,
-        metadata: { error: error.message },
+        metadata: { error: error instanceof Error ? error.message : 'Unknown error' },
       });
     }
 
@@ -312,7 +313,7 @@ export class SessionManager {
 
       logger.info('Expired sessions cleaned', { cleanedCount });
     } catch (error) {
-      logger.error('Failed to clean expired sessions', { error: error.message });
+      logger.error('Failed to clean expired sessions', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
 
     return cleanedCount;
@@ -371,7 +372,7 @@ export class SessionManager {
       logger.auditEvent({
         action: 'TOKEN_PARSE',
         success: false,
-        metadata: { error: error.message },
+        metadata: { error: error instanceof Error ? error.message : 'Unknown error' },
       });
       return null;
     }
@@ -443,21 +444,22 @@ export class SessionManager {
   }
 
   private serializeSession(session: SessionData): string {
-    return safeStringify(session, (key, value) => {
-      if (value instanceof Date) {
-        return { __type: 'Date', value: value.toISOString() };
-      }
-      return value;
-    });
+    return safeStringify(session);
   }
 
   private deserializeSession(serialized: string): SessionData {
-    return safeParse(serialized, (key, value) => {
-      if (value && typeof value === 'object' && value.__type === 'Date') {
-        return new Date(value.value);
-      }
-      return value;
-    });
+    const parsed = safeParse(serialized) as SessionData;
+    // Convert date strings back to Date objects
+    if (parsed.created && typeof parsed.created === 'string') {
+      parsed.created = new Date(parsed.created);
+    }
+    if (parsed.lastAccessed && typeof parsed.lastAccessed === 'string') {
+      parsed.lastAccessed = new Date(parsed.lastAccessed);
+    }
+    if (parsed.expires && typeof parsed.expires === 'string') {
+      parsed.expires = new Date(parsed.expires);
+    }
+    return parsed;
   }
 
   async getSessionStats(): Promise<{
@@ -498,7 +500,7 @@ export class SessionManager {
         }
       }
     } catch (error) {
-      logger.error('Failed to get session stats', { error: error.message });
+      logger.error('Failed to get session stats', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
 
     return {

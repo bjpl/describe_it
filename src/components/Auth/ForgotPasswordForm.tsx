@@ -142,7 +142,7 @@ export function ForgotPasswordForm({
           Reset Your Password
         </h2>
         <p className="text-gray-600 dark:text-gray-400">
-          Enter your email address and we'll send you a link to reset your password.
+          Enter your email address and we&apos;ll send you a link to reset your password.
         </p>
       </div>
 
@@ -168,13 +168,13 @@ export function ForgotPasswordForm({
             <div>
               <p className="font-medium">Check your email</p>
               <p className="mt-1">
-                We've sent a password reset link to <strong>{email}</strong>
+                We&apos;ve sent a password reset link to <strong>{email}</strong>
               </p>
             </div>
           </div>
           {!canResend && (
             <p className="text-xs mt-2">
-              Didn't receive it? You can resend in {resendTimer} seconds
+              Didn&apos;t receive it? You can resend in {resendTimer} seconds
             </p>
           )}
           {canResend && (

@@ -1,5 +1,4 @@
 import vault from 'node-vault';
-import { Logger } from 'winston';
 import { createAuditLogger } from './audit-logger';
 
 export interface VaultConfig {
@@ -26,7 +25,7 @@ export interface VaultSecret {
 
 export class VaultClient {
   private client: any;
-  private logger: Logger;
+  private logger: ReturnType<typeof createAuditLogger>;
   private isAuthenticated: boolean = false;
 
   constructor(private config: VaultConfig) {
@@ -41,7 +40,6 @@ export class VaultClient {
         endpoint: this.config.endpoint,
         token: this.config.token,
         namespace: this.config.namespace,
-        timeout: this.config.timeout || 30000,
       });
 
       this.logger.info('Vault client initialized', {
@@ -49,7 +47,7 @@ export class VaultClient {
         namespace: this.config.namespace,
       });
     } catch (error) {
-      this.logger.error('Failed to initialize Vault client', { error });
+      this.logger.error('Failed to initialize Vault client', { error: error instanceof Error ? error.message : 'Unknown error' });
       throw new Error('Vault client initialization failed');
     }
   }
@@ -67,7 +65,7 @@ export class VaultClient {
           role_id: this.config.roleId,
           secret_id: this.config.secretId,
         });
-        
+
         if (result?.auth?.client_token) {
           this.client.token = result.auth.client_token;
           this.isAuthenticated = true;
@@ -79,7 +77,7 @@ export class VaultClient {
 
       return this.isAuthenticated;
     } catch (error) {
-      this.logger.error('Vault authentication failed', { error });
+      this.logger.error('Vault authentication failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       this.isAuthenticated = false;
       return false;
     }
@@ -92,7 +90,7 @@ export class VaultClient {
       }
 
       const result = await this.client.read(path);
-      
+
       this.logger.info('Secret read successfully', {
         path: this.sanitizePath(path),
         version: result?.data?.metadata?.version,
@@ -100,10 +98,7 @@ export class VaultClient {
 
       return result?.data || null;
     } catch (error) {
-      this.logger.error('Failed to read secret', {
-        path: this.sanitizePath(path),
-        error: error.message,
-      });
+      this.logger.error('Failed to read secret', { path: this.sanitizePath(path), error: error instanceof Error ? error.message : 'Unknown error' });
       return null;
     }
   }
@@ -115,7 +110,7 @@ export class VaultClient {
       }
 
       await this.client.write(path, { data });
-      
+
       this.logger.info('Secret written successfully', {
         path: this.sanitizePath(path),
         keys: Object.keys(data),
@@ -123,10 +118,7 @@ export class VaultClient {
 
       return true;
     } catch (error) {
-      this.logger.error('Failed to write secret', {
-        path: this.sanitizePath(path),
-        error: error.message,
-      });
+      this.logger.error('Failed to write secret', { path: this.sanitizePath(path), error: error instanceof Error ? error.message : 'Unknown error' });
       return false;
     }
   }
@@ -138,17 +130,14 @@ export class VaultClient {
       }
 
       await this.client.delete(path);
-      
+
       this.logger.info('Secret deleted successfully', {
         path: this.sanitizePath(path),
       });
 
       return true;
     } catch (error) {
-      this.logger.error('Failed to delete secret', {
-        path: this.sanitizePath(path),
-        error: error.message,
-      });
+      this.logger.error('Failed to delete secret', { path: this.sanitizePath(path), error: error instanceof Error ? error.message : 'Unknown error' });
       return false;
     }
   }
@@ -162,10 +151,7 @@ export class VaultClient {
       const result = await this.client.list(path);
       return result?.data?.keys || [];
     } catch (error) {
-      this.logger.error('Failed to list secrets', {
-        path: this.sanitizePath(path),
-        error: error.message,
-      });
+      this.logger.error('Failed to list secrets', { path: this.sanitizePath(path), error: error instanceof Error ? error.message : 'Unknown error' });
       return [];
     }
   }
@@ -189,10 +175,7 @@ export class VaultClient {
 
       return result?.auth?.client_token || null;
     } catch (error) {
-      this.logger.error('Failed to create token', {
-        policies,
-        error: error.message,
-      });
+      this.logger.error('Failed to create token', { error: error instanceof Error ? error.message : 'Unknown error' });
       return null;
     }
   }
@@ -200,7 +183,7 @@ export class VaultClient {
   async renewToken(token?: string): Promise<boolean> {
     try {
       const result = await this.client.tokenRenew({ token });
-      
+
       this.logger.info('Token renewed successfully', {
         renewable: result?.renewable,
         lease_duration: result?.lease_duration,
@@ -208,7 +191,7 @@ export class VaultClient {
 
       return true;
     } catch (error) {
-      this.logger.error('Failed to renew token', { error: error.message });
+      this.logger.error('Failed to renew token', { error: error instanceof Error ? error.message : 'Unknown error' });
       return false;
     }
   }
@@ -216,11 +199,11 @@ export class VaultClient {
   async revokeToken(token?: string): Promise<boolean> {
     try {
       await this.client.tokenRevoke({ token });
-      
+
       this.logger.info('Token revoked successfully');
       return true;
     } catch (error) {
-      this.logger.error('Failed to revoke token', { error: error.message });
+      this.logger.error('Failed to revoke token', { error: error instanceof Error ? error.message : 'Unknown error' });
       return false;
     }
   }
@@ -230,7 +213,7 @@ export class VaultClient {
       const result = await this.client.health();
       return result?.initialized && !result?.sealed;
     } catch (error) {
-      this.logger.error('Vault health check failed', { error: error.message });
+      this.logger.error('Vault health check failed', { error: error instanceof Error ? error.message : 'Unknown error' });
       return false;
     }
   }
@@ -248,7 +231,7 @@ export class VaultClient {
       this.isAuthenticated = false;
       this.logger.info('Vault client connection closed');
     } catch (error) {
-      this.logger.error('Error closing Vault client', { error: error.message });
+      this.logger.error('Error closing Vault client', { error: error instanceof Error ? error.message : 'Unknown error' });
     }
   }
 }

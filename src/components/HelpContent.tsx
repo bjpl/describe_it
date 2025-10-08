@@ -282,7 +282,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
               {expandedSections.has("features") && (
                 <div className="mt-4 space-y-4">
                   <div className="flex items-start gap-3">
-                    <Image className="w-5 h-5 text-green-600 mt-0.5" />
+                    <Image className="w-5 h-5 text-green-600 mt-0.5" aria-label="AI descriptions feature" />
                     <div>
                       <strong className="text-green-600">
                         AI-Powered Descriptions
@@ -471,7 +471,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Image className="w-4 h-4" />
+                    <Image className="w-4 h-4" aria-label="Image search" />
                     <span className="text-sm">Image Search</span>
                   </div>
                   <div className="flex items-center gap-2">

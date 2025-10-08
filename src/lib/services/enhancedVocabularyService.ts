@@ -110,7 +110,7 @@ export class EnhancedVocabularyService {
       this.setCache(cacheKey, result);
       return result;
     } catch (error) {
-      logger.warn("Database query failed, using fallback:", error);
+      logger.warn("Database query failed, using fallback:", { error });
       return await this.getFallbackVocabulary(filter);
     }
   }
@@ -132,7 +132,7 @@ export class EnhancedVocabularyService {
         });
         item.english_translation = translation.translation;
       } catch (error) {
-        logger.warn("Auto-translation failed:", error);
+        logger.warn("Auto-translation failed:", { error });
       }
     }
 
@@ -143,7 +143,7 @@ export class EnhancedVocabularyService {
           item.spanish_text,
         );
       } catch (error) {
-        logger.warn("Context generation failed:", error);
+        logger.warn("Context generation failed:", { error });
       }
     }
 
@@ -339,14 +339,14 @@ export class EnhancedVocabularyService {
           .limit(limit);
 
         if (!error && data) {
-          items = data;
+          items = data as EnhancedVocabularyItem[];
         }
       }
 
       // Fallback to base service
       if (items.length === 0) {
         const baseResults = await baseVocabularyService.searchVocabulary(query);
-        items = baseResults as unknown as EnhancedVocabularyItem[];
+        items = baseResults as EnhancedVocabularyItem[];
       }
 
       // Apply fuzzy matching if requested
@@ -362,7 +362,7 @@ export class EnhancedVocabularyService {
       this.setCache(cacheKey, items);
       return items;
     } catch (error) {
-      logger.warn("Search failed:", error);
+      logger.warn("Search failed:", { error });
       return [];
     }
   }
@@ -438,7 +438,7 @@ export class EnhancedVocabularyService {
       this.setCache(cacheKey, stats, 600000); // 10 minutes
       return stats;
     } catch (error) {
-      logger.warn("Stats calculation failed:", error);
+      logger.warn("Stats calculation failed:", { error });
       return {
         totalItems: 0,
         byDifficulty: {},
@@ -512,7 +512,7 @@ export class EnhancedVocabularyService {
         });
       }
     } catch (error) {
-      logger.warn("Failed to update vocabulary stats:", error);
+      logger.warn("Failed to update vocabulary stats:", { error });
     }
   }
 
@@ -547,7 +547,7 @@ export class EnhancedVocabularyService {
     }
 
     if (filter.difficulty?.length) {
-      query = query.in("difficulty_level", filter.difficulty);
+      query = query.in("difficulty_level", filter.difficulty as any);
     }
 
     if (filter.masteryLevel) {
@@ -592,7 +592,7 @@ export class EnhancedVocabularyService {
 
     if (error) throw error;
 
-    const items = data || [];
+    const items = (data || []) as EnhancedVocabularyItem[];
     const total = count || 0;
     const hasMore = filter.limit
       ? (filter.offset || 0) + items.length < total
@@ -606,8 +606,8 @@ export class EnhancedVocabularyService {
     total: number;
     hasMore: boolean;
   }> {
-    const allItems = await baseVocabularyService.getAllVocabularyItems();
-    let filteredItems = allItems as unknown as EnhancedVocabularyItem[];
+    const allItems = await baseVocabularyService.getAllVocabulary();
+    let filteredItems = allItems as EnhancedVocabularyItem[];
 
     // Apply filters
     if (filter.category?.length) {
@@ -652,10 +652,10 @@ export class EnhancedVocabularyService {
           .single();
 
         if (error) throw error;
-        return data;
+        return data as EnhancedVocabularyItem;
       }
     } catch (error) {
-      logger.warn("Failed to get vocabulary by ID:", error);
+      logger.warn("Failed to get vocabulary by ID:", { error });
     }
     return null;
   }

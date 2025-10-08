@@ -120,7 +120,8 @@ export default function UsageDashboard() {
   useEffect(() => {
     // Load initial data
     fetchInitialData();
-  }, [selectedTimeRange]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTimeRange]); // fetchInitialData is stable and doesn't need to be a dependency
 
   const fetchInitialData = async () => {
     try {

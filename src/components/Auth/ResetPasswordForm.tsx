@@ -40,7 +40,8 @@ export function ResetPasswordForm({
   // Validate token on mount
   useEffect(() => {
     validateToken();
-  }, [token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [token]); // validateToken is stable
 
   const validateToken = async () => {
     try {

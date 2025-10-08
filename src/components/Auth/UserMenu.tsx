@@ -99,7 +99,7 @@ export function UserMenu() {
         const recentSignIn = sessionStorage.getItem('recent-auth-success');
         
         if (stored) {
-          const parsedData = safeParse<StoredAuthData>(stored, null);
+          const parsedData = safeParse<StoredAuthData>(stored, undefined);
           if (parsedData && 'access_token' in parsedData) {
             const { access_token, user: storedUser } = parsedData;
             const hasToken = !!access_token;
@@ -108,7 +108,7 @@ export function UserMenu() {
             if (hasToken !== localIsAuthenticated) {
               authLogger.info('[UserMenu] Polling detected auth change:', { hasToken });
               setLocalIsAuthenticated(hasToken);
-              setLocalUser(storedUser);
+              setLocalUser(storedUser as any || null);
               
               if (hasToken && recentSignIn) {
                 // Clear the recent sign-in flag
@@ -148,12 +148,12 @@ export function UserMenu() {
         setTimeout(() => {
           const stored = localStorage.getItem('describe-it-auth');
           if (stored) {
-            const parsedData = safeParse<StoredAuthData>(stored, null);
+            const parsedData = safeParse<StoredAuthData>(stored, undefined);
             if (parsedData && 'access_token' in parsedData && parsedData.access_token) {
               const { access_token, user: storedUser } = parsedData;
               authLogger.info('[UserMenu] Recent auth success detected, updating UI');
               setLocalIsAuthenticated(true);
-              setLocalUser(storedUser);
+              setLocalUser(storedUser as any || null);
               setIsLoading(false);
               sessionStorage.removeItem('recent-auth-success');
               
@@ -195,7 +195,7 @@ export function UserMenu() {
     const localStorageStr = window.localStorage.getItem('describe-it-auth');
     let localStorageData: StoredAuthData | { error: string } | null = null;
 
-    localStorageData = localStorageStr ? safeParse<StoredAuthData>(localStorageStr, { error: 'Invalid JSON in localStorage' }) : null;
+    localStorageData = localStorageStr ? safeParse<StoredAuthData>(localStorageStr, undefined) : null;
 
     const stateComparison = {
       authProvider: { isAuthenticated, user: user?.email, profile: !!profile },

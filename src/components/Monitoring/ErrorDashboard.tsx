@@ -175,7 +175,7 @@ const ErrorDashboard: React.FC<{ isOpen: boolean; onClose: () => void }> = ({
       config,
     };
 
-    const blob = new Blob([safeStringify(data, null, 2)], { type: 'application/json' });
+    const blob = new Blob([safeStringify(data, '{}')], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;

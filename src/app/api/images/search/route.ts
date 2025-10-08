@@ -112,10 +112,10 @@ export async function OPTIONS(request: NextRequest) {
   
   // Enhanced security logging for CORS preflight
   apiLogger.info('[SECURITY] CORS preflight request:', {
-    origin,
-    requestedMethod,
-    requestedHeaders,
-    userAgent: request.headers.get('user-agent'),
+    origin: origin || undefined,
+    requestedMethod: requestedMethod || undefined,
+    requestedHeaders: requestedHeaders || undefined,
+    userAgent: request.headers.get('user-agent') || undefined,
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV
   });

@@ -81,7 +81,7 @@ export function useSession() {
       exportedAt: new Date(),
     };
 
-    return new Blob([safeStringify(sessionData, null, 2)], {
+    return new Blob([safeStringify(sessionData, '{}')], {
       type: "application/json",
     });
   }, [session]);

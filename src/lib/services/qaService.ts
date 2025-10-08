@@ -158,7 +158,7 @@ export class QAService {
         }
         source = "openai";
       } catch (error) {
-        qaLogger.warn('OpenAI Q&A generation failed', error);
+        qaLogger.warn('OpenAI Q&A generation failed', error as Record<string, any>);
       }
     }
 
@@ -173,7 +173,7 @@ export class QAService {
       try {
         await this.saveQuestionsToDatabase(questions);
       } catch (error) {
-        dbLogger.warn('Failed to save questions to database', error);
+        dbLogger.warn('Failed to save questions to database', error as Record<string, any>);
       }
     }
 
@@ -213,7 +213,7 @@ export class QAService {
     try {
       await this.recordAnswerValidation(request, validation);
     } catch (error) {
-      qaLogger.warn('Failed to record answer validation', error);
+      qaLogger.warn('Failed to record answer validation', error as Record<string, any>);
     }
 
     return validation;
@@ -239,7 +239,7 @@ export class QAService {
       this.setCache(cacheKey, result);
       return result;
     } catch (error) {
-      dbLogger.warn('Database query failed', error);
+      dbLogger.warn('Database query failed', error as Record<string, any>);
       return { items: [], total: 0, hasMore: false };
     }
   }
@@ -275,7 +275,7 @@ export class QAService {
       this.clearCacheByPattern("qa_");
       return result.success && result.data ? result.data : null;
     } catch (error) {
-      qaLogger.warn('Failed to update Q&A item', error);
+      qaLogger.warn('Failed to update Q&A item', error as Record<string, any>);
       return null;
     }
   }
@@ -287,7 +287,7 @@ export class QAService {
     try {
       await withRetry(async () => {
         if (supabase) {
-          const { error } = await supabase
+          const { error } = await (supabase as any)
             .from("qa_items")
             .delete()
             .eq("id", id);
@@ -299,7 +299,7 @@ export class QAService {
       this.clearCacheByPattern("qa_");
       return true;
     } catch (error) {
-      qaLogger.warn('Failed to delete Q&A item', error);
+      qaLogger.warn('Failed to delete Q&A item', error as Record<string, any>);
       return false;
     }
   }
@@ -364,7 +364,7 @@ export class QAService {
       this.setCache(cacheKey, stats, 600000); // 10 minutes
       return stats;
     } catch (error) {
-      qaLogger.warn('Failed to calculate Q&A stats', error);
+      qaLogger.warn('Failed to calculate Q&A stats', error as Record<string, any>);
       return {
         totalQuestions: 0,
         byDifficulty: {},
@@ -551,7 +551,7 @@ export class QAService {
           ? Math.max(confidence, 0.8)
           : Math.min(confidence, 0.6);
       } catch (error) {
-        qaLogger.warn('Semantic matching failed', error);
+        qaLogger.warn('Semantic matching failed', error as Record<string, any>);
       }
     }
 
@@ -734,7 +734,7 @@ export class QAService {
       return { items: [], total: 0, hasMore: false };
     }
 
-    let query = supabase.from("qa_items").select("*", { count: "exact" });
+    let query = (supabase as any).from("qa_items").select("*", { count: "exact" });
 
     // Apply filters
     if (filter.imageId) {
@@ -780,7 +780,7 @@ export class QAService {
 
     if (error) throw error;
 
-    const items = data || [];
+    const items = (data || []) as QAItem[];
     const total = count || 0;
     const hasMore = filter.limit
       ? (filter.offset || 0) + items.length < total
@@ -792,7 +792,7 @@ export class QAService {
   private async saveQuestionsToDatabase(questions: QAItem[]): Promise<void> {
     if (!supabase || questions.length === 0) return;
 
-    const { error } = await supabase.from("qa_items").upsert(questions as any);
+    const { error } = await (supabase as any).from("qa_items").upsert(questions as any);
 
     if (error) {
       logger.warn("Failed to save questions to database:", error);
@@ -820,7 +820,7 @@ export class QAService {
         } as never,
       ]);
     } catch (error) {
-      qaLogger.warn('Failed to record answer validation', error);
+      qaLogger.warn('Failed to record answer validation', error as Record<string, any>);
     }
   }
 

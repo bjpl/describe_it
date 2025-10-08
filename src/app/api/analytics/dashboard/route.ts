@@ -139,7 +139,7 @@ async function getAlertsData(startTime: number, endTime: number) {
         for (const alertStr of alerts) {
           const alert = safeParse<{ timestamp: number; [key: string]: any }>(
             alertStr,
-            null
+            undefined
           );
           if (alert && alert.timestamp >= startTime && alert.timestamp <= endTime) {
             allAlerts.push(alert);

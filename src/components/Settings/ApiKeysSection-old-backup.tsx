@@ -197,7 +197,7 @@ export function ApiKeysSection() {
         }
       } catch (cloudError) {
         // Cloud save is optional, don't fail the whole operation
-        logger.warn('[ApiKeysSection] Cloud save failed:', cloudError);
+        logger.warn('[ApiKeysSection] Cloud save failed:', { error: cloudError instanceof Error ? cloudError.message : String(cloudError) });
       }
 
       // Trigger Unsplash service update

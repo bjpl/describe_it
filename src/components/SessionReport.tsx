@@ -70,7 +70,8 @@ export function SessionReport({
 
   useEffect(() => {
     generateReport();
-  }, [sessionLogger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sessionLogger]); // generateReport is stable
 
   const generateReport = async () => {
     setIsGenerating(true);

@@ -214,7 +214,7 @@ class AlertManager {
   public async triggerAlert(alert: Omit<Alert, 'id' | 'createdAt'>): Promise<string | null> {
     try {
       // Store alert in database
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('system_alerts')
         .insert({
           alert_type: alert.type,
@@ -318,13 +318,13 @@ class AlertManager {
 
   public async acknowledgeAlert(alertId: string, userId?: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('system_alerts')
         .update({
           acknowledged: true,
           acknowledged_by: userId,
           acknowledged_at: new Date().toISOString(),
-        })
+        } as never)
         .eq('id', alertId);
 
       return !error;
@@ -336,13 +336,13 @@ class AlertManager {
 
   public async resolveAlert(alertId: string, userId?: string): Promise<boolean> {
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('system_alerts')
         .update({
           resolved: true,
           resolved_by: userId,
           resolved_at: new Date().toISOString(),
-        })
+        } as never)
         .eq('id', alertId);
 
       return !error;
@@ -354,7 +354,7 @@ class AlertManager {
 
   public async getActiveAlerts(): Promise<Alert[]> {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('system_alerts')
         .select('*')
         .eq('resolved', false)
@@ -366,7 +366,7 @@ class AlertManager {
         return [];
       }
 
-      return data?.map(row => ({
+      return data?.map((row: any) => ({
         id: row.id,
         type: row.alert_type,
         severity: row.severity,

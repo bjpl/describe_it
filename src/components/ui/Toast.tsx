@@ -43,6 +43,10 @@ interface ToastProviderProps {
 export function ToastProvider({ children, maxToasts = 5 }: ToastProviderProps) {
   const [toasts, setToasts] = useState<Toast[]>([]);
 
+  const dismiss = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+  }, []);
+
   const toast = useCallback((toastData: Omit<Toast, "id">) => {
     const id = Math.random().toString(36).substring(2, 9);
     const newToast: Toast = {
@@ -66,11 +70,7 @@ export function ToastProvider({ children, maxToasts = 5 }: ToastProviderProps) {
     }
 
     return id;
-  }, [maxToasts]);
-
-  const dismiss = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
-  }, []);
+  }, [maxToasts, dismiss]);
 
   const dismissAll = useCallback(() => {
     setToasts([]);
@@ -185,77 +185,79 @@ function ToastComponent({ toast }: ToastComponentProps) {
   );
 }
 
-// Utility functions for common toast types
-export const toast = {
-  success: (message: string, options?: Partial<Toast>) => {
-    const { toast: toastFn } = useToast();
-    return toastFn({
-      type: "success",
-      description: message,
-      ...options,
-    });
-  },
-  error: (message: string, options?: Partial<Toast>) => {
-    const { toast: toastFn } = useToast();
-    return toastFn({
-      type: "error",
-      description: message,
-      duration: 0, // Don't auto-dismiss errors
-      ...options,
-    });
-  },
-  warning: (message: string, options?: Partial<Toast>) => {
-    const { toast: toastFn } = useToast();
-    return toastFn({
-      type: "warning",
-      description: message,
-      ...options,
-    });
-  },
-  info: (message: string, options?: Partial<Toast>) => {
-    const { toast: toastFn } = useToast();
-    return toastFn({
-      type: "info",
-      description: message,
-      ...options,
-    });
-  },
-  promise: <T,>(
-    promise: Promise<T>,
-    msgs: {
-      loading: string;
-      success: string | ((data: T) => string);
-      error: string | ((error: any) => string);
-    }
-  ) => {
-    const { toast: toastFn, dismiss } = useToast();
-    
-    const loadingId = toastFn({
-      type: "info",
-      description: msgs.loading,
-      duration: 0,
-      dismissible: false,
-    });
+// Utility hook for common toast types
+export function useToastHelpers() {
+  const { toast: toastFn, dismiss } = useToast();
 
-    promise
-      .then((data) => {
-        dismiss(loadingId);
-        toastFn({
-          type: "success",
-          description: typeof msgs.success === "function" ? msgs.success(data) : msgs.success,
-        });
-      })
-      .catch((error) => {
-        dismiss(loadingId);
-        toastFn({
-          type: "error",
-          description: typeof msgs.error === "function" ? msgs.error(error) : msgs.error,
-          duration: 0,
-        });
+  return {
+    success: useCallback((message: string, options?: Partial<Toast>) => {
+      return toastFn({
+        type: "success",
+        description: message,
+        ...options,
+      });
+    }, [toastFn]),
+
+    error: useCallback((message: string, options?: Partial<Toast>) => {
+      return toastFn({
+        type: "error",
+        description: message,
+        duration: 0, // Don't auto-dismiss errors
+        ...options,
+      });
+    }, [toastFn]),
+
+    warning: useCallback((message: string, options?: Partial<Toast>) => {
+      return toastFn({
+        type: "warning",
+        description: message,
+        ...options,
+      });
+    }, [toastFn]),
+
+    info: useCallback((message: string, options?: Partial<Toast>) => {
+      return toastFn({
+        type: "info",
+        description: message,
+        ...options,
+      });
+    }, [toastFn]),
+
+    promise: useCallback(<T,>(
+      promise: Promise<T>,
+      msgs: {
+        loading: string;
+        success: string | ((data: T) => string);
+        error: string | ((error: any) => string);
+      }
+    ) => {
+      const loadingId = toastFn({
+        type: "info",
+        description: msgs.loading,
+        duration: 0,
+        dismissible: false,
       });
 
-    return promise;
-  },
-};
+      promise
+        .then((data) => {
+          dismiss(loadingId);
+          toastFn({
+            type: "success",
+            description: typeof msgs.success === "function" ? msgs.success(data) : msgs.success,
+          });
+        })
+        .catch((error) => {
+          dismiss(loadingId);
+          toastFn({
+            type: "error",
+            description: typeof msgs.error === "function" ? msgs.error(error) : msgs.error,
+            duration: 0,
+          });
+        });
+
+      return promise;
+    }, [toastFn, dismiss])
+  };
+}
 
 export default Toast;

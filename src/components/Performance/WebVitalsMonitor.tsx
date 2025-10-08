@@ -173,7 +173,7 @@ export const WebVitalsMonitor = memo(() => {
       url: window.location.href,
     };
 
-    const blob = new Blob([safeStringify(exportData, null, 2)], {
+    const blob = new Blob([safeStringify(exportData, '{}')], {
       type: 'application/json',
     });
     const url = URL.createObjectURL(blob);

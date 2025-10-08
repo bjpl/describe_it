@@ -160,7 +160,7 @@ export function usePerformanceTracking() {
         }
       }
     } catch (error) {
-      logger.warn('Performance tracking error:', error);
+      logger.warn('Performance tracking error:', { error: error instanceof Error ? error.message : String(error) });
     }
   };
 

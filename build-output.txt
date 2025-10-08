@@ -1,0 +1,204 @@
+
+> describe-it@0.1.0 prebuild
+> echo 'Skipping prebuild checks for deployment'
+
+'Skipping prebuild checks for deployment'
+
+> describe-it@0.1.0 build
+> next build
+
+ ⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of C:\Users\brand\Development\Project_Workspace\package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * C:\Users\brand\Development\Project_Workspace\active-development\describe_it\package-lock.json
+
+   ▲ Next.js 15.5.4
+   - Environments: .env.local
+   - Experiments (use with caution):
+     · optimizePackageImports
+
+   Creating an optimized production build ...
+ ⚠ Compiled with warnings in 83s
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/app/global-error.tsx
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+Critical dependency: the request of a dependency is an expression
+
+Import trace for requested module:
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/instrumentation.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/node/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/platform/index.js
+./node_modules/@prisma/instrumentation/node_modules/@opentelemetry/instrumentation/build/esm/index.js
+./node_modules/@prisma/instrumentation/dist/index.js
+./node_modules/@sentry/node/build/cjs/integrations/tracing/prisma.js
+./node_modules/@sentry/node/build/cjs/index.js
+./node_modules/@sentry/nextjs/build/cjs/index.server.js
+./src/lib/monitoring/sentry.ts
+./src/app/api/analytics/route.ts
+
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+{"context":"api","environment":"production","level":"warn","message":"Vercel KV not configured. Caching will be disabled. Vercel KV not configured. Caching will be disabled.","service":"describe-it","timestamp":"2025-10-08T06:22:20.946Z"}
+{"context":"security","level":"info","message":"Keys initialized successfully","openai":{"hasKey":true,"isValid":true,"keyType":"standard","source":"environment"},"step":"keys_initialized","timestamp":"2025-10-08T06:22:20.957Z","unsplash":{"hasKey":true,"source":"environment"}}
+ ⚠ Using edge runtime on a page currently disables static generation for that page
+{"accessKeyLength":63,"context":"api","environment":"production","hasKey":true,"isDemo":true,"isValid":false,"level":"info","message":"[UnsplashService] Initializing with keyProvider: [UnsplashService] Initializing with keyProvider:","service":"describe-it","source":"environment","timestamp":"2025-10-08T06:22:20.962Z"}
+{"context":"api","environment":"production","level":"warn","message":"Unsplash API key not configured or invalid. Using demo mode. Unsplash API key not configured or invalid. Using demo mode.","service":"describe-it","timestamp":"2025-10-08T06:22:20.962Z"}
+{"context":"ErrorTracking","level":"info","message":"Error tracking integration 'sentry' registered","timestamp":"2025-10-08T06:22:21.116Z"}
+{"context":"api","environment":"production","level":"info","message":"Using memory-only cache adapter Using memory-only cache adapter","service":"describe-it","timestamp":"2025-10-08T06:22:21.135Z"}
+{"context":"api","environment":"production","level":"info","message":"Using memory-only cache adapter Using memory-only cache adapter","service":"describe-it","timestamp":"2025-10-08T06:22:21.208Z"}
+{"context":"api","environment":"production","level":"warn","message":"Vercel KV not configured. Caching will be disabled. Vercel KV not configured. Caching will be disabled.","service":"describe-it","timestamp":"2025-10-08T06:22:21.219Z"}
+{"context":"api","environment":"production","level":"info","message":"Using memory-only cache adapter Using memory-only cache adapter","service":"describe-it","timestamp":"2025-10-08T06:22:21.650Z"}
+{"context":"api","environment":"production","level":"warn","message":"Vercel KV not configured. Caching will be disabled. Vercel KV not configured. Caching will be disabled.","service":"describe-it","timestamp":"2025-10-08T06:22:21.662Z"}
+{"context":"database","environment":"production","level":"info","message":"[Supabase] Creating server-side client instance [Supabase] Creating server-side client instance","service":"describe-it","timestamp":"2025-10-08T06:22:21.744Z"}
+{"context":"api","environment":"production","level":"warn","message":"Vercel KV not configured. Caching will be disabled. Vercel KV not configured. Caching will be disabled.","service":"describe-it","timestamp":"2025-10-08T06:22:21.761Z"}
+{"context":"ErrorTracking","level":"info","message":"Error tracking integration 'sentry' registered","timestamp":"2025-10-08T06:22:21.998Z"}
+{"context":"database","environment":"production","level":"info","message":"[Supabase] Creating server-side client instance [Supabase] Creating server-side client instance","service":"describe-it","timestamp":"2025-10-08T06:22:22.638Z"}
+{"context":"api","environment":"production","level":"info","message":"Using memory-only cache adapter Using memory-only cache adapter","service":"describe-it","timestamp":"2025-10-08T06:22:27.992Z"}
+{"context":"api","environment":"production","level":"warn","message":"Vercel KV not configured. Caching will be disabled. Vercel KV not configured. Caching will be disabled.","service":"describe-it","timestamp":"2025-10-08T06:22:28.026Z"}
+{"context":"api","environment":"production","level":"info","message":"Using memory-only cache adapter Using memory-only cache adapter","service":"describe-it","timestamp":"2025-10-08T06:22:29.654Z"}
+{"context":"api","environment":"production","level":"warn","message":"Vercel KV not configured. Caching will be disabled. Vercel KV not configured. Caching will be disabled.","service":"describe-it","timestamp":"2025-10-08T06:22:29.666Z"}
+   Generating static pages (0/33) ...
+{"context":"api","environment":"production","level":"info","message":"Using memory-only cache adapter Using memory-only cache adapter","service":"describe-it","timestamp":"2025-10-08T06:22:42.163Z"}
+{"context":"api","environment":"production","level":"warn","message":"Vercel KV not configured. Caching will be disabled. Vercel KV not configured. Caching will be disabled.","service":"describe-it","timestamp":"2025-10-08T06:22:42.176Z"}
+   Generating static pages (8/33) 
+ ⚠ Unsupported metadata viewport is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /_not-found. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /admin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /admin. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+{"context":"database","environment":"production","level":"info","message":"[Supabase] Creating server-side client instance [Supabase] Creating server-side client instance","service":"describe-it","timestamp":"2025-10-08T06:22:43.050Z"}
+{"context":"auth","environment":"production","forceUpdateCounter":0,"isAuthenticated":false,"level":"info","message":"[AuthProvider] Creating new context value: [AuthProvider] Creating new context value:","refreshKey":1759904563067,"service":"describe-it","timestamp":"2025-10-08T06:22:43.067Z","version":0}
+{"context":"api","environment":"production","level":"info","message":"Using memory-only cache adapter Using memory-only cache adapter","service":"describe-it","timestamp":"2025-10-08T06:22:43.231Z"}
+{"context":"api","environment":"production","level":"warn","message":"Vercel KV not configured. Caching will be disabled. Vercel KV not configured. Caching will be disabled.","service":"describe-it","timestamp":"2025-10-08T06:22:43.249Z"}
+{"context":"database","environment":"production","level":"info","message":"[Supabase] Creating server-side client instance [Supabase] Creating server-side client instance","service":"describe-it","timestamp":"2025-10-08T06:22:43.234Z"}
+{"context":"auth","environment":"production","forceUpdateCounter":0,"isAuthenticated":false,"level":"info","message":"[AuthProvider] Creating new context value: [AuthProvider] Creating new context value:","refreshKey":1759904563256,"service":"describe-it","timestamp":"2025-10-08T06:22:43.256Z","version":0}
+   Generating static pages (16/33) 
+ ⚠ Unsupported metadata viewport is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /dashboard. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /test-auth. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /test-auth. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+{"context":"auth","environment":"production","forceUpdateCounter":0,"isAuthenticated":false,"level":"info","message":"[AuthProvider] Creating new context value: [AuthProvider] Creating new context value:","refreshKey":1759904563330,"service":"describe-it","timestamp":"2025-10-08T06:22:43.330Z","version":0}
+{"context":"auth","environment":"production","forceUpdateCounter":0,"isAuthenticated":false,"level":"info","message":"[AuthProvider] Creating new context value: [AuthProvider] Creating new context value:","refreshKey":1759904563388,"service":"describe-it","timestamp":"2025-10-08T06:22:43.389Z","version":0}
+{"NODE_ENV":"production","context":"app","environment":"production","isClient":false,"level":"info","message":"[HOMEPAGE] Starting to load, environment: [HOMEPAGE] Starting to load, environment:","service":"describe-it","timestamp":"2025-10-08T06:22:43.460Z"}
+{"context":"auth","environment":"production","forceUpdateCounter":0,"isAuthenticated":false,"level":"info","message":"[AuthProvider] Creating new context value: [AuthProvider] Creating new context value:","refreshKey":1759904563463,"service":"describe-it","timestamp":"2025-10-08T06:22:43.463Z","version":0}
+{"context":"app","environment":"production","level":"info","message":"[HOMEPAGE] Component initializing... [HOMEPAGE] Component initializing...","service":"describe-it","timestamp":"2025-10-08T06:22:43.470Z"}
+{"context":"performance","environment":"production","level":"info","message":"[PERFORMANCE] Initializing monitor for HomePage [PERFORMANCE] Initializing monitor for HomePage","service":"describe-it","timestamp":"2025-10-08T06:22:43.473Z"}
+{"context":"app","environment":"production","level":"info","message":"[HOMEPAGE] Rendering settings modal check: [HOMEPAGE] Rendering settings modal check:","service":"describe-it","showSettings":false,"timestamp":"2025-10-08T06:22:43.477Z"}
+ ⚠ Unsupported metadata viewport is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+   Generating static pages (24/33) 
+{"context":"database","environment":"production","level":"info","message":"[Supabase] Creating server-side client instance [Supabase] Creating server-side client instance","service":"describe-it","timestamp":"2025-10-08T06:22:43.687Z"}
+ ⚠ Unsupported metadata viewport is configured in metadata export in /sentry-example-page. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /sentry-example-page. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata viewport is configured in metadata export in /test-api-key. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+ ⚠ Unsupported metadata themeColor is configured in metadata export in /test-api-key. Please move it to viewport export instead.
+Read more: https://nextjs.org/docs/app/api-reference/functions/generate-viewport
+{"context":"auth","environment":"production","forceUpdateCounter":0,"isAuthenticated":false,"level":"info","message":"[AuthProvider] Creating new context value: [AuthProvider] Creating new context value:","refreshKey":1759904563875,"service":"describe-it","timestamp":"2025-10-08T06:22:43.875Z","version":0}
+{"context":"auth","environment":"production","forceUpdateCounter":0,"isAuthenticated":false,"level":"info","message":"[AuthProvider] Creating new context value: [AuthProvider] Creating new context value:","refreshKey":1759904563936,"service":"describe-it","timestamp":"2025-10-08T06:22:43.936Z","version":0}
+ ✓ Generating static pages (33/33)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS
+┌ ○ /                                    63.5 kB         337 kB
+├ ○ /_not-found                          1.01 kB         216 kB
+├ ○ /admin                                 341 B         216 kB
+├ ƒ /api/admin/analytics                   233 B         216 kB
+├ ƒ /api/analytics                         233 B         216 kB
+├ ƒ /api/analytics/dashboard               233 B         216 kB
+├ ƒ /api/analytics/export                  233 B         216 kB
+├ ƒ /api/analytics/web-vitals              233 B         216 kB
+├ ƒ /api/analytics/ws                      233 B         216 kB
+├ ƒ /api/auth/admin-reset                  233 B         216 kB
+├ ƒ /api/auth/mock-signup                  233 B         216 kB
+├ ƒ /api/auth/signin                       233 B         216 kB
+├ ƒ /api/auth/signup                       233 B         216 kB
+├ ƒ /api/auth/simple-signup                233 B         216 kB
+├ ƒ /api/auth/test-env                     233 B         216 kB
+├ ƒ /api/cache/status                      233 B         216 kB
+├ ƒ /api/descriptions/generate             233 B         216 kB
+├ ƒ /api/env-status                        233 B         216 kB
+├ ƒ /api/error-report                      233 B         216 kB
+├ ƒ /api/example/error-handling            233 B         216 kB
+├ ƒ /api/export/generate                   233 B         216 kB
+├ ƒ /api/health                            233 B         216 kB
+├ ƒ /api/images/proxy                      233 B         216 kB
+├ ƒ /api/images/search                     233 B         216 kB
+├ ƒ /api/images/search-edge                233 B         216 kB
+├ ƒ /api/images/test                       233 B         216 kB
+├ ƒ /api/metrics                           233 B         216 kB
+├ ƒ /api/monitoring/health                 233 B         216 kB
+├ ƒ /api/monitoring/metrics                233 B         216 kB
+├ ƒ /api/monitoring/resource-usage         233 B         216 kB
+├ ƒ /api/phrases/extract                   233 B         216 kB
+├ ƒ /api/progress/track                    233 B         216 kB
+├ ƒ /api/qa/generate                       233 B         216 kB
+├ ƒ /api/sentry-example-api                233 B         216 kB
+├ ƒ /api/settings/apikeys                  233 B         216 kB
+├ ƒ /api/settings/save                     233 B         216 kB
+├ ƒ /api/settings/sync                     233 B         216 kB
+├ ƒ /api/status                            233 B         216 kB
+├ ƒ /api/storage/cleanup                   233 B         216 kB
+├ ƒ /api/translate                         233 B         216 kB
+├ ƒ /api/vocabulary/save                   233 B         216 kB
+├ ƒ /auth/callback                         233 B         216 kB
+├ ○ /dashboard                             345 B         216 kB
+├ ○ /sentry-example-page                 2.68 kB         218 kB
+├ ○ /test-api-key                        1.33 kB         219 kB
+└ ○ /test-auth                           3.14 kB         221 kB
++ First Load JS shared by all             215 kB
+  ├ chunks/4bd1b696-100b9d70ed4e49c1.js  54.2 kB
+  ├ chunks/52774a7f-9adbbe199f6ac74b.js  37.9 kB
+  ├ chunks/6731-11db07d327da1f22.js       120 kB
+  └ other shared chunks (total)          2.83 kB
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+> describe-it@0.1.0 postbuild
+> echo 'Build completed successfully'
+
+'Build completed successfully'

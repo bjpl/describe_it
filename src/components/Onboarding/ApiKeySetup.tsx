@@ -216,7 +216,7 @@ export default function ApiKeySetup({
             variants={itemVariants}
             className="text-gray-600 dark:text-gray-300 max-w-2xl mx-auto"
           >
-            Connect your API keys to unlock enhanced features. Don't worry - this step is optional 
+            Connect your API keys to unlock enhanced features. Don&apos;t worry - this step is optional
             and you can always add them later in settings.
           </motion.p>
         </div>
@@ -233,7 +233,7 @@ export default function ApiKeySetup({
                 Your Keys Are Secure
               </h4>
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                API keys are encrypted and stored securely. They're only used to enhance your learning experience 
+                API keys are encrypted and stored securely. They&apos;re only used to enhance your learning experience
                 and are never shared with third parties.
               </p>
             </div>
@@ -364,7 +364,7 @@ export default function ApiKeySetup({
           className="text-center mt-8 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg max-w-2xl mx-auto"
         >
           <p className="text-sm text-gray-600 dark:text-gray-300">
-            <strong>Don't have API keys?</strong> No problem! You can still use the app with demo content 
+            <strong>Don&apos;t have API keys?</strong> No problem! You can still use the app with demo content
             and add your keys later from the settings page.
           </p>
         </motion.div>

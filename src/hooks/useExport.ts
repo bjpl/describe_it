@@ -20,7 +20,7 @@ export function useExport() {
           message: "Export functionality would gather data here",
         };
 
-        const content = safeStringify(data, null, 2);
+        const content = safeStringify(data, '{}');
         return new Blob([content], { type: "application/json" });
       } catch (err) {
         const errorMessage =

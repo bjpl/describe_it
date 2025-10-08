@@ -99,9 +99,9 @@ export async function validateApiKey(apiKey: string, provider: 'openai' | 'anthr
     logger.securityEvent('API_KEY_VALIDATION', {
       provider,
       valid: false,
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     }, false);
-    
+
     return { isValid: false };
   }
 }
@@ -221,9 +221,9 @@ export async function getSecureApiKey(keyName: string, userProvidedKey?: string)
     logger.securityEvent('NO_VALID_API_KEY', { keyName }, false);
     return null;
   } catch (error) {
-    logger.securityEvent('API_KEY_RETRIEVAL_ERROR', { 
-      keyName, 
-      error: error.message 
+    logger.securityEvent('API_KEY_RETRIEVAL_ERROR', {
+      keyName,
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, false);
     return null;
   }
@@ -312,7 +312,7 @@ export async function checkRateLimit(
   } catch (error) {
     logger.securityEvent('RATE_LIMIT_ERROR', {
       identifier: CryptoUtils.hash(identifier, { algorithm: 'sha256' }),
-      error: error.message,
+      error: error instanceof Error ? error.message : 'Unknown error',
     }, false);
     
     // Fail open for now
@@ -473,10 +473,10 @@ export function withSecurity(
 
     } catch (error) {
       const responseTime = performance.now() - startTime;
-      
+
       logger.securityEvent('SECURITY_MIDDLEWARE_ERROR', {
         requestId,
-        error: error.message,
+        error: error instanceof Error ? error.message : 'Unknown error',
         responseTime: responseTime.toFixed(2),
       }, false);
 
@@ -502,9 +502,9 @@ export function generateClientFingerprint(request: NextRequest): string {
     request.headers.get('accept') || '',
     request.headers.get('accept-language') || '',
     request.headers.get('accept-encoding') || '',
-    request.ip || request.headers.get('x-forwarded-for') || '',
+    request.headers.get('x-forwarded-for') || '',
   ];
-  
+
   return CryptoUtils.hash(components.join('|'), { algorithm: 'sha256' });
 }
 
@@ -560,9 +560,9 @@ export async function cleanupSecurityManagers(): Promise<void> {
       await sessionManager.close();
       sessionManager = null;
     }
-    
+
     logger.info('Security managers cleaned up successfully');
   } catch (error) {
-    logger.error('Error during security cleanup', { error: error.message });
+    logger.error('Error during security cleanup', { error: error instanceof Error ? error.message : 'Unknown error' });
   }
 }

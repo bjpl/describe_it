@@ -34,7 +34,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
       const { authManager } = require('../../lib/auth/authManager');
       zustandState = authManager.getState();
     } catch (error) {
-      authLogger.warn('Could not access authManager:', error);
+      authLogger.warn('Could not access authManager:', { error: error instanceof Error ? error.message : String(error) });
     }
     
     let localStorageData = null;
@@ -116,21 +116,22 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
         setDebugState(captureDebugState());
       });
     } catch (error) {
-      authLogger.warn('Could not subscribe to authManager:', error);
+      authLogger.warn('Could not subscribe to authManager:', { error: error instanceof Error ? error.message : String(error) });
     }
 
     return () => {
       clearInterval(interval);
       unsubscribe();
     };
-  }, [isVisible, authContext]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible, authContext]); // captureDebugState is stable
 
   if (!isVisible || !debugState) {
     return null;
   }
 
   const formatJson = (obj: any) => {
-    return safeStringify(obj, null, 2);
+    return safeStringify(obj, '{}');
   };
 
   const getStatusColor = (hasDiscrepancies: boolean) => {
@@ -236,7 +237,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
                     const { authManager } = require('../../lib/auth/authManager');
                     authManager.getState().signOut();
                   } catch (error) {
-                    authLogger.warn('Could not access authManager for signOut:', error);
+                    authLogger.warn('Could not access authManager for signOut:', { error: error instanceof Error ? error.message : String(error) });
                   }
                 }}
                 style={{

@@ -347,7 +347,7 @@ const EnhancedExportManager: React.FC<{
       },
     };
 
-    const blob = new Blob([safeStringify(exportedData, null, 2)], {
+    const blob = new Blob([safeStringify(exportedData, '{}')], {
       type: "application/json",
     });
 
@@ -730,7 +730,7 @@ const EnhancedExportManager: React.FC<{
                     animate={{ opacity: 1 }}
                     className="bg-gray-900 text-gray-100 rounded-lg p-4 text-xs font-mono overflow-x-auto"
                   >
-                    <pre>{safeStringify(previewData, null, 2)}</pre>
+                    <pre>{safeStringify(previewData, '{}')}</pre>
                   </MotionDiv>
                 )}
               </div>

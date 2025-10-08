@@ -145,3 +145,16 @@ export function safeParseLimited<T = any>(
   }
   return safeParse<T>(text);
 }
+
+/**
+ * Convert unknown error to safe log context
+ * Useful for passing errors to logger methods that expect LogContext
+ * @param error - Unknown error value
+ * @returns Safe log context object
+ */
+export function toLogContext(error: unknown): { error: string } {
+  if (error instanceof Error) {
+    return { error: error.message };
+  }
+  return { error: String(error) };
+}
