@@ -386,7 +386,7 @@ export const validateEnvironment = (): void => {
 // =============================================================================
 
 // Default export for convenience
-export default {
+const envConfig = {
   client: clientEnv,
   server: serverEnv,
   all: env,
@@ -402,6 +402,8 @@ export default {
   getDebugAllowedIPs,
   validateEnvironment,
 };
+
+export default envConfig;
 
 // Re-export types for convenience
 export type { ClientEnv, ServerEnv, Env };

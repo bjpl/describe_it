@@ -6,6 +6,7 @@
 
 import { SupabaseClient } from "@supabase/supabase-js";
 import { supabase } from '../supabase/client';
+import { logger } from '@/lib/logger';
 import type {
   DatabaseUser,
   SessionType,
@@ -348,7 +349,7 @@ export class DatabaseService {
 
   private log(message: string, level: "info" | "warn" | "error" = "info") {
     if (this.config.enableLogging) {
-      console[level](`[DatabaseService] ${message}`);
+      logger[level](`[DatabaseService] ${message}`);
     }
   }
 

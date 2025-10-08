@@ -780,6 +780,74 @@ export interface Database {
           }
         ]
       }
+      analytics_events: {
+        Row: {
+          id: string
+          event_name: string
+          event_type: string | null
+          user_id: string | null
+          user_tier: string | null
+          session_id: string | null
+          timestamp: string
+          created_at: string
+          properties: Json | null
+          user_agent: string | null
+          ip_address: string | null
+          referrer: string | null
+          page_path: string | null
+          severity: string | null
+          error_message: string | null
+          error_stack: string | null
+          duration_ms: number | null
+        }
+        Insert: {
+          id?: string
+          event_name: string
+          event_type?: string | null
+          user_id?: string | null
+          user_tier?: string | null
+          session_id?: string | null
+          timestamp?: string
+          created_at?: string
+          properties?: Json | null
+          user_agent?: string | null
+          ip_address?: string | null
+          referrer?: string | null
+          page_path?: string | null
+          severity?: string | null
+          error_message?: string | null
+          error_stack?: string | null
+          duration_ms?: number | null
+        }
+        Update: {
+          id?: string
+          event_name?: string
+          event_type?: string | null
+          user_id?: string | null
+          user_tier?: string | null
+          session_id?: string | null
+          timestamp?: string
+          created_at?: string
+          properties?: Json | null
+          user_agent?: string | null
+          ip_address?: string | null
+          referrer?: string | null
+          page_path?: string | null
+          severity?: string | null
+          error_message?: string | null
+          error_stack?: string | null
+          duration_ms?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'analytics_events_user_id_fkey'
+            columns: ['user_id']
+            isOneToOne: false
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

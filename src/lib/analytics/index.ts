@@ -43,9 +43,12 @@ export function useAnalytics(componentName: string) {
       },
     });
 
+    // Copy ref value to use in cleanup
+    const startTime = mountTime.current;
+
     return () => {
       // Track component unmount with duration
-      const duration = Date.now() - mountTime.current;
+      const duration = Date.now() - startTime;
       trackEvent({
         eventName: 'component_render',
         timestamp: Date.now(),

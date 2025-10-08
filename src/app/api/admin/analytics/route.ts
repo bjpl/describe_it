@@ -79,7 +79,8 @@ async function getAnalyticsData() {
     const totalSessions = Array.isArray(sessionData) ? sessionData.length : 0;
     const avgSessionDuration = Array.isArray(sessionData) && totalSessions > 0
       ? sessionData.reduce((acc, session) => {
-          return acc + ('properties' in session && session.properties?.sessionDuration || 0);
+          const props = session.properties as Record<string, any> | null;
+          return acc + (props?.sessionDuration || 0);
         }, 0) / totalSessions
       : 0;
 
@@ -92,8 +93,9 @@ async function getAnalyticsData() {
     const featureUsage = Array.isArray(featureData)
       ? featureData.reduce((acc, event) => {
           if ('properties' in event) {
-            const featureName = event.properties?.featureName;
-            if (featureName) {
+            const props = event.properties as Record<string, any> | null;
+            const featureName = props?.featureName;
+            if (featureName && typeof featureName === 'string') {
               acc[featureName] = (acc[featureName] || 0) + 1;
             }
           }
@@ -152,7 +154,10 @@ async function getErrorData() {
 
     const totalErrors = Array.isArray(errorEvents) ? errorEvents.length : 0;
     const criticalErrors = Array.isArray(errorEvents)
-      ? errorEvents.filter(e => 'properties' in e && e.properties?.severity === 'critical').length
+      ? errorEvents.filter(e => {
+          const props = e.properties as Record<string, any> | null;
+          return props?.severity === 'critical';
+        }).length
       : 0;
 
     // Calculate error rate (errors per 100 requests)
@@ -168,8 +173,9 @@ async function getErrorData() {
     const errorTypes = Array.isArray(errorEvents)
       ? errorEvents.reduce((acc, event) => {
           if ('properties' in event) {
-            const message = event.properties?.errorMessage || 'Unknown error';
-            const severity = event.properties?.severity || 'medium';
+            const props = event.properties as Record<string, any> | null;
+            const message = (props?.errorMessage || 'Unknown error') as string;
+            const severity = (props?.severity || 'medium') as string;
             const key = `${message.substring(0, 100)}...`;
 
             if (!acc[key]) {
@@ -258,7 +264,10 @@ async function getPerformanceData() {
 
     const responseTimes = Array.isArray(apiEvents)
       ? apiEvents
-          .map(e => 'properties' in e ? e.properties?.responseTime : null)
+          .map(e => {
+            const props = e.properties as Record<string, any> | null;
+            return props?.responseTime;
+          })
           .filter((t): t is number => typeof t === 'number')
       : [];
     const avgResponseTime = responseTimes.length > 0
@@ -285,7 +294,7 @@ async function getPerformanceData() {
 
     const latestVitals =
       Array.isArray(vitalsEvents) && vitalsEvents.length > 0 && 'properties' in vitalsEvents[0]
-        ? vitalsEvents[0].properties?.vitals || {}
+        ? (vitalsEvents[0].properties as Record<string, any> | null)?.vitals || {}
         : {};
     const webVitals = {
       fcp: latestVitals.fcp || 0,

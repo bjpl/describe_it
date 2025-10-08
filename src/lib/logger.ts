@@ -164,7 +164,6 @@ if (typeof window === 'undefined' && !isEdgeRuntime) {
       silly: 'grey',
     });
 // Logger fallback when Winston initialization fails
-    // eslint-disable-next-line custom-rules/require-logger, no-console
   } catch (error) {
     console.error('Failed to initialize Winston logger:', error);
   }
@@ -281,7 +280,6 @@ class Logger {
   private writeToConsole(level: LogLevel, message: string, data: any): void {
     if (process.env.NODE_ENV === 'test') return;
 // Logger fallback console output (used when Winston is not available)
-    // eslint-disable-next-line custom-rules/require-logger, no-console
 
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}] [${this.context}]`;

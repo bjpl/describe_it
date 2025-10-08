@@ -186,8 +186,8 @@ export class DataSanitizer {
       }
 
       // Sanitize the URL string
-      let sanitized = urlObj.toString();
-      
+      const sanitized = urlObj.toString();
+
       // Remove any javascript: or data: schemes that might have slipped through
       if (/javascript:|data:|vbscript:/i.test(sanitized)) {
         return null;
@@ -207,7 +207,7 @@ export class DataSanitizer {
       return null;
     }
 
-    let sanitized = email.toLowerCase().trim();
+    const sanitized = email.toLowerCase().trim();
 
     // Basic email regex validation
     const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;

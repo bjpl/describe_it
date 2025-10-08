@@ -16,7 +16,7 @@ function createSupabaseClient() {
   if (typeof window !== 'undefined') {
     // Browser client with persistent sessions
     dbLogger.info('[Supabase] Creating browser client instance');
-    return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    return createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -33,7 +33,7 @@ function createSupabaseClient() {
   } else {
     // Server-side client (SSR) without persistent sessions
     dbLogger.info('[Supabase] Creating server-side client instance');
-    return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    return createClient<Database>(supabaseUrl!, supabaseAnonKey!, {
       auth: {
         persistSession: false,
         autoRefreshToken: false,
@@ -175,7 +175,7 @@ export const realtimeHelpers = {
     filter?: string,
     callback?: (payload: any) => void
   ) {
-    let subscription = supabase
+    const subscription = supabase
       .channel(`${table}-changes`)
       .on(
         'postgres_changes',
@@ -248,7 +248,7 @@ export const dbHelpers = {
         .select(`
           *
         `)
-        .eq('id', userId)
+        .eq('id' as any, userId)
         .single()
 
       if (error) throw error
@@ -272,7 +272,7 @@ export const dbHelpers = {
           phrases (*),
           questions (*)
         `)
-        .eq('user_id', userId)
+        .eq('user_id' as any, userId)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
@@ -293,7 +293,7 @@ export const dbHelpers = {
       const { data, error } = await supabase
         .from('learning_progress')
         .select('*')
-        .eq('user_id', userId)
+        .eq('user_id' as any, userId)
 
       if (error) throw error
       return data
@@ -347,7 +347,7 @@ export const dbHelpers = {
     try {
       const { data, error } = await supabase
         .from('descriptions')
-        .insert(description)
+        .insert(description as any)
         .select()
         .single()
 
@@ -369,8 +369,8 @@ export const dbHelpers = {
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
+        } as any)
+        .eq('id' as any, id)
         .select()
         .single()
 
@@ -390,7 +390,7 @@ export const dbHelpers = {
       const { error } = await supabase
         .from('descriptions')
         .delete()
-        .eq('id', id)
+        .eq('id' as any, id)
 
       if (error) throw error
     } catch (error) {

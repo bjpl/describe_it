@@ -4,6 +4,12 @@ import path from 'path'
 
 export default defineConfig({
   plugins: [react()],
+  esbuild: {
+    jsx: 'automatic',
+    jsxImportSource: 'react',
+    // Allow JSX in .ts files (not just .tsx)
+    loader: 'tsx'
+  },
   test: {
     globals: true,
     environment: 'jsdom',

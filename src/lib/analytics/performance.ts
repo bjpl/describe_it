@@ -296,12 +296,12 @@ export function withPerformanceTracking<P extends object>(
   
   const PerformanceTrackedComponent = (props: P) => {
     const startTime = performance.now();
-    
+
     React.useEffect(() => {
       const renderTime = performance.now() - startTime;
       performanceMonitor.trackComponentRender(displayName, renderTime);
-    }, []);
-    
+    }, [startTime]);
+
     return React.createElement(WrappedComponent, props);
   };
   

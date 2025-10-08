@@ -791,9 +791,9 @@ export const useUndoRedoRegistration = (
         return useStore.subscribe(callback);
       }
     };
-    
+
     registerStore(storeKey, storeInterface, strategy);
-    
+
     // Set selective props if provided
     if (strategy === 'selective' && selectiveProps) {
       useUndoRedoStore.setState((state) => ({
@@ -806,9 +806,9 @@ export const useUndoRedoRegistration = (
         }
       }));
     }
-    
+
     return () => unregisterStore(storeKey);
-  }, [storeKey, registerStore, unregisterStore, strategy, selectiveProps]);
+  }, [storeKey, registerStore, unregisterStore, strategy, selectiveProps, useStore]);
 };
 
 // Keyboard shortcuts for undo/redo

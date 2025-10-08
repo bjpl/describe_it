@@ -317,7 +317,7 @@ export function withMetrics(handler: Function) {
   };
 }
 
-export default {
+const prometheusMetrics = {
   apiRequestCounter,
   apiRequestDuration,
   apiErrorCounter,
@@ -353,3 +353,5 @@ export default {
   clearMetrics,
   withMetrics
 };
+
+export default prometheusMetrics;

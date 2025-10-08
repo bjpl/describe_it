@@ -3,7 +3,7 @@ import { logger } from '@/lib/logger';
 // Cloudflare Worker for CDN edge caching and optimization
 // Deploy this to Cloudflare Workers for global edge caching
 
-export default {
+const cloudflareWorker = {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const cache = caches.default;
@@ -82,6 +82,8 @@ export default {
   },
 };
 
+export default cloudflareWorker;
+
 // Advanced caching configuration
 const CACHE_CONFIG = {
   // Cache TTL by content type
@@ -149,9 +151,9 @@ export const imageOptimizationWorker = {
     // Create cache key for optimized image
     const cacheKey = `img:${imageUrl}:${width}:${height}:${quality}:${format}`;
     const cache = caches.default;
-    
+
     // Check cache
-    let response = await cache.match(cacheKey);
+    const response = await cache.match(cacheKey);
     if (response) {
       return response;
     }
@@ -277,8 +279,8 @@ export const optimizedWorker = {
     if (url.pathname.startsWith('/geo/')) {
       return geoRoutingWorker.fetch(request, env, ctx);
     }
-    
+
     // Default caching behavior
-    return exports.default.fetch(request, env, ctx);
+    return cloudflareWorker.fetch(request, env, ctx);
   },
 };

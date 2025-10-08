@@ -85,7 +85,7 @@ export function createShallowSelector<T, R>(
           lastStateRef.current = state;
           return result;
         },
-        [selector] as any[]
+        []
       )
     );
   };

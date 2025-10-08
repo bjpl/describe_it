@@ -260,12 +260,12 @@ export class ErrorTracker {
    * Get errors by fingerprint
    */
   getErrorsByFingerprint(fingerprint: string): ErrorReport[] {
-    let matchingErrors: ErrorReport[] = [];
-    
+    const matchingErrors: ErrorReport[] = [];
+
     this.errorStore.forEach(errors => {
       matchingErrors.push(...errors.filter(error => error.fingerprint === fingerprint));
     });
-    
+
     return matchingErrors.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
   }
 
@@ -273,12 +273,12 @@ export class ErrorTracker {
    * Get recent errors
    */
   getRecentErrors(count: number = 50): ErrorReport[] {
-    let allErrors: ErrorReport[] = [];
-    
+    const allErrors: ErrorReport[] = [];
+
     this.errorStore.forEach(errors => {
       allErrors.push(...errors);
     });
-    
+
     return allErrors
       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
       .slice(0, count);
