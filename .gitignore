@@ -121,6 +121,13 @@ HYDRATION_DEBUGGING_SUMMARY.md
 test-json-parser.js
 
 
+
+# Removed Windows wrapper files per user request
+hive-mind-prompt-*.txt
+
+# Sentry Config File
+.env.sentry-build-plugin
+
 # Claude Flow generated files
 .claude/settings.local.json
 .mcp.json
@@ -147,6 +154,3 @@ coordination/orchestration/*
 claude-flow
 # Removed Windows wrapper files per user request
 hive-mind-prompt-*.txt
-
-# Sentry Config File
-.env.sentry-build-plugin
