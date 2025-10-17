@@ -77,52 +77,103 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   }, []);
 
   // Create new vocabulary set
-  const createVocabularySet = useCallback(() => {
-    if (!newSetName.trim() || savedPhrases.length === 0) return;
+  const createVocabularySet = useCallback(async () => {
+    if (!newSetName.trim() || savedPhrases.length === 0) {
+      throw new Error("Please provide a set name and ensure you have phrases to save");
+    }
 
-    const newSet: VocabularySet = {
-      id: `set_${Date.now()}`,
-      name: newSetName,
-      description: `Study set created from ${savedPhrases.length} saved phrases`,
-      phrases: savedPhrases.map((phrase) => ({
-        ...phrase,
-        savedAt: new Date(),
-        studyProgress: {
-          correctAnswers: 0,
-          totalAttempts: 0,
+    try {
+      // Map savedPhrases to vocabulary items format expected by the API
+      const vocabularyItems = savedPhrases.map((phrase) => ({
+        id: phrase.id || `phrase_${Date.now()}_${Math.random()}`,
+        phrase: phrase.phrase,
+        definition: phrase.definition,
+        category: phrase.category || 'general',
+        partOfSpeech: phrase.partOfSpeech,
+        difficulty: phrase.difficulty || 'beginner' as 'beginner' | 'intermediate' | 'advanced',
+        context: phrase.context,
+        translation: phrase.translation || phrase.definition,
+        notes: phrase.notes,
+        tags: phrase.tags || [],
+        examples: phrase.examples || [],
+      }));
+
+      // Save vocabulary items to database via API
+      const response = await fetch('/api/vocabulary/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-      })) as SavedPhrase[],
-      createdAt: new Date(),
-      lastModified: new Date(),
-      studyStats: {
-        totalPhrases: savedPhrases.length,
-        masteredPhrases: 0,
-        reviewsDue: savedPhrases.length,
-        averageProgress: 0,
-      },
-    };
+        body: JSON.stringify({
+          vocabularyItems,
+          collectionName: newSetName,
+          metadata: {
+            source: 'vocabulary_builder',
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      });
 
-    // Save to storage
-    const updatedSets = [...vocabularySets, newSet];
-    setVocabularySets(updatedSets);
-    VocabularyStorage.saveVocabularySets(updatedSets);
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || errorData.error || `Failed to save vocabulary set: ${response.statusText}`);
+      }
 
-    // Create review items for spaced repetition
-    const newReviewItems = newSet.phrases.map((phrase) =>
-      SpacedRepetitionSystem.createReviewItem(
-        phrase.id,
-        phrase.phrase,
-        phrase.definition,
-      ),
-    );
-    const updatedReviewItems = [...reviewItems, ...newReviewItems];
-    setReviewItems(updatedReviewItems);
-    VocabularyStorage.saveReviewItems(updatedReviewItems);
+      const result = await response.json();
 
-    setCurrentSet(newSet);
-    setNewSetName("");
-    setShowCreateSet(false);
-  }, [newSetName, savedPhrases, vocabularySets, reviewItems]);
+      // Create new set object from API response
+      const newSet: VocabularySet = {
+        id: `set_${Date.now()}`,
+        name: newSetName,
+        description: `Study set created from ${savedPhrases.length} saved phrases`,
+        phrases: savedPhrases.map((phrase) => ({
+          ...phrase,
+          savedAt: new Date(),
+          studyProgress: {
+            correctAnswers: 0,
+            totalAttempts: 0,
+          },
+        })) as SavedPhrase[],
+        createdAt: new Date(),
+        lastModified: new Date(),
+        studyStats: {
+          totalPhrases: savedPhrases.length,
+          masteredPhrases: 0,
+          reviewsDue: savedPhrases.length,
+          averageProgress: 0,
+        },
+      };
+
+      // Update local state
+      const updatedSets = [...vocabularySets, newSet];
+      setVocabularySets(updatedSets);
+
+      // Also save to localStorage for offline access and backward compatibility
+      VocabularyStorage.saveVocabularySets(updatedSets);
+
+      // Create review items for spaced repetition
+      const newReviewItems = newSet.phrases.map((phrase) =>
+        SpacedRepetitionSystem.createReviewItem(
+          phrase.id,
+          phrase.phrase,
+          phrase.definition,
+        ),
+      );
+      const updatedReviewItems = [...reviewItems, ...newReviewItems];
+      setReviewItems(updatedReviewItems);
+      VocabularyStorage.saveReviewItems(updatedReviewItems);
+
+      setCurrentSet(newSet);
+      setNewSetName("");
+      setShowCreateSet(false);
+
+      // Clear saved phrases after successful save
+      onUpdatePhrases([]);
+    } catch (error) {
+      console.error("Failed to create vocabulary set:", error);
+      throw error; // Re-throw to be handled by the form component
+    }
+  }, [newSetName, savedPhrases, vocabularySets, reviewItems, onUpdatePhrases]);
 
   // Start study session
   const startStudySession = useCallback(

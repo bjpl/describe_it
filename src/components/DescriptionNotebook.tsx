@@ -4,7 +4,7 @@
 import React, { useState, useCallback, useMemo, memo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
-import { Loader2, RefreshCw, Copy, Check } from "lucide-react";
+import { Loader2, RefreshCw, Copy, Check, Save } from "lucide-react";
 import {
   DescriptionStyle,
   StyleDescription,
@@ -90,6 +90,11 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
       showSpanish: true,
     });
   const [copiedText, setCopiedText] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<{
+    message: string;
+    type: 'success' | 'error' | null;
+  }>({ message: '', type: null });
 
   const handleStyleSelect = useCallback((style: DescriptionStyle) => {
     setActiveStyle(style);
@@ -191,6 +196,56 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
     [activeStyle],
   );
 
+  const handleSaveDescription = useCallback(async () => {
+    if (!image || !activeDescription.english || !activeDescription.spanish) {
+      setSaveStatus({
+        message: 'Please generate a description before saving',
+        type: 'error',
+      });
+      setTimeout(() => setSaveStatus({ message: '', type: null }), 3000);
+      return;
+    }
+
+    setIsSaving(true);
+    setSaveStatus({ message: '', type: null });
+
+    try {
+      const response = await fetch('/api/descriptions/saved', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: safeStringify({
+          image_id: image.id,
+          image_url: image.urls?.regular || image.urls.small,
+          style: activeStyle,
+          description_english: activeDescription.english,
+          description_spanish: activeDescription.spanish,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to save description');
+      }
+
+      setSaveStatus({
+        message: 'Description saved successfully!',
+        type: 'success',
+      });
+
+      setTimeout(() => setSaveStatus({ message: '', type: null }), 3000);
+    } catch (error) {
+      logger.error('Failed to save description:', error);
+      setSaveStatus({
+        message: error instanceof Error ? error.message : 'Failed to save description',
+        type: 'error',
+      });
+      setTimeout(() => setSaveStatus({ message: '', type: null }), 5000);
+    } finally {
+      setIsSaving(false);
+    }
+  }, [image, activeDescription, activeStyle]);
+
   // Memoize expensive computations
   const activeDescription = useMemo(
     () => descriptions[activeStyle],
@@ -221,9 +276,9 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
         disabled={!image}
       />
 
-      {/* Generate Button */}
+      {/* Action Buttons */}
       {hasImage && (
-        <div className="flex justify-center">
+        <div className="flex justify-center gap-4">
           <MotionButton
             onClick={() => handleGenerateDescription(activeStyle)}
             disabled={activeDescription.isLoading}
@@ -242,8 +297,43 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                 : "Generar Descripción"}
             </span>
           </MotionButton>
+
+          {(activeDescription.english || activeDescription.spanish) && (
+            <MotionButton
+              onClick={handleSaveDescription}
+              disabled={isSaving || activeDescription.isLoading}
+              className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors shadow-lg"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              {isSaving ? (
+                <Loader2 className="h-5 w-5 animate-spin" />
+              ) : (
+                <Save className="h-5 w-5" />
+              )}
+              <span>{isSaving ? "Guardando..." : "Guardar"}</span>
+            </MotionButton>
+          )}
         </div>
       )}
+
+      {/* Save Status Notification */}
+      <AnimatePresence>
+        {saveStatus.type && (
+          <MotionDiv
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className={`text-center py-2 px-4 rounded-lg ${
+              saveStatus.type === 'success'
+                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300'
+                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+            }`}
+          >
+            {saveStatus.message}
+          </MotionDiv>
+        )}
+      </AnimatePresence>
 
       {/* Description Display */}
       {hasImage && (

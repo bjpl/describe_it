@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
-import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 import { logger } from '@/lib/logger';
+import { APIClient } from '@/lib/api-client';
+import { useAuth } from '@/providers/AuthProvider';
 
 interface ProgressStats {
   total_points: number;
@@ -40,34 +41,7 @@ interface ProgressSummary {
   vocabulary_mastered: number;
 }
 
-const STORAGE_KEYS = {
-  PROGRESS_STATS: "describe_it_progress_stats",
-  STREAK_INFO: "describe_it_streak_info",
-  ANALYTICS: "describe_it_learning_analytics",
-  SESSION_DATA: "describe_it_session_data",
-  DAILY_PROGRESS: "describe_it_daily_progress",
-};
-
-// Helper to safely parse JSON from localStorage
-function getStorageItem<T>(key: string, defaultValue: T): T {
-  if (typeof window === "undefined") return defaultValue;
-  try {
-    const item = localStorage.getItem(key);
-    return item ? (safeParse(item) as T) : defaultValue;
-  } catch {
-    return defaultValue;
-  }
-}
-
-// Helper to save to localStorage
-function setStorageItem(key: string, value: any): void {
-  if (typeof window === "undefined") return;
-  try {
-    localStorage.setItem(key, safeStringify(value));
-  } catch (error) {
-    logger.error("Failed to save to localStorage:", error);
-  }
-}
+// Removed localStorage helpers - now using database API
 
 // Calculate trend based on historical data
 function calculateTrend(
@@ -117,359 +91,209 @@ function calculateAchievements(stats: any): string[] {
 export function useProgressStats() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<ProgressStats | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Load session data from localStorage
-    const sessionData = getStorageItem(STORAGE_KEYS.SESSION_DATA, {
-      total_sessions: 0,
-      total_points: 0,
-      accuracy_history: [],
-      weekly_points: [],
-      weekly_sessions: [],
-    });
+    const fetchProgressStats = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
 
-    const dailyProgress = getStorageItem(STORAGE_KEYS.DAILY_PROGRESS, {
-      date: new Date().toDateString(),
-      points: 0,
-      sessions: 0,
-      correct: 0,
-      total: 0,
-    });
+      try {
+        setIsLoading(true);
+        const response = await APIClient.getProgressStats(user.id);
 
-    // Calculate this week's stats
-    const today = new Date();
-    const weekAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
 
-    // If daily progress is from today, use it; otherwise reset
-    const isToday = dailyProgress.date === today.toDateString();
-    const todayPoints = isToday ? dailyProgress.points : 0;
-    const todaySessions = isToday ? dailyProgress.sessions : 0;
-    const todayAccuracy =
-      dailyProgress.total > 0
-        ? (dailyProgress.correct / dailyProgress.total) * 100
-        : 0;
+        if (response.data) {
+          const progressStats: ProgressStats = {
+            total_points: response.data.total_points || 0,
+            completion_rate: response.data.completion_rate || 0,
+            improvement_trend: response.data.improvement_trend || "stable",
+            this_week: {
+              points: response.data.this_week?.points || 0,
+              sessions: response.data.this_week?.sessions || 0,
+              accuracy: response.data.this_week?.accuracy || 0,
+            },
+            achievements: response.data.achievements || [],
+            next_milestones: response.data.next_milestones || {},
+          };
 
-    // Calculate completion rate from accuracy history
-    const completionRate =
-      sessionData.accuracy_history.length > 0
-        ? sessionData.accuracy_history.reduce(
-            (a: number, b: number) => a + b,
-            0,
-          ) / sessionData.accuracy_history.length
-        : 0;
-
-    // Determine improvement trend
-    const trend = calculateTrend(sessionData.accuracy_history || []);
-
-    // Calculate achievements
-    const achievements = calculateAchievements({
-      total_sessions: sessionData.total_sessions,
-      streak_current: getStorageItem(STORAGE_KEYS.STREAK_INFO, { current: 0 })
-        .current,
-      accuracy_rate: completionRate,
-      vocabulary_mastered: (sessionData as any).vocabulary_mastered || 0,
-    });
-
-    // Calculate next milestones
-    const nextMilestones: Record<string, any> = {};
-    const pointsToNextLevel =
-      Math.ceil(sessionData.total_points / 100 + 1) * 100;
-    nextMilestones.next_level = `${pointsToNextLevel} points`;
-
-    if (sessionData.total_sessions < 10) {
-      nextMilestones.next_achievement = "10 sessions for Regular Learner";
-    } else if (sessionData.total_sessions < 50) {
-      nextMilestones.next_achievement = "50 sessions for Dedicated Student";
-    } else if (sessionData.total_sessions < 100) {
-      nextMilestones.next_achievement = "100 sessions for Century Club";
-    }
-
-    const progressStats: ProgressStats = {
-      total_points: sessionData.total_points || 0,
-      completion_rate: completionRate,
-      improvement_trend: trend,
-      this_week: {
-        points: todayPoints,
-        sessions: todaySessions,
-        accuracy: todayAccuracy,
-      },
-      achievements,
-      next_milestones: nextMilestones,
+          setData(progressStats);
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load progress stats';
+        logger.error('Failed to fetch progress stats:', err);
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setData(progressStats);
-    setIsLoading(false);
-  }, []);
+    fetchProgressStats();
+  }, [user?.id]);
 
-  return { data, isLoading };
+  return { data, isLoading, error };
 }
 
 export function useStreakInfo() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<StreakInfo | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const storedStreak = getStorageItem(STORAGE_KEYS.STREAK_INFO, {
-      current: 0,
-      longest: 0,
-      last_activity: null,
-      today_completed: false,
-    });
-
-    const today = new Date().toDateString();
-    const lastActivity = storedStreak.last_activity;
-
-    // Check if streak should be reset
-    if (lastActivity) {
-      const lastDate = new Date(lastActivity);
-      const yesterday = new Date();
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (
-        lastDate.toDateString() !== today &&
-        lastDate.toDateString() !== yesterday.toDateString()
-      ) {
-        // Streak broken - reset current but keep longest
-        storedStreak.current = 0;
-        storedStreak.today_completed = false;
-      } else if (lastDate.toDateString() === today) {
-        storedStreak.today_completed = true;
+    const fetchStreakInfo = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
       }
-    }
 
-    const streakInfo: StreakInfo = {
-      current: storedStreak.current,
-      longest: Math.max(storedStreak.longest, storedStreak.current),
-      today_completed: storedStreak.today_completed,
+      try {
+        setIsLoading(true);
+        const response = await APIClient.getStreakInfo(user.id);
+
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (response.data) {
+          setData({
+            current: response.data.current,
+            longest: response.data.longest,
+            today_completed: response.data.today_completed,
+          });
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load streak info';
+        logger.error('Failed to fetch streak info:', err);
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    // Save updated streak info
-    setStorageItem(STORAGE_KEYS.STREAK_INFO, {
-      ...storedStreak,
-      longest: streakInfo.longest,
-    });
+    fetchStreakInfo();
+  }, [user?.id]);
 
-    setData(streakInfo);
-    setIsLoading(false);
-  }, []);
-
-  return { data, isLoading };
+  return { data, isLoading, error };
 }
 
 export function useLearningAnalytics() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<LearningAnalytics | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    // Load analytics from localStorage
-    const analytics = getStorageItem(STORAGE_KEYS.ANALYTICS, {
-      skill_scores: {
-        vocabulary: [],
-        grammar: [],
-        comprehension: [],
-        speaking: [],
-      },
-      recent_sessions: [],
-      phrases_learned: [],
-    });
-
-    // Calculate skill breakdown (average of recent scores)
-    const skillBreakdown: Record<string, number> = {};
-    Object.entries(analytics.skill_scores).forEach(([skill, scores]) => {
-      const recentScores = (scores as number[]).slice(-10); // Last 10 scores
-      if (recentScores.length > 0) {
-        skillBreakdown[skill] =
-          recentScores.reduce((a, b) => a + b, 0) / recentScores.length;
-      } else {
-        skillBreakdown[skill] = 0;
+    const fetchLearningAnalytics = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
       }
-    });
 
-    // Calculate recent activity (last 7 days)
-    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const recentSessions = analytics.recent_sessions.filter(
-      (session: any) => new Date(session.date).getTime() > weekAgo,
-    );
-    const recentPhrases = analytics.phrases_learned.filter(
-      (phrase: any) => new Date(phrase.date).getTime() > weekAgo,
-    );
+      try {
+        setIsLoading(true);
+        const response = await APIClient.getLearningAnalytics(user.id);
 
-    // Determine focus areas based on weakest skills
-    const sortedSkills = Object.entries(skillBreakdown)
-      .sort(([, a], [, b]) => a - b)
-      .slice(0, 3);
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
 
-    const focusAreas = sortedSkills.map(([skill, score]) => {
-      if (skill === "vocabulary" && score < 70)
-        return "Expand vocabulary practice";
-      if (skill === "grammar" && score < 70) return "Grammar patterns review";
-      if (skill === "comprehension" && score < 70)
-        return "Reading comprehension exercises";
-      if (skill === "speaking" && score < 70) return "Pronunciation practice";
-      return `Improve ${skill}`;
-    });
-
-    const learningAnalytics: LearningAnalytics = {
-      skill_breakdown: skillBreakdown,
-      recent_activity: {
-        sessions_last_week: recentSessions.length,
-        descriptions_completed: recentSessions.reduce(
-          (sum: number, s: any) => sum + (s.descriptions || 0),
-          0,
-        ),
-        new_phrases_learned: recentPhrases.length,
-      },
-      recommendations: {
-        focus_areas: focusAreas,
-      },
+        if (response.data) {
+          setData({
+            skill_breakdown: response.data.skill_breakdown || {},
+            recent_activity: {
+              sessions_last_week: response.data.recent_activity?.sessions_last_week || 0,
+              descriptions_completed: response.data.recent_activity?.descriptions_completed || 0,
+              new_phrases_learned: response.data.recent_activity?.new_phrases_learned || 0,
+            },
+            recommendations: {
+              focus_areas: response.data.recommendations?.focus_areas || [],
+            },
+          });
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load learning analytics';
+        logger.error('Failed to fetch learning analytics:', err);
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setData(learningAnalytics);
-    setIsLoading(false);
-  }, []);
+    fetchLearningAnalytics();
+  }, [user?.id]);
 
-  return { data, isLoading };
+  return { data, isLoading, error };
 }
 
 export function useProgressSummary() {
   const [isLoading, setIsLoading] = useState(true);
   const [data, setData] = useState<ProgressSummary | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
-    const sessionData = getStorageItem(STORAGE_KEYS.SESSION_DATA, {
-      total_sessions: 0,
-      total_descriptions: 0,
-      total_correct: 0,
-      total_attempts: 0,
-      vocabulary_mastered: 0,
-    });
+    const fetchProgressSummary = async () => {
+      if (!user?.id) {
+        setIsLoading(false);
+        return;
+      }
 
-    const accuracyRate =
-      sessionData.total_attempts > 0
-        ? (sessionData.total_correct / sessionData.total_attempts) * 100
-        : 0;
+      try {
+        setIsLoading(true);
+        const response = await APIClient.getProgressStats(user.id);
 
-    const summary: ProgressSummary = {
-      total_sessions: sessionData.total_sessions || 0,
-      total_descriptions: sessionData.total_descriptions || 0,
-      accuracy_rate: accuracyRate,
-      vocabulary_mastered: (sessionData as any).vocabulary_mastered || 0,
+        if (response.error) {
+          throw new Error(response.error.message);
+        }
+
+        if (response.data) {
+          const summary: ProgressSummary = {
+            total_sessions: response.data.total_sessions || 0,
+            total_descriptions: response.data.total_descriptions || 0,
+            accuracy_rate: response.data.accuracy_rate || 0,
+            vocabulary_mastered: response.data.vocabulary_mastered || 0,
+          };
+
+          setData(summary);
+        }
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load progress summary';
+        logger.error('Failed to fetch progress summary:', err);
+        setError(errorMessage);
+      } finally {
+        setIsLoading(false);
+      }
     };
 
-    setData(summary);
-    setIsLoading(false);
-  }, []);
+    fetchProgressSummary();
+  }, [user?.id]);
 
-  return { data, isLoading };
+  return { data, isLoading, error };
 }
 
 // Export function to update progress when user completes activities
-export function updateProgress(
+export async function updateProgress(
   type: "session" | "description" | "phrase" | "quiz",
   result?: any,
-) {
-  const sessionData = getStorageItem(STORAGE_KEYS.SESSION_DATA, {
-    total_sessions: 0,
-    total_points: 0,
-    total_descriptions: 0,
-    total_correct: 0,
-    total_attempts: 0,
-    vocabulary_mastered: 0,
-    accuracy_history: [],
-    weekly_points: [],
-    weekly_sessions: [],
-  });
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const response = await APIClient.updateProgressStats(type, result);
 
-  const dailyProgress = getStorageItem(STORAGE_KEYS.DAILY_PROGRESS, {
-    date: new Date().toDateString(),
-    points: 0,
-    sessions: 0,
-    correct: 0,
-    total: 0,
-  });
+    if (response.error) {
+      throw new Error(response.error.message);
+    }
 
-  const today = new Date().toDateString();
-
-  // Reset daily progress if it's a new day
-  if (dailyProgress.date !== today) {
-    dailyProgress.date = today;
-    dailyProgress.points = 0;
-    dailyProgress.sessions = 0;
-    dailyProgress.correct = 0;
-    dailyProgress.total = 0;
+    return { success: true };
+  } catch (err) {
+    const errorMessage = err instanceof Error ? err.message : 'Failed to update progress';
+    logger.error('Failed to update progress:', err);
+    return { success: false, error: errorMessage };
   }
-
-  switch (type) {
-    case "session":
-      sessionData.total_sessions += 1;
-      sessionData.total_points += 10;
-      dailyProgress.sessions += 1;
-      dailyProgress.points += 10;
-
-      // Update streak
-      const streakInfo = getStorageItem(STORAGE_KEYS.STREAK_INFO, {
-        current: 0,
-        longest: 0,
-        last_activity: null,
-        today_completed: false,
-      });
-
-      if (!streakInfo.today_completed) {
-        streakInfo.current += 1;
-        streakInfo.longest = Math.max(streakInfo.longest, streakInfo.current);
-        streakInfo.today_completed = true;
-      }
-      (streakInfo as any).last_activity = today;
-      setStorageItem(STORAGE_KEYS.STREAK_INFO, streakInfo);
-      break;
-
-    case "description":
-      sessionData.total_descriptions += 1;
-      sessionData.total_points += 5;
-      dailyProgress.points += 5;
-      break;
-
-    case "phrase":
-      sessionData.vocabulary_mastered += 1;
-      sessionData.total_points += 3;
-      dailyProgress.points += 3;
-
-      // Update analytics
-      const analytics = getStorageItem(STORAGE_KEYS.ANALYTICS, {
-        skill_scores: {
-          vocabulary: [],
-          grammar: [],
-          comprehension: [],
-          speaking: [],
-        },
-        recent_sessions: [],
-        phrases_learned: [],
-      });
-      (analytics as any).phrases_learned.push({ date: new Date(), phrase: result });
-      setStorageItem(STORAGE_KEYS.ANALYTICS, analytics);
-      break;
-
-    case "quiz":
-      if (result) {
-        sessionData.total_attempts += 1;
-        dailyProgress.total += 1;
-        if (result.correct) {
-          sessionData.total_correct += 1;
-          dailyProgress.correct += 1;
-          sessionData.total_points += 2;
-          dailyProgress.points += 2;
-        }
-
-        // Update accuracy history
-        const accuracy = result.correct ? 100 : 0;
-        (sessionData as any).accuracy_history.push(accuracy);
-        if ((sessionData as any).accuracy_history.length > 100) {
-          (sessionData as any).accuracy_history.shift(); // Keep only last 100
-        }
-      }
-      break;
-  }
-
-  setStorageItem(STORAGE_KEYS.SESSION_DATA, sessionData);
-  setStorageItem(STORAGE_KEYS.DAILY_PROGRESS, dailyProgress);
 }
