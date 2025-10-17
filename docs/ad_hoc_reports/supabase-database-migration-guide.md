@@ -29,7 +29,7 @@ Before you begin, ensure you have:
 3. ✅ Database connection established (green indicator in top-right)
 4. ✅ Migration SQL files located:
    - `docs/migrations/STEP-1-create-enums-only.sql`
-   - `docs/safe-migration-001-complete.sql`
+   - `docs/migrations/safe-migration-001-complete.sql`
 
 ---
 
@@ -95,7 +95,7 @@ WHERE typname IN (
 **Actions:**
 
 1. **Clear** the SQL Editor or open a new query tab
-2. **Copy** the entire contents of `docs/safe-migration-001-complete.sql`
+2. **Copy** the entire contents of `docs/migrations/safe-migration-001-complete.sql`
 3. **Paste** into the SQL Editor
 4. **Click** "Run" button (or press `Ctrl+Enter` / `Cmd+Enter`)
 5. **Wait** for execution to complete (~10-20 seconds)
@@ -456,7 +456,7 @@ ALTER TABLE users ENABLE ROW LEVEL SECURITY;
 
 **Migration Files Location:**
 - ENUMs: `docs/migrations/STEP-1-create-enums-only.sql`
-- Full Schema: `docs/safe-migration-001-complete.sql`
+- Full Schema: `docs/migrations/safe-migration-001-complete.sql`
 
 **Project Documentation:**
 - Database Setup Guide: `docs/setup/DATABASE_SETUP.md`
