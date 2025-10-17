@@ -18,7 +18,7 @@ export async function validateAuth(request: NextRequest) {
   // Full auth can be implemented once build is stable
   return {
     authenticated: true,
-    user: null
+    user: null,
   };
 }
 
@@ -26,6 +26,6 @@ export async function checkRateLimit(userId: string, tier: string = 'free') {
   // Simplified rate limiting
   return {
     allowed: true,
-    remaining: 100
+    remaining: 100,
   };
 }

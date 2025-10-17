@@ -9,9 +9,9 @@ import { kv } from '@vercel/kv';
 // Rate limit configuration
 const RATE_LIMITS = {
   description: {
-    points: 10,          // 10 requests
-    duration: 60,        // per minute
-    blockDuration: 300,  // block for 5 minutes on exceed
+    points: 10, // 10 requests
+    duration: 60, // per minute
+    blockDuration: 300, // block for 5 minutes on exceed
   },
   vocabulary: {
     points: 30,
@@ -24,9 +24,9 @@ const RATE_LIMITS = {
     blockDuration: 180,
   },
   auth: {
-    points: 5,           // Strict limit for auth endpoints
+    points: 5, // Strict limit for auth endpoints
     duration: 60,
-    blockDuration: 600,  // 10 minute block
+    blockDuration: 600, // 10 minute block
   },
 } as const;
 
@@ -44,7 +44,7 @@ interface RateLimitInfo {
 class MemoryRateLimiter {
   private limits = new Map<string, RateLimitInfo>();
 
-  async check(key: string, limit: typeof RATE_LIMITS[RateLimitType]): Promise<RateLimitInfo> {
+  async check(key: string, limit: (typeof RATE_LIMITS)[RateLimitType]): Promise<RateLimitInfo> {
     const now = Date.now();
     const existing = this.limits.get(key);
 
@@ -89,9 +89,12 @@ const memoryLimiter = new MemoryRateLimiter();
 
 // Cleanup memory limiter every 5 minutes
 if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    memoryLimiter.cleanup().catch(console.error);
-  }, 5 * 60 * 1000);
+  setInterval(
+    () => {
+      memoryLimiter.cleanup().catch(console.error);
+    },
+    5 * 60 * 1000
+  );
 }
 
 /**
@@ -126,7 +129,7 @@ function buildRateLimitKey(clientId: string, type: RateLimitType): string {
  */
 async function checkRateLimit(
   key: string,
-  limit: typeof RATE_LIMITS[RateLimitType]
+  limit: (typeof RATE_LIMITS)[RateLimitType]
 ): Promise<RateLimitInfo> {
   const hasKV = process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN;
 
@@ -187,7 +190,7 @@ async function checkRateLimit(
  */
 function addRateLimitHeaders(
   response: NextResponse,
-  limit: typeof RATE_LIMITS[RateLimitType],
+  limit: (typeof RATE_LIMITS)[RateLimitType],
   info: RateLimitInfo
 ): void {
   const remaining = Math.max(0, limit.points - info.count);

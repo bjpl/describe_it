@@ -13,13 +13,13 @@ const DEFAULT_TTL = parseInt(process.env.DEFAULT_CACHE_TTL || '3600', 10);
 
 // Cache TTL strategies (in seconds)
 export const CacheTTL = {
-  USER_PROGRESS: 5 * 60,        // 5 minutes
-  VOCABULARY_LIST: 10 * 60,     // 10 minutes
-  STATIC_CONTENT: 60 * 60,      // 1 hour
-  DESCRIPTION: 30 * 60,         // 30 minutes
-  SESSION: 15 * 60,             // 15 minutes
-  SHORT: 2 * 60,                // 2 minutes
-  DEFAULT: DEFAULT_TTL,         // From env
+  USER_PROGRESS: 5 * 60, // 5 minutes
+  VOCABULARY_LIST: 10 * 60, // 10 minutes
+  STATIC_CONTENT: 60 * 60, // 1 hour
+  DESCRIPTION: 30 * 60, // 30 minutes
+  SESSION: 15 * 60, // 15 minutes
+  SHORT: 2 * 60, // 2 minutes
+  DEFAULT: DEFAULT_TTL, // From env
 } as const;
 
 // In-memory cache fallback

@@ -42,10 +42,7 @@ export function withAuth(
       return handler(request, context);
     } catch (error) {
       authLogger.error('Auth middleware error:', error);
-      return NextResponse.json(
-        { error: 'Internal server error' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
     }
   };
 }
