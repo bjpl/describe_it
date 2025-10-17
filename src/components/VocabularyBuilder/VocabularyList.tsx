@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useCallback, useState, useEffect } from "react";
+import { memo, useCallback, useState, useEffect, useRef } from "react";
 import {
   Play,
   Star,
@@ -10,12 +10,21 @@ import {
   Trash2,
   Clock,
   AlertCircle,
-  Loader2
+  Loader2,
+  Upload
 } from "lucide-react";
 import { VocabularyListProps } from "./types";
 import { APIClient } from "@/lib/api-client";
 import type { VocabularyList as DBVocabularyList, VocabularyItem } from "@/types/database";
 import { logger } from "@/lib/logger";
+import {
+  exportToCSV,
+  exportToJSON,
+  importFromCSV,
+  importFromJSON,
+  validateImportedItems,
+  type VocabularyExportData
+} from "@/lib/vocabulary-export";
 
 interface VocabularyListWithItems extends DBVocabularyList {
   items: VocabularyItem[];
@@ -41,6 +50,9 @@ export const VocabularyList = memo<APIVocabularyListProps>(function VocabularyLi
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [importing, setImporting] = useState(false);
+  const [importError, setImportError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const MAX_RETRIES = 3;
 
   // Fetch vocabulary lists and their items
@@ -132,34 +144,125 @@ export const VocabularyList = memo<APIVocabularyListProps>(function VocabularyLi
   }, [onDeleteSet, fetchVocabularyData]);
 
   const handleExportCSV = useCallback((set: VocabularyListWithItems) => {
-    // Convert database format to legacy format for export
-    const legacySet = {
-      id: set.id,
-      name: set.name,
-      description: set.description,
-      phrases: set.items,
-      createdAt: new Date(set.created_at),
-    };
-    onExportSet(legacySet as any, "csv");
-  }, [onExportSet]);
+    try {
+      const exportData: VocabularyExportData = {
+        list: set,
+        items: set.items
+      };
+      exportToCSV(exportData);
+      logger.info("CSV export initiated", { setId: set.id, setName: set.name });
+    } catch (err) {
+      logger.error("CSV export failed", err);
+      setError("Failed to export CSV file");
+    }
+  }, []);
 
   const handleExportJSON = useCallback((set: VocabularyListWithItems) => {
-    // Convert database format to legacy format for export
-    const legacySet = {
-      id: set.id,
-      name: set.name,
-      description: set.description,
-      phrases: set.items,
-      createdAt: new Date(set.created_at),
-    };
-    onExportSet(legacySet as any, "json");
-  }, [onExportSet]);
+    try {
+      const exportData: VocabularyExportData = {
+        list: set,
+        items: set.items
+      };
+      exportToJSON(exportData);
+      logger.info("JSON export initiated", { setId: set.id, setName: set.name });
+    } catch (err) {
+      logger.error("JSON export failed", err);
+      setError("Failed to export JSON file");
+    }
+  }, []);
 
   const handleRetry = useCallback(() => {
     setRetryCount(0);
     setError(null);
     fetchVocabularyData();
   }, [fetchVocabularyData]);
+
+  // Import handlers
+  const handleImportClick = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileImport = useCallback(async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !userId) return;
+
+    setImporting(true);
+    setImportError(null);
+
+    try {
+      let items: VocabularyItem[];
+
+      // Determine file type and parse accordingly
+      if (file.name.endsWith('.csv')) {
+        items = await importFromCSV(file);
+      } else if (file.name.endsWith('.json')) {
+        items = await importFromJSON(file);
+      } else {
+        throw new Error("Unsupported file format. Please use CSV or JSON.");
+      }
+
+      // Validate items
+      const { valid, errors } = validateImportedItems(items);
+
+      if (errors.length > 0) {
+        logger.warn("Import validation errors", { errors });
+        setImportError(`Import warnings: ${errors.slice(0, 3).join(", ")}${errors.length > 3 ? "..." : ""}`);
+      }
+
+      if (valid.length === 0) {
+        throw new Error("No valid items found in import file");
+      }
+
+      // Create new vocabulary list for imported items
+      const listName = file.name.replace(/\.(csv|json)$/i, '');
+      const { data: newList, error: listError } = await APIClient.createVocabularyList({
+        name: `Imported: ${listName}`,
+        description: `Imported from ${file.name} on ${new Date().toLocaleDateString()}`,
+        user_id: userId
+      });
+
+      if (listError || !newList) {
+        throw new Error(listError?.message || "Failed to create vocabulary list");
+      }
+
+      // Save items to database in batches
+      const batchSize = 50;
+      for (let i = 0; i < valid.length; i += batchSize) {
+        const batch = valid.slice(i, i + batchSize);
+        await Promise.all(
+          batch.map(item =>
+            APIClient.saveVocabularyItem({
+              ...item,
+              user_id: userId,
+              list_id: newList.id
+            })
+          )
+        );
+      }
+
+      logger.info("Import successful", {
+        fileName: file.name,
+        itemCount: valid.length,
+        listId: newList.id
+      });
+
+      // Refresh vocabulary data
+      await fetchVocabularyData();
+
+      alert(`Successfully imported ${valid.length} items!${errors.length > 0 ? `\n\n${errors.length} items had warnings.` : ""}`);
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      logger.error("Import failed", err);
+      setImportError(errorMessage);
+      alert(`Import failed: ${errorMessage}`);
+    } finally {
+      setImporting(false);
+      // Reset file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  }, [userId, fetchVocabularyData]);
 
   // Loading state
   if (loading && vocabularySets.length === 0) {
@@ -203,9 +306,40 @@ export const VocabularyList = memo<APIVocabularyListProps>(function VocabularyLi
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">My Study Sets</h3>
-        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-          <Clock className="h-4 w-4" />
-          <span>{statistics.itemsToReview} items due for review</span>
+        <div className="flex items-center gap-3">
+          {/* Import button */}
+          <button
+            onClick={handleImportClick}
+            disabled={importing || !userId}
+            className="px-3 py-1.5 bg-green-600 text-white text-sm rounded-lg hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+            title="Import vocabulary from CSV or JSON"
+          >
+            {importing ? (
+              <>
+                <Loader2 className="h-3 w-3 animate-spin" />
+                Importing...
+              </>
+            ) : (
+              <>
+                <Upload className="h-3 w-3" />
+                Import
+              </>
+            )}
+          </button>
+
+          {/* Hidden file input */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".csv,.json"
+            onChange={handleFileImport}
+            className="hidden"
+          />
+
+          <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
+            <Clock className="h-4 w-4" />
+            <span>{statistics.itemsToReview} items due for review</span>
+          </div>
         </div>
       </div>
 
@@ -213,6 +347,13 @@ export const VocabularyList = memo<APIVocabularyListProps>(function VocabularyLi
         <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 flex items-center gap-2">
           <AlertCircle className="h-4 w-4 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
           <p className="text-sm text-yellow-800 dark:text-yellow-200">{error}</p>
+        </div>
+      )}
+
+      {importError && (
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg p-3 flex items-center gap-2">
+          <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+          <p className="text-sm text-amber-800 dark:text-amber-200">{importError}</p>
         </div>
       )}
 

@@ -96,6 +96,12 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
     type: 'success' | 'error' | null;
   }>({ message: '', type: null });
 
+  // Memoize expensive computations - MOVED BEFORE USAGE
+  const activeDescription = useMemo(
+    () => descriptions[activeStyle],
+    [descriptions, activeStyle],
+  );
+
   const handleStyleSelect = useCallback((style: DescriptionStyle) => {
     setActiveStyle(style);
   }, []);
@@ -245,12 +251,6 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
       setIsSaving(false);
     }
   }, [image, activeDescription, activeStyle]);
-
-  // Memoize expensive computations
-  const activeDescription = useMemo(
-    () => descriptions[activeStyle],
-    [descriptions, activeStyle],
-  );
 
   // Memoize image-dependent values
   const hasImage = useMemo(() => Boolean(image), [image]);

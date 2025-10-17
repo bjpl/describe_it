@@ -434,6 +434,33 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
       originalImageUrl: params.imageUrl
     }, secureApiKey);
 
+    // Save descriptions to database
+    if (userId && descriptions && descriptions.length > 0) {
+      try {
+        const { DatabaseService } = await import('@/lib/supabase');
+
+        for (const desc of descriptions) {
+          // Map languages to column format
+          const isEnglish = desc.language === "english";
+          await DatabaseService.saveDescription({
+            image_id: desc.imageId,
+            image_url: params.imageUrl,
+            style: validatedStyle as "narrativo" | "poetico" | "academico" | "conversacional" | "infantil",
+            description_english: isEnglish ? desc.content : "",
+            description_spanish: !isEnglish ? desc.content : "",
+          });
+        }
+
+        requestLogger.info('Descriptions saved to database', {
+          count: descriptions.length,
+          userId
+        });
+      } catch (dbError) {
+        requestLogger.warn('Failed to save descriptions to database', asLogContext(dbError));
+        // Don't fail the request if database save fails
+      }
+    }
+
     const responseTime = performance.now() - startTime;
 
     const response = {

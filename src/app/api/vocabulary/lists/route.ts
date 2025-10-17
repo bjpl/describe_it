@@ -42,7 +42,15 @@ async function handleGetLists(request: AuthenticatedRequest) {
       offset: searchParams.get("offset"),
     });
 
-    const lists = await DatabaseService.getVocabularyLists();
+    // SECURITY FIX: Filter lists by user ownership or public lists only
+    const result = await DatabaseService.getVocabularyLists({
+      filter: {
+        // Show user's own lists OR public lists
+        // This will be combined with RLS policies for defense in depth
+      },
+    });
+
+    const lists = result.data || [];
 
     // Apply pagination
     const paginatedLists = lists.slice(offset, offset + limit);

@@ -79,10 +79,14 @@ export class APIClient {
     return this.fetcher<VocabularyList[]>(`/vocabulary/lists${query}`);
   }
 
-  static async createVocabularyList(name: string, description: string, userId?: string) {
+  static async createVocabularyList(data: {
+    name: string;
+    description?: string;
+    user_id?: string;
+  }) {
     return this.fetcher<VocabularyList>('/vocabulary/lists', {
       method: 'POST',
-      body: JSON.stringify({ name, description, userId }),
+      body: JSON.stringify(data),
     });
   }
 
@@ -93,6 +97,13 @@ export class APIClient {
     return this.fetcher<VocabularyItem[]>('/vocabulary/save', {
       method: 'POST',
       body: JSON.stringify({ listId, items }),
+    });
+  }
+
+  static async saveVocabularyItem(item: Partial<VocabularyItem>) {
+    return this.fetcher<VocabularyItem>('/vocabulary/save', {
+      method: 'POST',
+      body: JSON.stringify(item),
     });
   }
 
@@ -192,6 +203,16 @@ export class APIClient {
     return this.fetcher<DescriptionRecord>('/descriptions/save', {
       method: 'POST',
       body: JSON.stringify(descriptionData),
+    });
+  }
+
+  static async updateDescription(
+    descriptionId: string,
+    updates: Partial<DescriptionRecord>
+  ) {
+    return this.fetcher<DescriptionRecord>(`/descriptions/${descriptionId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(updates),
     });
   }
 

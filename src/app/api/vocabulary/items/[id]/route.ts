@@ -46,9 +46,14 @@ async function handleGetItem(
       throw new Error("Database not configured");
     }
 
+    // SECURITY FIX: Verify ownership before allowing access
+    // First, get the item with its list ownership info
     const { data: item, error } = await supabaseAdmin
       .from("vocabulary_items")
-      .select("*")
+      .select(`
+        *,
+        vocabulary_lists!inner(created_by, is_active)
+      `)
       .eq("id", params.id)
       .single();
 
@@ -62,6 +67,21 @@ async function handleGetItem(
         { status: 404 }
       );
     }
+
+    // SECURITY: Verify user owns the list or it's a public active list
+    const list = (item as any).vocabulary_lists;
+    const isOwner = list?.created_by === userId;
+    const isPublicList = list?.is_active === true;
+
+    if (!isOwner && !isPublicList) {
+      return NextResponse.json(
+        { success: false, error: "Access denied: You don't have permission to view this item" },
+        { status: 403 }
+      );
+    }
+
+    // Remove the joined list data from response
+    delete (item as any).vocabulary_lists;
 
     const responseTime = performance.now() - startTime;
 
@@ -127,6 +147,32 @@ async function handleUpdateItem(
 
     if (!supabaseAdmin) {
       throw new Error("Database not configured");
+    }
+
+    // SECURITY FIX: Verify ownership before allowing update
+    const { data: existingItem, error: fetchError } = await supabaseAdmin
+      .from("vocabulary_items")
+      .select(`
+        id,
+        vocabulary_lists!inner(created_by)
+      `)
+      .eq("id", params.id)
+      .single();
+
+    if (fetchError || !existingItem) {
+      return NextResponse.json(
+        { success: false, error: "Vocabulary item not found" },
+        { status: 404 }
+      );
+    }
+
+    // SECURITY: Only list owner can update items
+    const list = (existingItem as any).vocabulary_lists;
+    if (list?.created_by !== userId) {
+      return NextResponse.json(
+        { success: false, error: "Access denied: Only the list owner can update items" },
+        { status: 403 }
+      );
     }
 
     const { data: updatedItem, error } = await supabaseAdmin
@@ -223,6 +269,32 @@ async function handleDeleteItem(
   try {
     if (!supabaseAdmin) {
       throw new Error("Database not configured");
+    }
+
+    // SECURITY FIX: Verify ownership before allowing delete
+    const { data: existingItem, error: fetchError } = await supabaseAdmin
+      .from("vocabulary_items")
+      .select(`
+        id,
+        vocabulary_lists!inner(created_by)
+      `)
+      .eq("id", params.id)
+      .single();
+
+    if (fetchError || !existingItem) {
+      return NextResponse.json(
+        { success: false, error: "Vocabulary item not found" },
+        { status: 404 }
+      );
+    }
+
+    // SECURITY: Only list owner can delete items
+    const list = (existingItem as any).vocabulary_lists;
+    if (list?.created_by !== userId) {
+      return NextResponse.json(
+        { success: false, error: "Access denied: Only the list owner can delete items" },
+        { status: 403 }
+      );
     }
 
     const { error } = await supabaseAdmin

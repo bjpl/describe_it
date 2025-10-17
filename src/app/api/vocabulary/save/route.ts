@@ -113,7 +113,7 @@ const vocabularyQuerySchema = z.object({
 
 export const runtime = "nodejs";
 
-// Storage service for vocabulary persistence
+// Storage service for vocabulary persistence using Supabase database
 class VocabularyStorage {
   private cachePrefix = "vocabulary";
   private userPrefix = (userId: string) => `${this.cachePrefix}:user:${userId}`;
@@ -126,47 +126,70 @@ class VocabularyStorage {
     collectionName: string,
     metadata?: any,
   ) {
-    const vocabularyId = vocabulary.id;
-    const timestamp = new Date().toISOString();
+    const { DatabaseService } = await import('@/lib/supabase');
 
-    const vocabularyItem = {
+    // First, ensure vocabulary list exists
+    let listId: string;
+    const existingLists = await DatabaseService.getVocabularyLists();
+    const existingList = existingLists.find(list => list.name === collectionName);
+
+    if (existingList) {
+      listId = existingList.id;
+    } else {
+      const newList = await DatabaseService.createVocabularyList({
+        name: collectionName,
+        description: `Vocabulary collection: ${collectionName}`,
+        category: 'general',
+        difficulty_level: 1,
+        total_words: 0,
+        is_active: true,
+        is_public: false,
+        shared_with: []
+      });
+
+      if (!newList) {
+        throw new Error('Failed to create vocabulary list');
+      }
+      listId = newList.id;
+    }
+
+    // Map difficulty to number
+    const difficultyMap: Record<string, number> = {
+      beginner: 1,
+      intermediate: 2,
+      advanced: 3
+    };
+
+    // Save vocabulary item to database
+    const vocabularyItem = await DatabaseService.addVocabularyItem({
+      vocabulary_list_id: listId,
+      spanish_text: vocabulary.phrase,
+      english_translation: vocabulary.translation || vocabulary.definition,
+      part_of_speech: vocabulary.partOfSpeech || 'other',
+      difficulty_level: difficultyMap[vocabulary.difficulty] || 1,
+      category: vocabulary.category,
+      context_sentence_spanish: vocabulary.context,
+      context_sentence_english: vocabulary.examples?.[0],
+      usage_notes: vocabulary.notes
+    });
+
+    if (!vocabularyItem) {
+      throw new Error('Failed to save vocabulary item to database');
+    }
+
+    return {
+      id: vocabularyItem.id,
       ...vocabulary,
-      id: vocabularyId,
       userId,
       collectionName,
-      createdAt: timestamp,
-      updatedAt: timestamp,
+      createdAt: vocabularyItem.created_at,
+      updatedAt: vocabularyItem.created_at,
       metadata: {
         ...metadata,
-        timestamp,
+        timestamp: vocabularyItem.created_at,
         saved: true,
       },
     };
-
-    // Save individual vocabulary item
-    const itemKey = `${this.collectionPrefix(userId, collectionName)}:item:${vocabularyId}`;
-    await descriptionCache.set(itemKey, vocabularyItem, {
-      kvTTL: 86400 * 30, // 30 days
-      memoryTTL: 3600, // 1 hour
-      sessionTTL: 1800, // 30 minutes
-    });
-
-    // Update collection index
-    await this.updateCollectionIndex(
-      userId,
-      collectionName,
-      vocabularyId,
-      vocabulary,
-    );
-
-    // Update user statistics
-    await this.updateUserStats(
-      userId,
-      vocabulary.difficulty,
-      vocabulary.category,
-    );
-
-    return vocabularyItem;
   }
 
   async saveBulkVocabulary(
@@ -175,41 +198,73 @@ class VocabularyStorage {
     collectionName: string,
     metadata?: any,
   ) {
+    const { DatabaseService } = await import('@/lib/supabase');
+
+    // First, ensure vocabulary list exists
+    let listId: string;
+    const existingLists = await DatabaseService.getVocabularyLists();
+    const existingList = existingLists.find(list => list.name === collectionName);
+
+    if (existingList) {
+      listId = existingList.id;
+    } else {
+      const newList = await DatabaseService.createVocabularyList({
+        name: collectionName,
+        description: `Vocabulary collection: ${collectionName}`,
+        category: 'general',
+        difficulty_level: 1,
+        total_words: 0,
+        is_active: true,
+        is_public: false,
+        shared_with: []
+      });
+
+      if (!newList) {
+        throw new Error('Failed to create vocabulary list');
+      }
+      listId = newList.id;
+    }
+
+    // Map difficulty to number
+    const difficultyMap: Record<string, number> = {
+      beginner: 1,
+      intermediate: 2,
+      advanced: 3
+    };
+
     const results = [];
     const timestamp = new Date().toISOString();
 
+    // Save all vocabulary items to database
     for (const vocabulary of vocabularyItems) {
-      const vocabularyItem = {
-        ...vocabulary,
-        id:
-          vocabulary.id ||
-          `vocab_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        userId,
-        collectionName,
-        createdAt: timestamp,
-        updatedAt: timestamp,
-        metadata: {
-          ...metadata,
-          timestamp,
-          saved: true,
-          bulkImport: true,
-        },
-      };
-
-      const itemKey = `${this.collectionPrefix(userId, collectionName)}:item:${vocabularyItem.id}`;
-      await descriptionCache.set(itemKey, vocabularyItem, {
-        kvTTL: 86400 * 30, // 30 days
-        memoryTTL: 3600, // 1 hour
-        sessionTTL: 1800, // 30 minutes
+      const vocabularyItem = await DatabaseService.addVocabularyItem({
+        vocabulary_list_id: listId,
+        spanish_text: vocabulary.phrase,
+        english_translation: vocabulary.translation || vocabulary.definition,
+        part_of_speech: vocabulary.partOfSpeech || 'other',
+        difficulty_level: difficultyMap[vocabulary.difficulty] || 1,
+        category: vocabulary.category,
+        context_sentence_spanish: vocabulary.context,
+        context_sentence_english: vocabulary.examples?.[0],
+        usage_notes: vocabulary.notes
       });
 
-      results.push(vocabularyItem);
-    }
-
-    // Update collection index with all items
-    for (const item of results) {
-      await this.updateCollectionIndex(userId, collectionName, item.id, item);
-      await this.updateUserStats(userId, item.difficulty, item.category);
+      if (vocabularyItem) {
+        results.push({
+          id: vocabularyItem.id,
+          ...vocabulary,
+          userId,
+          collectionName,
+          createdAt: vocabularyItem.created_at,
+          updatedAt: vocabularyItem.created_at,
+          metadata: {
+            ...metadata,
+            timestamp: vocabularyItem.created_at,
+            saved: true,
+            bulkImport: true,
+          },
+        });
+      }
     }
 
     return results;
@@ -228,32 +283,70 @@ class VocabularyStorage {
     } = filters;
 
     try {
-      // Get collection index
-      const indexKey = collectionName
-        ? `${this.collectionPrefix(userId, collectionName)}:index`
-        : `${this.userPrefix(userId)}:index`;
+      const { DatabaseService } = await import('@/lib/supabase');
 
-      const index = (await descriptionCache.get(indexKey)) || { items: [] };
-      let items = index.items || [];
+      // Get all vocabulary lists
+      const lists = await DatabaseService.getVocabularyLists();
+
+      // Filter by collection name if specified
+      const targetLists = collectionName
+        ? lists.filter(list => list.name === collectionName)
+        : lists;
+
+      if (targetLists.length === 0) {
+        return {
+          items: [],
+          total: 0,
+          offset,
+          limit,
+          hasMore: false,
+        };
+      }
+
+      // Get items from all target lists
+      let allItems: any[] = [];
+      for (const list of targetLists) {
+        const items = await DatabaseService.getVocabularyItems(list.id);
+
+        // Transform database items to expected format
+        const transformedItems = items.map(item => ({
+          id: item.id,
+          phrase: item.spanish_text,
+          definition: item.english_translation,
+          translation: item.english_translation,
+          category: item.category,
+          partOfSpeech: item.part_of_speech,
+          difficulty: item.difficulty_level === 1 ? 'beginner' : item.difficulty_level === 2 ? 'intermediate' : 'advanced',
+          context: item.context_sentence_spanish,
+          notes: item.usage_notes,
+          examples: item.context_sentence_english ? [item.context_sentence_english] : [],
+          tags: [],
+          collectionName: list.name,
+          createdAt: item.created_at,
+          updatedAt: item.created_at,
+          userId,
+        }));
+
+        allItems = allItems.concat(transformedItems);
+      }
 
       // Apply filters
       if (category) {
-        items = items.filter((item: any) => item.category === category);
+        allItems = allItems.filter(item => item.category === category);
       }
 
       if (difficulty) {
-        items = items.filter((item: any) => item.difficulty === difficulty);
+        allItems = allItems.filter(item => item.difficulty === difficulty);
       }
 
       if (tags && tags.length > 0) {
-        items = items.filter(
-          (item: any) =>
-            item.tags && item.tags.some((tag: string) => tags.includes(tag)),
+        allItems = allItems.filter(
+          item => item.tags && item.tags.some((tag: string) => tags.includes(tag))
         );
       }
 
       // Sort items
-      items.sort((a: any, b: any) => {
+      allItems.sort((a: any, b: any) => {
         let aValue = a[sortBy];
         let bValue = b[sortBy];
 
@@ -269,27 +362,17 @@ class VocabularyStorage {
       });
 
       // Apply pagination
-      const paginatedItems = items.slice(offset, offset + limit);
-
-      // Fetch full details for paginated items
-      const fullItems = [];
-      for (const item of paginatedItems) {
-        const itemKey = `${this.collectionPrefix(userId, item.collectionName)}:item:${item.id}`;
-        const fullItem = await descriptionCache.get(itemKey);
-        if (fullItem) {
-          fullItems.push(fullItem);
-        }
-      }
+      const paginatedItems = allItems.slice(offset, offset + limit);
 
       return {
-        items: fullItems,
-        total: items.length,
+        items: paginatedItems,
+        total: allItems.length,
         offset,
         limit,
-        hasMore: offset + limit < items.length,
+        hasMore: offset + limit < allItems.length,
       };
     } catch (error) {
-      apiLogger.warn("Failed to get vocabulary from cache:", asLogContext(error));
+      apiLogger.warn("Failed to get vocabulary from database:", asLogContext(error));
       return {
         items: [],
         total: 0,

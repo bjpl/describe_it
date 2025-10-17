@@ -106,17 +106,49 @@ export async function POST(request: NextRequest) {
         if (error.message?.includes('already registered')) {
           return createErrorResponse('This email is already registered. Please sign in instead.', 400);
         }
-        
+
         return createErrorResponse(
           error.message || 'Signup failed',
           error.status || 400
         );
       }
-      
+
       // If we reach here but have no data, something went wrong
       if (!data || !data.user) {
         apiLogger.error('No user data returned from Supabase');
         return createErrorResponse('Failed to create account - no user data returned', 500);
+      }
+
+      // Create user record in database
+      const { DatabaseService } = await import('@/lib/supabase');
+      try {
+        const dbUser = await DatabaseService.createUser({
+          id: data.user.id,
+          email: data.user.email!,
+          full_name: `${firstName} ${lastName}`,
+          subscription_status: 'free',
+          learning_level: 'beginner'
+        });
+
+        if (!dbUser) {
+          logger.warn('Failed to create user record in database, but auth user created', {
+            userId: data.user.id,
+            email: data.user.email
+          });
+        } else {
+          logger.info('User record created in database', {
+            userId: dbUser.id,
+            email: dbUser.email
+          });
+        }
+      } catch (dbError) {
+        logger.error('Database user creation failed', dbError as Error, {
+          userId: data.user.id,
+          email: data.user.email,
+          category: 'database',
+          severity: 'medium'
+        });
+        // Don't fail the signup if database insert fails, auth user already exists
       }
     } catch (fetchError: any) {
       apiLogger.error('Network error calling Supabase:', fetchError);

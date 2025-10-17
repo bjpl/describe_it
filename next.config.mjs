@@ -1,12 +1,15 @@
-// Temporarily disable Sentry wrapper for faster local builds
-// Re-enable in production/CI by uncommenting the import and export statement
-// import {withSentryConfig} from '@sentry/nextjs';
+import {withSentryConfig} from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
 
-  // Image optimization
+  // Performance optimizations
+  swcMinify: true,
+  compress: true,
+  poweredByHeader: false,
+
+  // Image optimization with blur placeholders
   images: {
     remotePatterns: [
       {
@@ -20,11 +23,16 @@ const nextConfig = {
     ],
     formats: ['image/avif', 'image/webp'],
     minimumCacheTTL: 60,
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    dangerouslyAllowSVG: false,
   },
 
-  // Experimental features
+  // Experimental features for performance
   experimental: {
-    optimizePackageImports: ['lucide-react', 'framer-motion'],
+    optimizePackageImports: ['lucide-react', 'framer-motion', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu'],
+    optimizeCss: true,
+    webVitalsAttribution: ['CLS', 'LCP', 'FCP', 'FID', 'TTFB', 'INP'],
   },
 
   // Output configuration for Vercel
@@ -42,8 +50,44 @@ const nextConfig = {
     ignoreDuringBuilds: true,
   },
 
-  // Webpack configuration to fix DOMPurify bundling issues
-  webpack: (config, { isServer, webpack }) => {
+  // HTTP headers for security and performance
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'Referrer-Policy',
+            value: 'origin-when-cross-origin'
+          },
+        ],
+      },
+      {
+        source: '/static/:path*',
+        headers: [
+          {
+            key: 'Cache-Control',
+            value: 'public, max-age=31536000, immutable',
+          },
+        ],
+      },
+    ];
+  },
+
+  // Webpack configuration for optimal bundling
+  webpack: (config, { isServer, webpack, dev }) => {
     if (isServer) {
       // Ignore DOMPurify's browser-specific stylesheets
       config.plugins.push(
@@ -60,21 +104,92 @@ const nextConfig = {
         tls: false,
       };
     }
+
+    // Bundle analyzer for production builds
+    if (!dev && process.env.ANALYZE === 'true') {
+      const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+      config.plugins.push(
+        new BundleAnalyzerPlugin({
+          analyzerMode: 'static',
+          reportFilename: isServer
+            ? '../analyze/server.html'
+            : './analyze/client.html',
+          openAnalyzer: false,
+        })
+      );
+    }
+
+    // Optimize chunking
+    if (!isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            // Vendor chunk
+            vendor: {
+              name: 'vendor',
+              chunks: 'all',
+              test: /node_modules/,
+              priority: 20,
+            },
+            // Common chunk
+            common: {
+              name: 'common',
+              minChunks: 2,
+              chunks: 'async',
+              priority: 10,
+              reuseExistingChunk: true,
+              enforce: true,
+            },
+            // React/Next.js framework chunk
+            framework: {
+              name: 'framework',
+              test: /[\\/]node_modules[\\/](react|react-dom|next)[\\/]/,
+              priority: 40,
+              reuseExistingChunk: true,
+            },
+            // UI libraries chunk
+            ui: {
+              name: 'ui',
+              test: /[\\/]node_modules[\\/](@radix-ui|lucide-react|framer-motion)[\\/]/,
+              priority: 30,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      };
+    }
+
     return config;
   },
 };
 
-// Export without Sentry wrapper for faster local builds
-export default nextConfig;
+// Export with Sentry configuration
+export default withSentryConfig(nextConfig, {
+  org: process.env.SENTRY_ORG || "bjpl",
+  project: process.env.SENTRY_PROJECT || "describe-it-dev",
 
-// For production/CI builds with Sentry, use this instead:
-// export default withSentryConfig(nextConfig, {
-//   org: "bjpl",
-//   project: "describe-it-dev",
-//   silent: !process.env.CI,
-//   widenClientFileUpload: false,
-//   tunnelRoute: "/monitoring",
-//   disableLogger: true,
-//   automaticVercelMonitors: true,
-//   hideSourceMaps: false,
-// });
+  // Suppress Sentry CLI logs in local development
+  silent: !process.env.CI,
+
+  // Enable wider file upload for better error tracking
+  widenClientFileUpload: true,
+
+  // Use tunnel route for Sentry to avoid ad-blockers
+  tunnelRoute: "/monitoring",
+
+  // Disable Sentry logger to reduce noise
+  disableLogger: true,
+
+  // Enable automatic Vercel monitoring integration
+  automaticVercelMonitors: true,
+
+  // Keep source maps for better debugging
+  hideSourceMaps: false,
+
+  // Transpile Sentry packages for better compatibility
+  transpileClientSDK: true,
+});

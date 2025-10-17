@@ -7,7 +7,8 @@ const API_CACHE = 'describe-it-api';
 const STATIC_RESOURCES = [
   '/',
   '/manifest.json',
-  '/favicon.ico'
+  '/favicon.ico',
+  '/offline.html'
 ];
 
 // API endpoints to cache
@@ -15,7 +16,9 @@ const CACHEABLE_API_ROUTES = [
   '/api/images/search',
   '/api/descriptions/generate',
   '/api/qa/generate',
-  '/api/phrases/extract'
+  '/api/phrases/extract',
+  '/api/search/descriptions',
+  '/api/search/vocabulary'
 ];
 
 // Install event - cache static resources
@@ -231,3 +234,118 @@ function createPlaceholderImage() {
     </text>
   </svg>`;
 }
+
+// Background sync for offline changes
+self.addEventListener('sync', (event) => {
+  console.log('[SW] Background sync:', event.tag);
+
+  if (event.tag === 'sync-vocabulary') {
+    event.waitUntil(syncVocabulary());
+  } else if (event.tag === 'sync-descriptions') {
+    event.waitUntil(syncDescriptions());
+  }
+});
+
+// Sync vocabulary items
+async function syncVocabulary() {
+  try {
+    const db = await openIndexedDB();
+    const pendingItems = await getPendingItems(db, 'vocabulary');
+
+    for (const item of pendingItems) {
+      try {
+        const response = await fetch('/api/vocabulary/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item.data)
+        });
+
+        if (response.ok) {
+          await removePendingItem(db, 'vocabulary', item.id);
+        }
+      } catch (error) {
+        console.error('[SW] Failed to sync vocabulary item:', error);
+      }
+    }
+  } catch (error) {
+    console.error('[SW] Vocabulary sync failed:', error);
+  }
+}
+
+// Sync descriptions
+async function syncDescriptions() {
+  try {
+    const db = await openIndexedDB();
+    const pendingItems = await getPendingItems(db, 'descriptions');
+
+    for (const item of pendingItems) {
+      try {
+        const response = await fetch('/api/descriptions/save', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(item.data)
+        });
+
+        if (response.ok) {
+          await removePendingItem(db, 'descriptions', item.id);
+        }
+      } catch (error) {
+        console.error('[SW] Failed to sync description:', error);
+      }
+    }
+  } catch (error) {
+    console.error('[SW] Description sync failed:', error);
+  }
+}
+
+// IndexedDB helpers for background sync
+function openIndexedDB() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('describe-it-offline', 1);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+
+    request.onupgradeneeded = (event) => {
+      const db = event.target.result;
+
+      if (!db.objectStoreNames.contains('vocabulary')) {
+        db.createObjectStore('vocabulary', { keyPath: 'id', autoIncrement: true });
+      }
+      if (!db.objectStoreNames.contains('descriptions')) {
+        db.createObjectStore('descriptions', { keyPath: 'id', autoIncrement: true });
+      }
+    };
+  });
+}
+
+function getPendingItems(db, storeName) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readonly');
+    const store = transaction.objectStore(storeName);
+    const request = store.getAll();
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve(request.result);
+  });
+}
+
+function removePendingItem(db, storeName, id) {
+  return new Promise((resolve, reject) => {
+    const transaction = db.transaction(storeName, 'readwrite');
+    const store = transaction.objectStore(storeName);
+    const request = store.delete(id);
+
+    request.onerror = () => reject(request.error);
+    request.onsuccess = () => resolve();
+  });
+}
+
+// Listen for messages from clients
+self.addEventListener('message', (event) => {
+  console.log('[SW] Message received:', event.data);
+
+  if (event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+});

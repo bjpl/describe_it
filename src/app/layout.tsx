@@ -2,6 +2,20 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
+import OfflineIndicator from "@/components/OfflineIndicator";
+import Script from "next/script";
+import dynamic from 'next/dynamic';
+
+// Lazy load performance monitoring components
+const PerformanceBudget = dynamic(
+  () => import('@/components/Performance/PerformanceBudget'),
+  { ssr: false }
+);
+
+const SentryErrorBoundary = dynamic(
+  () => import('@/components/ErrorBoundary/SentryErrorBoundary').then(mod => mod.SentryErrorBoundary),
+  { ssr: false }
+);
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -62,9 +76,28 @@ export default function RootLayout({
         <meta name="format-detection" content="telephone=no" />
       </head>
       <body className={`${inter.className} min-h-screen bg-gray-50`}>
-        <Providers>
-          {children}
-        </Providers>
+        <SentryErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
+          <Providers>
+            {children}
+            <OfflineIndicator />
+            <PerformanceBudget />
+          </Providers>
+        </SentryErrorBoundary>
+        <Script id="register-sw" strategy="afterInteractive">
+          {`
+            if ('serviceWorker' in navigator) {
+              window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                  .then((registration) => {
+                    console.log('SW registered:', registration);
+                  })
+                  .catch((error) => {
+                    console.log('SW registration failed:', error);
+                  });
+              });
+            }
+          `}
+        </Script>
       </body>
     </html>
   );
