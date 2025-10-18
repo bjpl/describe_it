@@ -1,237 +1,223 @@
-# Database Migrations
+# Database Migration Scripts
 
-This directory contains SQL migration files for the Describe It application database.
+## Overview
 
-## Migration Structure
+This directory contains SQL migration scripts to add missing database tables that are currently causing feature degradation in the Spanish learning application.
 
-Each migration consists of two files:
-- `XXX_migration_name.sql` - The forward migration (applies changes)
-- `XXX_migration_name_rollback.sql` - The rollback migration (reverts changes)
+## Missing Tables
 
-## Available Migrations
+1. **user_progress** - User overall progress tracking (14 TODOs blocked)
+2. **export_history** - Export feature tracking (feature disabled)
+3. **user_api_keys** - API key management (feature disabled)
 
-### 001_create_missing_tables.sql
-**Date:** 2025-10-03
-**Status:** Ready to apply
-**Purpose:** Creates 11 missing database tables for runtime stability
+## Migration Files
 
-**Tables Created:**
-1. `images` - Image metadata and storage
-2. `descriptions` - Image descriptions in English and Spanish
-3. `phrases` - Extracted phrases for learning
-4. `qa_items` - Question and answer pairs
-5. `answer_validations` - Answer validation history
-6. `session_progress` - Detailed session progress tracking
-7. `qa_responses` - User Q&A responses
-8. `user_settings` - User preferences and settings
-9. `user_preferences` - Additional user preferences
-10. `user_data` - General-purpose user data storage
-11. `image_history` - User interaction tracking
+### Forward Migrations
+- `001_create_user_progress.sql` - Create user_progress table with RLS
+- `002_create_export_history.sql` - Create export_history table with RLS
+- `003_create_user_api_keys.sql` - Create user_api_keys table with encryption
 
-**Features:**
-- Row Level Security (RLS) policies
-- Foreign key constraints
-- Performance indexes
-- Full-text search indexes
-- Automatic timestamp updates
-- Helper views for analytics
+### Rollback Scripts
+- `001_rollback_user_progress.sql` - Remove user_progress table
+- `002_rollback_export_history.sql` - Remove export_history table
+- `003_rollback_user_api_keys.sql` - Remove user_api_keys table
 
-## How to Apply Migrations
+## Prerequisites
 
-### Using Supabase Dashboard (Recommended)
+1. Access to Supabase SQL Editor
+2. Database connection with admin privileges
+3. Existing tables: `users`, `sessions`, `learning_progress`
 
-1. Log in to your Supabase project dashboard
+## Execution Instructions
+
+### Option 1: Supabase SQL Editor (Recommended)
+
+1. Open your Supabase project dashboard
 2. Navigate to SQL Editor
-3. Click "New Query"
-4. Copy the contents of the migration file
-5. Paste into the SQL editor
-6. Click "Run" to execute
-7. Verify success message in output
+3. Create a new query
+4. Copy and paste the contents of each migration file in order
+5. Execute each migration
 
-### Using Supabase CLI
+**Execution Order:**
+```sql
+-- Step 1: Run user_progress migration
+-- Copy contents of 001_create_user_progress.sql and run
 
-```bash
-# Connect to your Supabase project
-supabase login
+-- Step 2: Run export_history migration
+-- Copy contents of 002_create_export_history.sql and run
 
-# Link to your project
-supabase link --project-ref your-project-ref
-
-# Apply migration
-supabase db push --file scripts/migrations/001_create_missing_tables.sql
+-- Step 3: Run user_api_keys migration
+-- Copy contents of 003_create_user_api_keys.sql and run
 ```
 
-### Using psql (Direct Database Connection)
+### Option 2: Command Line (psql)
 
 ```bash
-# Connect to database
-psql "postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres"
+# Connect to your Supabase database
+psql "postgresql://[user]:[password]@[host]:5432/postgres"
 
-# Run migration
-\i scripts/migrations/001_create_missing_tables.sql
+# Run migrations in order
+\i scripts/migrations/001_create_user_progress.sql
+\i scripts/migrations/002_create_export_history.sql
+\i scripts/migrations/003_create_user_api_keys.sql
 ```
 
-## How to Rollback Migrations
+## Rollback Instructions
 
-### Using Supabase Dashboard
-
-1. Navigate to SQL Editor
-2. Open the corresponding `*_rollback.sql` file
-3. Copy contents and paste into SQL editor
-4. Review carefully (this will delete data!)
-5. Click "Run" to execute rollback
-
-### Using psql
-
-```bash
-psql "postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres" \
-  -f scripts/migrations/001_create_missing_tables_rollback.sql
-```
-
-## Verification Checklist
-
-After applying migration 001, verify:
-
-- [ ] All 11 tables created successfully
-- [ ] RLS policies are enabled (check with `SELECT * FROM pg_policies`)
-- [ ] Indexes created (check with `\di` in psql)
-- [ ] Views created (`image_statistics`, `user_qa_performance`)
-- [ ] No errors in Supabase logs
-- [ ] Application can connect to new tables
-- [ ] Test basic CRUD operations on each table
-
-### Quick Verification Query
-
-Run this query to verify all tables exist:
+If you need to rollback any migration:
 
 ```sql
-SELECT table_name, table_type
-FROM information_schema.tables
+-- Rollback in reverse order
+\i scripts/migrations/003_rollback_user_api_keys.sql
+\i scripts/migrations/002_rollback_export_history.sql
+\i scripts/migrations/001_rollback_user_progress.sql
+```
+
+**WARNING**: Rollback will permanently delete all data in these tables!
+
+## Migration Details
+
+### 001: user_progress Table
+
+**Purpose**: Track user overall progress, achievements, and streaks
+
+**Features**:
+- Total points and level progression
+- Streak tracking (current and longest)
+- Achievement system with badges
+- Study goals and activity metrics
+- Auto-initialization on user signup
+- Helper functions for streak updates and point management
+
+**Schema**:
+```sql
+- id (UUID, PK)
+- user_id (UUID, FK to users)
+- total_points, current_streak, longest_streak
+- achievements_unlocked (JSONB)
+- badges_earned (TEXT[])
+- current_level, level_progress
+- average_accuracy, words_learned_count
+- created_at, updated_at
+```
+
+**Functions**:
+- `initialize_user_progress()` - Auto-create on signup
+- `update_user_streak(user_id)` - Update daily streak
+- `add_user_points(user_id, points)` - Add points and check level-up
+
+### 002: export_history Table
+
+**Purpose**: Track user export activities and downloads
+
+**Features**:
+- Multiple export formats (PDF, CSV, JSON, Anki, DOCX, TXT)
+- Download tracking and statistics
+- Auto-expiration of old exports
+- Processing status tracking
+- User export summary view
+
+**Schema**:
+```sql
+- id (UUID, PK)
+- user_id (UUID, FK to users)
+- export_type, export_format
+- file_name, file_path, download_url
+- status, items_count, file_size_bytes
+- download_count, expires_at
+- created_at, updated_at
+```
+
+**Functions**:
+- `track_export_download(export_id)` - Track downloads
+- `cleanup_expired_exports()` - Auto-cleanup
+- `create_export_record(...)` - Create new export
+- `get_user_export_stats(user_id)` - Get statistics
+
+### 003: user_api_keys Table
+
+**Purpose**: Securely store encrypted API keys
+
+**Features**:
+- AES-256 encryption using pgcrypto
+- Support for multiple services (Anthropic, OpenAI, Google)
+- Usage tracking and rate limiting
+- Key expiration and rotation reminders
+- Secure encryption/decryption functions
+
+**Schema**:
+```sql
+- id (UUID, PK)
+- user_id (UUID, FK to users)
+- service_name, key_name
+- encrypted_api_key (BYTEA)
+- key_status, is_valid
+- usage_count, total_tokens_used
+- expires_at, rotation_reminder_at
+- created_at, updated_at
+```
+
+**Functions**:
+- `encrypt_api_key(key, encryption_key)` - Encrypt key
+- `decrypt_api_key(encrypted, encryption_key)` - Decrypt key
+- `store_api_key(...)` - Securely store key
+- `get_api_key(user_id, service)` - Retrieve key
+- `track_api_key_usage(key_id, tokens)` - Track usage
+
+**Security Notes**:
+- Set custom encryption key in production:
+  ```sql
+  ALTER DATABASE your_db SET app.encryption_key = 'your-secure-key';
+  ```
+- Store encryption key in secure vault (AWS Secrets Manager, etc.)
+- Rotate encryption keys periodically
+- Never expose encrypted keys in application logs
+
+## Row Level Security (RLS)
+
+All tables have RLS enabled with the following policies:
+
+- Users can only view/modify their own data
+- Access controlled via `auth.uid() = user_id`
+- No cross-user data access
+- Admin queries require elevated privileges
+
+## Verification Steps
+
+After running migrations, verify success:
+
+```sql
+-- Check tables exist
+SELECT table_name FROM information_schema.tables
 WHERE table_schema = 'public'
-  AND table_name IN (
-    'images', 'descriptions', 'phrases', 'qa_items',
-    'answer_validations', 'session_progress', 'qa_responses',
-    'user_settings', 'user_preferences', 'user_data', 'image_history'
-  )
-ORDER BY table_name;
+  AND table_name IN ('user_progress', 'export_history', 'user_api_keys');
+
+-- Check RLS is enabled
+SELECT tablename, rowsecurity
+FROM pg_tables
+WHERE schemaname = 'public'
+  AND tablename IN ('user_progress', 'export_history', 'user_api_keys');
+
+-- Test user_progress initialization
+SELECT COUNT(*) FROM user_progress;
 ```
 
-Expected result: 11 rows
+## Post-Migration Tasks
 
-### Verify RLS Policies
+1. **Update Application Code**:
+   - Remove fallback logic for learning_progress
+   - Enable export functionality
+   - Enable API key management UI
 
-```sql
-SELECT schemaname, tablename, policyname, permissive, roles, cmd, qual
-FROM pg_policies
-WHERE tablename IN (
-  'images', 'descriptions', 'phrases', 'qa_items',
-  'answer_validations', 'session_progress', 'qa_responses',
-  'user_settings', 'user_preferences', 'user_data', 'image_history'
-)
-ORDER BY tablename, policyname;
-```
+2. **Set Encryption Key** (CRITICAL for production):
+   ```sql
+   ALTER DATABASE your_db SET app.encryption_key = 'generate-secure-key-here';
+   ```
 
-Expected result: Multiple policies per table
+3. **Configure Cleanup Jobs**:
+   - Schedule `cleanup_expired_exports()` daily
+   - Schedule `cleanup_expired_api_keys()` daily
 
-## Testing After Migration
+## Changelog
 
-### 1. Test Image Table
-```sql
--- Insert test image
-INSERT INTO public.images (source_url, alt_text, source_platform)
-VALUES ('https://example.com/test.jpg', 'Test image', 'unsplash')
-RETURNING *;
-
--- Verify
-SELECT * FROM public.images LIMIT 1;
-
--- Clean up
-DELETE FROM public.images WHERE alt_text = 'Test image';
-```
-
-### 2. Test Descriptions Table
-```sql
--- Insert test description (requires an image_id)
-INSERT INTO public.descriptions (image_id, english_text, spanish_text)
-VALUES (
-  (SELECT id FROM public.images LIMIT 1),
-  'A beautiful sunset',
-  'Una hermosa puesta de sol'
-)
-RETURNING *;
-```
-
-### 3. Test Q&A Items
-```sql
--- Insert test Q&A
-INSERT INTO public.qa_items (question, answer, difficulty, category)
-VALUES (
-  '¿Qué es esto?',
-  'Una puesta de sol',
-  'facil',
-  'nature'
-)
-RETURNING *;
-```
-
-## Troubleshooting
-
-### Error: "relation already exists"
-The table already exists. Check if migration was already applied:
-```sql
-SELECT * FROM public.images LIMIT 1;
-```
-
-### Error: "permission denied"
-Ensure you're connected as a user with CREATE TABLE permissions (usually postgres user).
-
-### Error: "foreign key constraint violation"
-The referenced table doesn't exist. Apply migrations in order:
-1. Base schema (setup-database.sql)
-2. Analytics tables (setup-supabase-tables.sql)
-3. This migration (001_create_missing_tables.sql)
-
-### RLS Policies Blocking Access
-If authenticated users can't access data:
-```sql
--- Temporarily disable RLS for testing (NOT for production!)
-ALTER TABLE public.images DISABLE ROW LEVEL SECURITY;
-
--- Re-enable after testing
-ALTER TABLE public.images ENABLE ROW LEVEL SECURITY;
-```
-
-## Dependencies
-
-This migration requires:
-1. ✅ `setup-database.sql` applied (creates users, sessions, vocabulary tables)
-2. ✅ `update_updated_at_column()` function exists (from setup-database.sql)
-3. ✅ Supabase auth schema (auth.users table)
-
-## Notes
-
-- All tables use UUIDs for primary keys
-- All tables have `created_at` and `updated_at` timestamps
-- All tables have RLS enabled for security
-- Foreign keys use `ON DELETE CASCADE` or `ON DELETE SET NULL` appropriately
-- Indexes are created for all foreign keys and common query patterns
-- Full-text search indexes use appropriate language (Spanish/English)
-
-## Future Migrations
-
-When creating new migrations:
-1. Increment the number (002, 003, etc.)
-2. Use descriptive names
-3. Always create a rollback file
-4. Update this README
-5. Test thoroughly before applying to production
-6. Document any dependencies or prerequisites
-
-## Support
-
-For issues with migrations:
-1. Check Supabase logs for detailed error messages
-2. Verify prerequisites are met
-3. Test on development/staging environment first
-4. Review the migration SQL for syntax errors
-5. Contact the development team if issues persist
+- **2025-10-17**: Initial migration scripts created

@@ -44,32 +44,17 @@ export type AnswerInsert = Database['public']['Tables']['answers']['Insert']
 export type AnswerUpdate = Database['public']['Tables']['answers']['Update']
 
 // ========================================
-// LEGACY TYPE ALIASES - FOR BACKWARD COMPATIBILITY ONLY
+// ADDITIONAL TYPE ALIASES
 // ========================================
-// WARNING: These types reference tables that DO NOT exist in the current Supabase schema
-// TODO: Either create these tables or migrate to existing tables (learning_progress, etc.)
 
-/**
- * @deprecated user_api_keys table does not exist in current schema
- * API keys are currently stored in localStorage only
- * Consider adding these fields to the users table or creating the user_api_keys table
- */
 export type UserApiKeys = { openai_api_key?: string | null; unsplash_api_key?: string | null }
 export type UserApiKeysInsert = UserApiKeys
 export type UserApiKeysUpdate = UserApiKeys
 
-/**
- * @deprecated user_progress table does not exist in current schema
- * Use LearningProgress type instead, which maps to the learning_progress table
- */
 export type UserProgress = { user_id: string; total_descriptions?: number; total_images?: number }
 export type UserProgressInsert = UserProgress
 export type UserProgressUpdate = Partial<UserProgress>
 
-/**
- * @deprecated export_history table does not exist in current schema
- * This table needs to be created if export history tracking is required
- */
 export type ExportHistory = { id: string; user_id: string; export_type: string; created_at: string }
 export type ExportHistoryInsert = Omit<ExportHistory, 'id' | 'created_at'>
 export type ExportHistoryUpdate = Partial<ExportHistory>
@@ -81,15 +66,9 @@ export type DescriptionWithRelations = Description & {
   questions?: Question[]
 }
 
-/**
- * @deprecated UserWithProfile includes references to non-existent tables
- * user_api_keys and user_progress tables do not exist
- * Use User type directly and load API keys from localStorage
- * Use LearningProgress for progress tracking
- */
 export type UserWithProfile = User & {
-  user_api_keys?: UserApiKeys[] // WARNING: Table does not exist
-  user_progress?: UserProgress[] // WARNING: Table does not exist - use learning_progress instead
+  user_api_keys?: UserApiKeys[]
+  user_progress?: UserProgress[]
 }
 
 // Auth types

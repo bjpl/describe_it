@@ -6,6 +6,7 @@ import {
   BarChart3,
 } from "lucide-react";
 import { CategorizedPhrase, VocabularySet, SavedPhrase } from "@/types/api";
+import { logger } from "@/lib/logger";
 import FlashcardComponent from "./FlashcardComponent";
 import QuizComponent, { QuizResults } from "./QuizComponent";
 import ProgressStatistics from "./ProgressStatistics";
@@ -170,7 +171,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       // Clear saved phrases after successful save
       onUpdatePhrases([]);
     } catch (error) {
-      console.error("Failed to create vocabulary set:", error);
+      logger.error('Failed to create vocabulary set', error instanceof Error ? error : new Error(String(error)), { component: 'VocabularyBuilder' });
       throw error; // Re-throw to be handled by the form component
     }
   }, [newSetName, savedPhrases, vocabularySets, reviewItems, onUpdatePhrases]);

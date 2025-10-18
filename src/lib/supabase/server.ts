@@ -97,12 +97,12 @@ export const serverAuthHelpers = {
     if (!user) return null
 
     try {
-      // TODO: user_api_keys and user_progress tables don't exist
-      // Removed from query - use learning_progress table instead of user_progress
       const { data, error } = await supabase
         .from('users')
         .select(`
-          *
+          *,
+          user_api_keys (*),
+          user_progress (*)
         `)
         .eq('id', user.id)
         .single()
@@ -186,20 +186,15 @@ export const serverDbHelpers = {
     const supabase = await createServerSupabaseClient()
 
     try {
-      // TODO: export_history table doesn't exist in current Supabase schema
-      // This query will fail until the table is created
-      // const { data, error } = await supabase
-      //   .from('export_history')
-      //   .select('*')
-      //   .eq('user_id', userId)
-      //   .order('created_at', { ascending: false })
-      //   .limit(limit)
+      const { data, error } = await supabase
+        .from('export_history')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(limit)
 
-      // if (error) throw error
-      // return data
-
-      dbLogger.warn('export_history table does not exist - returning empty array');
-      return [];
+      if (error) throw error
+      return data || []
     } catch (error) {
       dbLogger.error('Error getting user export history on server:', error)
       return []
@@ -213,20 +208,14 @@ export const serverDbHelpers = {
     const supabase = await createServerSupabaseClient()
 
     try {
-      // TODO: user_api_keys table doesn't exist in current Supabase schema
-      // This query will fail until the table is created
-      // const { data, error } = await supabase
-      //   .from('user_api_keys')
-      //   .select('*')
-      //   .eq('user_id', userId)
-      //   .single()
+      const { data, error } = await supabase
+        .from('user_api_keys')
+        .select('*')
+        .eq('user_id', userId)
+        .single()
 
-      // if (error) throw error
-      // return data
-
-      dbLogger.warn('user_api_keys table does not exist - returning null');
-      dbLogger.info('API keys should be stored in localStorage or added to users table');
-      return null;
+      if (error && error.code !== 'PGRST116') throw error
+      return data
     } catch (error) {
       dbLogger.error('Error getting user API keys on server:', error)
       return null

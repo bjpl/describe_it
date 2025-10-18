@@ -36,7 +36,7 @@ export async function applyVocabularyRateLimit(req: NextRequest): Promise<NextRe
 
 /**
  * Example 3: Apply rate limiting to auth endpoints
- * Usage in /api/auth/*/route.ts
+ * Usage in /api/auth/[endpoint]/route.ts
  */
 export async function applyAuthRateLimit(req: NextRequest): Promise<NextResponse | null> {
   const result = await checkApiRateLimit(req, 'auth');

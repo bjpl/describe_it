@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { apiLogger, dbLogger } from '@/lib/logger';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
       });
 
     if (historyError) {
-      console.error('Failed to record review history:', historyError);
+      dbLogger.error('Failed to record review history', historyError, { context: 'vocabulary-review' });
     }
 
     // Update daily progress
@@ -122,7 +123,7 @@ export async function POST(request: NextRequest) {
       pointsEarned: points,
     });
   } catch (error) {
-    console.error('Error saving review:', error);
+    apiLogger.error('Error saving review', error instanceof Error ? error : new Error(String(error)), { endpoint: '/api/vocabulary/review' });
     return NextResponse.json(
       { error: 'Failed to save review' },
       { status: 500 }
@@ -154,7 +155,7 @@ export async function GET(request: NextRequest) {
       count: dueItems?.length || 0,
     });
   } catch (error) {
-    console.error('Error fetching review items:', error);
+    apiLogger.error('Error fetching review items', error instanceof Error ? error : new Error(String(error)), { endpoint: '/api/vocabulary/review' });
     return NextResponse.json(
       { error: 'Failed to fetch review items' },
       { status: 500 }

@@ -10,6 +10,7 @@ import {
   type ReviewResult,
   type DifficultyRating,
 } from '@/lib/spaced-repetition';
+import { logger } from '@/lib/logger';
 
 interface VocabularyItem {
   id: string;
@@ -79,7 +80,7 @@ export default function FlashcardReview({
         body: JSON.stringify(result),
       });
     } catch (error) {
-      console.error('Failed to save review:', error);
+      logger.error('Failed to save flashcard review', error instanceof Error ? error : new Error(String(error)), { component: 'FlashcardReview' });
     }
 
     // Move to next card or complete session

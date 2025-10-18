@@ -5,6 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@vercel/kv';
+import { logger } from '@/lib/logger';
 
 // Rate limit configuration
 const RATE_LIMITS = {
@@ -91,7 +92,7 @@ const memoryLimiter = new MemoryRateLimiter();
 if (typeof setInterval !== 'undefined') {
   setInterval(
     () => {
-      memoryLimiter.cleanup().catch(console.error);
+      memoryLimiter.cleanup().catch(err => logger.error('Memory limiter cleanup failed', err));
     },
     5 * 60 * 1000
   );
@@ -180,7 +181,7 @@ async function checkRateLimit(
       resetAt,
     };
   } catch (error) {
-    console.error('[RateLimit] KV error, falling back to memory:', error);
+    logger.warn('Rate limit KV error, falling back to memory', error instanceof Error ? error : undefined, { middleware: 'rate-limit' });
     return memoryLimiter.check(key, limit);
   }
 }
@@ -370,7 +371,7 @@ export async function resetRateLimit(clientId: string, type: RateLimitType): Pro
       await kv.del(key);
       await kv.del(blockKey);
     } catch (error) {
-      console.error('[RateLimit] Error resetting rate limit:', error);
+      logger.error('Error resetting rate limit', error instanceof Error ? error : new Error(String(error)), { middleware: 'rate-limit' });
     }
   }
 }

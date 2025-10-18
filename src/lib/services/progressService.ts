@@ -321,9 +321,8 @@ export class ProgressService {
       const result = await withRetry(async () => {
         const client = supabaseService.getClient();
         if (client) {
-          // TODO: user_progress table doesn't exist - using learning_progress instead
           const { data, error } = await client
-            .from("learning_progress")
+            .from("user_progress")
             .select("*")
             .eq("user_id", userId)
             .single();
@@ -576,8 +575,7 @@ export class ProgressService {
     try {
       const client = supabaseService.getClient();
       if (client) {
-        // TODO: user_progress table doesn't exist - using learning_progress instead
-        await client.from("learning_progress").insert([initialProgress]);
+        await client.from("user_progress").insert([initialProgress]);
       }
     } catch (error) {
       logger.warn("Failed to save initial progress:", { error });
@@ -631,9 +629,8 @@ export class ProgressService {
     try {
       const client = supabaseService.getClient();
       if (client) {
-        // TODO: user_progress table doesn't exist - using learning_progress instead
         await client
-          .from("learning_progress")
+          .from("user_progress")
           .update(updatedProgress)
           .eq("user_id", userId);
       }

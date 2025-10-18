@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { trackPerformanceMetric } from '@/lib/sentry-utils';
+import { performanceLogger } from '@/lib/logger';
 
 interface WebVitalsMetric {
   name: string;
@@ -43,10 +44,7 @@ export function LighthouseMonitor() {
 
         // Log in development
         if (process.env.NODE_ENV === 'development') {
-          console.log(`[Web Vitals] ${metric.name}:`, {
-            value: metric.value,
-            rating: metric.rating,
-          });
+          performanceLogger.debug('Web Vitals metric', { metric: metric.name, value: metric.value, rating: metric.rating });
         }
       }
 

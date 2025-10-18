@@ -4,6 +4,7 @@
  */
 
 import { kv } from '@vercel/kv';
+import { logger } from '@/lib/logger';
 
 // Cache configuration from environment
 const ENABLE_REDIS = process.env.ENABLE_REDIS_CACHE === 'true';
@@ -297,7 +298,7 @@ export const sessionCache = new CacheManager('session');
 export async function warmCache(userId: string): Promise<void> {
   // This would be called on login to preload user data
   // Implementation depends on your data fetching logic
-  console.log('[Cache] Warming cache for user:', userId);
+  logger.info('Warming cache for user', { userId, operation: 'cache-warm' });
 }
 
 /**

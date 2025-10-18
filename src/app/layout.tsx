@@ -6,6 +6,7 @@ import OfflineIndicator from '@/components/OfflineIndicator';
 import Script from 'next/script';
 import PerformanceBudget from '@/components/Performance/PerformanceBudget';
 import { SentryErrorBoundary } from '@/components/ErrorBoundary/SentryErrorBoundary';
+import { logger } from '@/lib/logger';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -74,10 +75,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
                   .then((registration) => {
-                    console.log('SW registered:', registration);
+                    if (window.logger) {
+                      window.logger.info('Service worker registered', { registration });
+                    }
                   })
                   .catch((error) => {
-                    console.log('SW registration failed:', error);
+                    if (window.logger) {
+                      window.logger.error('Service worker registration failed', error);
+                    }
                   });
               });
             }
