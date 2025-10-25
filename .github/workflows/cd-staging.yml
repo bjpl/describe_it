@@ -1,10 +1,6 @@
 name: CD - Staging Deployment
 
 on:
-  push:
-    branches: [develop]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 env:
