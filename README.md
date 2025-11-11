@@ -1,6 +1,8 @@
 # Describe It - Spanish Learning through Visual Intelligence
 
-A comprehensive Next.js 14 application that combines visual learning with AI-powered language education, helping users learn Spanish through interactive image descriptions, Q&A sessions, and vocabulary extraction.
+**Version:** 0.1.0 | **Status:** ACTIVE - 10 commits in last 30 days
+
+A comprehensive Next.js 15.5 application that combines visual learning with AI-powered language education, helping users learn Spanish through interactive image descriptions, Q&A sessions, and vocabulary extraction.
 
 ## 🌟 Features
 
@@ -14,19 +16,20 @@ A comprehensive Next.js 14 application that combines visual learning with AI-pow
 
 ### Technical Features
 
-- **Next.js 14 App Router** with TypeScript strict mode
-- **Supabase Integration** for auth, database, and real-time features
-- **Vercel KV** for Redis caching and session management
-- **OpenAI GPT-4** for AI-powered content generation
-- **Unsplash API** for high-quality image search
-- **React Query** for data fetching and caching
+- **Next.js 15.5 App Router** with React 19 and TypeScript 5.9 strict mode
+- **Anthropic Claude SDK 0.65.0** for AI-powered image analysis and content generation
+- **Supabase 2.58.0** for auth, database, and real-time features
+- **Sentry 10.17.0** for production monitoring and error tracking
+- **TanStack Query 5.90** for data fetching and caching
 - **Zustand** for state management
+- **Unsplash API** for high-quality image search
 - **Radix UI** for accessible components
 - **Tailwind CSS** for styling
 
 ## 🚀 Quick Start
 
-> Last deployed: December 9, 2024 - Cache cleared and fixed runtime errors
+**Deployment Status:** Production-ready on Vercel
+**Recent Activity:** Database migrations, Plans A/B/C completion, Build/test infrastructure fixes
 
 ## 🚀 Getting Started
 
@@ -208,6 +211,8 @@ describe-it/
 ## 🔧 Development
 
 ### Running Tests
+
+**Testing Framework:** Vitest + Playwright
 
 ```bash
 npm run test           # Unit tests with Vitest
