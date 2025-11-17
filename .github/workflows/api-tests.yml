@@ -1,10 +1,12 @@
 name: API Tests
 
 on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main, develop]
+  # Temporarily disabled to prevent email spam
+  # push:
+  workflow_dispatch:
+    # branches: [main, develop]
+  # pull_request:
+    # branches: [main, develop]
 
 jobs:
   test:

@@ -1,12 +1,13 @@
 name: Docker - Build & Publish
 
 on:
-  push:
-    branches: [main, develop]
+  # Temporarily disabled to prevent email spam
+  # push:
+    # branches: [main, develop]
     tags:
       - 'v*.*.*'
-  pull_request:
-    branches: [main]
+  # pull_request:
+    # branches: [main]
   workflow_dispatch:
 
 env:
