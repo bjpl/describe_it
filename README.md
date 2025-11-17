@@ -46,8 +46,8 @@ A comprehensive Next.js 15.5 application that combines visual learning with AI-p
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/describe-it.git
-cd describe-it
+git clone https://github.com/bjpl/describe_it.git
+cd describe_it
 ```
 
 2. Install dependencies:
