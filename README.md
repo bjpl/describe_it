@@ -44,73 +44,107 @@ Describe It is a comprehensive Next.js 15.5 application designed for Spanish lan
 - Accessible UI components built with Radix UI
 - Styled with Tailwind CSS
 
-## Installation
+## Live Demo
+
+**Deployed Application:** [View Live Demo](https://describe-it.vercel.app)
+
+This project demonstrates full-stack Next.js 15.5 development with AI integration, real-time collaboration, and production-grade architecture. The implementation showcases modern React patterns, TypeScript strict mode, multi-layered caching strategies, and comprehensive security implementations.
+
+## Technical Overview
+
+**Key Technologies:**
+- Next.js 15.5 App Router with React 19 and TypeScript 5.9
+- Anthropic Claude SDK 0.65.0 for AI-powered image analysis
+- Supabase 2.58.0 (Auth, Database, Real-time)
+- TanStack Query 5.90 for server state management
+- Zustand for client state management
+- Radix UI for accessible components
+- Tailwind CSS for styling
+- Sentry 10.17.0 for production monitoring
+
+**Implementation Highlights:**
+- Multi-style AI-generated descriptions (Narrativo, Poético, Académico, Conversacional, Infantil)
+- Interactive Q&A system with context-aware questions and confidence scoring
+- Real-time collaboration with live updates and shared sessions
+- Comprehensive security: JWT auth, Row-Level Security, CORS, rate limiting, input validation
+- Multi-layer caching architecture: Browser → CDN → Application → Database
+- Core Web Vitals monitoring with automatic alerting
+- Production deployment on Vercel with Supabase backend
+
+## Exploring the Code
+
+The project structure demonstrates clean architecture and separation of concerns:
+
+```
+describe-it/
+├── src/
+│   ├── app/                  # Next.js app router
+│   ├── components/           # React components
+│   ├── hooks/                # Custom React hooks
+│   ├── lib/
+│   │   ├── api/              # API integrations (Anthropic, Unsplash)
+│   │   ├── database/         # Database utilities and migrations
+│   │   └── store/            # State management (Zustand)
+│   ├── types/                # TypeScript definitions
+│   └── utils/                # Utility functions
+├── tests/                    # Vitest unit and Playwright E2E tests
+└── docs/                     # Comprehensive documentation
+```
+
+**For Technical Review:**
+
+Those interested in the implementation details can explore:
+- `/src/app/api` directory for API route implementations
+- `/src/lib/database/migrations` for database schema and RLS policies
+- `/docs/security` for comprehensive security documentation
+- `/docs/architecture` for system design patterns
+- `/tests` directory for testing approach (Vitest + Playwright)
+
+**Local Development** _(Optional for developers)_
+
+<details>
+<summary>Click to expand setup instructions</summary>
 
 ### Prerequisites
 - Node.js 18 or higher
 - npm or pnpm
 - Supabase account
-- OpenAI API key
+- Anthropic API key
 - Unsplash API key
-- Vercel account (for deployment)
 
 ### Setup
 
-Clone the repository and install dependencies:
-
 ```bash
+# Clone repository
 git clone https://github.com/bjpl/describe_it.git
 cd describe_it
 npm install
-```
 
-Configure environment variables:
-
-```bash
+# Configure environment variables
 cp docs/setup/.env.local.example .env.local
-```
+# Update .env.local with your API keys
 
-Update `.env.local` with required API keys:
-
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-OPENAI_API_KEY=sk-proj-your-key
-NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=your-unsplash-key
-UNSPLASH_ACCESS_KEY=your-unsplash-key
-```
-
-Generate security keys:
-
-```bash
-node -e "console.log('API_SECRET_KEY=' + require('crypto').randomBytes(32).toString('hex'))"
-node -e "console.log('JWT_SECRET=' + require('crypto').randomBytes(32).toString('hex'))"
-node -e "console.log('SESSION_SECRET=' + require('crypto').randomBytes(16).toString('hex'))"
-```
-
-Run database migrations:
-
-```bash
+# Run database migrations
 npx supabase migration up
-```
 
-## Usage
-
-Start the development server:
-
-```bash
+# Start development server
 npm run dev
 ```
 
 The application will be available at http://localhost:3000.
 
-Build for production:
+### Build Commands
 
 ```bash
-npm run build
-npm run start
+npm run build       # Build for production
+npm run start       # Start production server
+npm run test        # Run unit tests
+npm run test:e2e    # Run E2E tests
+npm run lint        # Lint and format code
+npm run typecheck   # TypeScript type checking
 ```
+
+</details>
 
 ## Project Structure
 
