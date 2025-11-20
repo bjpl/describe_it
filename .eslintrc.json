@@ -8,7 +8,8 @@
       {
         "allow": []
       }
-    ]
+    ],
+    "react/no-unescaped-entities": "warn"
   },
   "overrides": [
     {
@@ -31,7 +32,9 @@
       "files": ["src/**/*.ts", "src/**/*.tsx"],
       "plugins": ["custom-rules"],
       "rules": {
-        "custom-rules/require-logger": "error"
+        "custom-rules/require-logger": "error",
+        "react/no-unescaped-entities": "warn",
+        "react/display-name": "warn"
       }
     }
   ]

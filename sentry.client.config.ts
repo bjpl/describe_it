@@ -20,7 +20,7 @@ Sentry.init({
     }),
     Sentry.browserTracingIntegration({
       // Track navigation performance
-      tracingOrigins: ['localhost', /^\//],
+      tracePropagationTargets: ['localhost', /^\//],
       // Track component interactions
       enableLongTask: true,
       enableInp: true,
@@ -96,7 +96,7 @@ Sentry.init({
     },
     user: {
       // Anonymous user tracking
-      id: typeof window !== 'undefined' ? window.localStorage.getItem('user-id') : undefined,
+      id: typeof window !== 'undefined' ? (window.localStorage.getItem('user-id') || undefined) : undefined,
     },
   },
 

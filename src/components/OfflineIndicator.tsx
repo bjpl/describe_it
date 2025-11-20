@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { WifiOff, Wifi, RefreshCw } from 'lucide-react';
 import { syncQueue } from '@/lib/offline-storage';
+import { logger } from '@/lib/logger';
 
 export default function OfflineIndicator() {
   const [isOnline, setIsOnline] = useState(true);
@@ -41,7 +42,7 @@ export default function OfflineIndicator() {
       await syncQueue.syncAll();
       setPendingCount(0);
     } catch (error) {
-      console.error('Sync failed:', error);
+      logger.error('Sync failed:', error);
     } finally {
       setIsSyncing(false);
     }

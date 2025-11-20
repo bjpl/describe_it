@@ -95,58 +95,8 @@ export async function POST(request: NextRequest) {
     });
     
     logger.info('Authenticating user', { email, rememberMe });
-    
-    // Special handling for admin account during development
-    if (email === 'brandon.lambert87@gmail.com' && password === 'Test123') {
-      // Try to sign in normally first
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      // If rate limited, return a valid mock session for admin
-      if (error && (error.message?.includes('quota') || error.message?.includes('exceeded'))) {
-        apiLogger.info('[Signin] Admin account rate limited, using enhanced mock');
-        return createSuccessResponse({
-          message: 'Signed in successfully (admin bypass)',
-          user: {
-            id: 'e32caa0c-9720-492d-9f6f-fb3860f4b563',
-            email: email,
-            emailConfirmed: true,
-            lastSignIn: new Date().toISOString()
-          },
-          session: {
-            access_token: 'admin-mock-token-' + Date.now(),
-            refresh_token: 'admin-mock-refresh-' + Date.now(),
-            expires_at: Date.now() / 1000 + 3600,
-            user: {
-              id: 'e32caa0c-9720-492d-9f6f-fb3860f4b563',
-              email: email,
-              role: 'authenticated'
-            }
-          },
-          isMock: true,
-          isAdmin: true
-        });
-      }
-      
-      // If successful, continue normally
-      if (!error && data) {
-        apiLogger.info('[Signin] Admin signin successful');
-        return createSuccessResponse({
-          message: 'Signed in successfully!',
-          user: data.user ? {
-            id: data.user.id,
-            email: data.user.email,
-            emailConfirmed: !!data.user.email_confirmed_at,
-            lastSignIn: data.user.last_sign_in_at
-          } : null,
-          session: data.session
-        });
-      }
-    }
-    
-    // Sign in the user normally for all other accounts
+
+    // Sign in the user with Supabase authentication
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
@@ -154,30 +104,16 @@ export async function POST(request: NextRequest) {
     
     if (error) {
       apiLogger.error('[Signin] Auth error:', error);
-      
-      // Handle rate limiting by falling back to mock auth
-      if (error.message?.includes('quota') || 
-          error.message?.includes('rate') || 
+
+      // Handle rate limiting errors
+      if (error.message?.includes('quota') ||
+          error.message?.includes('rate') ||
           error.message?.includes('exceeded') ||
           error.status === 429) {
-        apiLogger.info('[Signin] Rate limited, using mock auth');
-        
-        // Return mock session for development
-        return createSuccessResponse({
-          message: 'Signed in successfully (development mode)',
-          user: {
-            id: 'mock-' + Date.now(),
-            email: email,
-            emailConfirmed: true,
-            lastSignIn: new Date().toISOString()
-          },
-          session: {
-            access_token: 'mock-token-' + Date.now(),
-            refresh_token: 'mock-refresh-' + Date.now(),
-            expires_at: Date.now() / 1000 + 3600
-          },
-          isMock: true
-        });
+        return createErrorResponse(
+          'Too many login attempts. Please try again later.',
+          429
+        );
       }
       
       // Handle specific error cases

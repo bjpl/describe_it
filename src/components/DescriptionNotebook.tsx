@@ -445,7 +445,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
                   {!activeDescription.english && !activeDescription.spanish && (
                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <p>
-                        Haz clic en &ldquo;Generar Descripción&rdquo; para crear contenido
+                        Haz clic en &quot;Generar Descripción&quot; para crear contenido
                         en estilo {activeStyle}
                       </p>
                     </div>

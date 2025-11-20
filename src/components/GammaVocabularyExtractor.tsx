@@ -931,7 +931,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                               <div className="flex-1">
                                 <div className="flex items-center gap-2 mb-2">
                                   <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    &ldquo;{phrase.phrase}&rdquo;
+                                    "{phrase.phrase}"
                                   </h4>
                                   {phrase.gender && (
                                     <span className="text-xs px-2 py-1 bg-gray-100 dark:bg-gray-700 rounded">
@@ -954,7 +954,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
                                   {phrase.definition}
                                 </p>
                                 <p className="text-sm text-gray-600 dark:text-gray-400 italic">
-                                  &ldquo;{phrase.context}&rdquo;
+                                  "{phrase.context}"
                                 </p>
                               </div>
 
@@ -1034,7 +1034,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
             Ready to Extract Vocabulary
           </h3>
           <p className="text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-            Click &ldquo;Extract&rdquo; to analyze the current description and extract
+            Click "Extract" to analyze the current description and extract
             Spanish vocabulary into 5 categories with click-to-add
             functionality.
           </p>

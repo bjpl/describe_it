@@ -139,7 +139,7 @@ class VercelKVCache implements CacheInterface {
       }
       return value;
     } catch (error) {
-      console.error('[Cache] Vercel KV get error:', error);
+      logger.error('[Cache] Vercel KV get error:', error);
       // Fallback to memory cache
       if (ENABLE_MEMORY_FALLBACK) {
         return memoryCache.get<T>(key);
@@ -156,7 +156,7 @@ class VercelKVCache implements CacheInterface {
         await memoryCache.set(key, value, ttl);
       }
     } catch (error) {
-      console.error('[Cache] Vercel KV set error:', error);
+      logger.error('[Cache] Vercel KV set error:', error);
       // Fallback to memory cache
       if (ENABLE_MEMORY_FALLBACK) {
         await memoryCache.set(key, value, ttl);
@@ -171,7 +171,7 @@ class VercelKVCache implements CacheInterface {
         await memoryCache.del(key);
       }
     } catch (error) {
-      console.error('[Cache] Vercel KV del error:', error);
+      logger.error('[Cache] Vercel KV del error:', error);
       if (ENABLE_MEMORY_FALLBACK) {
         await memoryCache.del(key);
       }
@@ -182,25 +182,25 @@ class VercelKVCache implements CacheInterface {
     try {
       // Vercel KV doesn't support pattern deletion, so we'll need to scan
       // For now, log a warning and rely on TTL expiration
-      console.warn('[Cache] Pattern deletion not fully supported on Vercel KV:', pattern);
+      logger.warn('[Cache] Pattern deletion not fully supported on Vercel KV:', { pattern });
 
       if (ENABLE_MEMORY_FALLBACK) {
         await memoryCache.delPattern(pattern);
       }
     } catch (error) {
-      console.error('[Cache] Vercel KV delPattern error:', error);
+      logger.error('[Cache] Vercel KV delPattern error:', error);
     }
   }
 
   async clear(): Promise<void> {
     try {
       // Vercel KV doesn't have a clear all method
-      console.warn('[Cache] Clear all not supported on Vercel KV');
+      logger.warn('[Cache] Clear all not supported on Vercel KV');
       if (ENABLE_MEMORY_FALLBACK) {
         await memoryCache.clear();
       }
     } catch (error) {
-      console.error('[Cache] Vercel KV clear error:', error);
+      logger.error('[Cache] Vercel KV clear error:', error);
     }
   }
 
@@ -227,7 +227,7 @@ function getCacheBackend(): CacheInterface {
   }
 
   // Fallback to memory cache
-  console.warn('[Cache] Using in-memory cache fallback');
+  logger.warn('[Cache] Using in-memory cache fallback');
   return memoryCache;
 }
 

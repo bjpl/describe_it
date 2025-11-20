@@ -17,7 +17,6 @@
     "allowImportingTsExtensions": false,
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
-    "types": ["vitest/globals"],
     "plugins": [
       {
         "name": "next"

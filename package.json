@@ -173,5 +173,8 @@
   },
   "optionalDependencies": {
     "ioredis": "^5.8.0"
+  },
+  "overrides": {
+    "pg-promise": "^12.3.0"
   }
 }

@@ -633,7 +633,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(
                                     </span>
                                   )}
                                   <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                                    &ldquo;{phrase.phrase}&rdquo;
+                                    &quot;{phrase.phrase}&quot;
                                   </h4>
                                   {phrase.gender && (
                                     <span
@@ -721,7 +721,7 @@ const EnhancedPhrasesPanel = memo<EnhancedPhrasesPanelProps>(
                                 Context:
                               </h5>
                               <p className="text-gray-700 dark:text-gray-300 text-sm italic">
-                                &ldquo;{phrase.context}&rdquo;
+                                &quot;{phrase.context}&quot;
                               </p>
                             </div>
                           </div>

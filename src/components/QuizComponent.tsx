@@ -302,7 +302,7 @@ export const QuizComponent: React.FC<QuizComponentProps> = ({
 
             {currentQuestion.type !== "multipleChoice" && (
               <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 py-2">
-                &ldquo;{currentQuestion.phrase.phrase}&rdquo;
+                "{currentQuestion.phrase.phrase}"
               </p>
             )}
           </div>

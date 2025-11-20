@@ -110,7 +110,7 @@ export default function TestAPIKey() {
         <h3 className="font-semibold text-yellow-800 mb-2">Setup Instructions:</h3>
         <ol className="list-decimal list-inside text-sm text-yellow-700 space-y-1">
           <li>Go to Settings and add your OpenAI API key</li>
-          <li>Click "Test API Key Flow" above</li>
+          <li>Click &quot;Test API Key Flow&quot; above</li>
           <li>Check if &quot;keyReceived&quot; is true and &quot;keySource&quot; is &quot;user&quot;</li>
           <li>Verify that descriptions are NOT in demo mode</li>
         </ol>
