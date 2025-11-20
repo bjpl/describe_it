@@ -1,157 +1,135 @@
 /**
- * Motion Wrapper Components
- * Comprehensive set of properly typed motion components that resolve TS2322 errors
+ * Type-Safe Motion Wrapper Components
+ * Properly typed Framer Motion components that resolve all TypeScript errors
+ *
+ * This file exports the same components as MotionComponents.tsx for backward compatibility
  */
 import React from 'react';
-import { motion, MotionProps } from 'framer-motion';
+import { motion, HTMLMotionProps, ForwardRefComponent } from 'framer-motion';
 
-// Utility type for motion components that accept all standard HTML attributes
-type MotionComponentProps<T extends keyof React.JSX.IntrinsicElements> = 
-  React.ComponentPropsWithoutRef<T> & MotionProps;
+// Direct exports from Framer Motion for type safety
+// These components are fully typed and support all motion props
 
-// Motion Div
-export const MotionDiv = React.forwardRef<HTMLDivElement, MotionComponentProps<'div'>>(
-  (props, ref) => <motion.div ref={ref} {...(props as any)} />
-);
-MotionDiv.displayName = 'MotionDiv';
+/**
+ * Motion Div - The most commonly used motion component
+ * @example
+ * <MotionDiv initial={{ opacity: 0 }} animate={{ opacity: 1 }} />
+ */
+export const MotionDiv = motion.div;
 
-// Motion Button
-export const MotionButton = React.forwardRef<HTMLButtonElement, MotionComponentProps<'button'>>(
-  (props, ref) => <motion.button ref={ref} {...(props as any)} />
-);
-MotionButton.displayName = 'MotionButton';
+/**
+ * Motion Button
+ * @example
+ * <MotionButton whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} />
+ */
+export const MotionButton = motion.button;
 
-// Motion Span
-export const MotionSpan = React.forwardRef<HTMLSpanElement, MotionComponentProps<'span'>>(
-  (props, ref) => <motion.span ref={ref} {...(props as any)} />
-);
-MotionSpan.displayName = 'MotionSpan';
+/**
+ * Motion Span
+ * @example
+ * <MotionSpan initial={{ x: -20 }} animate={{ x: 0 }} />
+ */
+export const MotionSpan = motion.span;
 
-// Motion Paragraph
-export const MotionP = React.forwardRef<HTMLParagraphElement, MotionComponentProps<'p'>>(
-  (props, ref) => <motion.p ref={ref} {...(props as any)} />
-);
-MotionP.displayName = 'MotionP';
+/**
+ * Motion Paragraph
+ * @example
+ * <MotionP initial={{ opacity: 0 }} animate={{ opacity: 1 }} />
+ */
+export const MotionP = motion.p;
 
-// Motion Headers
-export const MotionH1 = React.forwardRef<HTMLHeadingElement, MotionComponentProps<'h1'>>(
-  (props, ref) => <motion.h1 ref={ref} {...(props as any)} />
-);
-MotionH1.displayName = 'MotionH1';
+/**
+ * Motion Headers - H1 through H6
+ */
+export const MotionH1 = motion.h1;
+export const MotionH2 = motion.h2;
+export const MotionH3 = motion.h3;
+export const MotionH4 = motion.h4;
+export const MotionH5 = motion.h5;
+export const MotionH6 = motion.h6;
 
-export const MotionH2 = React.forwardRef<HTMLHeadingElement, MotionComponentProps<'h2'>>(
-  (props, ref) => <motion.h2 ref={ref} {...(props as any)} />
-);
-MotionH2.displayName = 'MotionH2';
+/**
+ * Motion Form Elements
+ */
+export const MotionForm = motion.form;
+export const MotionInput = motion.input;
+export const MotionTextarea = motion.textarea;
+export const MotionSelect = motion.select;
+export const MotionLabel = motion.label;
 
-export const MotionH3 = React.forwardRef<HTMLHeadingElement, MotionComponentProps<'h3'>>(
-  (props, ref) => <motion.h3 ref={ref} {...(props as any)} />
-);
-MotionH3.displayName = 'MotionH3';
+/**
+ * Motion Semantic Elements
+ */
+export const MotionHeader = motion.header;
+export const MotionSection = motion.section;
+export const MotionArticle = motion.article;
+export const MotionAside = motion.aside;
+export const MotionNav = motion.nav;
+export const MotionMain = motion.main;
+export const MotionFooter = motion.footer;
 
-export const MotionH4 = React.forwardRef<HTMLHeadingElement, MotionComponentProps<'h4'>>(
-  (props, ref) => <motion.h4 ref={ref} {...(props as any)} />
-);
-MotionH4.displayName = 'MotionH4';
+/**
+ * Motion Links and Media
+ */
+export const MotionA = motion.a;
+export const MotionImg = motion.img;
+export const MotionVideo = motion.video;
+export const MotionAudio = motion.audio;
+export const MotionCanvas = motion.canvas;
+export const MotionSvg = motion.svg;
 
-export const MotionH5 = React.forwardRef<HTMLHeadingElement, MotionComponentProps<'h5'>>(
-  (props, ref) => <motion.h5 ref={ref} {...(props as any)} />
-);
-MotionH5.displayName = 'MotionH5';
+/**
+ * Motion Lists
+ */
+export const MotionUl = motion.ul;
+export const MotionOl = motion.ol;
+export const MotionLi = motion.li;
+export const MotionDl = motion.dl;
+export const MotionDt = motion.dt;
+export const MotionDd = motion.dd;
 
-export const MotionH6 = React.forwardRef<HTMLHeadingElement, MotionComponentProps<'h6'>>(
-  (props, ref) => <motion.h6 ref={ref} {...(props as any)} />
-);
-MotionH6.displayName = 'MotionH6';
+/**
+ * Motion Tables
+ */
+export const MotionTable = motion.table;
+export const MotionThead = motion.thead;
+export const MotionTbody = motion.tbody;
+export const MotionTfoot = motion.tfoot;
+export const MotionTr = motion.tr;
+export const MotionTh = motion.th;
+export const MotionTd = motion.td;
 
-// Motion Form Elements
-export const MotionForm = React.forwardRef<HTMLFormElement, MotionComponentProps<'form'>>(
-  (props, ref) => <motion.form ref={ref} {...(props as any)} />
-);
-MotionForm.displayName = 'MotionForm';
+/**
+ * Motion Generic Elements
+ */
+export const MotionFieldset = motion.fieldset;
+export const MotionLegend = motion.legend;
+export const MotionPre = motion.pre;
+export const MotionCode = motion.code;
+export const MotionBlockquote = motion.blockquote;
+export const MotionFigure = motion.figure;
+export const MotionFigcaption = motion.figcaption;
 
-export const MotionInput = React.forwardRef<HTMLInputElement, MotionComponentProps<'input'>>(
-  (props, ref) => <motion.input ref={ref} {...(props as any)} />
-);
-MotionInput.displayName = 'MotionInput';
+/**
+ * Motion SVG Elements (for animated icons/graphics)
+ */
+export const MotionPath = motion.path;
+export const MotionCircle = motion.circle;
+export const MotionRect = motion.rect;
+export const MotionLine = motion.line;
+export const MotionPolygon = motion.polygon;
+export const MotionPolyline = motion.polyline;
+export const MotionEllipse = motion.ellipse;
+export const MotionG = motion.g;
 
-export const MotionTextarea = React.forwardRef<HTMLTextAreaElement, MotionComponentProps<'textarea'>>(
-  (props, ref) => <motion.textarea ref={ref} {...(props as any)} />
-);
-MotionTextarea.displayName = 'MotionTextarea';
-
-export const MotionSelect = React.forwardRef<HTMLSelectElement, MotionComponentProps<'select'>>(
-  (props, ref) => <motion.select ref={ref} {...(props as any)} />
-);
-MotionSelect.displayName = 'MotionSelect';
-
-// Motion Semantic Elements
-export const MotionHeader = React.forwardRef<HTMLElement, MotionComponentProps<'header'>>(
-  (props, ref) => <motion.header ref={ref} {...(props as any)} />
-);
-MotionHeader.displayName = 'MotionHeader';
-
-export const MotionSection = React.forwardRef<HTMLElement, MotionComponentProps<'section'>>(
-  (props, ref) => <motion.section ref={ref} {...(props as any)} />
-);
-MotionSection.displayName = 'MotionSection';
-
-export const MotionArticle = React.forwardRef<HTMLElement, MotionComponentProps<'article'>>(
-  (props, ref) => <motion.article ref={ref} {...(props as any)} />
-);
-MotionArticle.displayName = 'MotionArticle';
-
-export const MotionAside = React.forwardRef<HTMLElement, MotionComponentProps<'aside'>>(
-  (props, ref) => <motion.aside ref={ref} {...(props as any)} />
-);
-MotionAside.displayName = 'MotionAside';
-
-export const MotionNav = React.forwardRef<HTMLElement, MotionComponentProps<'nav'>>(
-  (props, ref) => <motion.nav ref={ref} {...(props as any)} />
-);
-MotionNav.displayName = 'MotionNav';
-
-export const MotionMain = React.forwardRef<HTMLElement, MotionComponentProps<'main'>>(
-  (props, ref) => <motion.main ref={ref} {...(props as any)} />
-);
-MotionMain.displayName = 'MotionMain';
-
-export const MotionFooter = React.forwardRef<HTMLElement, MotionComponentProps<'footer'>>(
-  (props, ref) => <motion.footer ref={ref} {...(props as any)} />
-);
-MotionFooter.displayName = 'MotionFooter';
-
-// Motion Links and Media
-export const MotionA = React.forwardRef<HTMLAnchorElement, MotionComponentProps<'a'>>(
-  (props, ref) => <motion.a ref={ref} {...(props as any)} />
-);
-MotionA.displayName = 'MotionA';
-
-export const MotionImg = React.forwardRef<HTMLImageElement, MotionComponentProps<'img'>>(
-  (props, ref) => <motion.img ref={ref} {...(props as any)} />
-);
-MotionImg.displayName = 'MotionImg';
-
-// Motion Lists
-export const MotionUl = React.forwardRef<HTMLUListElement, MotionComponentProps<'ul'>>(
-  (props, ref) => <motion.ul ref={ref} {...(props as any)} />
-);
-MotionUl.displayName = 'MotionUl';
-
-export const MotionOl = React.forwardRef<HTMLOListElement, MotionComponentProps<'ol'>>(
-  (props, ref) => <motion.ol ref={ref} {...(props as any)} />
-);
-MotionOl.displayName = 'MotionOl';
-
-export const MotionLi = React.forwardRef<HTMLLIElement, MotionComponentProps<'li'>>(
-  (props, ref) => <motion.li ref={ref} {...(props as any)} />
-);
-MotionLi.displayName = 'MotionLi';
-
-// Aliases for backward compatibility
+/**
+ * Aliases for backward compatibility
+ */
 export const MotionLink = MotionA;
 
-// Export all as named object for easy importing
+/**
+ * Export all as named object for easy importing
+ */
 const MotionWrappers = {
   Div: MotionDiv,
   Button: MotionButton,
@@ -167,6 +145,7 @@ const MotionWrappers = {
   Input: MotionInput,
   Textarea: MotionTextarea,
   Select: MotionSelect,
+  Label: MotionLabel,
   Header: MotionHeader,
   Section: MotionSection,
   Article: MotionArticle,
@@ -177,9 +156,46 @@ const MotionWrappers = {
   A: MotionA,
   Link: MotionA,
   Img: MotionImg,
+  Video: MotionVideo,
+  Audio: MotionAudio,
+  Canvas: MotionCanvas,
+  Svg: MotionSvg,
   Ul: MotionUl,
   Ol: MotionOl,
   Li: MotionLi,
+  Dl: MotionDl,
+  Dt: MotionDt,
+  Dd: MotionDd,
+  Table: MotionTable,
+  Thead: MotionThead,
+  Tbody: MotionTbody,
+  Tfoot: MotionTfoot,
+  Tr: MotionTr,
+  Th: MotionTh,
+  Td: MotionTd,
+  Fieldset: MotionFieldset,
+  Legend: MotionLegend,
+  Pre: MotionPre,
+  Code: MotionCode,
+  Blockquote: MotionBlockquote,
+  Figure: MotionFigure,
+  Figcaption: MotionFigcaption,
+  Path: MotionPath,
+  Circle: MotionCircle,
+  Rect: MotionRect,
+  Line: MotionLine,
+  Polygon: MotionPolygon,
+  Polyline: MotionPolyline,
+  Ellipse: MotionEllipse,
+  G: MotionG,
 };
 
 export default MotionWrappers;
+
+/**
+ * Type exports for advanced usage
+ */
+export type {
+  HTMLMotionProps,
+  ForwardRefComponent,
+};
