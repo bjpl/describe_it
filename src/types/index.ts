@@ -1,3 +1,43 @@
+/**
+ * Comprehensive TypeScript Type Definitions
+ *
+ * This is the main barrel export combining both new modular types
+ * and legacy types for backward compatibility.
+ *
+ * NEW MODULAR STRUCTURE (Recommended):
+ * - Import from specific modules: import { UserData } from '@/types/database'
+ * - Or use this index: import { UserData, ApiResponse } from '@/types'
+ */
+
+// ============================================================================
+// MODULAR TYPE EXPORTS (New Structure - Recommended)
+// ============================================================================
+
+// Core types
+export * from './core';
+
+// Database types
+export * from './database';
+
+// API types (includes request, response, middleware)
+export * from './api';
+
+// Component types
+export * from './components';
+
+// Service types
+export * from './services';
+
+// Application-specific types
+export * from './application';
+
+// Constants and validation
+export * from './constants';
+
+// ============================================================================
+// LEGACY TYPE DEFINITIONS (Maintained for Backward Compatibility)
+// ============================================================================
+
 // Core Types
 export interface Image {
   id: string;
