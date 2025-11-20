@@ -163,7 +163,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
               </div>
 
               <h2 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
-                &ldquo;{phrase.phrase}&rdquo;
+                "{phrase.phrase}"
               </h2>
 
               {phrase.article && (
@@ -224,7 +224,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
           <div className="flashcard-face flashcard-back bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 border-2 border-blue-200 dark:border-blue-600 rounded-xl p-8 shadow-lg">
             <div className="text-center space-y-6">
               <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
-                &ldquo;{phrase.phrase}&rdquo;
+                "{phrase.phrase}"
               </h2>
 
               <div className="space-y-4">
@@ -253,7 +253,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
                     Context
                   </h3>
                   <p className="text-gray-700 dark:text-gray-300 italic">
-                    &ldquo;{phrase.context}&rdquo;
+                    "{phrase.context}"
                   </p>
                 </div>
 

@@ -3,6 +3,7 @@
 import React, { Component, ReactNode } from 'react';
 import * as Sentry from '@sentry/nextjs';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
+import { logger } from '@/lib/logger';
 
 interface Props {
   children: ReactNode;
@@ -43,7 +44,7 @@ export class SentryErrorBoundary extends Component<Props, State> {
     });
 
     if (process.env.NODE_ENV === 'development') {
-      console.error('Error boundary caught an error:', error, errorInfo);
+      logger.error('Error boundary caught an error:', error, { errorInfo });
     }
   }
 

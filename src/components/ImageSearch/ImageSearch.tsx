@@ -206,7 +206,7 @@ const ImageSearchBase: React.FC<ImageSearchProps> = ({
             <div className="text-sm text-gray-500">
               {images.length > 0 && (
                 <span>
-                  Showing {images.length} images for &ldquo;{searchParams.query}&rdquo;
+                  Showing {images.length} images for "{searchParams.query}"
                 </span>
               )}
             </div>

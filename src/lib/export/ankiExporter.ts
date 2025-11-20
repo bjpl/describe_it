@@ -563,12 +563,19 @@ export class AnkiExporter {
   }
 
   /**
-   * Utility function to escape HTML
+   * Utility function to escape HTML - safe for both client and server environments
    */
   private escapeHtml(text: string): string {
-    const div = document.createElement("div");
-    div.textContent = text;
-    return div.innerHTML;
+    const htmlEscapeMap: { [key: string]: string } = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+      '/': '&#x2F;'
+    };
+
+    return text.replace(/[&<>"'\/]/g, (char) => htmlEscapeMap[char] || char);
   }
 }
 

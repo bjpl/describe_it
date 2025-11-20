@@ -278,7 +278,7 @@ export function ShowAnswer({
       {!isRevealed && (
         <div className="p-4 bg-gray-50 dark:bg-gray-700">
           <p className="text-sm text-gray-600 dark:text-gray-400 text-center italic">
-            Click &ldquo;Show Answer&rdquo; to reveal the correct response and explanation
+            Click "Show Answer" to reveal the correct response and explanation
           </p>
         </div>
       )}

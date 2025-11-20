@@ -38,14 +38,13 @@ const nextConfig = {
   // Output configuration for Vercel
   output: 'standalone',
 
-  // TypeScript - temporarily ignore errors for faster deployment
-  // Re-enable after fixing type issues
+  // TypeScript - enabled for production quality
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
-  // ESLint - temporarily ignore during builds for faster deployment
-  // Re-enable after fixing linting issues
+  // ESLint - temporarily disabled until React unescaped entities are fixed
+  // See docs/TECH_DEBT.md for list of remaining issues
   eslint: {
     ignoreDuringBuilds: true,
   },

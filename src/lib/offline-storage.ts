@@ -1,4 +1,6 @@
 // IndexedDB wrapper for offline storage
+import { logger } from '@/lib/logger';
+
 const DB_NAME = 'describe-it-offline';
 const DB_VERSION = 1;
 
@@ -19,13 +21,13 @@ class OfflineStorage {
       const request = indexedDB.open(DB_NAME, DB_VERSION);
 
       request.onerror = () => {
-        console.error('Failed to open IndexedDB:', request.error);
+        logger.error('Failed to open IndexedDB:', request.error);
         reject(request.error);
       };
 
       request.onsuccess = () => {
         this.db = request.result;
-        console.log('IndexedDB initialized successfully');
+        logger.info('IndexedDB initialized successfully');
         resolve();
       };
 
@@ -57,7 +59,7 @@ class OfflineStorage {
           searchStore.createIndex('timestamp', 'timestamp', { unique: false });
         }
 
-        console.log('IndexedDB schema created');
+        logger.info('IndexedDB schema created');
       };
     });
   }
@@ -255,7 +257,7 @@ export class SyncQueue {
 
   async syncAll(): Promise<void> {
     if (this.syncing) {
-      console.log('Sync already in progress');
+      logger.debug('Sync already in progress');
       return;
     }
 
@@ -266,9 +268,9 @@ export class SyncQueue {
         this.syncVocabulary(),
         this.syncDescriptions(),
       ]);
-      console.log('All pending items synced successfully');
+      logger.info('All pending items synced successfully');
     } catch (error) {
-      console.error('Sync failed:', error);
+      logger.error('Sync failed:', error);
       throw error;
     } finally {
       this.syncing = false;
@@ -290,7 +292,7 @@ export class SyncQueue {
           await offlineStorage.removePendingItem('vocabulary', item.id);
         }
       } catch (error) {
-        console.error('Failed to sync vocabulary item:', error);
+        logger.error('Failed to sync vocabulary item:', error);
         // Don't throw, continue with other items
       }
     }
@@ -311,7 +313,7 @@ export class SyncQueue {
           await offlineStorage.removePendingItem('descriptions', item.id);
         }
       } catch (error) {
-        console.error('Failed to sync description:', error);
+        logger.error('Failed to sync description:', error);
         // Don't throw, continue with other items
       }
     }

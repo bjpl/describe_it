@@ -186,7 +186,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
     { key: "Ctrl/Cmd + K", action: "Focus search bar" },
     { key: "Ctrl/Cmd + Enter", action: "Search for images" },
     { key: "Ctrl/Cmd + D", action: "Generate description" },
-    { key: "Ctrl/Cmd + Q", action: "Generate Q&amp;A" },
+    { key: "Ctrl/Cmd + Q", action: "Generate Q&A" },
     { key: "Ctrl/Cmd + P", action: "Extract phrases" },
     { key: "Ctrl/Cmd + I", action: "Open help modal" },
     { key: "Escape", action: "Close modal/cancel action" },
@@ -603,7 +603,7 @@ export function HelpContent({ onClose }: HelpContentProps) {
                       Active Engagement
                     </h4>
                     <p className="text-sm text-purple-800 dark:text-purple-200 mb-2">
-                      Don&apos;t just read passively. Use the Q&amp;A feature to test
+                      Don't just read passively. Use the Q&A feature to test
                       yourself and the phrase extraction to identify key terms.
                     </p>
                     <div className="text-xs text-purple-700 dark:text-purple-300">
