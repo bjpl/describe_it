@@ -8,4 +8,13 @@ export * from './middleware';
 
 // Legacy re-exports for backward compatibility
 // These will be deprecated in future versions
-export type { TranslationRequest } from './legacy';
+export {
+  APIError,
+  type DescriptionStyle,
+  type DescriptionRequest,
+  type GeneratedDescription,
+  type TranslationRequest,
+  type QAGeneration,
+  type PhraseCategories,
+  type RetryConfig,
+} from './legacy';

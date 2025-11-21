@@ -90,9 +90,9 @@ export async function handleV2GetLists(
     });
 
     // Parse cursor for offset
-    const { offset } = query.cursor
-      ? cursorToOffset(query.cursor)
-      : { offset: 0, limit: query.limit };
+    const offset = query.cursor
+      ? cursorToOffset(query.cursor).offset
+      : 0;
 
     // Mock data for example
     const mockLists: V2VocabularyList[] = [

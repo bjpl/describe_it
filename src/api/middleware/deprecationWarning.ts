@@ -67,7 +67,7 @@ export function withDeprecationWarnings(
         version,
         url: request.url,
         method: request.method,
-        userAgent: request.headers.get('User-Agent'),
+        userAgent: request.headers.get('User-Agent') ?? undefined,
         deprecationInfo,
       });
     }

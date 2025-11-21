@@ -122,10 +122,10 @@ class ExportService {
     }
   }
 
-  async getVocabularyContent(userId: string, filters: any) {
+  async getVocabularyContent(userId: string, filters: any): Promise<any[]> {
     // Get vocabulary from cache (this would typically integrate with the vocabulary API)
     const vocabularyKey = `vocabulary:user:${userId}:index`;
-    const vocabularyIndex = await descriptionCache.get(vocabularyKey);
+    const vocabularyIndex = (await descriptionCache.get(vocabularyKey)) as { items?: any[] } | null;
 
     if (!vocabularyIndex?.items) return [];
 
@@ -149,10 +149,10 @@ class ExportService {
     return items;
   }
 
-  async getPhrasesContent(userId: string, filters: any) {
+  async getPhrasesContent(userId: string, filters: any): Promise<any[]> {
     // Get phrases from recent sessions or saved phrases
     const phrasesKey = `phrases:user:${userId}:saved`;
-    const phrases = (await descriptionCache.get(phrasesKey)) || [];
+    const phrases = ((await descriptionCache.get(phrasesKey)) || []) as any[];
 
     let filteredPhrases = phrases;
 
@@ -170,15 +170,15 @@ class ExportService {
     return filteredPhrases;
   }
 
-  async getQAContent(userId: string, filters: any) {
+  async getQAContent(userId: string, filters: any): Promise<any[]> {
     // Get Q&A from recent sessions
     const qaKey = `qa:user:${userId}:history`;
-    const qa = (await descriptionCache.get(qaKey)) || [];
+    const qa = ((await descriptionCache.get(qaKey)) || []) as any[];
 
     return qa;
   }
 
-  async getProgressContent(userId: string, filters: any) {
+  async getProgressContent(userId: string, filters: any): Promise<any[]> {
     // Get progress data
     const progressKey = `progress:user:${userId}:summary`;
     const progress = await descriptionCache.get(progressKey);
@@ -441,7 +441,7 @@ async function handleExportGenerate(request: AuthenticatedRequest) {
     const cacheKey = `export:${userId}:${exportType}:${contentType}:${safeStringify(filters, '{}', 'cache-key-filters').substring(0, 50)}`;
 
     // Check cache first
-    let exportResult = await descriptionCache.get(cacheKey);
+    let exportResult: any = await descriptionCache.get(cacheKey);
     let fromCache = false;
 
     if (exportResult) {
@@ -457,7 +457,7 @@ async function handleExportGenerate(request: AuthenticatedRequest) {
       );
 
       // Cache the export for 1 hour
-      await descriptionCache.set(cacheKey, exportResult, {
+      await (descriptionCache as any).set(cacheKey, exportResult, {
         kvTTL: 3600, // 1 hour
         memoryTTL: 1800, // 30 minutes
         sessionTTL: 900, // 15 minutes
@@ -552,7 +552,7 @@ async function handleExportDownload(request: AuthenticatedRequest) {
   try {
     // Get export data from cache
     const exportKey = `export:download:${filename}`;
-    const exportData = await descriptionCache.get(exportKey);
+    const exportData = (await descriptionCache.get(exportKey)) as { data: any; contentType: string } | null;
 
     if (!exportData) {
       return NextResponse.json(
