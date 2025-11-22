@@ -3,6 +3,13 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* Fix for Framer Motion - ensure content is visible before JS hydration */
+/* This prevents blank page when JavaScript hasn't loaded yet */
+[style*="opacity: 0"],
+[style*="opacity:0"] {
+  opacity: 1 !important;
+}
+
 /* CSS Variables */
 :root {
   --background: 255 255 255;
