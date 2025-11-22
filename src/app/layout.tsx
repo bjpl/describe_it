@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import OfflineIndicator from '@/components/OfflineIndicator';
@@ -8,7 +7,8 @@ import PerformanceBudget from '@/components/Performance/PerformanceBudget';
 import { SentryErrorBoundary } from '@/components/ErrorBoundary/SentryErrorBoundary';
 import { logger } from '@/lib/logger';
 
-const inter = Inter({ subsets: ['latin'] });
+// Use system font stack instead of Google Fonts for offline/network-restricted environments
+const fontClassName = 'font-sans';
 
 export const metadata: Metadata = {
   title: 'Describe It - Spanish Learning with Images',
@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta httpEquiv='X-UA-Compatible' content='IE=edge' />
         <meta name='format-detection' content='telephone=no' />
       </head>
-      <body className={`${inter.className} min-h-screen bg-gray-50`}>
+      <body className={`${fontClassName} min-h-screen bg-gray-50`}>
         <SentryErrorBoundary showDetails={process.env.NODE_ENV === 'development'}>
           <Providers>
             {children}

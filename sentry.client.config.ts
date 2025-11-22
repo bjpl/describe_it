@@ -6,6 +6,9 @@ Sentry.init({
   // Performance Monitoring
   tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
+  // Trace propagation targets
+  tracePropagationTargets: ['localhost', /^\//],
+
   // Error Sampling
   sampleRate: 1.0,
 
@@ -19,8 +22,6 @@ Sentry.init({
       blockAllMedia: true,
     }),
     Sentry.browserTracingIntegration({
-      // Track navigation performance
-      tracePropagationTargets: ['localhost', /^\//],
       // Track component interactions
       enableLongTask: true,
       enableInp: true,
@@ -84,8 +85,6 @@ Sentry.init({
     return breadcrumb;
   },
 
-  // Track Web Vitals
-  enableTracing: true,
 
   // Additional context
   initialScope: {
