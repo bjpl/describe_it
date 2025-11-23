@@ -144,10 +144,12 @@ export function useImageSearch() {
       url.searchParams.set("query", query);
       url.searchParams.set("page", page.toString());
       
-      // Simplified API key retrieval - check localStorage only
-      let apiKey = null;
-      
-      if (typeof window !== 'undefined' && window.localStorage) {
+      // API key retrieval - check environment variable first, then localStorage
+      let apiKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || null;
+
+      if (apiKey) {
+        logger.info('[useImageSearch] Using API key from environment variable');
+      } else if (typeof window !== 'undefined' && window.localStorage) {
         // Check api-keys-backup first (most reliable)
         const apiKeysBackupStr = sessionStorage.getItem('api-keys-backup');
         if (apiKeysBackupStr) {
@@ -161,7 +163,7 @@ export function useImageSearch() {
             logger.warn('[useImageSearch] Failed to parse api-keys-backup:', { error: e instanceof Error ? e.message : String(e) });
           }
         }
-        
+
         // Fallback to app-settings if no backup
         if (!apiKey) {
           const settingsStr = localStorage.getItem('app-settings');
@@ -223,7 +225,7 @@ export function useImageSearch() {
   };
 
   // Helper function to retry failed requests
-  const retryRequest = async (
+  const retryRequest = useCallback(async (
     query: string,
     page: number = 1,
   ): Promise<any> => {
@@ -263,7 +265,7 @@ export function useImageSearch() {
     }
 
     throw lastError;
-  };
+  }, [makeSearchRequest, createSearchError]);
 
   const searchImages = useCallback(
     async (query: string, page: number = 1, filters?: any) => {
@@ -321,7 +323,8 @@ export function useImageSearch() {
         setError(searchError.message);
       }
     },
-    [], // Empty deps to ensure stable reference
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [], // Empty deps to ensure stable reference - retryRequest uses closure
   );
 
   const loadMoreImages = useCallback(async () => {
