@@ -177,38 +177,41 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Generate demo images without external API calls
+ * Generate demo images using Lorem Picsum (reliable, free service)
  */
 function generateDemoImages(query: string, page: number) {
-  const baseId = `${query}-${page}-${Date.now()}`;
   const images = [];
-  
+  const pageOffset = (page - 1) * 12;
+
   for (let i = 0; i < 12; i++) {
-    const seed = `${baseId}-${i}`;
+    const imageId = pageOffset + i + 1;
+    // Use specific Lorem Picsum IDs for consistent, quality images
+    const picsumId = ((imageId * 37) % 1000) + 1; // Distribute across available images
+
     images.push({
-      id: `demo-${seed}`,
+      id: `demo-${query}-${picsumId}`,
       urls: {
-        small: `https://picsum.photos/400/300?random=${seed}`,
-        regular: `https://picsum.photos/800/600?random=${seed}`,
-        full: `https://picsum.photos/1600/1200?random=${seed}`,
+        small: `https://picsum.photos/id/${picsumId}/400/300`,
+        regular: `https://picsum.photos/id/${picsumId}/800/600`,
+        full: `https://picsum.photos/id/${picsumId}/1600/1200`,
       },
-      alt_description: `Demo image ${i + 1} for "${query}"`,
+      alt_description: `${query} - Image ${imageId}`,
       user: {
-        name: "Demo User",
-        username: "demo",
+        name: "Lorem Picsum",
+        username: "picsum",
       },
       width: 1600,
       height: 1200,
       color: "#" + Math.floor(Math.random()*16777215).toString(16),
     });
   }
-  
+
   return {
     images,
-    totalPages: 5,
+    totalPages: 10,
     currentPage: page,
-    total: 60,
-    hasNextPage: page < 5,
+    total: 120,
+    hasNextPage: page < 10,
   };
 }
 
