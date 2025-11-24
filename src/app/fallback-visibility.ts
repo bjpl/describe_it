@@ -11,7 +11,7 @@ if (typeof window !== 'undefined') {
     const hiddenElements = document.querySelectorAll('[style*="opacity:0"], [style*="opacity: 0"]');
 
     if (hiddenElements.length > 0) {
-      logger.warn(`[Fallback] Found ${hiddenElements.length} hidden elements, making visible...`);
+      console.warn(`[Fallback] Found ${hiddenElements.length} hidden elements, making visible...`);
 
       hiddenElements.forEach(element => {
         if (element instanceof HTMLElement) {
@@ -22,7 +22,7 @@ if (typeof window !== 'undefined') {
         }
       });
 
-      logger.info('[Fallback] All hidden elements are now visible');
+      console.log('[Fallback] All hidden elements are now visible');
     }
   }, 2000); // Wait 2 seconds for Framer Motion to initialize
 
@@ -30,7 +30,7 @@ if (typeof window !== 'undefined') {
   setTimeout(() => {
     const stillHidden = document.querySelectorAll('[style*="opacity:0"], [style*="opacity: 0"]');
     if (stillHidden.length > 0) {
-      logger.warn(`[Fallback] Secondary check: ${stillHidden.length} elements still hidden, forcing visibility...`);
+      console.warn(`[Fallback] Secondary check: ${stillHidden.length} elements still hidden, forcing visibility...`);
       stillHidden.forEach(element => {
         if (element instanceof HTMLElement) {
           element.style.opacity = '1';
