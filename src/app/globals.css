@@ -1,7 +1,23 @@
 /* Tailwind CSS imports */
-@import "tailwindcss/base";
-@import "tailwindcss/components";
-@import "tailwindcss/utilities";
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Fallback animation for Framer Motion - ensures content is visible even if JS fails */
+@keyframes fallback-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Apply fallback to all elements with initial opacity:0 after 2 seconds */
+[style*='opacity:0'],
+[style*='opacity: 0'] {
+  animation: fallback-fade-in 0.5s ease-in 2s forwards;
+}
 
 /* CSS Variables */
 :root {
@@ -36,11 +52,11 @@
 
 html {
   font-family:
-    "Inter",
+    'Inter',
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
-    "Segoe UI",
+    'Segoe UI',
     Roboto,
     sans-serif;
   line-height: 1.5;
