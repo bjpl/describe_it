@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import './fallback-visibility';
+import './motion-fix.css';
 import { Providers } from './providers';
 import OfflineIndicator from '@/components/OfflineIndicator';
 import Script from 'next/script';
