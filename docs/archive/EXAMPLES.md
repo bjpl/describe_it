@@ -302,12 +302,14 @@ This document provides detailed examples of swarm orchestration using Claude Flo
 ### **Every Agent MUST Execute These Hooks**
 
 **1️⃣ BEFORE Work**:
+
 ```bash
 npx claude-flow@alpha hooks pre-task --description "[task description]"
 npx claude-flow@alpha hooks session-restore --session-id "swarm-[id]"
 ```
 
 **2️⃣ DURING Work**:
+
 ```bash
 # After each significant edit
 npx claude-flow@alpha hooks post-edit --file "[file-path]" --memory-key "swarm/[agent-name]/[step]"
@@ -317,6 +319,7 @@ npx claude-flow@alpha hooks notify --message "[what was accomplished]"
 ```
 
 **3️⃣ AFTER Work**:
+
 ```bash
 npx claude-flow@alpha hooks post-task --task-id "[task-id]"
 npx claude-flow@alpha hooks session-end --export-metrics true
@@ -327,6 +330,7 @@ npx claude-flow@alpha hooks session-end --export-metrics true
 ## ⚡ **Concurrent Execution Patterns**
 
 ### **Pattern 1: All-at-Once (Fastest)**
+
 ```javascript
 // Single message with ALL operations
 [One Message]:
@@ -342,6 +346,7 @@ npx claude-flow@alpha hooks session-end --export-metrics true
 ```
 
 ### **Pattern 2: Wave-Based (Controlled)**
+
 ```javascript
 // Wave 1: Research and Planning
 [Message 1]:
@@ -357,6 +362,7 @@ npx claude-flow@alpha hooks session-end --export-metrics true
 ```
 
 ### **Pattern 3: Hierarchical (Coordinator-Led)**
+
 ```javascript
 // Coordinator spawns and manages other agents
 [Message 1]:
@@ -372,6 +378,7 @@ npx claude-flow@alpha hooks session-end --export-metrics true
 ## 🚫 **Anti-Patterns (DON'T DO THIS)**
 
 ### **❌ Sequential Messages**
+
 ```javascript
 // WRONG - Multiple messages
 Message 1: Task("agent1", "...", "type1")
@@ -380,13 +387,15 @@ Message 3: TodoWrite { todos: [...] }      // DON'T DO THIS
 ```
 
 ### **❌ Missing Coordination Hooks**
+
 ```javascript
 // WRONG - Agent doesn't use hooks
-Task("Coder", "Build feature without any hooks", "coder")
+Task('Coder', 'Build feature without any hooks', 'coder');
 // This breaks coordination and memory sharing
 ```
 
 ### **❌ Batching Too Few Items**
+
 ```javascript
 // WRONG - Only 1-2 todos
 TodoWrite { todos: [{content: "Fix bug", status: "pending"}] }
@@ -401,11 +410,11 @@ TodoWrite { todos: [...10 todos...] }
 
 ### **Swarm vs Sequential Execution**
 
-| Approach | Time | Agents | Efficiency |
-|----------|------|--------|------------|
-| Sequential | 120 min | 1 at a time | 1.0x baseline |
-| Swarm (mesh) | 35 min | 6 parallel | 3.4x faster |
-| Swarm (optimal) | 27 min | 13 parallel | 4.4x faster |
+| Approach        | Time    | Agents      | Efficiency    |
+| --------------- | ------- | ----------- | ------------- |
+| Sequential      | 120 min | 1 at a time | 1.0x baseline |
+| Swarm (mesh)    | 35 min  | 6 parallel  | 3.4x faster   |
+| Swarm (optimal) | 27 min  | 13 parallel | 4.4x faster   |
 
 **Today's swarm**: 13 agents, 16 tasks, ~90 minutes = **massive productivity**
 
@@ -414,29 +423,35 @@ TodoWrite { todos: [...10 todos...] }
 ## 🔄 **Swarm Topologies**
 
 ### **Mesh Network (Peer-to-Peer)**
+
 ```
 Agent1 ←→ Agent2
   ↕         ↕
 Agent3 ←→ Agent4
 ```
+
 - **Best for**: Independent parallel tasks
 - **Coordination**: Memory sharing, event-based
 - **Example**: Testing, documentation, analysis
 
 ### **Hierarchical (Queen + Workers)**
+
 ```
     Queen Coordinator
     /    |    \    \
  Agent1 Agent2 Agent3 Agent4
 ```
+
 - **Best for**: Complex projects with dependencies
 - **Coordination**: Queen assigns and reviews work
 - **Example**: Full-stack development, migrations
 
 ### **Adaptive (Dynamic Switching)**
+
 ```
 Start: Mesh → Detect complexity → Switch to Hierarchical
 ```
+
 - **Best for**: Unknown complexity tasks
 - **Coordination**: Smart-agent decides topology
 - **Example**: Exploratory work, refactoring
@@ -531,13 +546,13 @@ npx claude-flow@alpha hooks session-restore \
 
 ## 📊 **Swarm Size Guidelines**
 
-| Task Complexity | Agents | Topology | Coordinator |
-|----------------|--------|----------|-------------|
-| Simple (1-2 files) | 1 | None | Not needed |
-| Moderate (3-5 files) | 2-3 | Mesh | Optional |
-| Complex (6-10 files) | 4-8 | Mesh | Recommended |
-| Large (10+ files) | 8-15 | Hierarchical | Required |
-| Massive (20+ files) | 10-20 | Adaptive | Smart-agent |
+| Task Complexity      | Agents | Topology     | Coordinator |
+| -------------------- | ------ | ------------ | ----------- |
+| Simple (1-2 files)   | 1      | None         | Not needed  |
+| Moderate (3-5 files) | 2-3    | Mesh         | Optional    |
+| Complex (6-10 files) | 4-8    | Mesh         | Recommended |
+| Large (10+ files)    | 8-15   | Hierarchical | Required    |
+| Massive (20+ files)  | 10-20  | Adaptive     | Smart-agent |
 
 **Today's swarm**: 49 files = 13 agents with QA coordinator = Perfect sizing
 
@@ -546,6 +561,7 @@ npx claude-flow@alpha hooks session-restore \
 ## 🔧 **Tool Usage Patterns**
 
 ### **TodoWrite - Always Batch**
+
 ```javascript
 // ❌ WRONG - One at a time
 TodoWrite { todos: [{content: "Task 1", status: "pending"}] }
@@ -563,6 +579,7 @@ TodoWrite { todos: [
 ```
 
 ### **File Operations - Parallel**
+
 ```javascript
 // ❌ WRONG - Sequential
 Read "file1.ts"
@@ -585,33 +602,42 @@ Write "file4.ts"
 ## 🚀 **Advanced Patterns**
 
 ### **Self-Organizing Swarm**
+
 ```javascript
-Task("Smart Agent",
-  "Analyze task: [description]. " +
-  "Determine optimal agent team size and types. " +
-  "Spawn agents dynamically. " +
-  "Coordinate execution and synthesize results.",
-  "smart-agent")
+Task(
+  'Smart Agent',
+  'Analyze task: [description]. ' +
+    'Determine optimal agent team size and types. ' +
+    'Spawn agents dynamically. ' +
+    'Coordinate execution and synthesize results.',
+  'smart-agent'
+);
 ```
 
 ### **Fault-Tolerant Swarm**
+
 ```javascript
-Task("Byzantine Coordinator",
-  "Execute task with malicious actor detection. " +
-  "Verify agent outputs for consistency. " +
-  "Identify and isolate faulty agents. " +
-  "Achieve consensus despite failures.",
-  "byzantine-coordinator")
+Task(
+  'Byzantine Coordinator',
+  'Execute task with malicious actor detection. ' +
+    'Verify agent outputs for consistency. ' +
+    'Identify and isolate faulty agents. ' +
+    'Achieve consensus despite failures.',
+  'byzantine-coordinator'
+);
 ```
 
 ### **Learning Swarm**
+
 ```javascript
-Task("SAFLA Neural Agent",
-  "Create self-aware system with feedback loops. " +
-  "Train neural patterns from execution. " +
-  "Persist memory for continuous improvement. " +
-  "Adapt strategies based on outcomes.",
-  "safla-neural")
+Task(
+  'SAFLA Neural Agent',
+  'Create self-aware system with feedback loops. ' +
+    'Train neural patterns from execution. ' +
+    'Persist memory for continuous improvement. ' +
+    'Adapt strategies based on outcomes.',
+  'safla-neural'
+);
 ```
 
 ---

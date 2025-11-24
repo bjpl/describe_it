@@ -25,6 +25,7 @@ npm run dev
 ### 2. Test on Staging/Production
 
 **Option A: Deploy to Vercel (Recommended)**
+
 ```bash
 # Install Vercel CLI
 npm i -g vercel
@@ -37,6 +38,7 @@ vercel --prod
 ```
 
 **Option B: Docker (Local Production Build)**
+
 ```bash
 # Build and run production version
 docker-compose up --build
@@ -47,6 +49,7 @@ docker-compose up --build
 ### 3. Core Features Testing Checklist
 
 #### Authentication Flow
+
 - [ ] Sign up with email
 - [ ] Sign in with email
 - [ ] Sign in with Google OAuth
@@ -55,12 +58,14 @@ docker-compose up --build
 - [ ] Sign out
 
 #### Image Upload & Search
+
 - [ ] Upload a local image
 - [ ] Search for image using Unsplash
 - [ ] Image displays correctly
 - [ ] Image caching works
 
 #### Description Generation
+
 - [ ] Generate "Narrativo" style description
 - [ ] Generate "Poético" style description
 - [ ] Generate "Académico" style description
@@ -70,6 +75,7 @@ docker-compose up --build
 - [ ] Text-to-speech works (if available)
 
 #### Interactive Q&A System
+
 - [ ] Questions are generated
 - [ ] Can answer questions
 - [ ] Answer validation works
@@ -78,6 +84,7 @@ docker-compose up --build
 - [ ] Different difficulty levels work
 
 #### Vocabulary Extraction
+
 - [ ] Vocabulary is extracted from descriptions
 - [ ] Phrases are categorized correctly
 - [ ] Flashcards display properly
@@ -85,6 +92,7 @@ docker-compose up --build
 - [ ] Can mark words as learned
 
 #### Session Management
+
 - [ ] Progress is tracked
 - [ ] Learning history displays
 - [ ] Can export session data (CSV)
@@ -92,12 +100,14 @@ docker-compose up --build
 - [ ] Can export session data (JSON)
 
 #### Dashboard & Analytics
+
 - [ ] User statistics display
 - [ ] Learning progress charts work
 - [ ] Performance metrics are accurate
 - [ ] Charts render correctly
 
 #### Performance & UX
+
 - [ ] Pages load quickly
 - [ ] No console errors
 - [ ] Mobile responsive design works
@@ -107,11 +117,13 @@ docker-compose up --build
 ### 4. Testing on Different Devices
 
 **Desktop Browsers**
+
 - Chrome/Edge
 - Firefox
 - Safari
 
 **Mobile Testing**
+
 ```bash
 # Get your local IP
 ifconfig | grep "inet " | grep -v 127.0.0.1
@@ -120,6 +132,7 @@ ifconfig | grep "inet " | grep -v 127.0.0.1
 ```
 
 **Responsive Testing in Browser**
+
 - Use Chrome DevTools (F12 → Device Toolbar)
 - Test: Mobile (375px), Tablet (768px), Desktop (1920px)
 
@@ -180,6 +193,7 @@ npm run test:coverage
 ## Quick Bug Report Template
 
 When you find issues, note:
+
 - **What happened**: [describe the bug]
 - **Expected**: [what should happen]
 - **Steps to reproduce**: [list steps]

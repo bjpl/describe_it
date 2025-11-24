@@ -113,6 +113,7 @@ Successfully implemented a comprehensive API versioning system for the Describe 
 ### 1. Multi-Source Version Negotiation
 
 Clients can specify API version via:
+
 - URL path: `/api/v2/resource`
 - Custom headers: `X-API-Version: v2`
 - Accept header: `application/vnd.describeit.v2+json`
@@ -123,6 +124,7 @@ Priority: Header > URL > Accept > Query > Default
 ### 2. Automatic Deprecation Warnings
 
 Deprecated versions automatically include:
+
 ```http
 Deprecation: true
 Sunset: Thu, 01 Jun 2025 00:00:00 GMT
@@ -134,6 +136,7 @@ X-API-Latest-Version: v2
 ### 3. Data Migration System
 
 Transform data between versions automatically:
+
 ```typescript
 // V1 → V2
 const v2Data = await migrateData(v1Data, 'v1', 'v2');
@@ -145,6 +148,7 @@ const v2Items = await batchMigrateData(v1Items, 'v1', 'v2');
 ### 4. Feature Detection
 
 Check version capabilities:
+
 ```typescript
 if (hasFeature('v2', 'pagination.cursor')) {
   // Use cursor-based pagination
@@ -154,6 +158,7 @@ if (hasFeature('v2', 'pagination.cursor')) {
 ### 5. Version Router Middleware
 
 Simple integration into Next.js API routes:
+
 ```typescript
 export const GET = createVersionRouter({
   v1: handleV1Request,
@@ -164,6 +169,7 @@ export const GET = createVersionRouter({
 ## Version Differences
 
 ### V1 (Deprecated, Sunset: 2025-06-01)
+
 - Offset-based pagination
 - Flat data structure
 - Snake_case naming
@@ -171,6 +177,7 @@ export const GET = createVersionRouter({
 - Simple errors
 
 ### V2 (Current, Recommended)
+
 - Cursor-based pagination
 - Nested data structure (metadata, timestamps)
 - CamelCase naming
@@ -190,14 +197,17 @@ import { createVersionRouter } from '@/api/middleware/versionRouter';
 import { handleV1GetLists } from '@/api/examples/v1/vocabularyLists';
 import { handleV2GetLists } from '@/api/examples/v2/vocabularyLists';
 
-export const GET = createVersionRouter({
-  v1: handleV1GetLists,
-  v2: handleV2GetLists,
-}, {
-  includeDeprecationWarnings: true,
-  includeVersionHeaders: true,
-  logVersionNegotiation: true,
-});
+export const GET = createVersionRouter(
+  {
+    v1: handleV1GetLists,
+    v2: handleV2GetLists,
+  },
+  {
+    includeDeprecationWarnings: true,
+    includeVersionHeaders: true,
+    logVersionNegotiation: true,
+  }
+);
 ```
 
 ### Client Code
@@ -207,7 +217,7 @@ export const GET = createVersionRouter({
 const response = await fetch('/api/v2/vocabulary/lists', {
   headers: {
     'X-API-Version': 'v2',
-    'Accept': 'application/vnd.describeit.v2+json',
+    Accept: 'application/vnd.describeit.v2+json',
   },
 });
 
@@ -224,12 +234,14 @@ const data = await response.json();
 ## Migration Guide (V1 → V2)
 
 ### 1. Update URLs
+
 ```diff
 - fetch('/api/v1/vocabulary/lists')
 + fetch('/api/v2/vocabulary/lists')
 ```
 
 ### 2. Update Data Access
+
 ```diff
 - const difficulty = list.difficulty_level;
 - const created = list.created_at;
@@ -238,6 +250,7 @@ const data = await response.json();
 ```
 
 ### 3. Update Pagination
+
 ```diff
 - const nextOffset = pagination.offset + pagination.limit;
 + const nextCursor = pagination.cursor;
@@ -245,6 +258,7 @@ const data = await response.json();
 ```
 
 ### 4. Use HATEOAS Links
+
 ```typescript
 // V2 only
 const itemsUrl = list._links.items;
@@ -254,11 +268,13 @@ const items = await fetch(itemsUrl).then(r => r.json());
 ## Testing
 
 Comprehensive test suite with 20+ tests:
+
 ```bash
 npm run test tests/api/versioning.test.ts
 ```
 
 Tests cover:
+
 - Version negotiation (URL, headers, content-type)
 - Data migration (v1 ↔ v2)
 - Feature detection
@@ -283,12 +299,14 @@ Tests cover:
 ## Monitoring & Logging
 
 All versioning events logged:
+
 - Version negotiation results
 - Deprecated version access
 - Migration operations
 - Version mismatches
 
 Example log:
+
 ```json
 {
   "message": "API version negotiated",
@@ -315,6 +333,7 @@ To add versioning to an existing endpoint:
 1. Create v1 handler (current implementation)
 2. Create v2 handler (enhanced version)
 3. Replace route with version router:
+
 ```typescript
 export const GET = createVersionRouter({
   v1: existingHandler,

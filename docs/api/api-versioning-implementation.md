@@ -34,6 +34,7 @@ A comprehensive API versioning system has been implemented for the Describe It a
 ### 1. Version Negotiation
 
 Multiple strategies for specifying API version:
+
 - URL path: `/api/v1/resource`
 - Custom headers: `X-API-Version: v2`
 - Accept header: `Accept: application/vnd.describeit.v2+json`
@@ -46,15 +47,19 @@ Priority order ensures predictable behavior.
 Automatically routes requests to appropriate version handlers:
 
 ```typescript
-export const GET = createVersionRouter({
-  v1: handleV1Request,
-  v2: handleV2Request,
-}, options);
+export const GET = createVersionRouter(
+  {
+    v1: handleV1Request,
+    v2: handleV2Request,
+  },
+  options
+);
 ```
 
 ### 3. Deprecation System
 
 Automatic deprecation warnings with:
+
 - Deprecation headers
 - Sunset dates
 - Migration guide links
@@ -81,6 +86,7 @@ if (hasFeature(version, 'pagination.cursor')) {
 ## Version Comparison
 
 ### V1 Features
+
 - Offset-based pagination
 - Basic REST endpoints
 - Simple error responses
@@ -88,6 +94,7 @@ if (hasFeature(version, 'pagination.cursor')) {
 - Snake_case naming
 
 ### V2 Features
+
 - Cursor-based pagination
 - HATEOAS support
 - Structured error responses
@@ -107,14 +114,17 @@ import { createVersionRouter } from '@/api/middleware/versionRouter';
 import { handleV1GetLists } from '@/api/examples/v1/vocabularyLists';
 import { handleV2GetLists } from '@/api/examples/v2/vocabularyLists';
 
-export const GET = createVersionRouter({
-  v1: handleV1GetLists,
-  v2: handleV2GetLists,
-}, {
-  includeDeprecationWarnings: true,
-  includeVersionHeaders: true,
-  logVersionNegotiation: true,
-});
+export const GET = createVersionRouter(
+  {
+    v1: handleV1GetLists,
+    v2: handleV2GetLists,
+  },
+  {
+    includeDeprecationWarnings: true,
+    includeVersionHeaders: true,
+    logVersionNegotiation: true,
+  }
+);
 ```
 
 ### Example 2: Data Migration
@@ -147,7 +157,7 @@ const v2Data = await migrateData(v1Data, 'v1', 'v2');
 const response = await fetch('/api/v2/vocabulary/lists', {
   headers: {
     'X-API-Version': 'v2',
-    'Accept': 'application/vnd.describeit.v2+json',
+    Accept: 'application/vnd.describeit.v2+json',
   },
 });
 
@@ -161,6 +171,7 @@ if (response.headers.get('Deprecation') === 'true') {
 ## Testing
 
 Comprehensive test suite covering:
+
 - Version negotiation from all sources
 - Migration transformations
 - Feature detection
@@ -169,6 +180,7 @@ Comprehensive test suite covering:
 - Deprecation warnings
 
 Run tests:
+
 ```bash
 npm run test tests/api/versioning.test.ts
 ```
@@ -207,10 +219,12 @@ All implementation files saved to `/src/api/` directory:
 - `/src/api/index.ts` - Main exports
 
 Documentation:
+
 - `/docs/api-versioning-guide.md` - Complete user guide
 - `/docs/api-versioning-implementation.md` - This file
 
 Tests:
+
 - `/tests/api/versioning.test.ts` - Test suite
 
 ## Best Practices
@@ -226,6 +240,7 @@ Tests:
 ## Future Enhancements
 
 Potential improvements:
+
 - V3 with GraphQL support
 - Automatic client SDK generation
 - Version analytics dashboard
@@ -236,6 +251,7 @@ Potential improvements:
 ## Support
 
 For questions or issues:
+
 - Review `/docs/api-versioning-guide.md`
 - Check example implementations in `/src/api/examples/`
 - Run tests to verify behavior

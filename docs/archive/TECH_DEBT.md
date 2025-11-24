@@ -34,6 +34,7 @@ ESLint checking is temporarily disabled in builds until these are fixed.
 All errors are related to React unescaped entities (quotes in JSX).
 
 **Files requiring fixes:**
+
 1. `src/components/DescriptionNotebook.tsx` (2 errors)
 2. `src/components/ErrorBoundary/SentryErrorBoundary.tsx` (1 error)
 3. `src/components/FlashcardComponent.tsx` (6 errors)
@@ -46,10 +47,12 @@ All errors are related to React unescaped entities (quotes in JSX).
 
 **How to fix:**
 Replace literal quotes in JSX with HTML entities:
+
 - `"text"` → `&quot;text&quot;`
 - `'text'` → `&apos;text&apos;`
 
 **Command to check:**
+
 ```bash
 npm run lint
 ```
@@ -57,6 +60,7 @@ npm run lint
 #### TypeScript Type Issues (Non-blocking) - LOW PRIORITY
 
 **Vercel KV Storage Typing:**
+
 - Files: API routes using `@vercel/kv`
 - Issue: KV storage methods return `{}` type in some cases
 - Impact: Non-critical, runtime behavior is correct
@@ -85,7 +89,7 @@ Add explicit type assertions or interfaces for KV return types.
 ### 🎯 Build Status
 
 - ✅ TypeScript: **ENABLED** - Errors block builds
-- ⚠️  ESLint: **DISABLED** - 27 errors need fixing before enabling
+- ⚠️ ESLint: **DISABLED** - 27 errors need fixing before enabling
 - ✅ Type Safety: **GOOD** - Critical Sentry issues fixed
 - ✅ Logging: **GOOD** - Console statements replaced with logger
 
@@ -100,6 +104,7 @@ ESLint Warnings: ~50 (React hooks exhaustive-deps)
 ### 🚀 To Enable Full Type & Lint Checking
 
 1. Fix remaining ESLint errors:
+
    ```bash
    # See all errors
    npm run lint
@@ -109,6 +114,7 @@ ESLint Warnings: ~50 (React hooks exhaustive-deps)
    ```
 
 2. Enable ESLint in next.config.mjs:
+
    ```javascript
    eslint: {
      ignoreDuringBuilds: false,
@@ -121,5 +127,6 @@ ESLint Warnings: ~50 (React hooks exhaustive-deps)
    ```
 
 ---
-*Last updated: 2025-11-19*
-*Author: Claude Code Agent (Coder)*
+
+_Last updated: 2025-11-19_
+_Author: Claude Code Agent (Coder)_

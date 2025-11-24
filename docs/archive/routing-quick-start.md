@@ -50,12 +50,12 @@ export function ExistingTabsExample() {
   return (
     <Tabs value={value} onValueChange={onValueChange}>
       <TabsList>
-        <TabsTrigger value="overview">Overview</TabsTrigger>
-        <TabsTrigger value="details">Details</TabsTrigger>
+        <TabsTrigger value='overview'>Overview</TabsTrigger>
+        <TabsTrigger value='details'>Details</TabsTrigger>
       </TabsList>
 
-      <TabsContent value="overview">Overview content</TabsContent>
-      <TabsContent value="details">Details content</TabsContent>
+      <TabsContent value='overview'>Overview content</TabsContent>
+      <TabsContent value='details'>Details content</TabsContent>
     </Tabs>
   );
 }
@@ -145,9 +145,7 @@ export function Dashboard() {
         <button onClick={() => setTab('analytics')}>Analytics</button>
       </nav>
 
-      <button onClick={() => copyLink()}>
-        Share this view
-      </button>
+      <button onClick={() => copyLink()}>Share this view</button>
 
       {/* Content */}
       {activeTab === 'overview' && <Overview />}
@@ -171,9 +169,9 @@ import { RoutedDescriptionTabs } from '@/routing';
 export function DescriptionPage() {
   return (
     <RoutedDescriptionTabs
-      englishDescription="Description in English"
-      spanishDescription="Descripción en español"
-      selectedStyle="detailed"
+      englishDescription='Description in English'
+      spanishDescription='Descripción en español'
+      selectedStyle='detailed'
       routeConfig={{
         paramName: 'lang',
         defaultTab: 'spanish',
@@ -185,6 +183,7 @@ export function DescriptionPage() {
 ```
 
 **Features Added**:
+
 - URL sync: `/page?lang=english` or `/page?lang=spanish`
 - Share button to copy deep link
 - Browser back/forward support
@@ -192,17 +191,19 @@ export function DescriptionPage() {
 ## API Cheat Sheet
 
 ### useTabRouter
+
 ```tsx
 const { activeTab, setTab, isActive, getTabUrl, navigateToTab } = useTabRouter({
-  paramName: 'tab',      // Query param name
-  defaultTab: 'home',    // Default value
-  replace: false,        // Use replace instead of push
-  scroll: false,         // Scroll to top on change
-  preserveParams: true,  // Keep other query params
+  paramName: 'tab', // Query param name
+  defaultTab: 'home', // Default value
+  replace: false, // Use replace instead of push
+  scroll: false, // Scroll to top on change
+  preserveParams: true, // Keep other query params
 });
 ```
 
 ### useRouterTabs
+
 ```tsx
 const { value, onValueChange } = useRouterTabs({
   paramName: 'tab',
@@ -213,6 +214,7 @@ const { value, onValueChange } = useRouterTabs({
 ```
 
 ### useDeepLink
+
 ```tsx
 const { currentLink, copyLink, share, generateLink } = useDeepLink({
   tabParam: 'tab',
@@ -223,25 +225,29 @@ const { currentLink, copyLink, share, generateLink } = useDeepLink({
 ## Configuration Examples
 
 ### Different Parameter Name
+
 ```tsx
-useTabRouter({ paramName: 'view' })  // ?view=dashboard
-useTabRouter({ paramName: 'mode' })  // ?mode=edit
-useTabRouter({ paramName: 'lang' })  // ?lang=en
+useTabRouter({ paramName: 'view' }); // ?view=dashboard
+useTabRouter({ paramName: 'mode' }); // ?mode=edit
+useTabRouter({ paramName: 'lang' }); // ?lang=en
 ```
 
 ### Replace History Instead of Push
+
 ```tsx
-useTabRouter({ replace: true })  // No new history entries
+useTabRouter({ replace: true }); // No new history entries
 ```
 
 ### Scroll to Top on Tab Change
+
 ```tsx
-useTabRouter({ scroll: true })  // Scroll to top
+useTabRouter({ scroll: true }); // Scroll to top
 ```
 
 ### Clear Other Query Params
+
 ```tsx
-useTabRouter({ preserveParams: false })  // Clear other params
+useTabRouter({ preserveParams: false }); // Clear other params
 ```
 
 ## Multiple Independent Tab Groups
@@ -281,6 +287,7 @@ export function ComplexPage() {
 ## Advanced Features
 
 ### Programmatic Navigation with Extra Params
+
 ```tsx
 const { navigateToTab } = useTabRouter();
 
@@ -294,6 +301,7 @@ navigateToTab('products', {
 ```
 
 ### Get URL for Any Tab
+
 ```tsx
 const { getTabUrl } = useTabRouter();
 
@@ -302,6 +310,7 @@ const productsUrl = getTabUrl('products');
 ```
 
 ### Tab Change Callbacks
+
 ```tsx
 useRouterTabs({
   onTabChange: (newTab, oldTab) => {
@@ -334,24 +343,29 @@ const router: TabRouterState = useTabRouter(config);
 ## Troubleshooting
 
 ### Tabs not syncing with URL
+
 - Make sure component is client-side: `'use client'`
 - Check that `useTabRouter` is inside a component
 
 ### Browser back button not working
+
 - Verify `replace: false` (default)
 - Check that navigation is happening
 
 ### Deep links not working
+
 - Ensure base URL is correct
 - Check that tab values match exactly
 
 ### State out of sync
+
 - Use `useSyncedTabState` for bi-directional sync
 - Call `syncToUrl()` or `syncFromUrl()` manually
 
 ## More Examples
 
 See `/src/routing/examples.tsx` for 10 complete examples including:
+
 1. Basic tabs
 2. Existing component integration
 3. Pre-built RoutedTabs

@@ -10,24 +10,28 @@ Successfully resolved all high and moderate severity vulnerabilities. Security a
 ## Vulnerabilities Fixed
 
 ### 1. glob (High Severity - CVSS 7.5)
+
 - **Issue:** Command injection via -c/--cmd executes matches with shell:true
 - **Affected Versions:** 10.2.0 - 10.4.5
 - **Resolution:** Fixed automatically via `npm audit fix`
 - **Advisory:** GHSA-5j98-mcp5-4vw2
 
 ### 2. js-yaml (Moderate Severity - CVSS 5.3)
+
 - **Issue:** Prototype pollution in merge (<<)
 - **Affected Versions:** 4.0.0 - 4.1.0
 - **Resolution:** Fixed automatically via `npm audit fix`
 - **Advisory:** GHSA-mh29-5h37-fv8m
 
 ### 3. vite (Moderate Severity)
+
 - **Issue:** server.fs.deny bypass via backslash on Windows (path traversal)
 - **Affected Versions:** 7.1.0 - 7.1.10
 - **Resolution:** Fixed automatically via `npm audit fix`
 - **Advisory:** GHSA-93m4-6634-74q7
 
 ### 4. pg-promise (Moderate Severity)
+
 - **Issue:** SQL Injection vulnerability
 - **Affected Versions:** <11.5.5
 - **Dependency:** Transitive dependency via pg-to-ts@4.1.1
@@ -45,9 +49,11 @@ Successfully resolved all high and moderate severity vulnerabilities. Security a
 ## Changes Made
 
 ### package.json
+
 - Added `overrides` section to force pg-promise@^12.3.0
 
 ### package-lock.json
+
 - Updated to reflect all dependency changes
 - Added 1350 packages, audited 1352 packages total
 

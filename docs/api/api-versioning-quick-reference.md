@@ -32,6 +32,7 @@ export const GET = createVersionRouter({
 ## Common Tasks
 
 ### Migrate Data
+
 ```typescript
 import { migrateData } from '@/api/utils/migration';
 
@@ -39,6 +40,7 @@ const v2Data = await migrateData(v1Data, 'v1', 'v2');
 ```
 
 ### Check Feature
+
 ```typescript
 import { hasFeature } from '@/api/versioning/utils';
 
@@ -48,6 +50,7 @@ if (hasFeature('v2', 'pagination.cursor')) {
 ```
 
 ### Detect Version
+
 ```typescript
 import { negotiateVersion } from '@/api/versioning/negotiator';
 
@@ -56,18 +59,19 @@ const { version, isDeprecated } = negotiateVersion(request);
 
 ## Version Comparison
 
-| Feature | V1 | V2 |
-|---------|----|----|
-| Pagination | Offset | Cursor |
-| HATEOAS | ❌ | ✅ |
-| OAuth2 | ❌ | ✅ |
-| ETags | ❌ | ✅ |
-| Status | Deprecated | Current |
-| Sunset | 2025-06-01 | - |
+| Feature    | V1         | V2      |
+| ---------- | ---------- | ------- |
+| Pagination | Offset     | Cursor  |
+| HATEOAS    | ❌         | ✅      |
+| OAuth2     | ❌         | ✅      |
+| ETags      | ❌         | ✅      |
+| Status     | Deprecated | Current |
+| Sunset     | 2025-06-01 | -       |
 
 ## Response Formats
 
 ### V1
+
 ```json
 {
   "success": true,
@@ -84,6 +88,7 @@ const { version, isDeprecated } = negotiateVersion(request);
 ```
 
 ### V2
+
 ```json
 {
   "success": true,
@@ -139,12 +144,7 @@ X-API-Latest-Version: v2
 
 ```typescript
 // All-in-one
-import {
-  createVersionRouter,
-  negotiateVersion,
-  migrateData,
-  hasFeature,
-} from '@/api';
+import { createVersionRouter, negotiateVersion, migrateData, hasFeature } from '@/api';
 
 // Specific
 import { createVersionRouter } from '@/api/middleware/versionRouter';

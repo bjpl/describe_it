@@ -45,6 +45,7 @@ Add after line 243 (after the "Generate" button):
 ```
 
 Add import at top:
+
 ```typescript
 import APIClient from '@/lib/api-client';
 import { Check } from 'lucide-react';
@@ -147,6 +148,7 @@ export const VocabularyList = memo<VocabularyListProps>(function VocabularyList(
 ```
 
 Add to props type definition:
+
 ```typescript
 interface VocabularyListProps {
   userId?: string;
@@ -305,6 +307,7 @@ export const VocabularyForm = memo<VocabularyFormProps>(function VocabularyForm(
 ## 6. Testing the Integration
 
 ### Test API Client
+
 ```typescript
 // In browser console or test file
 import APIClient from '@/lib/api-client';
@@ -322,12 +325,13 @@ const saved = await APIClient.saveDescription({
   description_english: 'A beautiful sunset',
   description_spanish: 'Una hermosa puesta de sol',
   description_style: 'poetico',
-  image_url: 'https://example.com/image.jpg'
+  image_url: 'https://example.com/image.jpg',
 });
 console.log('Saved:', saved);
 ```
 
 ### Test Components
+
 ```bash
 # Run the app
 npm run dev
@@ -360,19 +364,25 @@ export default function App({ Component, pageProps }) {
 ## Common Issues & Solutions
 
 ### Issue: "Failed to fetch"
+
 **Solution:** Check that the API routes are running and CORS is configured
 
 ### Issue: "Cannot read property of undefined"
+
 **Solution:** Add proper null checks and loading states
 
 ### Issue: Data not updating after mutation
+
 **Solution:** Ensure query invalidation is called:
+
 ```typescript
 queryClient.invalidateQueries({ queryKey: ['vocabulary', 'lists'] });
 ```
 
 ### Issue: TypeScript errors
+
 **Solution:** Import types from `@/types/database`:
+
 ```typescript
 import type { VocabularyList, VocabularyItem } from '@/types/database';
 ```
@@ -380,6 +390,7 @@ import type { VocabularyList, VocabularyItem } from '@/types/database';
 ## Summary
 
 **Files to Update:**
+
 1. ✅ Created `src/lib/api-client.ts`
 2. 🟡 Update `src/components/DescriptionNotebook.tsx` - Add save button
 3. 🟡 Update `src/hooks/useVocabulary.ts` - Add React Query hooks
@@ -390,6 +401,7 @@ import type { VocabularyList, VocabularyItem } from '@/types/database';
 **Estimated Time:** 2-3 hours
 
 **Test Checklist:**
+
 - [ ] Vocabulary lists load from database
 - [ ] Can create new vocabulary list
 - [ ] Progress data displays correctly

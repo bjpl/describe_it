@@ -8,17 +8,18 @@ Describe It aims to be the leading AI-powered Spanish learning platform that tra
 
 ### Project Health: A- (88/100)
 
-| Category | Score | Status |
-|----------|-------|--------|
-| Security | 95/100 | Excellent |
-| Testing | 95/100 | Excellent (3,586 test cases) |
-| Architecture | 90/100 | Excellent |
-| Documentation | 88/100 | Excellent |
-| Code Quality | 85/100 | Good |
-| CI/CD | 85/100 | Good |
-| Dependencies | 80/100 | Good (12 outdated) |
+| Category      | Score  | Status                       |
+| ------------- | ------ | ---------------------------- |
+| Security      | 95/100 | Excellent                    |
+| Testing       | 95/100 | Excellent (3,586 test cases) |
+| Architecture  | 90/100 | Excellent                    |
+| Documentation | 88/100 | Excellent                    |
+| Code Quality  | 85/100 | Good                         |
+| CI/CD         | 85/100 | Good                         |
+| Dependencies  | 80/100 | Good (12 outdated)           |
 
 ### Key Metrics
+
 - **Version:** 0.1.0 (Active Production)
 - **Deployment:** Vercel with Supabase backend
 - **Type Safety:** 100% TypeScript strict mode
@@ -169,5 +170,5 @@ For detailed contribution guidelines, see [CONTRIBUTING.md](docs/guides/CONTRIBU
 
 ---
 
-*Last Updated: November 2025*
-*Version: 0.1.0*
+_Last Updated: November 2025_
+_Version: 0.1.0_

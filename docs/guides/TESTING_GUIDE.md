@@ -238,16 +238,19 @@ expect(results.every(r => r.success)).toBe(true);
 ## Test Best Practices
 
 ### 1. Test Isolation
+
 - Always use `beforeEach` to reset mocks
 - Clear cache between tests
 - Don't rely on test execution order
 
 ### 2. Descriptive Names
+
 - Use "should" statements: `it('should create user with defaults')`
 - Group related tests in `describe` blocks
 - Be specific about what's being tested
 
 ### 3. Arrange-Act-Assert
+
 ```typescript
 it('should update mastery level', async () => {
   // Arrange
@@ -267,6 +270,7 @@ it('should update mastery level', async () => {
 ```
 
 ### 4. Test Edge Cases
+
 - Empty arrays
 - Null values
 - Boundary values (0, 100, max lengths)
@@ -275,6 +279,7 @@ it('should update mastery level', async () => {
 - Concurrent operations
 
 ### 5. Avoid Test Interdependence
+
 ```typescript
 // ❌ Bad: Tests depend on each other
 it('should create user', () => {
@@ -324,11 +329,13 @@ open coverage/index.html
 ## Continuous Integration
 
 Tests run automatically on:
+
 - Every commit (pre-commit hook)
 - Pull requests
 - Merges to main branch
 
 CI configuration ensures:
+
 - All tests pass
 - Coverage thresholds met
 - No TypeScript errors
@@ -337,6 +344,7 @@ CI configuration ensures:
 ## Debugging Tests
 
 ### View Test Output
+
 ```bash
 # Verbose mode
 npm test -- --reporter=verbose

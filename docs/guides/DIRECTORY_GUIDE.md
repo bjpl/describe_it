@@ -1,4 +1,5 @@
 # 📁 Describe-It Directory Guide
+
 > **A Comprehensive Learning Resource for Project Architecture**
 
 ## Table of Contents
@@ -20,7 +21,9 @@
 ## Architecture Overview
 
 ### 💡 **Learning Objective**
+
 This project implements a modern, AI-enhanced Next.js application with enterprise-grade architecture patterns. It showcases:
+
 - **Microservices design** with clear service boundaries
 - **Event-driven architecture** for reactive programming
 - **AI agent orchestration** for enhanced development
@@ -106,14 +109,17 @@ describe_it/
 ## Root Configuration Files
 
 ### 📄 **package.json**
+
 **Purpose**: Project dependencies and scripts configuration
 
 **Learning Insight**: Implements "Convention over Configuration" principle
+
 - Standard scripts: `dev`, `build`, `test`
 - Semantic versioning for dependencies
 - Scripts for different environments
 
 **Key Contents**:
+
 ```json
 {
   "scripts": {
@@ -127,9 +133,11 @@ describe_it/
 ```
 
 ### ⚙️ **tsconfig.json**
+
 **Purpose**: TypeScript compiler configuration
 
 **Architecture Pattern**: Path aliases to avoid relative import hell
+
 - `@/components` → `src/components`
 - `@/lib` → `src/lib`
 - `@/hooks` → `src/hooks`
@@ -137,26 +145,32 @@ describe_it/
 **Best Practice**: Strict mode enabled for maximum type safety
 
 ### 🎨 **tailwind.config.js**
+
 **Purpose**: Tailwind CSS configuration
 
 **Design System**: Centralized theme configuration
+
 - Custom colors matching brand
 - Responsive breakpoints
 - Component variants
 
 ### 📦 **next.config.mjs**
+
 **Purpose**: Next.js framework configuration
 
 **Performance Optimizations**:
+
 - Image optimization with AVIF/WebP
 - Bundle splitting
 - Standalone output for Vercel
 - Package import optimizations
 
 ### 📁 **config/**
+
 **Purpose**: Centralized configuration directory
 
 **Contents**:
+
 - `docker/` - Docker configurations
   - `docker-compose.yml` - Development setup
   - `docker-compose.production.yml` - Production setup
@@ -181,9 +195,11 @@ describe_it/
 ## Source Code Organization
 
 ### 📁 **src/**
+
 The main application source following Next.js 13+ App Router structure.
 
 #### **src/app/**
+
 **Pattern**: File-based routing with React Server Components
 
 ```
@@ -197,19 +213,22 @@ app/
 **Learning Insight**: Server-first architecture reduces client bundle size
 
 #### **src/components/**
+
 **Pattern**: Atomic Design Methodology
 
-| Level | Description | Examples |
-|-------|-------------|----------|
-| Atoms | Basic building blocks | Button, Input, Label |
-| Molecules | Simple groups | FormField, Card |
-| Organisms | Complex components | Header, Dashboard |
-| Templates | Page layouts | MainLayout, AuthLayout |
+| Level     | Description           | Examples               |
+| --------- | --------------------- | ---------------------- |
+| Atoms     | Basic building blocks | Button, Input, Label   |
+| Molecules | Simple groups         | FormField, Card        |
+| Organisms | Complex components    | Header, Dashboard      |
+| Templates | Page layouts          | MainLayout, AuthLayout |
 
 #### **src/lib/**
+
 **Purpose**: Business logic and utilities
 
 **Subdirectories**:
+
 - `api/` - API client functions
 - `auth/` - Authentication logic
 - `db/` - Database utilities
@@ -218,17 +237,21 @@ app/
 **Pattern**: Separation of concerns - UI logic stays in components, business logic in lib
 
 #### **src/hooks/**
+
 **Purpose**: Custom React hooks
 
 **Examples**:
+
 - `useAuth()` - Authentication state
 - `useApi()` - Data fetching
 - `useLocalStorage()` - Persistent state
 
 #### **src/types/**
+
 **Purpose**: TypeScript type definitions
 
 **Organization**:
+
 - `api.ts` - API response types
 - `database.ts` - Database schemas
 - `components.ts` - Component props
@@ -238,6 +261,7 @@ app/
 ## AI & Automation Systems
 
 ### 🧠 **.claude/**
+
 **Revolutionary Concept**: AI-assisted development with specialized agents
 
 **Agent Types**:
@@ -249,18 +273,22 @@ app/
 | test-orchestrator | Testing | Generate and run tests |
 
 ### 🐝 **.swarm/**
+
 **Architecture Pattern**: Actor Model for concurrent computation
 
 **Swarm Intelligence Features**:
+
 - Message passing between agents
 - Shared memory coordination
 - Dynamic agent spawning
 - Collective problem solving
 
 ### 🧬 **.hive-mind/**
+
 **Purpose**: Collective intelligence system
 
 **Capabilities**:
+
 - Knowledge sharing between agents
 - Learning from past solutions
 - Pattern recognition
@@ -271,30 +299,35 @@ app/
 ## Infrastructure & DevOps
 
 ### ☸️ **k8s/**
+
 **Purpose**: Kubernetes orchestration configurations
 
 **Key Resources**:
+
 ```yaml
 # deployment.yaml
 apiVersion: apps/v1
 kind: Deployment
 spec:
-  replicas: 3  # Horizontal scaling
+  replicas: 3 # Horizontal scaling
   strategy:
-    type: RollingUpdate  # Zero-downtime
+    type: RollingUpdate # Zero-downtime
 ```
 
 **GitOps Principle**: Infrastructure changes through Git commits
 
 ### 🔧 **terraform/**
+
 **Purpose**: Infrastructure as Code
 
 **Benefits**:
+
 - **Reproducibility**: Same infrastructure across environments
 - **Version Control**: Track infrastructure changes
 - **Automation**: Deploy with CI/CD
 
 **Example Structure**:
+
 ```
 terraform/
 ├── modules/        # Reusable components
@@ -303,9 +336,11 @@ terraform/
 ```
 
 ### 📊 **monitoring/**
+
 **Purpose**: Observability and alerting
 
 **Stack Components**:
+
 - Prometheus - Metrics collection
 - Grafana - Visualization
 - Loki - Log aggregation
@@ -316,6 +351,7 @@ terraform/
 ## Testing & Quality
 
 ### 🧪 **tests/**
+
 **Testing Strategy**: The Testing Pyramid
 
 ```
@@ -329,26 +365,32 @@ terraform/
 ```
 
 **Coverage Goals**:
+
 - Unit: 80% coverage
 - Integration: Critical paths
 - E2E: Happy paths + edge cases
 
 ### 📊 **coverage/**
+
 **Purpose**: Code coverage reports
 
 **Metrics Tracked**:
+
 - Line coverage
 - Branch coverage
 - Function coverage
 - Statement coverage
 
 ### 🎭 **playwright-report/**
+
 **Purpose**: E2E test results and screenshots
 
 ### 📊 **test-results/**
+
 **Purpose**: Aggregated test execution results from all test suites
 
 **Contents**:
+
 - JSON test reports
 - JUnit XML reports for CI/CD
 - Performance benchmarks
@@ -359,28 +401,34 @@ terraform/
 ## AI & Automation Systems - Extended
 
 ### 🧠 **coordination/**
+
 **Purpose**: Service coordination and orchestration logic
 
 **Architecture Pattern**: Mediator Pattern for service communication
+
 - Decouples services from direct communication
 - Centralized coordination logic
 - Event-driven service orchestration
 
 **Key Components**:
+
 - `serviceRegistry.ts` - Service discovery
 - `eventBus.ts` - Inter-service messaging
 - `orchestrator.ts` - Workflow coordination
 
 ### 💾 **memory/**
+
 **Purpose**: Persistent storage for AI agent memory and learning
 
 **Capabilities**:
+
 - Long-term memory persistence
 - Cross-session knowledge retention
 - Pattern recognition storage
 - Learning optimization data
 
 **Storage Structure**:
+
 ```
 memory/
 ├── agents/         # Per-agent memory
@@ -390,9 +438,11 @@ memory/
 ```
 
 ### 📝 **logs/**
+
 **Purpose**: Centralized application logging
 
 **Log Categories**:
+
 - `error.log` - Error tracking
 - `access.log` - API access logs
 - `performance.log` - Performance metrics
@@ -406,6 +456,7 @@ memory/
 ## Utility Scripts
 
 ### 🛠️ **scripts/**
+
 **Purpose**: Automation and utility scripts
 
 **Categories**:
@@ -419,6 +470,7 @@ memory/
 | Utilities | Helper scripts | `validate-env.cjs` |
 
 **Key Scripts**:
+
 - `deploy-local.sh/bat` - Local deployment
 - `performance-monitor.js` - Real-time performance monitoring
 - `flow-nexus-login.js` - Flow Nexus authentication
@@ -429,6 +481,7 @@ memory/
 ## Documentation
 
 ### 📚 **docs/**
+
 **Organization**:
 
 ```
@@ -445,6 +498,7 @@ docs/
 ```
 
 **Key Documents**:
+
 - `API.md` - Complete API reference
 - `ARCHITECTURE.md` - System architecture overview
 - `DEPLOYMENT.md` - Deployment procedures
@@ -453,6 +507,7 @@ docs/
 - `BUILD_VERIFICATION_REPORT.md` - Build status
 
 **Best Practice**: Documentation as Code
+
 - Version controlled
 - Review process
 - Automated generation
@@ -462,9 +517,11 @@ docs/
 ## Build & Deployment
 
 ### ⚡ **.next/**
+
 **Purpose**: Next.js build output
 
 **Contents**:
+
 - Server bundles
 - Client bundles
 - Static assets
@@ -473,7 +530,9 @@ docs/
 ⚠️ **Warning**: Never commit to Git!
 
 ### 📦 **node_modules/**
+
 **The JavaScript Ecosystem Challenge**:
+
 - 1000+ dependencies
 - Complex dependency tree
 - Security scanning needed
@@ -481,9 +540,11 @@ docs/
 ⚠️ **Critical**: Use `package-lock.json` for reproducible builds
 
 ### 🚀 **.vercel/**
+
 **Purpose**: Vercel deployment cache
 
 **Features**:
+
 - Edge functions
 - Serverless functions
 - Static optimization
@@ -494,16 +555,16 @@ docs/
 
 ### 🏗️ **Patterns Implemented**
 
-| Pattern | Implementation | Benefits |
-|---------|---------------|----------|
-| Domain-Driven Design | Organized by domain | Better maintainability |
-| Microservices | Service boundaries | Independent scaling |
-| Event-Driven | Reactive patterns | Loose coupling |
-| CQRS | Command/Query separation | Performance optimization |
-| Repository Pattern | Data access abstraction | Testability |
-| Dependency Injection | IoC container | Flexibility |
-| Observer Pattern | Event emitters | Reactive UI |
-| Factory Pattern | Component creation | Consistency |
+| Pattern              | Implementation           | Benefits                 |
+| -------------------- | ------------------------ | ------------------------ |
+| Domain-Driven Design | Organized by domain      | Better maintainability   |
+| Microservices        | Service boundaries       | Independent scaling      |
+| Event-Driven         | Reactive patterns        | Loose coupling           |
+| CQRS                 | Command/Query separation | Performance optimization |
+| Repository Pattern   | Data access abstraction  | Testability              |
+| Dependency Injection | IoC container            | Flexibility              |
+| Observer Pattern     | Event emitters           | Reactive UI              |
+| Factory Pattern      | Component creation       | Consistency              |
 
 ### 🎯 **Design Principles**
 
@@ -613,6 +674,7 @@ docs/
 ## Conclusion
 
 This directory structure represents a **state-of-the-art architecture** combining:
+
 - Modern web development practices
 - AI-enhanced development workflows
 - Enterprise-grade infrastructure
@@ -623,6 +685,6 @@ The project serves as both a **functional application** and an **educational res
 
 ---
 
-*Generated by Flow Nexus Documentation Swarm*  
-*Last Updated: September 12, 2025*  
-*Version: 2.0.0 - Post Technical Debt Cleanup*
+_Generated by Flow Nexus Documentation Swarm_  
+_Last Updated: September 12, 2025_  
+_Version: 2.0.0 - Post Technical Debt Cleanup_

@@ -16,10 +16,10 @@ This application implements a comprehensive API versioning system that supports 
 
 ## Supported Versions
 
-| Version | Status | Deprecated | Sunset Date | Features |
-|---------|--------|------------|-------------|----------|
-| v1 | Active | Yes | 2025-06-01 | Offset pagination, basic REST |
-| v2 | Active | No | - | Cursor pagination, HATEOAS, enhanced validation |
+| Version | Status | Deprecated | Sunset Date | Features                                        |
+| ------- | ------ | ---------- | ----------- | ----------------------------------------------- |
+| v1      | Active | Yes        | 2025-06-01  | Offset pagination, basic REST                   |
+| v2      | Active | No         | -           | Cursor pagination, HATEOAS, enhanced validation |
 
 ## Version Negotiation
 
@@ -65,6 +65,7 @@ GET /api/vocabulary/lists?version=v2
 ### Pagination
 
 **V1 - Offset-based:**
+
 ```json
 {
   "data": [...],
@@ -78,6 +79,7 @@ GET /api/vocabulary/lists?version=v2
 ```
 
 **V2 - Cursor-based:**
+
 ```json
 {
   "data": [...],
@@ -98,6 +100,7 @@ GET /api/vocabulary/lists?version=v2
 ### Response Format
 
 **V1 - Simple:**
+
 ```json
 {
   "success": true,
@@ -112,6 +115,7 @@ GET /api/vocabulary/lists?version=v2
 ```
 
 **V2 - Structured with HATEOAS:**
+
 ```json
 {
   "success": true,
@@ -138,6 +142,7 @@ GET /api/vocabulary/lists?version=v2
 ### Error Handling
 
 **V1 - Basic:**
+
 ```json
 {
   "success": false,
@@ -147,6 +152,7 @@ GET /api/vocabulary/lists?version=v2
 ```
 
 **V2 - Structured:**
+
 ```json
 {
   "success": false,
@@ -196,11 +202,13 @@ X-API-Latest-Version: v2
 ### Step 1: Update API URLs
 
 **Before (V1):**
+
 ```javascript
 const response = await fetch('/api/v1/vocabulary/lists');
 ```
 
 **After (V2):**
+
 ```javascript
 const response = await fetch('/api/v2/vocabulary/lists');
 ```
@@ -208,6 +216,7 @@ const response = await fetch('/api/v2/vocabulary/lists');
 ### Step 2: Update Response Handling
 
 **Before (V1):**
+
 ```javascript
 const data = await response.json();
 const lists = data.data;
@@ -215,6 +224,7 @@ const nextOffset = data.pagination.offset + data.pagination.limit;
 ```
 
 **After (V2):**
+
 ```javascript
 const data = await response.json();
 const lists = data.data;
@@ -226,12 +236,14 @@ const nextUrl = data.pagination._links.next;
 ### Step 3: Update Data Structure Access
 
 **Before (V1):**
+
 ```javascript
 const difficulty = list.difficulty_level;
 const createdAt = list.created_at;
 ```
 
 **After (V2):**
+
 ```javascript
 const difficulty = list.metadata.difficultyLevel;
 const createdAt = list.timestamps.createdAt;
@@ -240,6 +252,7 @@ const createdAt = list.timestamps.createdAt;
 ### Step 4: Use HATEOAS Links
 
 **V2 Only:**
+
 ```javascript
 // Navigate using hypermedia links
 const itemsUrl = list._links.items;
@@ -256,14 +269,17 @@ import { createVersionRouter } from '@/api/middleware/versionRouter';
 import { handleV1GetLists } from '@/api/examples/v1/vocabularyLists';
 import { handleV2GetLists } from '@/api/examples/v2/vocabularyLists';
 
-export const GET = createVersionRouter({
-  v1: handleV1GetLists,
-  v2: handleV2GetLists,
-}, {
-  includeDeprecationWarnings: true,
-  includeVersionHeaders: true,
-  logVersionNegotiation: true,
-});
+export const GET = createVersionRouter(
+  {
+    v1: handleV1GetLists,
+    v2: handleV2GetLists,
+  },
+  {
+    includeDeprecationWarnings: true,
+    includeVersionHeaders: true,
+    logVersionNegotiation: true,
+  }
+);
 ```
 
 ### Using Migration Utilities
@@ -272,7 +288,7 @@ export const GET = createVersionRouter({
 import { migrateData, registerMigration } from '@/api/utils/migration';
 
 // Register custom migration
-registerMigration('v1', 'v2', (data) => {
+registerMigration('v1', 'v2', data => {
   return {
     ...data,
     metadata: {
@@ -299,7 +315,7 @@ async function fetchWithVersion(url: string, version: 'v1' | 'v2') {
   const response = await fetch(url, {
     headers: {
       'X-API-Version': version,
-      'Accept': `application/vnd.describeit.${version}+json`,
+      Accept: `application/vnd.describeit.${version}+json`,
     },
   });
 
@@ -410,6 +426,7 @@ test('migrates v1 to v2', async () => {
 ## Support
 
 For questions or issues with API versioning:
+
 - Review this documentation
 - Check deprecation headers in responses
 - Consult the migration guide
@@ -418,6 +435,7 @@ For questions or issues with API versioning:
 ## Changelog
 
 ### v2.0.0 (Current)
+
 - Cursor-based pagination
 - HATEOAS support
 - Enhanced validation
@@ -425,6 +443,7 @@ For questions or issues with API versioning:
 - Better TypeScript support
 
 ### v1.0.0 (Deprecated)
+
 - Offset-based pagination
 - Basic REST API
 - Simple error handling
