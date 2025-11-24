@@ -177,31 +177,47 @@ export async function GET(request: NextRequest) {
 }
 
 /**
- * Generate demo images using Lorem Picsum (reliable, free service)
+ * Generate demo images using stable Unsplash image IDs
  */
 function generateDemoImages(query: string, page: number) {
+  // Stable Unsplash photo IDs for reliable demo images
+  const stableImages = [
+    { id: '1506905925346-21bda4d32df4', description: 'Mountain landscape' },
+    { id: '1472214103451-9374bd1c798e', description: 'Forest pathway' },
+    { id: '1501594907352-04cda38ebc29', description: 'Ocean waves' },
+    { id: '1469474968028-56623f02e42e', description: 'Nature scene' },
+    { id: '1441974231531-c6227db76b6e', description: 'Rocky mountains' },
+    { id: '1470071459604-8b5ce755-dae1', description: 'Desert landscape' },
+    { id: '1426604966848-d7adac402bff', description: 'Arctic vista' },
+    { id: '1518173946687-a19c8550c4fd', description: 'Sunset view' },
+    { id: '1507003211169-0a1dd7228f2d', description: 'Beach scene' },
+    { id: '1441974231531-c6227db76b6e', description: 'Mountain peak' },
+    { id: '1472396821693-b928d1c53b87', description: 'Forest trees' },
+    { id: '1501594907352-04cda38ebc29', description: 'Ocean vista' },
+  ];
+
   const images = [];
   const pageOffset = (page - 1) * 12;
 
   for (let i = 0; i < 12; i++) {
+    const imageIndex = i % stableImages.length;
+    const stableImage = stableImages[imageIndex];
     const imageId = pageOffset + i + 1;
-    // Use specific Lorem Picsum IDs for consistent, quality images
-    const picsumId = ((imageId * 37) % 1000) + 1; // Distribute across available images
 
     images.push({
-      id: `demo-${query}-${picsumId}`,
+      id: `demo-${query}-${stableImage.id}`,
       urls: {
-        small: `https://picsum.photos/id/${picsumId}/400/300`,
-        regular: `https://picsum.photos/id/${picsumId}/800/600`,
-        full: `https://picsum.photos/id/${picsumId}/1600/1200`,
+        small: `https://images.unsplash.com/photo-${stableImage.id}?w=400`,
+        regular: `https://images.unsplash.com/photo-${stableImage.id}?w=1080`,
+        full: `https://images.unsplash.com/photo-${stableImage.id}?w=1920`,
       },
-      alt_description: `${query} - Image ${imageId}`,
+      alt_description: `${query} - ${stableImage.description}`,
       user: {
-        name: "Lorem Picsum",
-        username: "picsum",
+        name: "Unsplash Demo",
+        username: "unsplash",
       },
-      width: 1600,
-      height: 1200,
+      width: 1920,
+      height: 1080,
       color: "#" + Math.floor(Math.random()*16777215).toString(16),
     });
   }

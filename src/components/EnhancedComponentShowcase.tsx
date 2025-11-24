@@ -93,7 +93,7 @@ const EnhancedComponentShowcase: React.FC<EnhancedComponentShowcaseProps> = ({
       props: {
         imageUrl:
           selectedImage?.urls?.regular ||
-          "https://picsum.photos/800/600?random=1",
+          "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=800",
         description:
           "A beautiful landscape with mountains and trees in the background",
         language: "es" as const,
