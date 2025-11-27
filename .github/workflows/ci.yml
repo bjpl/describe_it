@@ -272,6 +272,16 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: 'npm'
 
+      - name: Restore dependency cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+            node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
       - name: Install dependencies
         run: npm ci
         env:
@@ -295,6 +305,38 @@ jobs:
           fi
           echo "Build verification successful"
 
+      - name: Analyze bundle size
+        run: |
+          echo "### Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get Next.js build info
+          if [ -f ".next/analyze/client.html" ]; then
+            echo "Bundle analyzer report generated" >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Calculate total size
+          total_size=$(du -sh .next/static | cut -f1)
+          echo "**Total Static Assets:** $total_size" >> $GITHUB_STEP_SUMMARY
+
+          # List largest chunks
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "#### Largest Chunks:" >> $GITHUB_STEP_SUMMARY
+          find .next/static -type f -name "*.js" -exec du -h {} \; | sort -rh | head -10 >> $GITHUB_STEP_SUMMARY
+
+      - name: Check bundle size limits
+        run: |
+          # Check if bundle exceeds size limits (example: 500KB)
+          total_bytes=$(du -sb .next/static/chunks | cut -f1)
+          max_bytes=512000  # 500KB
+
+          if [ $total_bytes -gt $max_bytes ]; then
+            echo "Warning: Bundle size ($total_bytes bytes) exceeds limit ($max_bytes bytes)"
+            echo "bundle_size_warning=true" >> $GITHUB_ENV
+          else
+            echo "Bundle size check passed: $total_bytes bytes"
+          fi
+
       - name: Cache build artifacts
         uses: actions/cache/save@v4
         if: success()
@@ -312,6 +354,19 @@ jobs:
             .next/
             !.next/cache
           retention-days: 3
+
+      - name: Generate build stats
+        run: |
+          mkdir -p reports
+          du -h .next/static > reports/build-stats.txt
+          find .next -name "*.js" -type f | wc -l > reports/js-file-count.txt
+
+      - name: Upload build stats
+        uses: actions/upload-artifact@v5
+        with:
+          name: build-stats
+          path: reports/
+          retention-days: 30
 
   # ============================================================================
   # CI SUCCESS CHECK

@@ -1,0 +1,343 @@
+name: Lighthouse CI - Performance Monitoring
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  workflow_dispatch:
+  schedule:
+    # Run weekly on Monday at 9 AM UTC
+    - cron: '0 9 * * 1'
+
+env:
+  NODE_VERSION: '20'
+
+# Prevent concurrent runs
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ============================================================================
+  # LIGHTHOUSE CI PERFORMANCE AUDIT
+  # ============================================================================
+
+  lighthouse-ci:
+    name: Lighthouse Performance Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          CI: true
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Start Next.js server
+        run: |
+          npm run start &
+          echo "Waiting for server to start..."
+          npx wait-on http://localhost:3000 --timeout 60000
+        env:
+          PORT: 3000
+
+      - name: Run Lighthouse CI
+        run: |
+          npm install -g @lhci/cli@0.12.x
+          lhci autorun --config=.lighthouserc.js
+        env:
+          LHCI_BUILD_CONTEXT__CURRENT_BRANCH: ${{ github.ref }}
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+
+      - name: Upload Lighthouse results
+        uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: lighthouse-results
+          path: |
+            .lighthouseci/
+            lighthouse-results.db
+          retention-days: 30
+
+      - name: Generate performance report
+        if: always()
+        run: |
+          echo "### Lighthouse Performance Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Extract scores from Lighthouse results
+          if [ -f ".lighthouseci/manifest.json" ]; then
+            echo "#### Performance Metrics" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Metric | Score |" >> $GITHUB_STEP_SUMMARY
+            echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+
+            # Parse manifest and display key metrics
+            # This is a simplified version - you can enhance with jq for actual JSON parsing
+            echo "View detailed results in the artifacts" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No Lighthouse results found" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Comment PR with results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+
+            // Read Lighthouse results
+            let comment = '## 🚦 Lighthouse CI Results\n\n';
+            comment += 'Performance audit completed. ';
+            comment += 'View detailed results in the [workflow artifacts]';
+            comment += `(${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}).\n`;
+
+            // Post comment
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: comment
+            });
+
+  # ============================================================================
+  # WEB VITALS MONITORING
+  # ============================================================================
+
+  web-vitals:
+    name: Web Vitals Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          CI: true
+
+      - name: Build application
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Start Next.js server
+        run: |
+          npm run start &
+          echo "Waiting for server to start..."
+          npx wait-on http://localhost:3000 --timeout 60000
+        env:
+          PORT: 3000
+
+      - name: Install Playwright
+        run: npx playwright install --with-deps chromium
+
+      - name: Collect Web Vitals
+        run: |
+          # Create a test script to collect Web Vitals
+          cat > collect-vitals.js << 'EOF'
+          const { chromium } = require('playwright');
+          const fs = require('fs');
+
+          (async () => {
+            const browser = await chromium.launch();
+            const context = await browser.newContext();
+            const page = await context.newPage();
+
+            const vitals = {};
+
+            // Collect Web Vitals
+            await page.goto('http://localhost:3000', { waitUntil: 'networkidle' });
+
+            // Get performance metrics
+            const metrics = await page.evaluate(() => {
+              return new Promise((resolve) => {
+                const observer = new PerformanceObserver((list) => {
+                  const entries = list.getEntries();
+                  const vitals = {};
+
+                  entries.forEach((entry) => {
+                    if (entry.entryType === 'paint') {
+                      vitals[entry.name] = entry.startTime;
+                    }
+                  });
+
+                  resolve(vitals);
+                });
+
+                observer.observe({ entryTypes: ['paint', 'navigation', 'largest-contentful-paint'] });
+
+                // Timeout after 10 seconds
+                setTimeout(() => resolve({}), 10000);
+              });
+            });
+
+            fs.writeFileSync('web-vitals-results.json', JSON.stringify(metrics, null, 2));
+
+            await browser.close();
+          })();
+          EOF
+
+          node collect-vitals.js || echo "Web Vitals collection completed with warnings"
+
+      - name: Analyze Web Vitals
+        if: always()
+        run: |
+          echo "### Web Vitals Analysis" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "web-vitals-results.json" ]; then
+            echo "#### Core Web Vitals" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            cat web-vitals-results.json >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No Web Vitals data collected" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Web Vitals results
+        uses: actions/upload-artifact@v5
+        if: always()
+        with:
+          name: web-vitals-results
+          path: |
+            web-vitals-results.json
+            web-vitals.json
+          retention-days: 30
+
+  # ============================================================================
+  # BUNDLE SIZE TRACKING
+  # ============================================================================
+
+  bundle-size:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          CI: true
+
+      - name: Build with bundle analysis
+        run: |
+          ANALYZE=true npm run build
+        env:
+          NODE_ENV: production
+          NEXT_TELEMETRY_DISABLED: 1
+
+      - name: Analyze bundle composition
+        run: |
+          echo "### Bundle Analysis Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Get total bundle size
+          if [ -d ".next/static" ]; then
+            total_size=$(du -sh .next/static | cut -f1)
+            echo "**Total Bundle Size:** $total_size" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+
+            # List all chunks
+            echo "#### JavaScript Chunks" >> $GITHUB_STEP_SUMMARY
+            echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+            find .next/static/chunks -name "*.js" -exec sh -c 'echo "| {} | $(du -h {} | cut -f1) |"' \; | head -20 >> $GITHUB_STEP_SUMMARY
+
+            # CSS files
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "#### CSS Files" >> $GITHUB_STEP_SUMMARY
+            echo "| File | Size |" >> $GITHUB_STEP_SUMMARY
+            echo "|------|------|" >> $GITHUB_STEP_SUMMARY
+            find .next/static -name "*.css" -exec sh -c 'echo "| {} | $(du -h {} | cut -f1) |"' \; >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Check size limits
+        run: |
+          # Define size limits (in bytes)
+          MAX_JS_SIZE=500000  # 500KB for main JS bundle
+          MAX_CSS_SIZE=100000 # 100KB for CSS
+
+          # Check main JS bundle
+          main_js_size=$(find .next/static/chunks -name "main-*.js" -exec du -b {} \; | cut -f1 | head -1)
+
+          if [ -n "$main_js_size" ]; then
+            if [ $main_js_size -gt $MAX_JS_SIZE ]; then
+              echo "::warning::Main JS bundle ($main_js_size bytes) exceeds limit ($MAX_JS_SIZE bytes)"
+            else
+              echo "Main JS bundle size OK: $main_js_size bytes"
+            fi
+          fi
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v5
+        with:
+          name: bundle-analysis
+          path: |
+            .next/analyze/
+            .next/static/
+          retention-days: 30
+
+  # ============================================================================
+  # PERFORMANCE SUMMARY
+  # ============================================================================
+
+  performance-summary:
+    name: Performance Summary
+    runs-on: ubuntu-latest
+    needs: [lighthouse-ci, web-vitals, bundle-size]
+    if: always()
+
+    steps:
+      - name: Generate summary
+        run: |
+          echo "### 📊 Performance Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Lighthouse CI | ${{ needs.lighthouse-ci.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Web Vitals | ${{ needs.web-vitals.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Bundle Size | ${{ needs.bundle-size.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "View detailed results in the workflow artifacts." >> $GITHUB_STEP_SUMMARY
+
+      - name: Check performance status
+        run: |
+          if [ "${{ needs.lighthouse-ci.result }}" != "success" ]; then
+            echo "::warning::Lighthouse CI checks failed"
+          fi
+
+          echo "Performance monitoring completed"
