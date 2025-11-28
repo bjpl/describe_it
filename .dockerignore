@@ -1,27 +1,37 @@
-# Dependency directories
+# ==============================================
+# Docker Ignore File
+# Describe It - Production Build Optimization
+# ==============================================
+
+# Dependencies
 node_modules
 npm-debug.log*
 .npm
 
-# Local env files
-.env*.local
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# Next.js build output
+# Build outputs
 .next/
 out/
 build/
 dist/
 
-# TypeScript build info
+# Environment files (use docker-compose env vars instead)
+.env*.local
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env
+
+# TypeScript
 *.tsbuildinfo
 
 # Logs
 logs
 *.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
 
 # Runtime data
 pids
@@ -29,14 +39,20 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Testing
 coverage/
 *.lcov
-
-# nyc test coverage
 .nyc_output
+test-results/
+playwright-report/
+tests/
+__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
 
-# OS generated files
+# OS generated
 .DS_Store
 .DS_Store?
 ._*
@@ -45,73 +61,86 @@ coverage/
 ehthumbs.db
 Thumbs.db
 
-# IDE files
+# IDE
 .vscode/
 .idea/
 *.swp
 *.swo
-
-# Temporary folders
-tmp/
-temp/
+*.swn
 
 # Git
 .git
 .gitignore
+.gitattributes
 
 # Docker
 Dockerfile*
 docker-compose*.yml
+.dockerignore
 
-# Misc
+# Documentation
 README.md
-*.md
-.eslintrc.json
-.prettierrc
-
-# Test files
-**/*.test.ts
-**/*.test.tsx
-**/*.spec.ts
-**/*.spec.tsx
-tests/
-test/
-__tests__/
-playwright-report/
-test-results/
-
-# Documentation and reports
+CHANGELOG.md
+CONTRIBUTING.md
+LICENSE
 docs/
 *.md
-*.txt
-api-test-report.json
-direct-services-test-report.json
-integration-test-results.json
-web-vitals.json
-build.log
 
-# Deployment files
+# Configuration
+.eslintrc.json
+.prettierrc
+.editorconfig
+.husky/
+
+# CI/CD
+.github/
+.gitlab-ci.yml
+.travis.yml
+azure-pipelines.yml
+
+# Deployment
 vercel.json
 netlify.toml
 .vercel
 .netlify
 
 # Cache
-.swc/
-.turbo/
 .cache/
 .parcel-cache/
+.swc/
+.turbo/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
 
 # Development files
 .env.example
 .env.sample
+scripts/
+config/
 
-# Playwright
+# Testing configs
 playwright.config.ts
 playwright-staging.config.ts
-
-# Jest
+vitest.config.ts
 jest.config.js
 
-# Lighthouse
+# Monitoring
 lighthouserc.js
+prometheus.yml
+
+# Reports
+*.json
+*.html
+*.txt
+api-test-report.json
+web-vitals.json
+build.log
+
+# Misc
+.todo
+.vscode-test
+*.backup
+*~

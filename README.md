@@ -3,6 +3,7 @@
 A Spanish learning application that combines visual learning with AI-powered language education through interactive image descriptions, Q&A sessions, and vocabulary extraction.
 
 ## Table of Contents
+
 - [Overview](#overview)
 - [Features](#features)
 - [Installation](#installation)
@@ -19,56 +20,97 @@ A Spanish learning application that combines visual learning with AI-powered lan
 
 ## Overview
 
-Describe It is a comprehensive Next.js 15.5 application designed for Spanish language learners. The platform utilizes AI-powered image analysis to generate contextual descriptions in multiple styles, enabling users to improve their language skills through visual learning, interactive comprehension exercises, and vocabulary building.
+Describe It is a Next.js 15.5 application designed for Spanish language learners. The platform uses AI-powered image analysis to generate contextual descriptions in multiple styles, helping users improve their language skills through visual learning, interactive exercises, and vocabulary building.
 
-**Current Version:** 0.1.0
-**Status:** Active Production
-**Deployment:** Vercel
+**Version:** 0.1.0 (Beta)
+**Status:** Active Development
+**Deployment:** https://describe-it.vercel.app
+
+### What's Working Right Now ✅
+
+- Search and select images from Unsplash
+- Generate AI descriptions in 5 Spanish styles
+- Toggle between Spanish and English translations
+- Practice with interactive Q&A questions
+- Extract and study vocabulary phrases
+- Save session data and export reports
+- User authentication and profile management
+
+### Known Limitations ⚠️
+
+- No real-time collaboration (planned for future release)
+- No spaced repetition system yet
+- No audio pronunciation features
+- Limited analytics dashboard
+- Single language focus (Spanish only)
 
 ## Features
 
-### Core Functionality
-- Multi-style image descriptions in five formats: Narrativo, Poético, Académico, Conversacional, and Infantil
-- Interactive Q&A system with context-aware questions, difficulty levels, and confidence scoring
-- Smart phrase extraction with categorized vocabulary and integrated learning features
-- Session management for progress tracking, data export, and learning history
-- Real-time collaboration with live updates and shared learning sessions
+### Core Functionality ✅ Implemented
 
-### Technical Capabilities
-- Built on Next.js 15.5 App Router with React 19 and TypeScript 5.9 strict mode
-- AI integration via Anthropic Claude SDK 0.65.0 for image analysis and content generation
-- Backend powered by Supabase 2.58.0 for authentication, database, and real-time features
-- Production monitoring with Sentry 10.17.0 for error tracking
-- Data management using TanStack Query 5.90 for caching and Zustand for state
-- Unsplash API integration for high-quality image search
-- Accessible UI components built with Radix UI
-- Styled with Tailwind CSS
+- **Multi-style AI Descriptions**: Generate image descriptions in five distinct Spanish styles (Narrativo, Poético, Académico, Conversacional, and Infantil)
+- **Interactive Q&A System**: Practice comprehension with context-aware questions and immediate feedback
+- **Smart Vocabulary Extraction**: Automatically extract and categorize key phrases and vocabulary from descriptions
+- **Image Search**: Browse and search high-quality images via Unsplash API integration
+- **Session Management**: Track learning progress, save sessions, and export data
+- **Multi-language Support**: Toggle between Spanish and English descriptions
+
+### Technical Implementation
+
+- **Frontend**: Next.js 15.5 App Router with React 19 and TypeScript 5.9 (strict mode)
+- **AI**: Anthropic Claude SDK 0.70.1 for intelligent image analysis and content generation
+- **Backend**: Supabase 2.84.0 (authentication, PostgreSQL database, storage)
+- **State Management**: TanStack Query 5.90 for server state, Zustand 4.4 for client state
+- **Monitoring**: Sentry 10.26.0 for error tracking and performance monitoring
+- **UI Components**: Radix UI with Tailwind CSS and Framer Motion animations
+- **Performance**: Multi-layer caching, code splitting, and optimistic updates
 
 ## Live Demo
 
 **Deployed Application:** [View Live Demo](https://describe-it.vercel.app)
 
-This project demonstrates full-stack Next.js 15.5 development with AI integration, real-time collaboration, and production-grade architecture. The implementation showcases modern React patterns, TypeScript strict mode, multi-layered caching strategies, and comprehensive security implementations.
+This project demonstrates full-stack Next.js 15.5 development with AI integration and production-grade architecture. The implementation showcases modern React patterns, TypeScript strict mode, multi-layered caching strategies, and comprehensive security implementations.
+
+## Roadmap
+
+### Planned Features 🚧
+
+- **Real-time Collaboration**: Multi-user sessions with live updates and shared progress
+- **Spaced Repetition System**: Intelligent review scheduling for vocabulary retention
+- **Audio Pronunciation**: Text-to-speech for Spanish phrases and descriptions
+- **User Progress Analytics**: Detailed learning metrics and achievement tracking
+- **Custom Vocabulary Lists**: Create and manage personalized word collections
+- **Offline Mode**: PWA support for learning without internet connection
+- **Mobile App**: Native iOS and Android applications
+
+### Under Consideration 💡
+
+- **Additional Languages**: Expand beyond Spanish (French, German, Italian)
+- **Community Features**: Share descriptions and study materials
+- **Gamification**: Streaks, badges, and learning challenges
+- **AI Tutor Mode**: Conversational practice with AI feedback
 
 ## Technical Overview
 
 **Key Technologies:**
+
 - Next.js 15.5 App Router with React 19 and TypeScript 5.9
-- Anthropic Claude SDK 0.65.0 for AI-powered image analysis
-- Supabase 2.58.0 (Auth, Database, Real-time)
+- Anthropic Claude SDK 0.70.1 for AI-powered image analysis
+- Supabase 2.84.0 (Authentication, PostgreSQL, Storage)
 - TanStack Query 5.90 for server state management
-- Zustand for client state management
+- Zustand 4.4 for client state management
 - Radix UI for accessible components
-- Tailwind CSS for styling
-- Sentry 10.17.0 for production monitoring
+- Tailwind CSS + Framer Motion for styling and animations
+- Sentry 10.26.0 for production monitoring
 
 **Implementation Highlights:**
-- Multi-style AI-generated descriptions (Narrativo, Poético, Académico, Conversacional, Infantil)
-- Interactive Q&A system with context-aware questions and confidence scoring
-- Real-time collaboration with live updates and shared sessions
-- Comprehensive security: JWT auth, Row-Level Security, CORS, rate limiting, input validation
-- Multi-layer caching architecture: Browser → CDN → Application → Database
-- Core Web Vitals monitoring with automatic alerting
+
+- Multi-style AI-generated descriptions (5 distinct Spanish writing styles)
+- Interactive Q&A system with context-aware questions
+- Smart vocabulary extraction and categorization
+- Comprehensive security: JWT auth, Row-Level Security, rate limiting, input validation
+- Multi-layer caching: Browser → CDN → Application → Database
+- Core Web Vitals monitoring with real-time metrics
 - Production deployment on Vercel with Supabase backend
 
 ## Exploring the Code
@@ -94,6 +136,7 @@ describe-it/
 **For Technical Review:**
 
 Those interested in the implementation details can explore:
+
 - `/src/app/api` directory for API route implementations
 - `/src/lib/database/migrations` for database schema and RLS policies
 - `/docs/security` for comprehensive security documentation
@@ -106,6 +149,7 @@ Those interested in the implementation details can explore:
 <summary>Click to expand setup instructions</summary>
 
 ### Prerequisites
+
 - Node.js 18 or higher
 - npm or pnpm
 - Supabase account
@@ -201,30 +245,58 @@ npm run format
 
 ## Deployment
 
-### Vercel Deployment
+### Current Deployment Status
 
-Push code to GitHub and import the project in Vercel:
+- **Platform**: Vercel (Production)
+- **URL**: https://describe-it.vercel.app
+- **Database**: Supabase (PostgreSQL)
+- **CDN**: Vercel Edge Network
+- **Monitoring**: Sentry
 
-1. Visit vercel.com/new
-2. Import GitHub repository
-3. Configure environment variables in Vercel dashboard
-4. Set up Vercel KV for caching (optional)
-5. Set up Vercel Blob Storage for file uploads (optional)
+### Deploying Your Own Instance
 
-Deploy:
+#### 1. Vercel Setup
 
 ```bash
+# Push to GitHub first
+git push origin main
+
+# Deploy to Vercel (or use Vercel dashboard)
 vercel --prod
 ```
 
-### Supabase Configuration
+#### 2. Environment Variables (Required)
 
-Create a Supabase project and configure:
+Configure in Vercel dashboard or `.env.local`:
 
-1. Run migrations from `src/lib/database/migrations/`
-2. Enable Row Level Security on all tables
-3. Configure OAuth providers (Google, GitHub)
-4. Set redirect URLs for authentication
+```bash
+# Anthropic (AI descriptions)
+ANTHROPIC_API_KEY=your_anthropic_key
+
+# Unsplash (image search)
+NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=your_unsplash_key
+
+# Supabase (database & auth)
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+# Sentry (error tracking - optional)
+NEXT_PUBLIC_SENTRY_DSN=your_sentry_dsn
+```
+
+#### 3. Supabase Configuration
+
+1. Create new project at [supabase.com](https://supabase.com)
+2. Run database migrations (see `/src/lib/database/migrations/`)
+3. Enable Row Level Security on all tables
+4. Configure authentication providers if needed
+5. Copy project URL and anon key to environment variables
+
+#### 4. Optional Enhancements
+
+- **Vercel KV**: Enable Redis caching for improved performance
+- **Vercel Blob**: Add file upload storage support
+- **Custom Domain**: Configure in Vercel settings
 
 ## Security
 
@@ -247,18 +319,21 @@ For detailed security information, see the [Security Documentation](docs/securit
 ## Performance
 
 ### Monitoring
+
 - Core Web Vitals tracking (LCP, FID, CLS, TTFB)
 - Real-time performance metrics with automatic alerting
 - Custom metrics for API response times and user interactions
 - Bundle size analysis with automated optimization suggestions
 
 ### Caching
+
 - Multi-layer caching: Browser → CDN → Application → Database
 - React Query for intelligent server state management
 - Vercel KV (Redis) for session and API response caching
 - Optimistic updates for improved user experience
 
 ### Optimization
+
 - Image optimization with Next.js Image component
 - Code splitting for faster initial loads
 - Lazy loading for components and routes

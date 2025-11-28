@@ -1,0 +1,134 @@
+# ==============================================
+# Docker Compose - Development Environment
+# Describe It Next.js Application
+# ==============================================
+# For local development with hot reload and debugging
+
+version: '3.9'
+
+services:
+  # ==============================================
+  # Next.js Application (Development)
+  # ==============================================
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        NODE_VERSION: "20.11.0"
+    container_name: describe-it-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Core configuration
+      - NODE_ENV=development
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+
+      # Redis connection
+      - REDIS_URL=redis://redis:6379
+      - ENABLE_REDIS_CACHE=true
+
+      # Development features
+      - DEBUG_ENDPOINT_ENABLED=true
+      - ENABLE_PERFORMANCE_MONITORING=true
+      - LOG_LEVEL=debug
+
+      # API Keys (load from .env.local)
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=${NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}
+
+      # Security keys
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
+
+    env_file:
+      - .env.local
+
+    volumes:
+      # Mount source code for hot reload
+      - ./src:/app/src:cached
+      - ./public:/app/public:cached
+      - ./package.json:/app/package.json:cached
+      - ./next.config.mjs:/app/next.config.mjs:cached
+      - ./tsconfig.json:/app/tsconfig.json:cached
+      - ./tailwind.config.ts:/app/tailwind.config.ts:cached
+      # Exclude node_modules from host
+      - /app/node_modules
+      - /app/.next
+      # Logs
+      - ./logs:/app/logs
+
+    depends_on:
+      redis:
+        condition: service_healthy
+
+    networks:
+      - dev-network
+
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # ==============================================
+  # Redis Cache
+  # ==============================================
+  redis:
+    image: redis:7.2-alpine
+    container_name: describe-it-redis-dev
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    volumes:
+      - redis-data:/data
+    networks:
+      - dev-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # ==============================================
+  # Redis Commander (Optional - Redis GUI)
+  # ==============================================
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: describe-it-redis-commander
+    restart: unless-stopped
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - dev-network
+    profiles:
+      - tools
+
+networks:
+  dev-network:
+    driver: bridge
+    name: describe-it-dev-network
+
+volumes:
+  redis-data:
+    driver: local

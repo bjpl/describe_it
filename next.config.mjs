@@ -37,16 +37,14 @@ const nextConfig = {
   // Output configuration for Vercel
   output: 'standalone',
 
-  // TypeScript - temporarily ignore build errors for initial setup
-  // TODO: Fix type errors in cache system and API routes
+  // TypeScript - build errors are now enforced
   typescript: {
-    ignoreBuildErrors: true,
+    ignoreBuildErrors: false,
   },
 
-  // ESLint - temporarily disabled until React unescaped entities are fixed
-  // See docs/TECH_DEBT.md for list of remaining issues
+  // ESLint - linting is now enforced during builds
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
   // HTTP headers for security and performance

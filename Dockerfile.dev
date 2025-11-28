@@ -1,0 +1,42 @@
+# ==============================================
+# Development Dockerfile
+# Describe It - Next.js 15.5 Application
+# ==============================================
+# Optimized for development with hot reload
+
+FROM node:20.11.0-alpine
+
+# Install development dependencies
+RUN apk update && \
+    apk add --no-cache \
+    libc6-compat \
+    curl \
+    git \
+    && rm -rf /var/cache/apk/*
+
+WORKDIR /app
+
+# Copy package files
+COPY package.json package-lock.json ./
+
+# Install all dependencies (including dev dependencies)
+RUN npm ci && \
+    npm cache clean --force
+
+# Copy application files
+COPY . .
+
+# Expose ports
+EXPOSE 3000
+
+# Development environment
+ENV NODE_ENV=development \
+    PORT=3000 \
+    HOSTNAME="0.0.0.0"
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Start development server with hot reload
+CMD ["npm", "run", "dev"]
