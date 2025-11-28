@@ -628,6 +628,7 @@ export interface CacheEntry<T = any> {
   timestamp: number;
   ttl: number;
   expires?: number;
+  key?: string;
 }
 
 /**

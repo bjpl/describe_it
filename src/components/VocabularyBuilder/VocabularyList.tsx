@@ -232,7 +232,7 @@ export const VocabularyList = memo<APIVocabularyListProps>(function VocabularyLi
           batch.map(item =>
             APIClient.saveVocabularyItem({
               ...item,
-              list_id: newList.id
+              list_id: newList.id as any
             })
           )
         );

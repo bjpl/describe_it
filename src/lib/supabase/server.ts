@@ -187,7 +187,7 @@ export const serverDbHelpers = {
 
     try {
       const { data, error } = await supabase
-        .from('export_history')
+        .from('export_history' as any)
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
@@ -209,7 +209,7 @@ export const serverDbHelpers = {
 
     try {
       const { data, error } = await supabase
-        .from('user_api_keys')
+        .from('user_api_keys' as any)
         .select('*')
         .eq('user_id', userId)
         .single()

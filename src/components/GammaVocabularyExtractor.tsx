@@ -232,11 +232,11 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
 
       const categorizedPhrases =
         await PhraseExtractor.extractCategorizedPhrases({
-          description: extractionRequest.description,
-          imageUrl: extractionRequest.imageUrl,
-          targetLevel: extractionRequest.targetLevel,
-          maxPhrases: extractionRequest.maxPhrases,
-          categories: extractionRequest.categories,
+          description: extractionRequest.description ?? '',
+          imageUrl: extractionRequest.imageUrl ?? '',
+          targetLevel: extractionRequest.targetLevel ?? 'beginner',
+          maxPhrases: extractionRequest.maxPhrases ?? 20,
+          categories: (extractionRequest.categories ?? []) as PhraseCategory[],
         });
 
       setState((prev) => ({

@@ -75,8 +75,8 @@ export class OpenAIConnectionPool {
         // OpenAI client doesn't have explicit cleanup, but we can clear internal state
         try {
           // @ts-ignore - accessing internal properties for cleanup
-          if (client.httpAgent) {
-            client.httpAgent.destroy?.();
+          if ((client as any).httpAgent) {
+            (client as any).httpAgent.destroy?.();
           }
         } catch (error) {
           performanceLogger.warn('Error during client cleanup:', {

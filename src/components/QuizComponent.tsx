@@ -507,7 +507,7 @@ function generateQuestion(
       return {
         ...baseQuestion,
         question: "What does this phrase mean?",
-        correctAnswer: phrase.definition,
+        correctAnswer: phrase.definition ?? '',
         hint: (phrase.context?.substring(0, 100) ?? 'No context available') + "...",
       };
 
@@ -541,16 +541,17 @@ function generateQuestion(
       const wrongOptions = otherPhrases
         .sort(() => Math.random() - 0.5)
         .slice(0, 3)
-        .map((p) => p.definition);
+        .map((p) => p.definition ?? '')
+        .filter((d) => d !== '');
 
-      const options = [phrase.definition, ...wrongOptions].sort(
-        () => Math.random() - 0.5,
-      );
+      const options = [phrase.definition ?? '', ...wrongOptions]
+        .filter((d) => d !== '')
+        .sort(() => Math.random() - 0.5);
 
       return {
         ...baseQuestion,
         question: `What does "${phrase.phrase}" mean?`,
-        correctAnswer: phrase.definition,
+        correctAnswer: phrase.definition ?? '',
         options,
         hint: (phrase.context?.substring(0, 100) ?? 'No context available') + "...",
       };

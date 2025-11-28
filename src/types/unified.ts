@@ -11,6 +11,7 @@
 export interface VocabularyItem {
   id: string;
   vocabulary_list_id?: string; // For database compatibility
+  list_id?: string; // Alternative field name for API compatibility
   spanish_text: string;
   english_translation: string;
   category: string;

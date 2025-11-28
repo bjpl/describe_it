@@ -380,7 +380,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
       const matchesSearch =
         !state.searchTerm ||
         phrase.phrase.toLowerCase().includes(state.searchTerm.toLowerCase()) ||
-        phrase.definition
+        (phrase.definition ?? '')
           .toLowerCase()
           .includes(state.searchTerm.toLowerCase()) ||
         (phrase.translation &&
@@ -1100,10 +1100,10 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                           <span>{set.phrases.length} phrases</span>
                           <span>
-                            Created {new Date(set.createdAt).toLocaleDateString()}
+                            Created {new Date(set.createdAt ?? Date.now()).toLocaleDateString()}
                           </span>
                           <span>
-                            Modified {new Date(set.lastModified).toLocaleDateString()}
+                            Modified {new Date(set.lastModified ?? Date.now()).toLocaleDateString()}
                           </span>
                         </div>
                       </div>

@@ -268,7 +268,7 @@ export const dbHelpers = {
           phrases (*),
           questions (*)
         `)
-        .eq('user_id' as any, userId)
+        .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1)
 
@@ -286,9 +286,9 @@ export const dbHelpers = {
   async getUserProgress(userId: string) {
     try {
       const { data, error } = await supabase
-        .from('user_progress')
+        .from('user_progress' as any)
         .select('*')
-        .eq('user_id' as any, userId)
+        .eq('user_id', userId)
 
       if (error) throw error
       return data
@@ -304,7 +304,7 @@ export const dbHelpers = {
   async updateUserApiKeys(userId: string, apiKeys: Record<string, string>) {
     try {
       const { data, error } = await supabase
-        .from('user_api_keys')
+        .from('user_api_keys' as any)
         .upsert({
           user_id: userId,
           ...apiKeys,

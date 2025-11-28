@@ -14,7 +14,7 @@ export async function getCachedUserProgress(userId: string) {
     async () => {
       // Fetch from database
       const { DatabaseService } = await import('./supabase');
-      return DatabaseService.getUserProgress(userId);
+      return (DatabaseService as any).getUserProgress(userId);
     },
     CacheTTL.USER_PROGRESS,
     userId
@@ -77,7 +77,7 @@ export async function getCachedSessionData(sessionId: string) {
   return sessionDataCache.getOrSet(
     async () => {
       const { DatabaseService } = await import('./supabase');
-      return DatabaseService.getSession(sessionId);
+      return (DatabaseService as any).getSession(sessionId);
     },
     CacheTTL.SESSION,
     sessionId

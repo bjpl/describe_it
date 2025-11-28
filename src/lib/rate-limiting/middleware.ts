@@ -20,6 +20,7 @@ export interface RateLimitMiddlewareOptions {
  * Enhanced error response for rate limiting - extends canonical ErrorResponse
  */
 export interface RateLimitErrorResponse extends Omit<ErrorResponse, 'details'> {
+  requestId?: string;
   code?: 'RATE_LIMIT_EXCEEDED';
   details: {
     limit: number;

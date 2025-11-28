@@ -40,7 +40,7 @@ export const demoImages: ProcessedImage[] = [
       twitter_username: null,
       portfolio_url: null,
       bio: "Demo photographer for educational purposes",
-      location: null,
+      location: undefined,
       links: {
         self: "https://api.unsplash.com/users/demo-user-1",
         html: "https://unsplash.com/@demo_photographer",
@@ -63,6 +63,7 @@ export const demoImages: ProcessedImage[] = [
     },
     canonicalUrl:
       "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+    likes: 245,
     isDuplicate: false,
   },
   {
@@ -127,6 +128,7 @@ export const demoImages: ProcessedImage[] = [
     },
     canonicalUrl:
       "https://images.unsplash.com/photo-1577303862012-f405cb017cf9",
+    likes: 245,
     isDuplicate: false,
   },
   {
@@ -190,6 +192,7 @@ export const demoImages: ProcessedImage[] = [
     },
     canonicalUrl:
       "https://images.unsplash.com/photo-1497486751825-1233686d5d80",
+    likes: 245,
     isDuplicate: false,
   },
 ];

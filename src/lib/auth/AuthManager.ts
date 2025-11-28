@@ -501,7 +501,7 @@ class AuthManager {
   private async initializeUserApiKeys(userId: string): Promise<void> {
     try {
       const { error } = await supabase
-        .from('user_api_keys')
+        .from('user_api_keys' as any)
         .insert({
           user_id: userId,
           unsplash_api_key: null,
@@ -553,7 +553,7 @@ class AuthManager {
       // Load API keys (encrypted) - but don't fail if they don't exist
       try {
         const { data: apiKeys, error: keysError } = await supabase
-          .from('user_api_keys')
+          .from('user_api_keys' as any)
           .select('*')
           .eq('user_id', userId)
           .single();
@@ -649,7 +649,7 @@ class AuthManager {
           
           // Try to save to Supabase with timeout
           const savePromise = supabase
-            .from('user_api_keys')
+            .from('user_api_keys' as any)
             .upsert({
               user_id: this.currentUser.id,
               unsplash_api_key: encryptedKeys.unsplash || null,
