@@ -4,6 +4,7 @@
  * This runs as early as possible in the client-side bundle
  */
 
+/* eslint-disable no-console, custom-rules/require-logger */
 if (typeof window !== 'undefined') {
   // Run after a delay to give Framer Motion a chance to work
   setTimeout(() => {

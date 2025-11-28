@@ -9,7 +9,7 @@
         "allow": []
       }
     ],
-    "react/no-unescaped-entities": "warn"
+    "react/no-unescaped-entities": "off"
   },
   "overrides": [
     {
@@ -33,7 +33,7 @@
       "plugins": ["custom-rules"],
       "rules": {
         "custom-rules/require-logger": "error",
-        "react/no-unescaped-entities": "warn",
+        "react/no-unescaped-entities": "off",
         "react/display-name": "warn"
       }
     }

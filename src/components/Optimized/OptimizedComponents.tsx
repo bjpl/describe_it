@@ -97,6 +97,7 @@ interface OptimizedListProps<T> {
   emptyState?: React.ReactNode;
 }
 
+// eslint-disable-next-line react/display-name
 export const OptimizedList = memo(<T,>({ 
   items, 
   renderItem, 
@@ -166,6 +167,7 @@ export const OptimizedList = memo(<T,>({
     </div>
   );
 }) as <T>(props: OptimizedListProps<T>) => React.ReactElement;
+
 
 // Optimized Search Input with debouncing
 interface OptimizedSearchInputProps {

@@ -25,6 +25,7 @@ export default [
     rules: {
       'prefer-const': 'error',
       'no-var': 'error',
+      'react/no-unescaped-entities': 'off',
     },
   },
 

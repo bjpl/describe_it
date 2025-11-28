@@ -2,6 +2,7 @@
  * Deep linking utilities for shareable tab URLs
  */
 
+import { logger } from '@/lib/logger';
 import { DeepLinkConfig } from '../types';
 
 /**
@@ -95,7 +96,7 @@ export async function copyDeepLinkToClipboard(link: string): Promise<boolean> {
     await navigator.clipboard.writeText(link);
     return true;
   } catch (error) {
-    console.error('Failed to copy deep link:', error);
+    logger.error('Failed to copy deep link:', error);
     return false;
   }
 }
@@ -121,7 +122,7 @@ export async function shareDeepLink(
     return true;
   } catch (error) {
     if ((error as Error).name !== 'AbortError') {
-      console.error('Failed to share deep link:', error);
+      logger.error('Failed to share deep link:', error);
     }
     return false;
   }

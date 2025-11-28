@@ -5,6 +5,7 @@
 'use client';
 
 import React from 'react';
+import { logger } from '@/lib/logger';
 import { Settings, User, Bell, Home, FileText, BarChart } from 'lucide-react';
 import {
   useTabRouter,
@@ -135,7 +136,7 @@ export function RoutedTabsExample() {
         defaultTab: 'profile',
       }}
       onTabChange={(tab, prevTab) => {
-        console.log(`Navigated from ${prevTab} to ${tab}`);
+        logger.debug(`Navigated from ${prevTab} to ${tab}`);
       }}
     />
   );
@@ -427,7 +428,7 @@ export function ValidatedTabsExample() {
     defaultTab: 'home',
     validTabs,
     onTabChange: (newTab, oldTab) => {
-      console.log(`Tab changed from ${oldTab} to ${newTab}`);
+      logger.debug(`Tab changed from ${oldTab} to ${newTab}`);
       // Analytics tracking
       // window.gtag?.('event', 'tab_change', { from: oldTab, to: newTab });
     },
