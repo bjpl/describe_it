@@ -16,8 +16,50 @@
 // Core types
 export * from './core';
 
-// Database types
-export * from './database';
+// Database types - explicit re-export to avoid duplicates
+export type {
+  Database,
+  DatabaseSchema,
+  TableTypeMap,
+  Tables,
+  TablesInsert,
+  TablesUpdate,
+  DatabaseUser,
+  SessionType,
+  QADifficulty,
+  ThemePreference,
+  LanguagePreference,
+  LearningPhase,
+  DatabaseTables,
+} from './database';
+
+// Re-export other database types without conflicts
+export type {
+  VocabularyList,
+  VocabularyListItem,
+  UserProgress,
+  StudySession,
+  ImageDescription,
+  QASession,
+  DatabaseResponse,
+  PaginatedResponse,
+  DatabaseVocabularyFilters,
+  StudySessionFilters,
+  StudyStats,
+  UserProgressInsert,
+  Phrase,
+  PhraseInsert,
+  Session,
+  SessionInsert,
+  ImageRecord,
+  ImageInsert,
+  DescriptionRecord,
+  DescriptionInsert,
+  LearningAnalytics,
+  UserWithProgress,
+  SessionWithDetails,
+  DescriptionWithRelations,
+} from './database';
 
 // API types (includes request, response, middleware)
 export * from './api';
@@ -32,9 +74,10 @@ export * from './services';
 export type {
   // Image types
   ImageData,
-  UnsplashImageData,
-  ImageSearchParams,
-  ImageSearchResult,
+  ImageFormat,
+  ImageMetadata,
+  ImageLocation,
+  ColorInfo,
   // Description types
   DescriptionRequest as AppDescriptionRequest,
   DescriptionContext,
@@ -72,11 +115,29 @@ export type {
   WordRelationship,
   // Data transfer types
   ExportFormat as AppExportFormat,
-  ExportData as AppExportData,
-  ImportData,
-  DataTransferOptions,
-  DataValidationResult,
-  DataMigration,
+  ExportConfiguration,
+  ExportFilters,
+  CustomFilter,
+  FormattingOptions,
+  MetadataOptions,
+  ExportResult,
+  ExportFileInfo,
+  ExportStatistics,
+  ExportError,
+  ImportConfiguration,
+  FieldMappingRule,
+  FieldTransformation,
+  ImportValidationRule,
+  ConflictResolution,
+  ImportProcessingOptions,
+  ImportResult,
+  ImportStatistics,
+  ValidationResults,
+  ValidationWarning,
+  ImportError,
+  ContentType,
+  ExportStatus,
+  ImportStatus,
 } from './application';
 
 // Constants and validation

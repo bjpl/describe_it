@@ -1,23 +1,23 @@
-"use client";
+'use client';
 
-import { useState, useCallback, useMemo, useEffect } from "react";
-import {
-  BookOpen,
-  BarChart3,
-} from "lucide-react";
-import { CategorizedPhrase, VocabularySet, SavedPhrase } from "@/types/api";
-import { logger } from "@/lib/logger";
-import FlashcardComponent from "./FlashcardComponent";
-import QuizComponent, { QuizResults } from "./QuizComponent";
-import ProgressStatistics from "./ProgressStatistics";
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { BookOpen, BarChart3 } from 'lucide-react';
+import { CategorizedPhrase, VocabularySet, SavedPhrase } from '@/types/api';
+import { logger } from '@/lib/logger';
+import FlashcardComponent from './FlashcardComponent';
+import QuizComponent, { QuizResults } from './QuizComponent';
+import ProgressStatistics from './ProgressStatistics';
 import SpacedRepetitionSystem, {
   ReviewItem,
   StudyStatistics,
-} from "@/lib/algorithms/spacedRepetition";
-import VocabularyStorage, {
-  StudySession,
-} from "@/lib/storage/vocabularyStorage";
-import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+} from '@/lib/algorithms/spacedRepetition';
+import VocabularyStorage, { StudySession } from '@/lib/storage/vocabularyStorage';
+import {
+  safeParse,
+  safeStringify,
+  safeParseLocalStorage,
+  safeSetLocalStorage,
+} from '@/lib/utils/json-safe';
 import {
   VocabularyList,
   VocabularyForm,
@@ -27,12 +27,9 @@ import {
   type VocabularyBuilderProps,
   type ActiveStudySession,
   type ViewMode,
-} from "./VocabularyBuilder/index";
+} from './VocabularyBuilder/index';
 
-const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
-  savedPhrases,
-  onUpdatePhrases,
-}) => {
+const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({ savedPhrases, onUpdatePhrases }) => {
   const [vocabularySets, setVocabularySets] = useState<VocabularySet[]>([]);
   const [currentSet, setCurrentSet] = useState<VocabularySet | null>(null);
   const [studySession, setStudySession] = useState<ActiveStudySession>({
@@ -40,16 +37,16 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
     correctAnswers: 0,
     totalAnswers: 0,
     isActive: false,
-    mode: "flashcards",
+    mode: 'flashcards',
     startTime: new Date(),
   });
   const [showAnswer, setShowAnswer] = useState(false);
-  const [newSetName, setNewSetName] = useState("");
+  const [newSetName, setNewSetName] = useState('');
   const [showCreateSet, setShowCreateSet] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState<"name" | "created" | "progress" | "size">("created");
-  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
-  const [viewMode, setViewMode] = useState<ViewMode>({ current: "sets" });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortBy, setSortBy] = useState<'name' | 'created' | 'progress' | 'size'>('created');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [viewMode, setViewMode] = useState<ViewMode>({ current: 'sets' });
   const [reviewItems, setReviewItems] = useState<ReviewItem[]>([]);
   const [studyHistory, setStudyHistory] = useState<StudySession[]>([]);
   const [statistics, setStatistics] = useState<StudyStatistics>({
@@ -80,12 +77,12 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   // Create new vocabulary set
   const createVocabularySet = useCallback(async () => {
     if (!newSetName.trim() || savedPhrases.length === 0) {
-      throw new Error("Please provide a set name and ensure you have phrases to save");
+      throw new Error('Please provide a set name and ensure you have phrases to save');
     }
 
     try {
       // Map savedPhrases to vocabulary items format expected by the API
-      const vocabularyItems = savedPhrases.map((phrase) => ({
+      const vocabularyItems = savedPhrases.map(phrase => ({
         id: phrase.id || `phrase_${Date.now()}_${Math.random()}`,
         phrase: phrase.phrase,
         definition: phrase.definition,
@@ -117,7 +114,11 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.message || errorData.error || `Failed to save vocabulary set: ${response.statusText}`);
+        throw new Error(
+          errorData.message ||
+            errorData.error ||
+            `Failed to save vocabulary set: ${response.statusText}`
+        );
       }
 
       const result = await response.json();
@@ -127,7 +128,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
         id: `set_${Date.now()}`,
         name: newSetName,
         description: `Study set created from ${savedPhrases.length} saved phrases`,
-        phrases: savedPhrases.map((phrase) => ({
+        phrases: savedPhrases.map(phrase => ({
           ...phrase,
           savedAt: new Date(),
           studyProgress: {
@@ -156,50 +157,45 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
 
       // Create review items for spaced repetition
       const newReviewItems = newSet.phrases.map((phrase: SavedPhrase) =>
-        SpacedRepetitionSystem.createReviewItem(
-          phrase.id,
-          phrase.phrase,
-          phrase.definition ?? '',
-        ),
+        SpacedRepetitionSystem.createReviewItem(phrase.id, phrase.phrase, phrase.definition ?? '')
       );
       const updatedReviewItems = [...reviewItems, ...newReviewItems];
       setReviewItems(updatedReviewItems);
       VocabularyStorage.saveReviewItems(updatedReviewItems);
 
       setCurrentSet(newSet);
-      setNewSetName("");
+      setNewSetName('');
       setShowCreateSet(false);
 
       // Clear saved phrases after successful save
       onUpdatePhrases([]);
     } catch (error) {
-      logger.error('Failed to create vocabulary set', error instanceof Error ? error : new Error(String(error)), { component: 'VocabularyBuilder' });
+      logger.error(
+        'Failed to create vocabulary set',
+        error instanceof Error ? error : new Error(String(error)),
+        { component: 'VocabularyBuilder' }
+      );
       throw error; // Re-throw to be handled by the form component
     }
   }, [newSetName, savedPhrases, vocabularySets, reviewItems, onUpdatePhrases]);
 
   // Start study session
   const startStudySession = useCallback(
-    (mode: "flashcards" | "quiz" | "review", setId?: string) => {
-      const targetSet = setId
-        ? vocabularySets.find((set) => set.id === setId)
-        : currentSet;
+    (mode: 'flashcards' | 'quiz' | 'review', setId?: string) => {
+      const targetSet = setId ? vocabularySets.find(set => set.id === setId) : currentSet;
       if (!targetSet || targetSet.phrases.length === 0) return;
 
       let sessionReviewItems: ReviewItem[] = [];
 
-      if (mode === "review") {
+      if (mode === 'review') {
         // Get items due for review using spaced repetition
         const setReviewItems = reviewItems.filter((item: any) =>
-          targetSet.phrases.some((phrase: SavedPhrase) => phrase.id === item.id),
+          targetSet.phrases.some((phrase: SavedPhrase) => phrase.id === item.id)
         );
-        sessionReviewItems = SpacedRepetitionSystem.getItemsDueForReview(
-          setReviewItems,
-          20,
-        );
+        sessionReviewItems = SpacedRepetitionSystem.getItemsDueForReview(setReviewItems, 20);
 
         if (sessionReviewItems.length === 0) {
-          alert("No items are due for review right now!");
+          alert('No items are due for review right now!');
           return;
         }
       }
@@ -215,9 +211,9 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
         startTime: new Date(),
       });
       setShowAnswer(false);
-      setViewMode({ current: "study", studyMode: mode });
+      setViewMode({ current: 'study', studyMode: mode });
     },
-    [vocabularySets, currentSet, reviewItems],
+    [vocabularySets, currentSet, reviewItems]
   );
 
   // Handle answer in study session (for flashcards)
@@ -228,16 +224,11 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       const currentPhrase = currentSet.phrases[studySession.currentIndex];
 
       // Update spaced repetition item
-      const reviewItem = reviewItems.find(
-        (item) => item.id === currentPhrase.id,
-      );
+      const reviewItem = reviewItems.find(item => item.id === currentPhrase.id);
       if (reviewItem) {
-        const updatedReviewItem = SpacedRepetitionSystem.calculateNextReview(
-          reviewItem,
-          quality,
-        );
-        const updatedReviewItems = reviewItems.map((item) =>
-          item.id === reviewItem.id ? updatedReviewItem : item,
+        const updatedReviewItem = SpacedRepetitionSystem.calculateNextReview(reviewItem, quality);
+        const updatedReviewItems = reviewItems.map(item =>
+          item.id === reviewItem.id ? updatedReviewItem : item
         );
         setReviewItems(updatedReviewItems);
         VocabularyStorage.saveReviewItems(updatedReviewItems);
@@ -249,8 +240,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
         ...currentPhrase,
         studyProgress: {
           totalAttempts: (currentPhrase.studyProgress?.totalAttempts ?? 0) + 1,
-          correctAnswers:
-            (currentPhrase.studyProgress?.correctAnswers ?? 0) + (isCorrect ? 1 : 0),
+          correctAnswers: (currentPhrase.studyProgress?.correctAnswers ?? 0) + (isCorrect ? 1 : 0),
           lastReviewed: new Date(),
         },
       };
@@ -259,30 +249,27 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       const updatedSet: VocabularySet = {
         ...currentSet,
         phrases: currentSet.phrases.map((p: SavedPhrase) =>
-          p.id === currentPhrase.id ? updatedPhrase : p,
+          p.id === currentPhrase.id ? updatedPhrase : p
         ),
         lastModified: new Date(),
       };
 
-      const updatedSets = vocabularySets.map((set) =>
-        set.id === updatedSet.id ? updatedSet : set,
-      );
+      const updatedSets = vocabularySets.map(set => (set.id === updatedSet.id ? updatedSet : set));
       setVocabularySets(updatedSets);
       setCurrentSet(updatedSet);
       VocabularyStorage.saveVocabularySets(updatedSets);
 
       // Update session stats
-      const newCorrectAnswers =
-        studySession.correctAnswers + (isCorrect ? 1 : 0);
+      const newCorrectAnswers = studySession.correctAnswers + (isCorrect ? 1 : 0);
       const newTotalAnswers = studySession.totalAnswers + 1;
 
-      setStudySession((prev) => ({
+      setStudySession(prev => ({
         ...prev,
         correctAnswers: newCorrectAnswers,
         totalAnswers: newTotalAnswers,
       }));
     },
-    [currentSet, studySession, reviewItems, vocabularySets],
+    [currentSet, studySession, reviewItems, vocabularySets]
   );
 
   // Handle quiz completion
@@ -293,15 +280,14 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       // Save study session
       const sessionData: StudySession = {
         id: `session_${Date.now()}`,
-        date: new Date().toISOString().split("T")[0],
+        date: new Date().toISOString().split('T')[0],
         duration: Math.round(
-          (new Date().getTime() - studySession.startTime.getTime()) /
-            (1000 * 60),
+          (new Date().getTime() - studySession.startTime.getTime()) / (1000 * 60)
         ),
         itemsStudied: results.totalQuestions,
         correctAnswers: results.correctAnswers,
         averageQuality: results.accuracy / 20, // Convert percentage to 0-5 scale
-        mode: "quiz",
+        mode: 'quiz',
       };
 
       const updatedHistory = [...studyHistory, sessionData];
@@ -309,14 +295,14 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       VocabularyStorage.addStudySession(sessionData);
 
       // Update statistics
-      const updatedReviewItems = reviewItems.map((item) => {
+      const updatedReviewItems = reviewItems.map(item => {
         const questionResult = results.questionsWithAnswers.find(
-          (qa) => qa.question.phrase.id === item.id,
+          qa => qa.question.phrase.id === item.id
         );
         if (questionResult) {
           const quality = SpacedRepetitionSystem.responseToQuality(
             questionResult.isCorrect,
-            questionResult.isCorrect ? "high" : "low",
+            questionResult.isCorrect ? 'high' : 'low'
           );
           return SpacedRepetitionSystem.calculateNextReview(item, quality);
         }
@@ -326,26 +312,21 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       setReviewItems(updatedReviewItems);
       VocabularyStorage.saveReviewItems(updatedReviewItems);
 
-      const stats =
-        SpacedRepetitionSystem.calculateStatistics(updatedReviewItems);
+      const stats = SpacedRepetitionSystem.calculateStatistics(updatedReviewItems);
       setStatistics(stats);
 
       // End session
-      setStudySession((prev) => ({ ...prev, isActive: false }));
-      setViewMode({ current: "sets" });
+      setStudySession(prev => ({ ...prev, isActive: false }));
+      setViewMode({ current: 'sets' });
     },
-    [currentSet, studySession, studyHistory, reviewItems],
+    [currentSet, studySession, studyHistory, reviewItems]
   );
 
   // Navigation helpers
   const navigateToNext = useCallback(() => {
-    if (
-      !currentSet ||
-      studySession.currentIndex >= currentSet.phrases.length - 1
-    )
-      return;
+    if (!currentSet || studySession.currentIndex >= currentSet.phrases.length - 1) return;
 
-    setStudySession((prev) => ({
+    setStudySession(prev => ({
       ...prev,
       currentIndex: prev.currentIndex + 1,
     }));
@@ -355,7 +336,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   const navigateToPrevious = useCallback(() => {
     if (studySession.currentIndex <= 0) return;
 
-    setStudySession((prev) => ({
+    setStudySession(prev => ({
       ...prev,
       currentIndex: prev.currentIndex - 1,
     }));
@@ -363,56 +344,48 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   }, [studySession.currentIndex]);
 
   // Export vocabulary set
-  const exportSet = useCallback(
-    (set: VocabularySet, format: "json" | "csv" = "json") => {
-      if (format === "csv") {
-        const csvData = VocabularyStorage.exportSetAsCSV(set);
-        const dataUri =
-          "data:text/csv;charset=utf-8," + encodeURIComponent(csvData);
-        const exportFileDefaultName = `vocabulary-${set.name.toLowerCase().replace(/\s+/g, "-")}.csv`;
+  const exportSet = useCallback((set: VocabularySet, format: 'json' | 'csv' = 'json') => {
+    if (format === 'csv') {
+      const csvData = VocabularyStorage.exportSetAsCSV(set);
+      const dataUri = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csvData);
+      const exportFileDefaultName = `vocabulary-${set.name.toLowerCase().replace(/\s+/g, '-')}.csv`;
 
-        const linkElement = document.createElement("a");
-        linkElement.setAttribute("href", dataUri);
-        linkElement.setAttribute("download", exportFileDefaultName);
-        linkElement.click();
-      } else {
-        const dataStr = safeStringify(set, '{}');
-        const dataUri =
-          "data:application/json;charset=utf-8," + encodeURIComponent(dataStr);
-        const exportFileDefaultName = `vocabulary-${set.name.toLowerCase().replace(/\s+/g, "-")}.json`;
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    } else {
+      const dataStr = safeStringify(set, '{}');
+      const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+      const exportFileDefaultName = `vocabulary-${set.name.toLowerCase().replace(/\s+/g, '-')}.json`;
 
-        const linkElement = document.createElement("a");
-        linkElement.setAttribute("href", dataUri);
-        linkElement.setAttribute("download", exportFileDefaultName);
-        linkElement.click();
-      }
-    },
-    [],
-  );
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+    }
+  }, []);
 
   // Import vocabulary set
   const importSet = useCallback(() => {
-    const input = document.createElement("input");
-    input.type = "file";
-    input.accept = ".json,.csv";
-    input.onchange = (e) => {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,.csv';
+    input.onchange = e => {
       const file = (e.target as HTMLInputElement).files?.[0];
       if (!file) return;
 
       const reader = new FileReader();
-      reader.onload = (e) => {
+      reader.onload = e => {
         const content = e.target?.result as string;
         if (!content) return;
 
         try {
-          if (file.name.endsWith(".csv")) {
-            const setName = prompt("Enter a name for the imported set:");
+          if (file.name.endsWith('.csv')) {
+            const setName = prompt('Enter a name for the imported set:');
             if (!setName) return;
 
-            const importedSet = VocabularyStorage.importSetFromCSV(
-              content,
-              setName,
-            );
+            const importedSet = VocabularyStorage.importSetFromCSV(content, setName);
             if (importedSet) {
               const updatedSets = [...vocabularySets, importedSet];
               setVocabularySets(updatedSets);
@@ -423,26 +396,26 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
                 SpacedRepetitionSystem.createReviewItem(
                   phrase.id,
                   phrase.phrase,
-                  phrase.definition ?? '',
-                ),
+                  phrase.definition ?? ''
+                )
               );
               const updatedReviewItems = [...reviewItems, ...newReviewItems];
               setReviewItems(updatedReviewItems);
               VocabularyStorage.saveReviewItems(updatedReviewItems);
 
-              alert("Set imported successfully!");
+              alert('Set imported successfully!');
             } else {
-              alert("Failed to import CSV file. Please check the format.");
+              alert('Failed to import CSV file. Please check the format.');
             }
           } else {
             const importedSet: VocabularySet = JSON.parse(content);
             const updatedSets = [...vocabularySets, importedSet];
             setVocabularySets(updatedSets);
             VocabularyStorage.saveVocabularySets(updatedSets);
-            alert("Set imported successfully!");
+            alert('Set imported successfully!');
           }
         } catch (error) {
-          alert("Failed to import file. Please check the format.");
+          alert('Failed to import file. Please check the format.');
         }
       };
       reader.readAsText(file);
@@ -469,47 +442,48 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
 
     // Apply search filter
     if (searchTerm.trim()) {
-      filtered = filtered.filter((set) =>
-        set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (set.description ?? '').toLowerCase().includes(searchTerm.toLowerCase())
+      filtered = filtered.filter(
+        set =>
+          set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (set.description ?? '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
     // Apply sorting
     return filtered.sort((a, b) => {
       let comparison = 0;
-      
+
       switch (sortBy) {
-        case "name":
+        case 'name':
           comparison = a.name.localeCompare(b.name);
           break;
-        case "created":
+        case 'created':
           comparison = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
           break;
-        case "progress":
+        case 'progress':
           comparison = calculateProgress(a) - calculateProgress(b);
           break;
-        case "size":
+        case 'size':
           comparison = a.phrases.length - b.phrases.length;
           break;
         default:
           return 0;
       }
-      
-      return sortOrder === "asc" ? comparison : -comparison;
+
+      return sortOrder === 'asc' ? comparison : -comparison;
     });
   }, [vocabularySets, searchTerm, sortBy, sortOrder, calculateProgress]);
 
   // Handle sort change
   const handleSortChange = useCallback((newSortBy: string, newSortOrder: string) => {
-    setSortBy(newSortBy as "name" | "created" | "progress" | "size");
-    setSortOrder(newSortOrder as "asc" | "desc");
+    setSortBy(newSortBy as 'name' | 'created' | 'progress' | 'size');
+    setSortOrder(newSortOrder as 'asc' | 'desc');
   }, []);
 
   // Handle form actions
   const handleCancelCreateSet = useCallback(() => {
     setShowCreateSet(false);
-    setNewSetName("");
+    setNewSetName('');
   }, []);
 
   const handleShowCreateSet = useCallback(() => {
@@ -519,7 +493,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   // Delete vocabulary set
   const deleteVocabularySet = useCallback(
     (setId: string) => {
-      const updatedSets = vocabularySets.filter((set) => set.id !== setId);
+      const updatedSets = vocabularySets.filter(set => set.id !== setId);
       setVocabularySets(updatedSets);
       VocabularyStorage.saveVocabularySets(updatedSets);
       VocabularyStorage.deleteVocabularySet(setId);
@@ -528,14 +502,14 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
         setCurrentSet(null);
       }
     },
-    [vocabularySets, currentSet],
+    [vocabularySets, currentSet]
   );
 
   // Get current phrase in study session
   const currentPhrase = useMemo(() => {
     if (!currentSet || !studySession.isActive) return null;
 
-    if (studySession.mode === "review" && studySession.reviewItems) {
+    if (studySession.mode === 'review' && studySession.reviewItems) {
       const reviewItem = studySession.reviewItems[studySession.currentIndex];
       return currentSet.phrases.find((phrase: SavedPhrase) => phrase.id === reviewItem?.id);
     }
@@ -544,36 +518,36 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   }, [currentSet, studySession]);
 
   return (
-    <div className="space-y-6">
+    <div className='space-y-6'>
       {/* Header with navigation */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold flex items-center gap-2">
-          <BookOpen className="h-6 w-6" />
+      <div className='flex items-center justify-between'>
+        <h2 className='text-2xl font-bold flex items-center gap-2'>
+          <BookOpen className='h-6 w-6' />
           Vocabulary Builder
         </h2>
 
-        <div className="flex items-center gap-2">
+        <div className='flex items-center gap-2'>
           {/* Navigation buttons */}
           <button
-            onClick={() => setViewMode({ current: "sets" })}
+            onClick={() => setViewMode({ current: 'sets' })}
             className={`px-3 py-2 rounded-lg transition-colors ${
-              viewMode.current === "sets"
-                ? "bg-blue-600 text-white"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+              viewMode.current === 'sets'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
             }`}
           >
             Study Sets
           </button>
 
           <button
-            onClick={() => setViewMode({ current: "statistics" })}
+            onClick={() => setViewMode({ current: 'statistics' })}
             className={`px-3 py-2 rounded-lg transition-colors flex items-center gap-2 ${
-              viewMode.current === "statistics"
-                ? "bg-blue-600 text-white"
-                : "text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+              viewMode.current === 'statistics'
+                ? 'bg-blue-600 text-white'
+                : 'text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'
             }`}
           >
-            <BarChart3 className="h-4 w-4" />
+            <BarChart3 className='h-4 w-4' />
             Statistics
           </button>
 
@@ -598,80 +572,77 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       />
 
       {/* Study Session */}
-      {viewMode.current === "study" &&
-        studySession.isActive &&
-        currentPhrase &&
-        currentSet && (
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">
-                  {studySession.mode === "flashcards"
-                    ? "Flashcards"
-                    : studySession.mode === "quiz"
-                      ? "Quiz"
-                      : "Review"}{" "}
-                  - {currentSet.name}
-                </h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {studySession.mode === "review"
-                    ? `Review session (${studySession.reviewItems?.length || 0} items due)`
-                    : `${currentSet.phrases.length} items in set`}
-                </p>
-              </div>
-              <button
-                onClick={() => {
-                  setStudySession((prev) => ({ ...prev, isActive: false }));
-                  setViewMode({ current: "sets" });
-                }}
-                className="px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
-              >
-                End Session
-              </button>
+      {viewMode.current === 'study' && studySession.isActive && currentPhrase && currentSet && (
+        <div className='space-y-4'>
+          <div className='flex items-center justify-between'>
+            <div>
+              <h3 className='text-lg font-semibold'>
+                {studySession.mode === 'flashcards'
+                  ? 'Flashcards'
+                  : studySession.mode === 'quiz'
+                    ? 'Quiz'
+                    : 'Review'}{' '}
+                - {currentSet.name}
+              </h3>
+              <p className='text-sm text-gray-600 dark:text-gray-400'>
+                {studySession.mode === 'review'
+                  ? `Review session (${studySession.reviewItems?.length || 0} items due)`
+                  : `${currentSet.phrases.length} items in set`}
+              </p>
             </div>
-
-            {studySession.mode === "flashcards" && (
-              <FlashcardComponent
-                phrase={currentPhrase}
-                onAnswer={handleFlashcardAnswer}
-                onNext={navigateToNext}
-                onPrevious={navigateToPrevious}
-                currentIndex={studySession.currentIndex}
-                totalCount={
-                  (studySession.mode as any) === "review"
-                    ? studySession.reviewItems?.length || 0
-                    : currentSet.phrases.length
-                }
-                showNavigation={true}
-              />
-            )}
-
-            {studySession.mode === "quiz" && (
-              <QuizComponent
-                phrases={currentSet.phrases}
-                onComplete={handleQuizComplete}
-                questionCount={Math.min(20, currentSet.phrases.length)}
-                timeLimit={600} // 10 minutes
-                showHints={true}
-              />
-            )}
-
-            {studySession.mode === "review" && (
-              <FlashcardComponent
-                phrase={currentPhrase}
-                onAnswer={handleFlashcardAnswer}
-                onNext={navigateToNext}
-                onPrevious={navigateToPrevious}
-                currentIndex={studySession.currentIndex}
-                totalCount={studySession.reviewItems?.length || 0}
-                showNavigation={true}
-              />
-            )}
+            <button
+              onClick={() => {
+                setStudySession(prev => ({ ...prev, isActive: false }));
+                setViewMode({ current: 'sets' });
+              }}
+              className='px-4 py-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors'
+            >
+              End Session
+            </button>
           </div>
-        )}
+
+          {studySession.mode === 'flashcards' && (
+            <FlashcardComponent
+              phrase={currentPhrase}
+              onAnswer={handleFlashcardAnswer}
+              onNext={navigateToNext}
+              onPrevious={navigateToPrevious}
+              currentIndex={studySession.currentIndex}
+              totalCount={
+                (studySession.mode as any) === 'review'
+                  ? studySession.reviewItems?.length || 0
+                  : currentSet.phrases.length
+              }
+              showNavigation={true}
+            />
+          )}
+
+          {studySession.mode === 'quiz' && (
+            <QuizComponent
+              phrases={currentSet.phrases}
+              onComplete={handleQuizComplete}
+              questionCount={Math.min(20, currentSet.phrases.length)}
+              timeLimit={600} // 10 minutes
+              showHints={true}
+            />
+          )}
+
+          {studySession.mode === 'review' && (
+            <FlashcardComponent
+              phrase={currentPhrase}
+              onAnswer={handleFlashcardAnswer}
+              onNext={navigateToNext}
+              onPrevious={navigateToPrevious}
+              currentIndex={studySession.currentIndex}
+              totalCount={studySession.reviewItems?.length || 0}
+              showNavigation={true}
+            />
+          )}
+        </div>
+      )}
 
       {/* Statistics View */}
-      {viewMode.current === "statistics" && (
+      {viewMode.current === 'statistics' && (
         <ProgressStatistics
           vocabularySets={vocabularySets}
           studyHistory={studyHistory}
@@ -680,7 +651,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       )}
 
       {/* Vocabulary Sets View */}
-      {viewMode.current === "sets" && (
+      {viewMode.current === 'sets' && (
         <>
           {/* Filters - only show if there are sets */}
           {vocabularySets.length > 0 && (

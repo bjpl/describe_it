@@ -36,7 +36,7 @@ export interface ClickToAddOptions {
 export class VocabularyManager {
   private config: VocabularyManagerConfig;
   private storage: typeof VocabularyStorage;
-  private currentPhrases: Map<string, CategorizedPhrase>;
+  private currentPhrases: Map<string, SavedPhrase>;
   private listeners: Set<(event: VocabularyEvent) => void>;
 
   constructor(config: Partial<VocabularyManagerConfig> = {}) {
@@ -77,13 +77,12 @@ export class VocabularyManager {
       saved: true,
       savedAt: new Date(),
       translation: autoTranslate
-        ? await this.translatePhrase(phrase.phrase, phrase.definition)
-        : undefined,
+        ? (await this.translatePhrase(phrase.phrase, phrase.definition)) || ""
+        : "",
       studyProgress: {
         correctAnswers: 0,
         totalAttempts: 0,
         lastReviewed: undefined,
-        nextReview: undefined,
       },
     };
 
@@ -196,9 +195,11 @@ export class VocabularyManager {
       createdAt: new Date(),
       lastModified: new Date(),
       studyStats: {
+        totalStudied: 0,
         totalPhrases: selectedPhrases.length,
         masteredPhrases: 0,
         reviewsDue: selectedPhrases.length,
+        averageScore: 0,
         averageProgress: 0,
       },
     };
@@ -225,8 +226,8 @@ export class VocabularyManager {
     }
 
     return phrases.sort((a, b) => {
-      const sortKeyA = a.sortKey || createSortKey(a.phrase);
-      const sortKeyB = b.sortKey || createSortKey(b.phrase);
+      const sortKeyA = createSortKey(a.phrase);
+      const sortKeyB = createSortKey(b.phrase);
       return sortKeyA.localeCompare(sortKeyB, "es", { sensitivity: "base" });
     });
   }
@@ -281,13 +282,12 @@ export class VocabularyManager {
       this.getCategoryDisplayName(phrase.category),
       phrase.partOfSpeech,
       phrase.difficulty,
-      phrase.context.replace(/"/g, '""'), // Escape quotes
+      (phrase.context || "").replace(/"/g, '""'), // Escape quotes
       phrase.gender || "",
       phrase.article || "",
       phrase.conjugation || "",
-      phrase.savedAt?.toISOString().split("T")[0] ||
-        new Date().toISOString().split("T")[0],
-      `${phrase.studyProgress.correctAnswers}/${phrase.studyProgress.totalAttempts}`,
+      phrase.savedAt ? new Date(phrase.savedAt).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+      `${phrase.studyProgress?.correctAnswers ?? 0}/${phrase.studyProgress?.totalAttempts ?? 0}`,
     ]);
 
     // Combine headers and rows
@@ -353,15 +353,22 @@ export class VocabularyManager {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const recentlyAdded = phrases
-      .filter((phrase) => phrase.savedAt && phrase.savedAt >= sevenDaysAgo)
-      .sort((a, b) => (b.savedAt?.getTime() || 0) - (a.savedAt?.getTime() || 0))
+      .filter((phrase) => {
+        const savedDate = phrase.savedAt ? new Date(phrase.savedAt) : null;
+        return savedDate && savedDate >= sevenDaysAgo;
+      })
+      .sort((a, b) => {
+        const dateA = a.savedAt ? new Date(a.savedAt).getTime() : 0;
+        const dateB = b.savedAt ? new Date(b.savedAt).getTime() : 0;
+        return dateB - dateA;
+      })
       .slice(0, 10);
 
     // Get most studied phrases
     const mostStudied = phrases
-      .filter((phrase) => phrase.studyProgress.totalAttempts > 0)
+      .filter((phrase) => (phrase.studyProgress?.totalAttempts ?? 0) > 0)
       .sort(
-        (a, b) => b.studyProgress.totalAttempts - a.studyProgress.totalAttempts,
+        (a, b) => (b.studyProgress?.totalAttempts ?? 0) - (a.studyProgress?.totalAttempts ?? 0),
       )
       .slice(0, 10);
 
@@ -386,8 +393,8 @@ export class VocabularyManager {
     return allPhrases.filter((phrase) => {
       const matchesQuery =
         phrase.phrase.toLowerCase().includes(lowerQuery) ||
-        phrase.definition.toLowerCase().includes(lowerQuery) ||
-        phrase.context.toLowerCase().includes(lowerQuery) ||
+        (phrase.definition || "").toLowerCase().includes(lowerQuery) ||
+        (phrase.context || "").toLowerCase().includes(lowerQuery) ||
         (phrase.translation &&
           phrase.translation.toLowerCase().includes(lowerQuery));
 
@@ -461,7 +468,9 @@ export class VocabularyManager {
     // Add phrase to set
     targetSet.phrases.push(phrase);
     targetSet.lastModified = new Date();
-    targetSet.studyStats.totalPhrases = targetSet.phrases.length;
+    if (targetSet.studyStats) {
+      targetSet.studyStats.totalPhrases = targetSet.phrases.length;
+    }
 
     // Save updated sets
     this.storage.saveVocabularySets(vocabularySets);
@@ -483,9 +492,11 @@ export class VocabularyManager {
         createdAt: new Date(),
         lastModified: new Date(),
         studyStats: {
+          totalStudied: 0,
           totalPhrases: 0,
           masteredPhrases: 0,
           reviewsDue: 0,
+          averageScore: 0,
           averageProgress: 0,
         },
       };
@@ -495,7 +506,9 @@ export class VocabularyManager {
     // Add phrase to recent set
     recentSet.phrases.push(phrase);
     recentSet.lastModified = new Date();
-    recentSet.studyStats.totalPhrases = recentSet.phrases.length;
+    if (recentSet.studyStats) {
+      recentSet.studyStats.totalPhrases = recentSet.phrases.length;
+    }
 
     // Save updated sets
     this.storage.saveVocabularySets(vocabularySets);
