@@ -107,19 +107,25 @@ export class VocabularyStorage {
     return data.vocabularySets.map((set) => ({
       ...set,
       createdAt: new Date(set.createdAt),
-      lastModified: new Date(set.lastModified),
+      lastModified: set.lastModified ? new Date(set.lastModified) : new Date(),
       phrases: set.phrases.map((phrase) => ({
         ...phrase,
         createdAt: new Date(phrase.createdAt),
-        savedAt: new Date(phrase.savedAt),
-        studyProgress: {
-          ...phrase.studyProgress,
+        savedAt: phrase.savedAt ? new Date(phrase.savedAt) : new Date(),
+        studyProgress: phrase.studyProgress ? {
+          totalAttempts: phrase.studyProgress.totalAttempts ?? 0,
+          correctAnswers: phrase.studyProgress.correctAnswers ?? 0,
           lastReviewed: phrase.studyProgress.lastReviewed
             ? new Date(phrase.studyProgress.lastReviewed)
             : undefined,
-          nextReview: phrase.studyProgress.nextReview
-            ? new Date(phrase.studyProgress.nextReview)
+          nextReview: (phrase.studyProgress as any).nextReview
+            ? new Date((phrase.studyProgress as any).nextReview)
             : undefined,
+        } : {
+          totalAttempts: 0,
+          correctAnswers: 0,
+          lastReviewed: undefined,
+          nextReview: undefined,
         },
       })),
     }));
@@ -291,19 +297,27 @@ export class VocabularyStorage {
 
     const rows = set.phrases.map((phrase) => [
       phrase.phrase,
-      phrase.definition,
-      phrase.translation || "",
+      phrase.definition ?? "",
+      phrase.translation ?? "",
       phrase.category,
       phrase.partOfSpeech,
       phrase.difficulty,
-      phrase.context,
-      phrase.gender || "",
-      phrase.article || "",
-      phrase.conjugation || "",
-      phrase.studyProgress.correctAnswers.toString(),
-      phrase.studyProgress.totalAttempts.toString(),
-      phrase.studyProgress.lastReviewed?.toISOString() || "",
-      phrase.studyProgress.nextReview?.toISOString() || "",
+      phrase.context ?? "",
+      phrase.gender ?? "",
+      phrase.article ?? "",
+      phrase.conjugation ?? "",
+      (phrase.studyProgress?.correctAnswers ?? 0).toString(),
+      (phrase.studyProgress?.totalAttempts ?? 0).toString(),
+      phrase.studyProgress?.lastReviewed
+        ? (typeof phrase.studyProgress.lastReviewed === 'string'
+          ? phrase.studyProgress.lastReviewed
+          : phrase.studyProgress.lastReviewed.toISOString())
+        : "",
+      ((phrase.studyProgress as any)?.nextReview
+        ? (typeof (phrase.studyProgress as any).nextReview === 'string'
+          ? (phrase.studyProgress as any).nextReview
+          : (phrase.studyProgress as any).nextReview.toISOString())
+        : ""),
     ]);
 
     const csvContent = [headers, ...rows]
@@ -342,7 +356,7 @@ export class VocabularyStorage {
             id: `imported_${Date.now()}_${i}`,
             phrase: values[0] || "",
             definition: values[1] || "",
-            translation: values[2] || undefined,
+            translation: values[2] || "",
             category: values[3] || "frasesClaves",
             partOfSpeech: values[4] || "",
             difficulty:
@@ -353,7 +367,6 @@ export class VocabularyStorage {
               (values[7] as "masculino" | "femenino" | "neutro") || undefined,
             article: values[8] || undefined,
             conjugation: values[9] || undefined,
-            sortKey: values[0]?.toLowerCase() || "",
             saved: true,
             createdAt: new Date(),
             savedAt: new Date(),
@@ -361,9 +374,13 @@ export class VocabularyStorage {
               correctAnswers: parseInt(values[10]) || 0,
               totalAttempts: parseInt(values[11]) || 0,
               lastReviewed: values[12] ? new Date(values[12]) : undefined,
-              nextReview: values[13] ? new Date(values[13]) : undefined,
-            },
+            } as any, // Type assertion needed for nextReview which isn't in the type definition
           };
+
+          // Add nextReview if present
+          if (values[13]) {
+            (phrase.studyProgress as any).nextReview = new Date(values[13]);
+          }
 
           phrases.push(phrase);
         }
@@ -381,24 +398,27 @@ export class VocabularyStorage {
         createdAt: new Date(),
         lastModified: new Date(),
         studyStats: {
+          totalStudied: phrases.filter((p) => (p.studyProgress?.totalAttempts ?? 0) > 0).length,
           totalPhrases: phrases.length,
           masteredPhrases: phrases.filter(
-            (p) => p.studyProgress.correctAnswers >= 3,
+            (p) => (p.studyProgress?.correctAnswers ?? 0) >= 3,
           ).length,
           reviewsDue: phrases.filter(
-            (p) =>
-              !p.studyProgress.nextReview ||
-              p.studyProgress.nextReview <= new Date(),
+            (p) => {
+              const nextReview = (p.studyProgress as any)?.nextReview;
+              return !nextReview ||
+                (typeof nextReview === 'string' ? new Date(nextReview) : nextReview) <= new Date();
+            }
           ).length,
+          averageScore: 0, // Required field
           averageProgress:
             phrases.length > 0
               ? phrases.reduce(
-                  (sum, p) =>
-                    sum +
-                    (p.studyProgress.totalAttempts > 0
-                      ? p.studyProgress.correctAnswers /
-                        p.studyProgress.totalAttempts
-                      : 0),
+                  (sum, p) => {
+                    const totalAttempts = p.studyProgress?.totalAttempts ?? 0;
+                    const correctAnswers = p.studyProgress?.correctAnswers ?? 0;
+                    return sum + (totalAttempts > 0 ? correctAnswers / totalAttempts : 0);
+                  },
                   0,
                 ) / phrases.length
               : 0,

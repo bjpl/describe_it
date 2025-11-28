@@ -138,9 +138,11 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
         createdAt: new Date(),
         lastModified: new Date(),
         studyStats: {
+          totalStudied: 0,
           totalPhrases: savedPhrases.length,
           masteredPhrases: 0,
           reviewsDue: savedPhrases.length,
+          averageScore: 0,
           averageProgress: 0,
         },
       };
@@ -157,7 +159,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
         SpacedRepetitionSystem.createReviewItem(
           phrase.id,
           phrase.phrase,
-          phrase.definition,
+          phrase.definition ?? '',
         ),
       );
       const updatedReviewItems = [...reviewItems, ...newReviewItems];
@@ -246,15 +248,10 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       const updatedPhrase: SavedPhrase = {
         ...currentPhrase,
         studyProgress: {
-          ...currentPhrase.studyProgress,
-          totalAttempts: currentPhrase.studyProgress.totalAttempts + 1,
+          totalAttempts: (currentPhrase.studyProgress?.totalAttempts ?? 0) + 1,
           correctAnswers:
-            currentPhrase.studyProgress.correctAnswers + (isCorrect ? 1 : 0),
+            (currentPhrase.studyProgress?.correctAnswers ?? 0) + (isCorrect ? 1 : 0),
           lastReviewed: new Date(),
-          nextReview: reviewItem
-            ? SpacedRepetitionSystem.calculateNextReview(reviewItem, quality)
-                .nextReview
-            : undefined,
         },
       };
 
@@ -426,7 +423,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
                 SpacedRepetitionSystem.createReviewItem(
                   phrase.id,
                   phrase.phrase,
-                  phrase.definition,
+                  phrase.definition ?? '',
                 ),
               );
               const updatedReviewItems = [...reviewItems, ...newReviewItems];
@@ -474,7 +471,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
     if (searchTerm.trim()) {
       filtered = filtered.filter((set) =>
         set.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        set.description.toLowerCase().includes(searchTerm.toLowerCase())
+        (set.description ?? '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -700,7 +697,6 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
           {/* Vocabulary List */}
           {filteredAndSortedSets.length > 0 && (
             <VocabularyList
-              vocabularySets={filteredAndSortedSets}
               reviewItems={reviewItems}
               statistics={statistics}
               onStartStudySession={startStudySession}
