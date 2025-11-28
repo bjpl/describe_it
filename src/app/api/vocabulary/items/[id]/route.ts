@@ -5,15 +5,16 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { z } from "zod";
 import { apiLogger } from "@/lib/logger";
 import { asLogContext } from "@/lib/utils/typeGuards";
+import type { VocabularyItemUpdate } from "@/lib/supabase/types";
 
 // Validation schemas
 const updateItemSchema = z.object({
   spanish_text: z.string().min(1).optional(),
   english_translation: z.string().min(1).optional(),
   part_of_speech: z
-    .enum(["noun", "verb", "adjective", "adverb", "preposition", "other"])
+    .enum(["noun", "verb", "adjective", "adverb", "preposition", "article", "pronoun", "conjunction", "interjection", "other"])
     .optional(),
-  difficulty_level: z.number().int().min(1).max(3).optional(),
+  difficulty_level: z.enum(["beginner", "intermediate", "advanced"]).optional(),
   category: z.string().optional(),
   context_sentence_spanish: z.string().optional().nullable(),
   context_sentence_english: z.string().optional().nullable(),
@@ -175,9 +176,12 @@ async function handleUpdateItem(
       );
     }
 
+    // Type assertion needed due to Supabase generic constraints
+    // Data is already validated by Zod schema
     const { data: updatedItem, error } = await supabaseAdmin
       .from("vocabulary_items")
-      .update(validatedData as any)
+      // @ts-ignore - Supabase type inference issue with partial updates
+      .update(validatedData)
       .eq("id", params.id)
       .select()
       .single();

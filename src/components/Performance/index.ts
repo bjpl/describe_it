@@ -6,5 +6,5 @@ export {
 } from "./PerformanceMonitor";
 
 export { WebVitalsMonitor } from "./WebVitalsMonitor";
-export { PerformanceBudget } from "./PerformanceBudget";
+export { default as PerformanceBudget } from "./PerformanceBudget";
 export { PerformanceDashboard } from "./PerformanceDashboard";

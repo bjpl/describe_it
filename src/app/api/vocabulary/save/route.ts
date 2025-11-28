@@ -140,11 +140,6 @@ class VocabularyStorage {
         name: collectionName,
         description: `Vocabulary collection: ${collectionName}`,
         category: 'general',
-        difficulty_level: 1,
-        total_words: 0,
-        is_active: true,
-        is_public: false,
-        shared_with: []
       });
 
       if (!newList) {
@@ -212,11 +207,6 @@ class VocabularyStorage {
         name: collectionName,
         description: `Vocabulary collection: ${collectionName}`,
         category: 'general',
-        difficulty_level: 1,
-        total_words: 0,
-        is_active: true,
-        is_public: false,
-        shared_with: []
       });
 
       if (!newList) {
@@ -392,7 +382,7 @@ class VocabularyStorage {
     const indexKey = `${this.collectionPrefix(userId, collectionName)}:index`;
 
     try {
-      const index = (await descriptionCache.get(indexKey)) || {
+      const index: CollectionIndex = (await descriptionCache.get<CollectionIndex>(indexKey)) || {
         items: [],
         collections: {},
         lastUpdated: new Date().toISOString(),
@@ -424,11 +414,7 @@ class VocabularyStorage {
 
       index.lastUpdated = new Date().toISOString();
 
-      await descriptionCache.set(indexKey, index, {
-        kvTTL: 86400 * 30, // 30 days
-        memoryTTL: 3600, // 1 hour
-        sessionTTL: 1800, // 30 minutes
-      });
+      await descriptionCache.set(index, 86400 * 30, indexKey);
     } catch (error) {
       apiLogger.warn("Failed to update collection index:", asLogContext(error));
     }
@@ -438,7 +424,7 @@ class VocabularyStorage {
     const statsKey = `${this.userPrefix(userId)}:stats`;
 
     try {
-      const stats = (await descriptionCache.get(statsKey)) || {
+      const stats: UserStats = (await descriptionCache.get<UserStats>(statsKey)) || {
         totalItems: 0,
         difficultyCounts: { beginner: 0, intermediate: 0, advanced: 0 },
         categoryCounts: {},
@@ -453,11 +439,7 @@ class VocabularyStorage {
         (stats.categoryCounts[category] || 0) + 1;
       stats.lastUpdated = new Date().toISOString();
 
-      await descriptionCache.set(statsKey, stats, {
-        kvTTL: 86400 * 30, // 30 days
-        memoryTTL: 3600, // 1 hour
-        sessionTTL: 1800, // 30 minutes
-      });
+      await descriptionCache.set(stats, 86400 * 30, statsKey);
     } catch (error) {
       apiLogger.warn("Failed to update user stats:", asLogContext(error));
     }

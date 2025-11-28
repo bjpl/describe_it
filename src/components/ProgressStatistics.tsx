@@ -53,10 +53,14 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
 }) => {
   // Process data for charts
   const difficultyData: ChartData[] = React.useMemo(() => {
-    const counts = { beginner: 0, intermediate: 0, advanced: 0 };
+    const counts: { beginner: number; intermediate: number; advanced: number } = {
+      beginner: 0,
+      intermediate: 0,
+      advanced: 0
+    };
 
     vocabularySets.forEach((set) => {
-      set.phrases.forEach((phrase) => {
+      set.phrases.forEach((phrase: { difficulty: "beginner" | "intermediate" | "advanced" }) => {
         counts[phrase.difficulty]++;
       });
     });
@@ -72,7 +76,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
     const counts: Record<string, number> = {};
 
     vocabularySets.forEach((set) => {
-      set.phrases.forEach((phrase) => {
+      set.phrases.forEach((phrase: { category: string }) => {
         counts[phrase.category] = (counts[phrase.category] || 0) + 1;
       });
     });
@@ -125,7 +129,7 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
     const masteredPhrases = vocabularySets.reduce(
       (sum, set) =>
         sum +
-        set.phrases.filter((phrase) => phrase.studyProgress.correctAnswers >= 3)
+        set.phrases.filter((phrase: any) => phrase.studyProgress?.correctAnswers >= 3)
           .length,
       0,
     );
@@ -133,9 +137,9 @@ export const ProgressStatistics: React.FC<ProgressStatisticsProps> = ({
       (sum, set) =>
         sum +
         set.phrases.filter(
-          (phrase) =>
-            phrase.studyProgress.totalAttempts > 0 &&
-            phrase.studyProgress.correctAnswers < 3,
+          (phrase: any) =>
+            phrase.studyProgress?.totalAttempts > 0 &&
+            phrase.studyProgress?.correctAnswers < 3,
         ).length,
       0,
     );

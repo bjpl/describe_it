@@ -158,6 +158,23 @@ const settingsQuerySchema = z.object({
 
 export const runtime = "nodejs";
 
+// TypeScript interfaces for settings data
+interface SettingsData {
+  userId: string;
+  settings: any;
+  metadata: {
+    version: string;
+    timestamp: string;
+    lastUpdated?: string;
+    source: string;
+    isDefault?: boolean;
+    error?: string;
+    [key: string]: any;
+  };
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // Settings service
 class SettingsService {
   private cachePrefix = "settings";
@@ -227,7 +244,7 @@ class SettingsService {
     const timestamp = new Date().toISOString();
 
     // Get existing settings to merge
-    const existingSettings = (await this.getSettings(userId)) || {};
+    const existingSettings: any = (await this.getSettings(userId)) || {};
 
     // Deep merge settings
     const mergedSettings = this.deepMerge(
@@ -251,19 +268,11 @@ class SettingsService {
 
     // Save settings
     const settingsKey = `${this.userPrefix(userId)}:config`;
-    await descriptionCache.set(settingsKey, settingsData, {
-      kvTTL: 86400 * 365, // 1 year
-      memoryTTL: 7200, // 2 hours
-      sessionTTL: 3600, // 1 hour
-    });
+    await descriptionCache.set(settingsData, 86400 * 365, settingsKey);
 
     // Save settings backup (for recovery)
     const backupKey = `${this.userPrefix(userId)}:backup:${Date.now()}`;
-    await descriptionCache.set(backupKey, settingsData, {
-      kvTTL: 86400 * 30, // 30 days
-      memoryTTL: 0, // Don't cache in memory
-      sessionTTL: 0, // Don't cache in session
-    });
+    await descriptionCache.set(settingsData, 86400 * 30, backupKey);
 
     // Update user profile with settings summary
     await this.updateUserProfile(userId, mergedSettings, timestamp);
@@ -275,11 +284,11 @@ class SettingsService {
     userId: string,
     section?: string,
     includeDefaults: boolean = true,
-  ) {
+  ): Promise<SettingsData | null> {
     const settingsKey = `${this.userPrefix(userId)}:config`;
 
     try {
-      const settings = await descriptionCache.get(settingsKey);
+      const settings = await descriptionCache.get<SettingsData>(settingsKey);
 
       if (!settings) {
         if (includeDefaults) {
@@ -299,17 +308,17 @@ class SettingsService {
 
       // Merge with defaults to ensure all properties exist
       if (includeDefaults) {
-        settings.settings = this.deepMerge(
+        (settings as any).settings = this.deepMerge(
           this.defaultSettings,
-          settings.settings || {},
+          (settings as any).settings || {},
         );
       }
 
       // Return specific section if requested
-      if (section && settings.settings[section]) {
+      if (section && (settings as any).settings[section]) {
         return {
           ...settings,
-          settings: { [section]: settings.settings[section] },
+          settings: { [section]: (settings as any).settings[section] },
         };
       }
 
@@ -336,8 +345,6 @@ class SettingsService {
   }
 
   async updateUserProfile(userId: string, settings: any, timestamp: string) {
-    const profileKey = `profile:user:${userId}:settings_summary`;
-
     try {
       const summary = {
         userId,
@@ -353,11 +360,7 @@ class SettingsService {
         },
       };
 
-      await descriptionCache.set(profileKey, summary, {
-        kvTTL: 86400 * 365, // 1 year
-        memoryTTL: 7200, // 2 hours
-        sessionTTL: 3600, // 1 hour
-      });
+      await descriptionCache.set(summary, 86400 * 365, `profile:user:${userId}:settings_summary`);
     } catch (error) {
       apiLogger.warn("Failed to update user profile:", asLogContext(error));
     }
@@ -402,7 +405,7 @@ class SettingsService {
 
     // This would typically use a pattern scan in a real cache implementation
     // For now, we'll return the current settings as history
-    const current = await this.getSettings(userId);
+    const current: any = await this.getSettings(userId);
     if (current) {
       backups.push({
         timestamp: current.updatedAt || current.metadata?.timestamp,

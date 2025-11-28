@@ -91,8 +91,8 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
         definition: phrase.definition,
         category: phrase.category || 'general',
         partOfSpeech: phrase.partOfSpeech,
-        difficulty: phrase.difficulty || 'beginner' as 'beginner' | 'intermediate' | 'advanced',
-        context: phrase.context,
+        difficulty: (phrase.difficulty || 'beginner') as 'beginner' | 'intermediate' | 'advanced',
+        context: phrase.context ?? '',
         translation: phrase.translation || phrase.definition,
         notes: phrase.notes,
         tags: phrase.tags || [],
@@ -153,7 +153,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       VocabularyStorage.saveVocabularySets(updatedSets);
 
       // Create review items for spaced repetition
-      const newReviewItems = newSet.phrases.map((phrase) =>
+      const newReviewItems = newSet.phrases.map((phrase: SavedPhrase) =>
         SpacedRepetitionSystem.createReviewItem(
           phrase.id,
           phrase.phrase,
@@ -188,8 +188,8 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
 
       if (mode === "review") {
         // Get items due for review using spaced repetition
-        const setReviewItems = reviewItems.filter((item) =>
-          targetSet.phrases.some((phrase) => phrase.id === item.id),
+        const setReviewItems = reviewItems.filter((item: any) =>
+          targetSet.phrases.some((phrase: SavedPhrase) => phrase.id === item.id),
         );
         sessionReviewItems = SpacedRepetitionSystem.getItemsDueForReview(
           setReviewItems,
@@ -261,7 +261,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
       // Update the set
       const updatedSet: VocabularySet = {
         ...currentSet,
-        phrases: currentSet.phrases.map((p) =>
+        phrases: currentSet.phrases.map((p: SavedPhrase) =>
           p.id === currentPhrase.id ? updatedPhrase : p,
         ),
         lastModified: new Date(),
@@ -422,7 +422,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
               VocabularyStorage.saveVocabularySets(updatedSets);
 
               // Create review items
-              const newReviewItems = importedSet.phrases.map((phrase) =>
+              const newReviewItems = importedSet.phrases.map((phrase: SavedPhrase) =>
                 SpacedRepetitionSystem.createReviewItem(
                   phrase.id,
                   phrase.phrase,
@@ -457,9 +457,9 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
   const calculateProgress = useCallback((set: VocabularySet) => {
     if (set.phrases.length === 0) return 0;
 
-    const totalProgress = set.phrases.reduce((sum, phrase) => {
-      const attempts = phrase.studyProgress.totalAttempts;
-      const correct = phrase.studyProgress.correctAnswers;
+    const totalProgress = set.phrases.reduce((sum: number, phrase: any) => {
+      const attempts = phrase.studyProgress?.totalAttempts || 0;
+      const correct = phrase.studyProgress?.correctAnswers || 0;
       return sum + (attempts > 0 ? correct / attempts : 0);
     }, 0);
 
@@ -540,7 +540,7 @@ const VocabularyBuilder: React.FC<VocabularyBuilderProps> = ({
 
     if (studySession.mode === "review" && studySession.reviewItems) {
       const reviewItem = studySession.reviewItems[studySession.currentIndex];
-      return currentSet.phrases.find((phrase) => phrase.id === reviewItem?.id);
+      return currentSet.phrases.find((phrase: SavedPhrase) => phrase.id === reviewItem?.id);
     }
 
     return currentSet.phrases[studySession.currentIndex];

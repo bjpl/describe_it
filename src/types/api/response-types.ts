@@ -124,3 +124,27 @@ export interface SystemErrorInfo {
   trace_id?: string;
   upstream_errors?: string[];
 }
+
+/**
+ * Phrase categorization types for vocabulary extraction
+ */
+export interface CategorizedPhrase {
+  id: string;
+  phrase: string;
+  definition: string;
+  category: string;
+  partOfSpeech: string;
+  difficulty: "beginner" | "intermediate" | "advanced";
+  context: string;
+  sortKey: string;
+  saved: boolean;
+  gender?: "masculino" | "femenino" | "neutro";
+  article?: string;
+  conjugation?: string;
+  createdAt: Date;
+  // Additional fields for vocabulary builder compatibility
+  translation?: string;
+  notes?: string;
+  tags?: string[];
+  examples?: string[];
+}

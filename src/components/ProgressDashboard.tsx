@@ -189,7 +189,7 @@ export default function ProgressDashboard() {
           <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
-                data={completionData}
+                data={completionData as any[]}
                 cx="50%"
                 cy="50%"
                 labelLine={false}

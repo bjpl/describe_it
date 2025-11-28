@@ -1048,7 +1048,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                             {phrase.category}
                           </span>
                           <span className="text-xs text-gray-500 dark:text-gray-400">
-                            {phrase.savedAt?.toLocaleDateString()}
+                            {phrase.savedAt ? new Date(phrase.savedAt).toLocaleDateString() : 'Unknown date'}
                           </span>
                         </div>
                       </div>
@@ -1100,10 +1100,10 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                         <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
                           <span>{set.phrases.length} phrases</span>
                           <span>
-                            Created {set.createdAt.toLocaleDateString()}
+                            Created {new Date(set.createdAt).toLocaleDateString()}
                           </span>
                           <span>
-                            Modified {set.lastModified.toLocaleDateString()}
+                            Modified {new Date(set.lastModified).toLocaleDateString()}
                           </span>
                         </div>
                       </div>
@@ -1152,25 +1152,25 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
                     <div className="mt-4 grid grid-cols-4 gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
                       <div className="text-center">
                         <div className="text-lg font-semibold text-blue-600">
-                          {set.studyStats.totalPhrases}
+                          {set.studyStats?.totalPhrases ?? 0}
                         </div>
                         <div className="text-xs text-gray-500">Total</div>
                       </div>
                       <div className="text-center">
                         <div className="text-lg font-semibold text-green-600">
-                          {set.studyStats.masteredPhrases}
+                          {set.studyStats?.masteredPhrases ?? 0}
                         </div>
                         <div className="text-xs text-gray-500">Mastered</div>
                       </div>
                       <div className="text-center">
                         <div className="text-lg font-semibold text-orange-600">
-                          {set.studyStats.reviewsDue}
+                          {set.studyStats?.reviewsDue ?? 0}
                         </div>
                         <div className="text-xs text-gray-500">Due</div>
                       </div>
                       <div className="text-center">
                         <div className="text-lg font-semibold text-purple-600">
-                          {Math.round(set.studyStats.averageProgress * 100)}%
+                          {Math.round((set.studyStats?.averageProgress ?? 0) * 100)}%
                         </div>
                         <div className="text-xs text-gray-500">Progress</div>
                       </div>

@@ -34,16 +34,16 @@ export function exportToCSV(data: VocabularyExportData): void {
 
     // Convert items to CSV rows
     const rows = items.map(item => [
-      escapeCsvValue(item.phrase_text || ""),
-      escapeCsvValue(item.translation || ""),
-      escapeCsvValue(item.definition || ""),
+      escapeCsvValue(item.spanish_text || ""),
+      escapeCsvValue(item.english_translation || ""),
+      escapeCsvValue(item.context_sentence_english || ""),
       escapeCsvValue(item.category || ""),
       escapeCsvValue(item.part_of_speech || ""),
       escapeCsvValue(item.difficulty_level?.toString() || ""),
-      escapeCsvValue(item.example_usage || ""),
-      escapeCsvValue(item.pronunciation || ""),
-      escapeCsvValue(item.notes || ""),
-      escapeCsvValue(item.image_url || "")
+      escapeCsvValue(item.context_sentence_spanish || ""),
+      escapeCsvValue(item.phonetic_pronunciation || item.pronunciation_ipa || ""),
+      escapeCsvValue(item.user_notes || ""),
+      escapeCsvValue(item.associated_image_urls?.[0] || "")
     ]);
 
     // Combine headers and rows
@@ -87,19 +87,19 @@ export function exportToJSON(data: VocabularyExportData): void {
         updated_at: list.updated_at
       },
       items: items.map(item => ({
-        phrase_text: item.phrase_text,
-        translation: item.translation,
-        definition: item.definition,
+        spanish_text: item.spanish_text,
+        english_translation: item.english_translation,
         category: item.category,
         part_of_speech: item.part_of_speech,
         difficulty_level: item.difficulty_level,
-        example_usage: item.example_usage,
-        pronunciation: item.pronunciation,
-        notes: item.notes,
-        image_url: item.image_url,
+        context_sentence_spanish: item.context_sentence_spanish,
+        context_sentence_english: item.context_sentence_english,
+        phonetic_pronunciation: item.phonetic_pronunciation,
+        pronunciation_ipa: item.pronunciation_ipa,
+        user_notes: item.user_notes,
+        associated_image_urls: item.associated_image_urls,
         audio_url: item.audio_url,
-        tags: item.tags,
-        context: item.context
+        frequency_score: item.frequency_score
       }))
     };
 
@@ -142,27 +142,18 @@ export async function importFromCSV(file: File): Promise<VocabularyItem[]> {
       }
 
       items.push({
-        id: "", // Will be generated on save
-        user_id: "", // Will be set on save
-        phrase_text: values[0] || "",
-        translation: values[1] || null,
-        definition: values[2] || null,
+        id: `temp_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`, // Temporary ID
+        spanish_text: values[0] || "",
+        english_translation: values[1] || "",
         category: values[3] || "general",
-        part_of_speech: values[4] || null,
-        difficulty_level: parseFloat(values[5]) || 1,
-        example_usage: values[6] || null,
-        pronunciation: values[7] || null,
-        notes: values[8] || null,
-        image_url: values[9] || null,
-        audio_url: null,
-        tags: [],
-        context: null,
-        is_user_selected: true,
-        is_mastered: false,
-        study_count: 0,
-        correct_count: 0,
-        last_studied_at: null,
-        mastered_at: null,
+        part_of_speech: values[4] || "other",
+        difficulty_level: parseFloat(values[5]) || 2,
+        context_sentence_spanish: values[6] || undefined,
+        context_sentence_english: values[2] || undefined,
+        phonetic_pronunciation: values[7] || undefined,
+        user_notes: values[8] || undefined,
+        associated_image_urls: values[9] ? [values[9]] : undefined,
+        audio_url: undefined,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       });
@@ -189,36 +180,29 @@ export async function importFromJSON(file: File): Promise<VocabularyItem[]> {
       throw new Error("Invalid JSON format: missing or invalid 'items' array");
     }
 
-    const items: VocabularyItem[] = data.items.map((item: any) => ({
-      id: "", // Will be generated on save
-      user_id: "", // Will be set on save
-      phrase_text: item.phrase_text || "",
-      translation: item.translation || null,
-      definition: item.definition || null,
+    const items: VocabularyItem[] = data.items.map((item: any, idx: number) => ({
+      id: item.id || `temp_${Date.now()}_${idx}_${Math.random().toString(36).substr(2, 9)}`,
+      spanish_text: item.spanish_text || item.phrase_text || "",
+      english_translation: item.english_translation || item.translation || "",
       category: item.category || "general",
-      part_of_speech: item.part_of_speech || null,
-      difficulty_level: item.difficulty_level || 1,
-      example_usage: item.example_usage || null,
-      pronunciation: item.pronunciation || null,
-      notes: item.notes || null,
-      image_url: item.image_url || null,
-      audio_url: item.audio_url || null,
-      tags: item.tags || [],
-      context: item.context || null,
-      is_user_selected: true,
-      is_mastered: false,
-      study_count: 0,
-      correct_count: 0,
-      last_studied_at: null,
-      mastered_at: null,
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      part_of_speech: item.part_of_speech || "other",
+      difficulty_level: item.difficulty_level || 2,
+      context_sentence_spanish: item.context_sentence_spanish || item.example_usage || undefined,
+      context_sentence_english: item.context_sentence_english || item.definition || undefined,
+      phonetic_pronunciation: item.phonetic_pronunciation || item.pronunciation || undefined,
+      pronunciation_ipa: item.pronunciation_ipa || undefined,
+      user_notes: item.user_notes || item.notes || undefined,
+      associated_image_urls: item.associated_image_urls || (item.image_url ? [item.image_url] : undefined),
+      audio_url: item.audio_url || undefined,
+      frequency_score: item.frequency_score || undefined,
+      created_at: item.created_at || new Date().toISOString(),
+      updated_at: item.updated_at || new Date().toISOString()
     }));
 
     // Validate required fields
     const validItems = items.filter(item => {
-      if (!item.phrase_text) {
-        logger.warn("Skipping item: missing phrase text");
+      if (!item.spanish_text) {
+        logger.warn("Skipping item: missing spanish text");
         return false;
       }
       return true;
@@ -245,12 +229,12 @@ export function validateImportedItems(items: VocabularyItem[]): {
   items.forEach((item, index) => {
     const itemErrors: string[] = [];
 
-    if (!item.phrase_text || item.phrase_text.trim().length === 0) {
-      itemErrors.push(`Item ${index + 1}: Missing phrase text`);
+    if (!item.spanish_text || item.spanish_text.trim().length === 0) {
+      itemErrors.push(`Item ${index + 1}: Missing spanish text`);
     }
 
-    if (item.phrase_text && item.phrase_text.length > 500) {
-      itemErrors.push(`Item ${index + 1}: Phrase text too long (max 500 characters)`);
+    if (item.spanish_text && item.spanish_text.length > 500) {
+      itemErrors.push(`Item ${index + 1}: Spanish text too long (max 500 characters)`);
     }
 
     if (item.difficulty_level && (item.difficulty_level < 1 || item.difficulty_level > 10)) {

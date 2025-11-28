@@ -82,6 +82,97 @@ const goalSchema = z.object({
 
 export const runtime = "nodejs";
 
+// TypeScript interfaces for progress tracking
+interface StreakData {
+  current: number;
+  longest: number;
+}
+
+interface ScoreData {
+  total: number;
+  count: number;
+  average: number;
+}
+
+interface DifficultyStats {
+  beginner: number;
+  intermediate: number;
+  advanced: number;
+}
+
+interface Achievement {
+  id: string;
+  title: string;
+  unlockedAt: string;
+  eventType: string;
+  eventData: any;
+}
+
+interface UserProgress {
+  userId: string;
+  totalEvents: number;
+  firstActivity: string;
+  lastActivity: string;
+  streaks: StreakData;
+  categories: Record<string, number>;
+  difficulties: DifficultyStats;
+  achievements: Achievement[];
+  masteryScores: Record<string, number>;
+  timeSpent: number;
+  scores: ScoreData;
+}
+
+interface SessionEvent {
+  eventType: string;
+  eventData: any;
+  timestamp: string;
+}
+
+interface SessionStats {
+  totalEvents: number;
+  correctAnswers: number;
+  incorrectAnswers: number;
+  vocabularyLearned: number;
+  phrasesLearned: number;
+  timeSpent: number;
+  averageScore: number;
+  completionRate: number;
+}
+
+interface SessionProgress {
+  sessionId: string;
+  startTime: string;
+  lastActivity: string;
+  events: SessionEvent[];
+  stats: SessionStats;
+}
+
+interface DailyProgress {
+  userId: string;
+  date: string;
+  events: Record<string, number>;
+  totalEvents: number;
+  timeSpent: number;
+  score: ScoreData;
+  categories: Record<string, number>;
+  difficulties: DifficultyStats;
+}
+
+interface Goal {
+  id: string;
+  goalType: string;
+  targetValue: number;
+  currentValue: number;
+  lastUpdated?: string;
+  completed?: boolean;
+  completedAt?: string;
+}
+
+interface GoalCollection {
+  active: Goal[];
+  completed: Goal[];
+}
+
 // Progress tracking service
 class ProgressTracker {
   private cachePrefix = "progress";
@@ -110,12 +201,7 @@ class ProgressTracker {
     };
 
     // Store individual event
-    const eventKey = `${this.userPrefix(userId)}:events:${eventId}`;
-    await descriptionCache.set(eventKey, progressEvent, {
-      kvTTL: 86400 * 90, // 90 days
-      memoryTTL: 3600, // 1 hour
-      sessionTTL: 1800, // 30 minutes
-    });
+    await descriptionCache.set(progressEvent, 86400 * 90, `${this.userPrefix(userId)}:events:${eventId}`);
 
     // Update user progress summary
     await this.updateUserProgress(userId, eventType, eventData, eventTime);
@@ -148,7 +234,7 @@ class ProgressTracker {
     const progressKey = `${this.userPrefix(userId)}:summary`;
 
     try {
-      const progress = (await descriptionCache.get(progressKey)) || {
+      const progress: UserProgress = (await descriptionCache.get(progressKey)) || {
         userId,
         totalEvents: 0,
         firstActivity: timestamp,
@@ -174,7 +260,7 @@ class ProgressTracker {
 
       // Update difficulty stats
       if (eventData.difficulty) {
-        progress.difficulties[eventData.difficulty]++;
+        progress.difficulties[eventData.difficulty as keyof DifficultyStats]++;
       }
 
       // Update scores
@@ -218,11 +304,7 @@ class ProgressTracker {
       // Check for achievements
       this.checkAchievements(progress, eventType, eventData);
 
-      await descriptionCache.set(progressKey, progress, {
-        kvTTL: 86400 * 90, // 90 days
-        memoryTTL: 3600, // 1 hour
-        sessionTTL: 1800, // 30 minutes
-      });
+      await descriptionCache.set(progress, 86400 * 90, progressKey);
     } catch (error) {
       apiLogger.warn("Failed to update user progress:", asLogContext(error));
     }
@@ -237,7 +319,7 @@ class ProgressTracker {
     const sessionKey = `${this.sessionPrefix(sessionId)}:progress`;
 
     try {
-      const session = (await descriptionCache.get(sessionKey)) || {
+      const session: SessionProgress = (await descriptionCache.get(sessionKey)) || {
         sessionId,
         startTime: timestamp,
         lastActivity: timestamp,
@@ -287,11 +369,7 @@ class ProgressTracker {
           session.stats.correctAnswers / totalAnswers;
       }
 
-      await descriptionCache.set(sessionKey, session, {
-        kvTTL: 86400 * 7, // 7 days
-        memoryTTL: 3600, // 1 hour
-        sessionTTL: 7200, // 2 hours
-      });
+      await descriptionCache.set(session, 86400 * 7, sessionKey);
     } catch (error) {
       apiLogger.warn("Failed to update session progress:", asLogContext(error));
     }
@@ -307,7 +385,7 @@ class ProgressTracker {
     const dailyKey = `${this.userPrefix(userId)}:daily:${dateKey}`;
 
     try {
-      const daily = (await descriptionCache.get(dailyKey)) || {
+      const daily: DailyProgress = (await descriptionCache.get(dailyKey)) || {
         userId,
         date: dateKey,
         events: {},
@@ -334,14 +412,10 @@ class ProgressTracker {
       }
 
       if (eventData.difficulty) {
-        daily.difficulties[eventData.difficulty]++;
+        daily.difficulties[eventData.difficulty as keyof DifficultyStats]++;
       }
 
-      await descriptionCache.set(dailyKey, daily, {
-        kvTTL: 86400 * 90, // 90 days
-        memoryTTL: 3600, // 1 hour
-        sessionTTL: 1800, // 30 minutes
-      });
+      await descriptionCache.set(daily, 86400 * 90, dailyKey);
     } catch (error) {
       apiLogger.warn("Failed to update daily aggregation:", asLogContext(error));
     }
@@ -351,7 +425,7 @@ class ProgressTracker {
     const goalsKey = `${this.userPrefix(userId)}:goals`;
 
     try {
-      const goals = (await descriptionCache.get(goalsKey)) || {
+      const goals: GoalCollection = (await descriptionCache.get(goalsKey)) || {
         active: [],
         completed: [],
       };
@@ -397,11 +471,7 @@ class ProgressTracker {
         }
       }
 
-      await descriptionCache.set(goalsKey, goals, {
-        kvTTL: 86400 * 90, // 90 days
-        memoryTTL: 3600, // 1 hour
-        sessionTTL: 1800, // 30 minutes
-      });
+      await descriptionCache.set(goals, 86400 * 90, goalsKey);
     } catch (error) {
       apiLogger.warn("Failed to check goal progress:", asLogContext(error));
     }

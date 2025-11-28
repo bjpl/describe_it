@@ -209,7 +209,7 @@ export const FlashcardComponent: React.FC<FlashcardComponentProps> = ({
               {showHint && (
                 <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                   <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                    <strong>Hint:</strong> {phrase.context.substring(0, 50)}...
+                    <strong>Hint:</strong> {phrase.context?.substring(0, 50) ?? 'No context available'}...
                   </p>
                 </div>
               )}

@@ -109,10 +109,10 @@ function getClientId(req: NextRequest): string {
   }
 
   // Fall back to IP address
+  // Note: NextRequest doesn't have .ip property in Next.js 15+
   const ip =
     req.headers.get('x-forwarded-for')?.split(',')[0] ||
     req.headers.get('x-real-ip') ||
-    req.ip ||
     'unknown';
 
   return `ip:${ip}`;
@@ -181,7 +181,7 @@ async function checkRateLimit(
       resetAt,
     };
   } catch (error) {
-    logger.warn('Rate limit KV error, falling back to memory', error instanceof Error ? error : undefined, { middleware: 'rate-limit' });
+    logger.warn('Rate limit KV error, falling back to memory', { error: error instanceof Error ? error.message : 'Unknown error', middleware: 'rate-limit' });
     return memoryLimiter.check(key, limit);
   }
 }

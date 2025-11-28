@@ -335,7 +335,7 @@ export function DescriptionExample() {
     <RoutedDescriptionTabs
       englishDescription="This is a comprehensive guide to using our application. It includes detailed instructions and examples."
       spanishDescription="Esta es una guía completa para usar nuestra aplicación. Incluye instrucciones detalladas y ejemplos."
-      selectedStyle="detailed"
+      selectedStyle="academico"
       routeConfig={{
         paramName: 'lang',
         defaultTab: 'spanish',

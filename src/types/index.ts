@@ -28,8 +28,56 @@ export * from './components';
 // Service types
 export * from './services';
 
-// Application-specific types
-export * from './application';
+// Application-specific types - use explicit exports to avoid duplicates
+export type {
+  // Image types
+  ImageData,
+  UnsplashImageData,
+  ImageSearchParams,
+  ImageSearchResult,
+  // Description types
+  DescriptionRequest as AppDescriptionRequest,
+  DescriptionContext,
+  AccessibilityRequirements,
+  GeneratedDescription as AppGeneratedDescription,
+  ReadingLevel,
+  QualityMetrics,
+  ModelInfo,
+  ModelParameters,
+  TokenUsage,
+  DescriptionStyle as AppDescriptionStyle,
+  LanguageCode as AppLanguageCode,
+  TargetAudience,
+  // Question types
+  QAGeneration as AppQAGeneration,
+  DifficultyDistribution,
+  GeneratedQuestion,
+  QAQualityAssessment,
+  QuestionType as AppQuestionType,
+  DifficultyLevel as AppDifficultyLevel,
+  // Vocabulary types
+  VocabularyExtraction,
+  ExtractedVocabularyItem,
+  PronunciationInfo,
+  EtymologyInfo,
+  RelatedWord,
+  UsageExample,
+  LinguisticAnalysis,
+  ReadabilityScores,
+  LanguageDetection,
+  ExtractionMethod,
+  VocabularyCategory as AppVocabularyCategory,
+  PartOfSpeech as AppPartOfSpeech,
+  TranslationMap,
+  WordRelationship,
+  // Data transfer types
+  ExportFormat as AppExportFormat,
+  ExportData as AppExportData,
+  ImportData,
+  DataTransferOptions,
+  DataValidationResult,
+  DataMigration,
+} from './application';
 
 // Constants and validation
 export * from './constants';

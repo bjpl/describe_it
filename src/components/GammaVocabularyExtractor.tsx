@@ -222,6 +222,7 @@ const GammaVocabularyExtractor: React.FC<GammaVocabularyExtractorProps> = ({
     try {
       const imageUrl = selectedImage.urls?.regular || selectedImage.urls.small;
       const extractionRequest: VocabularyExtractionRequest = {
+        text: currentDescription,
         description: currentDescription,
         imageUrl,
         targetLevel: settings.difficulty,

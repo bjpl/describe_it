@@ -1,4 +1,4 @@
-import { CategorizedPhrase } from "@/types/api";
+import { CategorizedPhrase } from "@/types/api/response-types";
 
 export function createCategorizedPhrase(params: {
   phrase: string;

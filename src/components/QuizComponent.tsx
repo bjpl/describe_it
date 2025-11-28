@@ -418,7 +418,7 @@ export const QuizComponent: React.FC<QuizComponentProps> = ({
                   {currentQuestion.correctAnswer}
                 </p>
                 <p className="text-gray-600 dark:text-gray-400">
-                  <strong>Context:</strong> {currentQuestion.phrase.context}
+                  <strong>Context:</strong> {currentQuestion.phrase.context ?? 'No context available'}
                 </p>
               </div>
             </div>
@@ -508,7 +508,7 @@ function generateQuestion(
         ...baseQuestion,
         question: "What does this phrase mean?",
         correctAnswer: phrase.definition,
-        hint: phrase.context.substring(0, 100) + "...",
+        hint: (phrase.context?.substring(0, 100) ?? 'No context available') + "...",
       };
 
     case "translation":
@@ -528,7 +528,7 @@ function generateQuestion(
         ...baseQuestion,
         question:
           'Complete the context: "' +
-          phrase.context.replace(phrase.phrase, "____") +
+          (phrase.context?.replace(phrase.phrase, "____") ?? "____") +
           '"',
         correctAnswer: phrase.phrase,
         hint: `This is a ${phrase.partOfSpeech} in the ${phrase.category} category`,
@@ -552,7 +552,7 @@ function generateQuestion(
         question: `What does "${phrase.phrase}" mean?`,
         correctAnswer: phrase.definition,
         options,
-        hint: phrase.context.substring(0, 100) + "...",
+        hint: (phrase.context?.substring(0, 100) ?? 'No context available') + "...",
       };
 
     default:

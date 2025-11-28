@@ -31,7 +31,8 @@ export function LighthouseMonitor() {
     if (typeof window === 'undefined') return;
 
     // Import web-vitals dynamically
-    import('web-vitals').then(({ onCLS, onFID, onLCP, onFCP, onTTFB, onINP }) => {
+    // Note: onFID is deprecated in web-vitals v3+, replaced by onINP
+    import('web-vitals').then(({ onCLS, onLCP, onFCP, onTTFB, onINP }) => {
       function sendToAnalytics(metric: WebVitalsMetric) {
         // Track in Sentry
         trackPerformanceMetric(metric.name, metric.value);
@@ -49,8 +50,8 @@ export function LighthouseMonitor() {
       }
 
       // Observe Core Web Vitals
+      // Note: FID has been replaced by INP (Interaction to Next Paint) in web-vitals v3+
       onCLS(sendToAnalytics);
-      onFID(sendToAnalytics);
       onLCP(sendToAnalytics);
       onFCP(sendToAnalytics);
       onTTFB(sendToAnalytics);

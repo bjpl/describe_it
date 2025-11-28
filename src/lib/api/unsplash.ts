@@ -360,6 +360,7 @@ class UnsplashService {
         blur_hash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
         description: `Demo image for "${params.query}"`,
         alt_description: `A beautiful scene related to ${params.query}`,
+        likes: 100,
         urls: {
           raw: `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&${encodeURIComponent(params.query)}`,
           full: `https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1920&${encodeURIComponent(params.query)}`,
@@ -414,6 +415,7 @@ class UnsplashService {
         blur_hash: 'LEHV6nWB2yk8pyo0adR*.7kCMdnj',
         description: `Another demo image for "${params.query}"`,
         alt_description: `Another beautiful scene related to ${params.query}`,
+        likes: 150,
         urls: {
           raw: `https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1920`,
           full: `https://images.unsplash.com/photo-1472214103451-9374bd1c798e?w=1920`,

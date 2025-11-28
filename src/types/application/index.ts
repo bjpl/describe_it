@@ -8,5 +8,7 @@ export * from './questions';
 export * from './vocabulary';
 export * from './data-transfer';
 
-// Re-export commonly used types
-export type { DifficultyLevel, LanguageCode } from './questions';
+// Re-export commonly used types for convenience
+// LanguageCode is defined in description.ts, not questions.ts
+export type { DifficultyLevel, QuestionType } from './questions';
+export type { LanguageCode, DescriptionStyle, TargetAudience } from './description';

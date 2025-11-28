@@ -218,7 +218,6 @@ export const VocabularyList = memo<APIVocabularyListProps>(function VocabularyLi
       const { data: newList, error: listError } = await APIClient.createVocabularyList({
         name: `Imported: ${listName}`,
         description: `Imported from ${file.name} on ${new Date().toLocaleDateString()}`,
-        user_id: userId
       });
 
       if (listError || !newList) {
@@ -233,7 +232,6 @@ export const VocabularyList = memo<APIVocabularyListProps>(function VocabularyLi
           batch.map(item =>
             APIClient.saveVocabularyItem({
               ...item,
-              user_id: userId,
               list_id: newList.id
             })
           )

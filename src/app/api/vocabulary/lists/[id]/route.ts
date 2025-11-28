@@ -5,13 +5,16 @@ import { supabaseAdmin } from "@/lib/supabase";
 import { z } from "zod";
 import { apiLogger } from "@/lib/logger";
 import { asLogContext } from "@/lib/utils/typeGuards";
+import type { VocabularyListUpdate } from "@/lib/supabase/types";
 
 // Validation schemas
 const updateListSchema = z.object({
   name: z.string().min(1).max(100).optional(),
-  description: z.string().optional(),
-  language: z.enum(["es", "en"]).optional(),
-  difficulty_level: z.number().int().min(1).max(3).optional(),
+  description: z.string().optional().nullable(),
+  category: z.enum(["basic", "intermediate", "advanced", "custom", "thematic"]).optional(),
+  difficulty_level: z.number().int().min(1).max(10).optional(),
+  tags: z.array(z.string()).optional().nullable(),
+  is_public: z.boolean().optional(),
 });
 
 export const runtime = "nodejs";
@@ -121,9 +124,12 @@ async function handleUpdateList(
       throw new Error("Database not configured");
     }
 
+    // Type assertion needed due to Supabase generic constraints
+    // Data is already validated by Zod schema
     const { data: updatedList, error } = await supabaseAdmin
       .from("vocabulary_lists")
-      .update(validatedData as any)
+      // @ts-ignore - Supabase type inference issue with partial updates
+      .update(validatedData)
       .eq("id", params.id)
       .select()
       .single();
