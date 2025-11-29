@@ -104,7 +104,7 @@ export function useOptimizedState<T>(
 
   const isStale = useMemo(() => {
     return Date.now() - lastUpdate.current > 60000; // 1 minute
-  }, [value]);
+  }, []);
 
   return {
     value,
@@ -210,8 +210,9 @@ export function useOptimizedSelector<T, R>(
   selector: (state: T) => R,
   deps: React.DependencyList = []
 ): R {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const memoizedSelector = useCallback(selector, deps);
-  
+
   return useMemo(() => {
     return memoizedSelector(state);
   }, [state, memoizedSelector]);

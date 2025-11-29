@@ -130,7 +130,7 @@ export default function ApiKeySetup({
 
   const handleSave = async () => {
     const hasKeys = apiKeys.unsplash.trim() || apiKeys.openai.trim();
-    
+
     if (hasKeys) {
       const keysToSave = {
         unsplash: apiKeys.unsplash.trim(),
@@ -138,15 +138,20 @@ export default function ApiKeySetup({
         anthropic: '' // Default empty string for required field
       };
 
-      if (saveToAccount && authManager.getCurrentUser()) {
-        // Save to user account
-        await authManager.saveApiKeys(keysToSave);
-      } else {
-        // Save to local settings
-        updatePreferences({
-          apiKeys: keysToSave
-        });
-        settingsManager.updateSection('apiKeys', keysToSave);
+      try {
+        if (saveToAccount && authManager.getCurrentUser()) {
+          // Save to user account
+          await authManager.saveApiKeys(keysToSave);
+        } else {
+          // Save to local settings
+          updatePreferences({
+            apiKeys: keysToSave
+          });
+          settingsManager.updateSection('apiKeys', keysToSave);
+        }
+      } catch (error) {
+        // Continue even if save fails - user can add keys later from settings
+        console.error('Failed to save API keys:', error);
       }
     }
 

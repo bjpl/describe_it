@@ -210,6 +210,7 @@ export function usePhraseExtraction(imageId: string) {
         const phraseError = createPhraseError(error);
 
         // Don't retry if error is not retryable or we've exceeded max retries
+        // eslint-disable-next-line react-hooks/exhaustive-deps
         if (!phraseError.retryable || attempt === MAX_RETRIES) {
           throw error;
         }
@@ -224,6 +225,7 @@ export function usePhraseExtraction(imageId: string) {
     }
 
     throw lastError;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const extractPhrases = useCallback(

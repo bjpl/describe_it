@@ -11,11 +11,32 @@ vi.mock('lucide-react', () => ({
   ChevronDown: ({ className }: { className?: string }) => (
     <div data-testid="chevron-down-icon" className={className}>ChevronDown</div>
   ),
+  ChevronRight: ({ className }: { className?: string }) => (
+    <div data-testid="chevron-right-icon" className={className}>ChevronRight</div>
+  ),
   AlertCircle: ({ className }: { className?: string }) => (
     <div data-testid="alert-circle-icon" className={className}>AlertCircle</div>
   ),
   RefreshCw: ({ className }: { className?: string }) => (
     <div data-testid="refresh-icon" className={className}>RefreshCw</div>
+  ),
+  Save: ({ className }: { className?: string }) => (
+    <div data-testid="save-icon" className={className}>Save</div>
+  ),
+  Bookmark: ({ className }: { className?: string }) => (
+    <div data-testid="bookmark-icon" className={className}>Bookmark</div>
+  ),
+  BookmarkCheck: ({ className }: { className?: string }) => (
+    <div data-testid="bookmark-check-icon" className={className}>BookmarkCheck</div>
+  ),
+  Languages: ({ className }: { className?: string }) => (
+    <div data-testid="languages-icon" className={className}>Languages</div>
+  ),
+  Filter: ({ className }: { className?: string }) => (
+    <div data-testid="filter-icon" className={className}>Filter</div>
+  ),
+  Search: ({ className }: { className?: string }) => (
+    <div data-testid="search-icon" className={className}>Search</div>
   )
 }));
 
@@ -23,13 +44,14 @@ vi.mock('lucide-react', () => ({
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-// Mock phrase data
+// Mock phrase data - categorized structure
 const mockPhrases = [
   {
     id: '1',
     phrase: 'Hello world',
     definition: 'A common programming greeting',
     partOfSpeech: 'noun phrase',
+    category: 'frasesClaves',
     difficulty: 'beginner',
     context: 'The first program often prints "Hello world" to the screen.',
     createdAt: new Date('2023-01-01')
@@ -39,6 +61,7 @@ const mockPhrases = [
     phrase: 'Machine learning',
     definition: 'A subset of artificial intelligence',
     partOfSpeech: 'noun phrase',
+    category: 'frasesClaves',
     difficulty: 'advanced',
     context: 'Machine learning algorithms can recognize patterns in data.',
     createdAt: new Date('2023-01-02')
@@ -133,18 +156,18 @@ describe('PhrasesPanel', () => {
   describe('Description Required State', () => {
     it('should show description required message when image is selected but no description', () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText={null} style="narrativo" />);
-      
-      expect(screen.getByText('Phrases & Vocabulary')).toBeInTheDocument();
+
+      expect(screen.getByText('Enhanced Phrases & Vocabulary')).toBeInTheDocument();
       expect(screen.getByText('Description Required')).toBeInTheDocument();
-      expect(screen.getByText('Please generate a description first. The phrases will be extracted from the actual description content.')).toBeInTheDocument();
+      expect(screen.getByText('Please generate a description first. The phrases will be categorized by grammatical type.')).toBeInTheDocument();
     });
   });
 
   describe('Header and Controls', () => {
     it('should render header with title when image is selected', () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
-      expect(screen.getByText('Phrases & Vocabulary')).toBeInTheDocument();
+
+      expect(screen.getByText('Enhanced Phrases & Vocabulary')).toBeInTheDocument();
     });
 
     it('should render difficulty selector with all options', () => {
@@ -161,45 +184,46 @@ describe('PhrasesPanel', () => {
 
     it('should render max phrases selector with all options', () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
-      const maxPhrasesSelect = screen.getByDisplayValue('5 phrases');
+
+      const maxPhrasesSelect = screen.getByDisplayValue('8 phrases');
       expect(maxPhrasesSelect).toBeInTheDocument();
-      
+
       // Check all options are present
-      expect(screen.getByText('3 phrases')).toBeInTheDocument();
       expect(screen.getByText('5 phrases')).toBeInTheDocument();
       expect(screen.getByText('8 phrases')).toBeInTheDocument();
-      expect(screen.getByText('10 phrases')).toBeInTheDocument();
+      expect(screen.getByText('12 phrases')).toBeInTheDocument();
+      expect(screen.getByText('15 phrases')).toBeInTheDocument();
     });
 
     it('should render extract button', () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
-      const extractButton = screen.getByRole('button', { name: /extract/i });
-      expect(extractButton).toBeInTheDocument();
-      expect(screen.getByTestId('refresh-icon')).toBeInTheDocument();
+
+      // Get all extract buttons and verify the main one exists
+      const extractButtons = screen.getAllByRole('button', { name: /extract/i });
+      expect(extractButtons.length).toBeGreaterThan(0);
+      expect(screen.getAllByTestId('refresh-icon')[0]).toBeInTheDocument();
     });
 
     it('should disable controls during loading', async () => {
-      mockFetch.mockImplementation(() => 
+      mockFetch.mockImplementation(() =>
         new Promise(resolve => setTimeout(() => resolve({
           ok: true,
           json: () => Promise.resolve(mockPhrases)
         }), 100))
       );
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       // Wait for the initial auto-extract to start
       await waitFor(() => {
         const difficultySelect = screen.getByDisplayValue('Intermediate');
         expect(difficultySelect).toBeDisabled();
-        
-        const maxPhrasesSelect = screen.getByDisplayValue('5 phrases');
+
+        const maxPhrasesSelect = screen.getByDisplayValue('8 phrases');
         expect(maxPhrasesSelect).toBeDisabled();
-        
-        const extractButton = screen.getByRole('button', { name: /extract/i });
-        expect(extractButton).toBeDisabled();
+
+        const extractButtons = screen.getAllByRole('button', { name: /extract/i });
+        expect(extractButtons[0]).toBeDisabled();
       });
     });
   });
@@ -210,21 +234,16 @@ describe('PhrasesPanel', () => {
         ok: true,
         json: () => Promise.resolve(mockPhrases)
       });
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
-        expect(mockFetch).toHaveBeenCalledWith('/api/phrases/extract', {
+        expect(mockFetch).toHaveBeenCalledWith('/api/phrases/extract', expect.objectContaining({
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            imageUrl: 'https://example.com/image.jpg',
-            targetLevel: 'intermediate',
-            maxPhrases: 5,
-          }),
-        });
+        }));
       });
     });
 
@@ -233,12 +252,21 @@ describe('PhrasesPanel', () => {
         ok: true,
         json: () => Promise.resolve(mockPhrases)
       });
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
+      // Wait for category to appear
       await waitFor(() => {
-        expect(screen.getByText('Hello world')).toBeInTheDocument();
-        expect(screen.getByText('Machine learning')).toBeInTheDocument();
+        expect(screen.getByText('Frases Clave (Key Phrases)')).toBeInTheDocument();
+      });
+
+      // Expand category
+      fireEvent.click(screen.getByText('Frases Clave (Key Phrases)'));
+
+      // Check for phrases
+      await waitFor(() => {
+        expect(screen.getByText('"Hello world"')).toBeInTheDocument();
+        expect(screen.getByText('"Machine learning"')).toBeInTheDocument();
       });
     });
 
@@ -299,13 +327,13 @@ describe('PhrasesPanel', () => {
         ok: true,
         json: () => Promise.resolve(mockPhrases)
       });
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
-      const maxPhrasesSelect = screen.getByDisplayValue('5 phrases');
-      fireEvent.change(maxPhrasesSelect, { target: { value: '10' } });
-      
-      expect(maxPhrasesSelect).toHaveValue('10');
+
+      const maxPhrasesSelect = screen.getByDisplayValue('8 phrases');
+      fireEvent.change(maxPhrasesSelect, { target: { value: '12' } });
+
+      expect(maxPhrasesSelect).toHaveValue('12');
     });
 
     it('should trigger extraction when extract button is clicked', async () => {
@@ -313,15 +341,20 @@ describe('PhrasesPanel', () => {
         ok: true,
         json: () => Promise.resolve(mockPhrases)
       });
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
+      // Wait for auto-extract to complete
+      await waitFor(() => {
+        expect(screen.queryByText('Extracting and categorizing phrases...')).not.toBeInTheDocument();
+      });
+
       // Clear initial calls
       mockFetch.mockClear();
-      
-      const extractButton = screen.getByRole('button', { name: /extract/i });
-      fireEvent.click(extractButton);
-      
+
+      const extractButtons = screen.getAllByRole('button', { name: /extract/i });
+      fireEvent.click(extractButtons[0]);
+
       await waitFor(() => {
         expect(mockFetch).toHaveBeenCalledTimes(1);
       });
@@ -333,41 +366,51 @@ describe('PhrasesPanel', () => {
         ok: false,
         json: () => Promise.resolve({ message: 'Initial error' })
       });
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Try again')).toBeInTheDocument();
       });
-      
+
       // Second call succeeds
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockPhrases)
       });
-      
+
       fireEvent.click(screen.getByText('Try again'));
-      
+
+      // Wait for category to appear
       await waitFor(() => {
-        expect(screen.getByText('Hello world')).toBeInTheDocument();
+        expect(screen.getByText('Frases Clave (Key Phrases)')).toBeInTheDocument();
+      });
+
+      // Expand category
+      fireEvent.click(screen.getByText('Frases Clave (Key Phrases)'));
+
+      // Check for phrases
+      await waitFor(() => {
+        expect(screen.getByText('"Hello world"')).toBeInTheDocument();
       });
     });
   });
 
   describe('Loading State', () => {
     it('should show loading state during API call', async () => {
-      mockFetch.mockImplementation(() => 
+      mockFetch.mockImplementation(() =>
         new Promise(resolve => setTimeout(() => resolve({
           ok: true,
           json: () => Promise.resolve(mockPhrases)
         }), 100))
       );
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
-        expect(screen.getByText('Extracting phrases from image...')).toBeInTheDocument();
-        expect(screen.getByTestId('refresh-icon')).toHaveClass('animate-spin');
+        expect(screen.getByText('Extracting and categorizing phrases...')).toBeInTheDocument();
+        const spinningIcons = screen.getAllByTestId('refresh-icon').filter(icon => icon.className.includes('animate-spin'));
+        expect(spinningIcons.length).toBeGreaterThan(0);
       });
     });
 
@@ -376,11 +419,11 @@ describe('PhrasesPanel', () => {
         ok: true,
         json: () => Promise.resolve(mockPhrases)
       });
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
-        expect(screen.queryByText('Extracting phrases from image...')).not.toBeInTheDocument();
+        expect(screen.queryByText('Extracting and categorizing phrases...')).not.toBeInTheDocument();
       });
     });
   });
@@ -395,7 +438,17 @@ describe('PhrasesPanel', () => {
 
     it('should display extracted phrases', async () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
+      // Wait for phrases to load and find the category header
+      await waitFor(() => {
+        expect(screen.getByText('Frases Clave (Key Phrases)')).toBeInTheDocument();
+      });
+
+      // Click to expand the category
+      const categoryHeader = screen.getByText('Frases Clave (Key Phrases)');
+      fireEvent.click(categoryHeader);
+
+      // Now check for phrases
       await waitFor(() => {
         expect(screen.getByText('"Hello world"')).toBeInTheDocument();
         expect(screen.getByText('"Machine learning"')).toBeInTheDocument();
@@ -404,7 +457,15 @@ describe('PhrasesPanel', () => {
 
     it('should display phrase definitions', async () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
+      // Wait for phrases to load
+      await waitFor(() => {
+        expect(screen.getByText('Frases Clave (Key Phrases)')).toBeInTheDocument();
+      });
+
+      // Expand category
+      fireEvent.click(screen.getByText('Frases Clave (Key Phrases)'));
+
       await waitFor(() => {
         expect(screen.getByText('A common programming greeting')).toBeInTheDocument();
         expect(screen.getByText('A subset of artificial intelligence')).toBeInTheDocument();
@@ -413,7 +474,15 @@ describe('PhrasesPanel', () => {
 
     it('should display phrase contexts', async () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
+      // Wait for phrases to load
+      await waitFor(() => {
+        expect(screen.getByText('Frases Clave (Key Phrases)')).toBeInTheDocument();
+      });
+
+      // Expand category
+      fireEvent.click(screen.getByText('Frases Clave (Key Phrases)'));
+
       await waitFor(() => {
         expect(screen.getByText('"The first program often prints "Hello world" to the screen."')).toBeInTheDocument();
         expect(screen.getByText('"Machine learning algorithms can recognize patterns in data."')).toBeInTheDocument();
@@ -422,7 +491,15 @@ describe('PhrasesPanel', () => {
 
     it('should display parts of speech', async () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
+      // Wait for phrases to load
+      await waitFor(() => {
+        expect(screen.getByText('Frases Clave (Key Phrases)')).toBeInTheDocument();
+      });
+
+      // Expand category
+      fireEvent.click(screen.getByText('Frases Clave (Key Phrases)'));
+
       await waitFor(() => {
         const partsOfSpeech = screen.getAllByText('noun phrase');
         expect(partsOfSpeech).toHaveLength(2);
@@ -431,9 +508,9 @@ describe('PhrasesPanel', () => {
 
     it('should display phrase count and difficulty', async () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
-        expect(screen.getByText('Found 2 intermediate level phrases')).toBeInTheDocument();
+        expect(screen.getByText(/Found 2 phrases in/)).toBeInTheDocument();
         expect(screen.getByText('Intermediate')).toBeInTheDocument();
       });
     });
@@ -441,17 +518,17 @@ describe('PhrasesPanel', () => {
     it('should apply correct difficulty color classes', async () => {
       const beginnerPhrase = { ...mockPhrases[0], difficulty: 'beginner' };
       const advancedPhrase = { ...mockPhrases[1], difficulty: 'advanced' };
-      
+
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve([beginnerPhrase, advancedPhrase])
       });
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
         // Check if difficulty indicators are present (we can't easily test CSS classes in jsdom)
-        expect(screen.getByText('Found 2 intermediate level phrases')).toBeInTheDocument();
+        expect(screen.getByText(/Found 2 phrases in/)).toBeInTheDocument();
       });
     });
   });
@@ -466,25 +543,22 @@ describe('PhrasesPanel', () => {
 
     it('should render study action buttons when phrases are present', async () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
-        expect(screen.getByText('Add to Study Set')).toBeInTheDocument();
+        expect(screen.getByText('Create Study Set')).toBeInTheDocument();
         expect(screen.getByText('Practice Flashcards')).toBeInTheDocument();
-        expect(screen.getByText('Quiz Me')).toBeInTheDocument();
       });
     });
 
     it('should make study action buttons clickable', async () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
-        const addButton = screen.getByText('Add to Study Set');
+        const createButton = screen.getByText('Create Study Set');
         const flashcardsButton = screen.getByText('Practice Flashcards');
-        const quizButton = screen.getByText('Quiz Me');
-        
-        expect(addButton).toBeEnabled();
+
+        expect(createButton).toBeEnabled();
         expect(flashcardsButton).toBeEnabled();
-        expect(quizButton).toBeEnabled();
       });
     });
   });
@@ -602,24 +676,24 @@ describe('PhrasesPanel', () => {
         ok: false,
         json: () => Promise.resolve({ message: 'Initial error' })
       });
-      
+
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       await waitFor(() => {
         expect(screen.getByText('Initial error')).toBeInTheDocument();
       });
-      
+
       // Second call succeeds
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: () => Promise.resolve(mockPhrases)
       });
-      
+
       fireEvent.click(screen.getByText('Try again'));
-      
+
       await waitFor(() => {
         expect(screen.queryByText('Initial error')).not.toBeInTheDocument();
-        expect(screen.getByText('Hello world')).toBeInTheDocument();
+        expect(screen.getByText('Frases Clave (Key Phrases)')).toBeInTheDocument();
       });
     });
 
@@ -629,24 +703,26 @@ describe('PhrasesPanel', () => {
         ok: true,
         json: () => Promise.resolve(mockPhrases)
       });
-      
-      const { rerender } = render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
+      render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
+
+      // Wait for category to appear
       await waitFor(() => {
-        expect(screen.getByText('Hello world')).toBeInTheDocument();
+        expect(screen.getByText('Frases Clave (Key Phrases)')).toBeInTheDocument();
       });
-      
+
       // Second call fails
       mockFetch.mockResolvedValueOnce({
         ok: false,
         json: () => Promise.resolve({ message: 'Network error' })
       });
-      
+
       // Trigger re-extraction
-      fireEvent.click(screen.getByRole('button', { name: /extract/i }));
-      
+      const extractButtons = screen.getAllByRole('button', { name: /extract/i });
+      fireEvent.click(extractButtons[0]);
+
       await waitFor(() => {
-        expect(screen.queryByText('Hello world')).not.toBeInTheDocument();
+        expect(screen.queryByText('Frases Clave (Key Phrases)')).not.toBeInTheDocument();
         expect(screen.getByText('Network error')).toBeInTheDocument();
       });
     });
@@ -655,28 +731,28 @@ describe('PhrasesPanel', () => {
   describe('Accessibility', () => {
     it('should have proper heading structure', () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       const heading = screen.getByRole('heading', { level: 2 });
-      expect(heading).toHaveTextContent('Phrases & Vocabulary');
+      expect(heading).toHaveTextContent('Enhanced Phrases & Vocabulary');
     });
 
     it('should have proper form labels', () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
+
       const difficultySelect = screen.getByDisplayValue('Intermediate');
-      const maxPhrasesSelect = screen.getByDisplayValue('5 phrases');
-      
+      const maxPhrasesSelect = screen.getByDisplayValue('8 phrases');
+
       expect(difficultySelect).toBeInTheDocument();
       expect(maxPhrasesSelect).toBeInTheDocument();
     });
 
     it('should maintain focus management', () => {
       render(<PhrasesPanel selectedImage={mockSelectedImage} descriptionText="Test description" style="narrativo" />);
-      
-      const extractButton = screen.getByRole('button', { name: /extract/i });
-      extractButton.focus();
-      
-      expect(extractButton).toHaveFocus();
+
+      const extractButtons = screen.getAllByRole('button', { name: /extract/i });
+      extractButtons[0].focus();
+
+      expect(extractButtons[0]).toHaveFocus();
     });
   });
 

@@ -58,6 +58,8 @@ import {
 import GammaVocabularyExtractor from "./GammaVocabularyExtractor";
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
 import { logger } from '@/lib/logger';
+import { useErrorHandler } from '@/hooks/useErrorHandler';
+import { ErrorCode } from '@/lib/errors';
 
 interface GammaVocabularyManagerProps {
   selectedImage: UnsplashImage | null;
@@ -102,6 +104,8 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
   allDescriptions = {},
   onLogEvent,
 }) => {
+  const { handleError, showSuccess } = useErrorHandler();
+
   const [state, setState] = useState<ManagerState>({
     activeView: "extractor",
     showSettings: false,
@@ -158,7 +162,10 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
         // setVocabularySets(sets);
         setVocabularySets([]);
       } catch (error) {
-        logger.error("Error loading vocabulary data:", error);
+        handleError(error, {
+          context: { operation: 'loadVocabularyData' },
+          toastTitle: 'Failed to Load Vocabulary',
+        });
       }
     };
 
@@ -175,6 +182,7 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
       clearInterval(interval);
       vocabularyManager.removeEventListener(handleVocabularyEvent);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vocabularyManager]);
 
   // Coordinate with Alpha-1 and Delta-4
@@ -270,10 +278,17 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
           });
         }
 
-        alert("Vocabulary exported successfully!");
+        showSuccess("Vocabulary exported successfully!");
       } catch (error) {
-        logger.error("Export error:", error);
-        alert("Error exporting vocabulary. Please try again.");
+        handleError(error, {
+          context: {
+            operation: 'exportVocabularyCSV',
+            setId,
+            includeTranslations: settings.enableTranslation,
+          },
+          toastTitle: 'Export Failed',
+          toastMessage: 'Failed to export vocabulary. Please try again.',
+        });
       } finally {
         setState((prev) => ({ ...prev, isExporting: false }));
       }
@@ -285,6 +300,8 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
       onLogEvent,
       vocabularySets,
       state.vocabularyStats.totalPhrases,
+      handleError,
+      showSuccess,
     ],
   );
 
@@ -292,7 +309,11 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
   const createVocabularySet = useCallback(
     async (name: string, description?: string) => {
       if (selectedPhrases.size === 0) {
-        alert("Please select phrases to create a vocabulary set");
+        handleError(new Error("Please select phrases to create a vocabulary set"), {
+          toastMessage: "Please select phrases to create a vocabulary set",
+          toastTitle: "No Phrases Selected",
+          logError: false,
+        });
         return;
       }
 
@@ -325,15 +346,22 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
           });
         }
 
-        alert(`Vocabulary set "${name}" created successfully!`);
+        showSuccess(`Vocabulary set "${name}" created successfully!`);
       } catch (error) {
-        logger.error("Error creating vocabulary set:", error);
-        alert("Error creating vocabulary set. Please try again.");
+        handleError(error, {
+          context: {
+            operation: 'createVocabularySet',
+            setName: name,
+            phraseCount: selectedPhrases.size,
+          },
+          toastTitle: 'Failed to Create Set',
+          toastMessage: 'Error creating vocabulary set. Please try again.',
+        });
       } finally {
         setState((prev) => ({ ...prev, isCreatingSet: false }));
       }
     },
-    [selectedPhrases, vocabularyManager, settings.logToDelta4, onLogEvent],
+    [selectedPhrases, vocabularyManager, settings.logToDelta4, onLogEvent, handleError, showSuccess],
   );
 
   // Delete vocabulary set
@@ -360,16 +388,26 @@ const GammaVocabularyManager: React.FC<GammaVocabularyManagerProps> = ({
             });
           }
 
-          alert("Vocabulary set deleted successfully!");
+          showSuccess("Vocabulary set deleted successfully!");
         } else {
-          alert("Failed to delete vocabulary set.");
+          handleError(new Error("Failed to delete vocabulary set"), {
+            toastMessage: "Failed to delete vocabulary set.",
+            toastTitle: "Delete Failed",
+            context: { setId },
+          });
         }
       } catch (error) {
-        logger.error("Error deleting vocabulary set:", error);
-        alert("Error deleting vocabulary set. Please try again.");
+        handleError(error, {
+          context: {
+            operation: 'deleteVocabularySet',
+            setId,
+          },
+          toastTitle: 'Delete Failed',
+          toastMessage: 'Error deleting vocabulary set. Please try again.',
+        });
       }
     },
-    [vocabularyManager, settings.logToDelta4, onLogEvent],
+    [vocabularyManager, settings.logToDelta4, onLogEvent, handleError, showSuccess],
   );
 
   // Filter phrases based on search and category

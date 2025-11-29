@@ -7,7 +7,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DatabaseService } from '@/lib/services/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-const mockSupabase = { from: vi.fn() } as unknown as SupabaseClient;
+// Use vi.hoisted to create variables that can be used in mock factories
+const { mockSupabase } = vi.hoisted(() => ({
+  mockSupabase: { from: vi.fn() } as unknown as SupabaseClient,
+}));
 
 vi.mock('@/lib/supabase/client', () => ({ supabase: mockSupabase }));
 vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), error: vi.fn() } }));

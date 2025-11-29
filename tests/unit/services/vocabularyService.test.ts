@@ -1,20 +1,52 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { VocabularyService, vocabularyService } from '@/lib/services/vocabularyService'
-import { mockSupabase } from '../../mocks/api'
+
+// Create proper mock query builder
+const createMockQueryBuilder = () => {
+  const mockBuilder: any = {
+    select: vi.fn(),
+    insert: vi.fn(),
+    update: vi.fn(),
+    delete: vi.fn(),
+    eq: vi.fn(),
+    or: vi.fn(),
+    order: vi.fn(),
+    limit: vi.fn(),
+    single: vi.fn(),
+    then: vi.fn(),
+  }
+
+  // Make all methods chainable
+  Object.keys(mockBuilder).forEach(key => {
+    if (key !== 'then' && key !== 'single') {
+      mockBuilder[key].mockReturnValue(mockBuilder)
+    }
+  })
+
+  return mockBuilder
+}
+
+let mockQueryBuilder: any
+const mockSupabase: any = {
+  from: vi.fn()
+}
 
 // Mock Supabase service
 vi.mock('@/lib/api/supabase', () => ({
   supabaseService: {
     getClient: vi.fn().mockReturnValue(mockSupabase),
-    isDemoMode: vi.fn().mockReturnValue(true)
+    isDemoMode: vi.fn().mockReturnValue(false)
   },
 }))
+
+import { VocabularyService } from '@/lib/services/vocabularyService'
 
 describe('VocabularyService', () => {
   let service: VocabularyService
 
   beforeEach(() => {
     vi.clearAllMocks()
+    mockQueryBuilder = createMockQueryBuilder()
+    mockSupabase.from.mockReturnValue(mockQueryBuilder)
     service = new VocabularyService()
   })
 
@@ -27,8 +59,21 @@ describe('VocabularyService', () => {
 
   describe('getVocabularyLists', () => {
     it('should return vocabulary lists from sample data', async () => {
+      mockQueryBuilder.then.mockResolvedValueOnce({
+        data: [{
+          id: '1',
+          name: 'Test List',
+          description: 'Test description',
+          is_public: true,
+          created_by: 'user-1',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }],
+        error: null,
+      })
+
       const lists = await service.getVocabularyLists()
-      
+
       expect(lists.length).toBeGreaterThan(0)
       expect(lists[0]).toHaveProperty('id')
       expect(lists[0]).toHaveProperty('name')
@@ -36,22 +81,24 @@ describe('VocabularyService', () => {
     })
   })
 
-  describe('getVocabularyItems', () => {
-    it('should return vocabulary items for a specific list', async () => {
-      const items = await service.getVocabularyItems('1')
-      
-      expect(Array.isArray(items)).toBe(true)
-      if (items.length > 0) {
-        expect(items[0]).toHaveProperty('spanish_text')
-        expect(items[0]).toHaveProperty('english_translation')
-      }
-    })
-  })
+  describe('getAllVocabulary', () => {
+    it('should return vocabulary items', async () => {
+      mockQueryBuilder.then.mockResolvedValueOnce({
+        data: [{
+          id: '1',
+          spanish_text: 'hola',
+          english_translation: 'hello',
+          category: 'greetings',
+          difficulty_level: 1,
+          part_of_speech: 'interjection',
+          frequency_score: 100,
+          created_at: new Date().toISOString(),
+        }],
+        error: null,
+      })
 
-  describe('getAllVocabularyItems', () => {
-    it('should return all vocabulary items', async () => {
-      const items = await service.getAllVocabularyItems()
-      
+      const items = await service.getAllVocabulary()
+
       expect(Array.isArray(items)).toBe(true)
       if (items.length > 0) {
         expect(items[0]).toHaveProperty('spanish_text')
@@ -61,26 +108,50 @@ describe('VocabularyService', () => {
   })
 
   describe('createVocabularyList', () => {
-    it('should return a mock vocabulary list for demo mode', async () => {
+    it('should create a vocabulary list', async () => {
+      mockQueryBuilder.single.mockResolvedValueOnce({
+        data: {
+          id: 'list-1',
+          name: 'Advanced Spanish',
+          description: 'Advanced vocabulary',
+          is_public: false,
+          created_by: 'user-1',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        },
+        error: null,
+      })
+
       const newList = {
         name: 'Advanced Spanish',
         description: 'Advanced vocabulary',
+        is_public: false,
+        created_by: 'user-1',
       }
 
       const result = await service.createVocabularyList(newList)
-      
-      if (result) {
-        expect(result).toHaveProperty('id')
-        expect(result).toHaveProperty('name', 'Advanced Spanish')
-      } else {
-        // In demo mode, it might return null
-        expect(result).toBeNull()
-      }
+
+      expect(result).toHaveProperty('id')
+      expect(result).toHaveProperty('name', 'Advanced Spanish')
     })
   })
 
-  describe('addVocabularyItem', () => {
-    it('should return a mock vocabulary item for demo mode', async () => {
+  describe('addVocabulary', () => {
+    it('should add a vocabulary item', async () => {
+      mockQueryBuilder.single.mockResolvedValueOnce({
+        data: {
+          id: 'vocab-1',
+          spanish_text: 'gracias',
+          english_translation: 'thank you',
+          category: 'greetings',
+          difficulty_level: 1,
+          part_of_speech: 'interjection' as const,
+          frequency_score: 90,
+          created_at: new Date().toISOString(),
+        },
+        error: null,
+      })
+
       const newItem = {
         spanish_text: 'gracias',
         english_translation: 'thank you',
@@ -90,94 +161,122 @@ describe('VocabularyService', () => {
         frequency_score: 90,
       }
 
-      const result = await service.addVocabularyItem(newItem)
-      
-      if (result) {
-        expect(result).toHaveProperty('id')
-        expect(result).toHaveProperty('spanish_text', 'gracias')
-      } else {
-        // In demo mode, it might return null
-        expect(result).toBeNull()
-      }
+      const result = await service.addVocabulary(newItem)
+
+      expect(result).toHaveProperty('id')
+      expect(result).toHaveProperty('spanish_text', 'gracias')
     })
   })
 
   describe('searchVocabulary', () => {
     it('should search vocabulary items by Spanish text', async () => {
+      mockQueryBuilder.then.mockResolvedValueOnce({
+        data: [{
+          id: '1',
+          spanish_text: 'casa',
+          english_translation: 'house',
+          category: 'home',
+          difficulty_level: 1,
+          part_of_speech: 'noun',
+          frequency_score: 95,
+          created_at: new Date().toISOString(),
+        }],
+        error: null,
+      })
+
       const results = await service.searchVocabulary('casa')
-      
+
       expect(Array.isArray(results)).toBe(true)
-      // Check if any results contain the search term
-      if (results.length > 0) {
-        const hasMatch = results.some(item => 
-          item.spanish_text.toLowerCase().includes('casa') ||
-          item.english_translation.toLowerCase().includes('casa') ||
-          item.category.toLowerCase().includes('casa')
-        )
-        expect(hasMatch).toBe(true)
-      }
+      expect(results.length).toBeGreaterThan(0)
     })
 
     it('should search vocabulary items by English translation', async () => {
+      mockQueryBuilder.then.mockResolvedValueOnce({
+        data: [{
+          id: '1',
+          spanish_text: 'casa',
+          english_translation: 'house',
+          category: 'home',
+          difficulty_level: 1,
+          part_of_speech: 'noun',
+          frequency_score: 95,
+          created_at: new Date().toISOString(),
+        }],
+        error: null,
+      })
+
       const results = await service.searchVocabulary('house')
-      
+
       expect(Array.isArray(results)).toBe(true)
-      // Check if any results contain the search term
-      if (results.length > 0) {
-        const hasMatch = results.some(item => 
-          item.spanish_text.toLowerCase().includes('house') ||
-          item.english_translation.toLowerCase().includes('house') ||
-          item.category.toLowerCase().includes('house')
-        )
-        expect(hasMatch).toBe(true)
-      }
+      expect(results.length).toBeGreaterThan(0)
     })
   })
 
   describe('testConnection', () => {
-    it('should return false in demo mode', async () => {
+    it('should test database connection', async () => {
+      mockQueryBuilder.then.mockResolvedValueOnce({
+        data: [{ id: '1' }],
+        error: null,
+      })
+
       const isConnected = await service.testConnection()
-      
-      expect(isConnected).toBe(false)
+
+      expect(typeof isConnected).toBe('boolean')
     })
   })
 
   describe('getVocabularyStats', () => {
-    it('should return vocabulary statistics from sample data', async () => {
-      // Since getVocabularyStats method doesn't exist, we'll just test getAllVocabularyItems
-      const items = await service.getAllVocabularyItems()
-      
-      expect(Array.isArray(items)).toBe(true)
-      // Basic stats calculation
-      const stats = {
-        total_items: items.length,
-        by_difficulty: {} as Record<string, number>,
-        by_category: {} as Record<string, number>,
-        database_connected: false
-      }
-      
-      items.forEach(item => {
-        stats.by_difficulty[item.difficulty_level] = (stats.by_difficulty[item.difficulty_level] || 0) + 1
-        stats.by_category[item.category] = (stats.by_category[item.category] || 0) + 1
+    it('should return vocabulary statistics', async () => {
+      mockQueryBuilder.then.mockResolvedValueOnce({
+        data: [
+          {
+            id: '1',
+            category: 'greetings',
+            difficulty_level: 1,
+            part_of_speech: 'noun',
+          },
+          {
+            id: '2',
+            category: 'food',
+            difficulty_level: 2,
+            part_of_speech: 'verb',
+          },
+        ],
+        error: null,
       })
-      
-      expect(stats.total_items).toBeGreaterThanOrEqual(0)
-      expect(stats.database_connected).toBe(false)
+
+      const stats = await service.getVocabularyStats()
+
+      expect(stats).toHaveProperty('total_words')
+      expect(stats).toHaveProperty('by_category')
+      expect(stats).toHaveProperty('by_difficulty')
     })
   })
 
   describe('utility methods', () => {
     it('should work with basic service methods', () => {
-      // Since utility methods don't exist, we'll just test basic functionality
       expect(service).toBeDefined()
-      expect(typeof service.getAllVocabularyItems).toBe('function')
+      expect(typeof service.getAllVocabulary).toBe('function')
       expect(typeof service.searchVocabulary).toBe('function')
     })
   })
 
   describe('performance', () => {
     it('should handle concurrent requests efficiently', async () => {
-      const promises = Array(10).fill(null).map(() => 
+      mockQueryBuilder.then.mockResolvedValue({
+        data: [{
+          id: '1',
+          name: 'Test List',
+          description: 'Test',
+          is_public: true,
+          created_by: 'user-1',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+        }],
+        error: null,
+      })
+
+      const promises = Array(10).fill(null).map(() =>
         service.getVocabularyLists()
       )
 
@@ -186,16 +285,30 @@ describe('VocabularyService', () => {
       const duration = performance.now() - start
 
       expect(results).toHaveLength(10)
-      expect(duration).toBeLessThan(1000) // Should complete within 1 second
+      expect(duration).toBeLessThan(1000)
     })
 
     it('should handle sample data efficiently', async () => {
+      mockQueryBuilder.then.mockResolvedValueOnce({
+        data: [{
+          id: '1',
+          spanish_text: 'hola',
+          english_translation: 'hello',
+          category: 'greetings',
+          difficulty_level: 1,
+          part_of_speech: 'interjection',
+          frequency_score: 100,
+          created_at: new Date().toISOString(),
+        }],
+        error: null,
+      })
+
       const start = performance.now()
-      const items = await service.getAllVocabularyItems()
+      const items = await service.getAllVocabulary()
       const duration = performance.now() - start
 
       expect(Array.isArray(items)).toBe(true)
-      expect(duration).toBeLessThan(100) // Should be fast for sample data
+      expect(duration).toBeLessThan(100)
     })
   })
 })

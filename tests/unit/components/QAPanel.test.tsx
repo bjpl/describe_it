@@ -95,8 +95,8 @@ describe('QAPanel', () => {
 
   it('should render with image and description', () => {
     renderWithProviders(<QAPanel {...defaultProps} />)
-    
-    expect(screen.getByText('Questions & Answers')).toBeInTheDocument()
+
+    expect(screen.getByText(/Q&A Practice/i)).toBeInTheDocument()
   })
 
   it('should show message when no image is selected', () => {
@@ -111,17 +111,17 @@ describe('QAPanel', () => {
     renderWithProviders(
       <QAPanel {...defaultProps} descriptionText={null} />
     )
-    
-    expect(screen.getByText(/description required/i)).toBeInTheDocument()
+
     expect(screen.getByText(/please generate a description first/i)).toBeInTheDocument()
+    expect(screen.getByText(/Q&A will be based on the actual description content/i)).toBeInTheDocument()
   })
 
   it('should show empty description warning', () => {
     renderWithProviders(
       <QAPanel {...defaultProps} descriptionText="" />
     )
-    
-    expect(screen.getByText(/description required/i)).toBeInTheDocument()
+
+    expect(screen.getByText(/please generate a description first/i)).toBeInTheDocument()
   })
 
   it('should show loading state during generation', () => {
@@ -129,7 +129,7 @@ describe('QAPanel', () => {
     const LoadingComponent = () => {
       return (
         <div className="space-y-4">
-          <h2 className="text-2xl font-bold">Questions & Answers</h2>
+          <h2 className="text-2xl font-bold">Q&A Practice</h2>
           <div data-testid="qa-progress-indicator">Generating questions...</div>
           <div className="space-y-6">
             {[1, 2, 3, 4].map((index) => (
@@ -152,9 +152,9 @@ describe('QAPanel', () => {
     }
 
     renderWithProviders(<LoadingComponent />)
-    
+
     expect(screen.getByText('Generating questions...')).toBeInTheDocument()
-    expect(screen.getAllByTestId('text-skeleton')).toHaveLength(8) // 4 questions + 4 options each
+    expect(screen.getAllByTestId('text-skeleton')).toHaveLength(20) // 4 questions * 5 elements each (1 question + 4 options)
   })
 
   it('should display error state', () => {

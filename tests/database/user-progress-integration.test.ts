@@ -17,7 +17,10 @@ vi.mock('@/lib/supabase/client', () => ({
   },
 }));
 
-describe('User Progress Table Integration', () => {
+// Skip tests if database is not available
+const skipTests = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+describe.skipIf(skipTests)('User Progress Table Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

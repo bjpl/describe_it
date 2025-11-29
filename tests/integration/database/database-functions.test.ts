@@ -14,7 +14,10 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { supabase, authHelpers } from '@/lib/supabase/client';
 import { supabaseService } from '@/lib/api/supabase';
 
-describe('Supabase Database Functions', () => {
+// Skip tests if database is not available
+const skipTests = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+describe.skipIf(skipTests)('Supabase Database Functions', () => {
   let testUserId: string;
   const testEmail = `functions-test-${Date.now()}@example.com`;
   const testPassword = 'TestPassword123!';

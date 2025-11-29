@@ -30,7 +30,10 @@ vi.mock('@/lib/logger', () => ({
   },
 }));
 
-describe('DatabaseService', () => {
+// Skip tests if database is not available
+const skipTests = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+describe.skipIf(skipTests)('DatabaseService', () => {
   let dbService: DatabaseService;
 
   beforeEach(() => {

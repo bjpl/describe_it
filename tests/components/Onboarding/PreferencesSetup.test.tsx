@@ -147,9 +147,11 @@ describe('PreferencesSetup', () => {
     it('should render interface language options', () => {
       render(<PreferencesSetup {...defaultProps} />);
 
-      expect(screen.getByText('English')).toBeInTheDocument();
-      expect(screen.getByText('Spanish')).toBeInTheDocument();
-      expect(screen.getByText('French')).toBeInTheDocument();
+      // Languages appear multiple times (interface language + target language sections)
+      // Use getAllByText to handle duplicates
+      expect(screen.getAllByText('English').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('Spanish').length).toBeGreaterThanOrEqual(1);
+      expect(screen.getAllByText('French').length).toBeGreaterThanOrEqual(1);
     });
 
     it('should render target language options', () => {

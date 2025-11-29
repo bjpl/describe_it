@@ -15,7 +15,10 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { supabase, authHelpers, dbHelpers } from '@/lib/supabase/client';
 import { createClient } from '@supabase/supabase-js';
 
-describe('Supabase Row Level Security (RLS) Policies', () => {
+// Skip tests if database is not available
+const skipTests = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+describe.skipIf(skipTests)('Supabase Row Level Security (RLS) Policies', () => {
   let authenticatedUserId: string;
   let testDescriptionId: string;
   const testEmail = `rls-test-${Date.now()}@example.com`;

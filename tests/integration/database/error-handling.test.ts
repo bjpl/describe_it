@@ -15,7 +15,10 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { supabase, authHelpers, withErrorHandling } from '@/lib/supabase/client';
 import { createClient } from '@supabase/supabase-js';
 
-describe('Supabase Error Handling', () => {
+// Skip tests if database is not available
+const skipTests = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+describe.skipIf(skipTests)('Supabase Error Handling', () => {
   let testUserId: string;
   const testEmail = `error-test-${Date.now()}@example.com`;
   const testPassword = 'TestPassword123!';

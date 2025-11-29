@@ -1,6 +1,9 @@
 /**
  * Integration Tests for Services Using Migrated Schema
  * Tests that services correctly interact with the new database schema
+ *
+ * NOTE: These tests require a real Supabase database connection.
+ * They are skipped when NEXT_PUBLIC_SUPABASE_URL is not configured.
  */
 
 import { describe, it, expect, beforeAll, afterEach, beforeEach } from 'vitest'
@@ -13,7 +16,17 @@ import {
   retryOperation
 } from './test-helpers'
 
-describe('Service Integration Tests', () => {
+// Skip all tests unless explicitly enabled via SUPABASE_RUN_INTEGRATION_TESTS=true
+// These tests require a real database with the correct schema set up
+const runIntegrationTests = process.env.SUPABASE_RUN_INTEGRATION_TESTS === 'true'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const hasValidConfig = supabaseUrl && supabaseUrl.length > 0 && supabaseKey && supabaseKey.length > 0
+
+// Only run if explicitly enabled AND config is valid
+const shouldRunTests = runIntegrationTests && hasValidConfig
+
+describe.skipIf(!shouldRunTests)('Service Integration Tests', () => {
   let client: SupabaseClient
 
   beforeAll(async () => {
@@ -21,7 +34,7 @@ describe('Service Integration Tests', () => {
   })
 
   beforeEach(async () => {
-    // Ensure schema is properly set up
+    // Schema verification only runs when tests actually run (shouldRunTests is true)
     const usersExist = await verifyTableExists(client, 'users', ['id'])
     const analyticsExist = await verifyTableExists(client, 'analytics_events', ['id'])
 

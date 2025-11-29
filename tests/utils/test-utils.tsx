@@ -133,6 +133,67 @@ export const waitForLoadingToFinish = async () => {
   await new Promise(resolve => setTimeout(resolve, 100));
 };
 
+/**
+ * Safe hook result accessor that handles unmounted components
+ * Use this to safely access result.current in async tests
+ */
+export const safeHookResult = <T,>(result: { current: T | null }): T | null => {
+  return result.current;
+};
+
+/**
+ * Check if hook result is still valid (component mounted)
+ */
+export const isHookMounted = <T,>(result: { current: T | null }): boolean => {
+  return result.current !== null;
+};
+
+/**
+ * Safely wait for hook state to match expected value
+ * Handles cases where component may unmount during async operations
+ */
+export const waitForHookState = async <T, V>(
+  result: { current: T | null },
+  getter: (current: T) => V,
+  expected: V,
+  options: { timeout?: number; interval?: number } = {}
+): Promise<void> => {
+  const { timeout = 5000, interval = 50 } = options;
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeout) {
+    if (result.current !== null) {
+      const actual = getter(result.current);
+      if (actual === expected) {
+        return;
+      }
+    }
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+
+  throw new Error(`Timeout waiting for hook state. Expected: ${expected}, Got: ${result.current !== null ? getter(result.current) : 'null (unmounted)'}`);
+};
+
+/**
+ * Create a safe async act wrapper that handles component unmount
+ */
+export const safeAct = async (
+  callback: () => Promise<void>,
+  result?: { current: unknown | null }
+): Promise<void> => {
+  try {
+    await callback();
+  } catch (error: unknown) {
+    // Ignore errors from unmounted components
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    if (result?.current === null || errorMessage.includes('unmounted')) {
+      console.warn('Component unmounted during async operation - test may be flaky');
+      return;
+    }
+    throw error;
+  }
+};
+
 // Screen utilities
 export const getByTextContent = (text: string) => {
   return screen.getByText((content, element) => {

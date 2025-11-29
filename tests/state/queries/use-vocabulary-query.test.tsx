@@ -11,11 +11,13 @@ const createWrapper = () => {
     },
   });
 
-  return ({ children }: { children: ReactNode }) => (
+  const QueryWrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={queryClient}>
       {children}
     </QueryClientProvider>
   );
+  QueryWrapper.displayName = 'QueryWrapper';
+  return QueryWrapper;
 };
 
 describe('useVocabulary - Data Fetching', () => {
@@ -75,7 +77,8 @@ describe('useVocabulary - Data Fetching', () => {
       { wrapper: createWrapper() }
     );
 
-    expect(result.current.connectionStatus).toBe('disconnected');
+    // Initial state may be 'connecting' or 'disconnected' depending on timing
+    expect(['connecting', 'disconnected']).toContain(result.current.connectionStatus);
 
     await waitFor(() => {
       expect(result.current.connectionStatus).toBe('connected');
@@ -492,10 +495,12 @@ describe('useVocabulary - Export Functionality', () => {
       expect(result.current.loading).toBe(false);
     });
 
-    // Mock URL.createObjectURL and document.createElement
-    const mockCreateObjectURL = vi.fn();
+    // Mock URL.createObjectURL, URL.revokeObjectURL and document.createElement
+    const mockCreateObjectURL = vi.fn(() => 'blob:mock-url');
+    const mockRevokeObjectURL = vi.fn();
     const mockClick = vi.fn();
     global.URL.createObjectURL = mockCreateObjectURL;
+    global.URL.revokeObjectURL = mockRevokeObjectURL;
 
     const originalCreateElement = document.createElement;
     document.createElement = vi.fn((tag: string) => {
@@ -511,5 +516,6 @@ describe('useVocabulary - Export Functionality', () => {
     });
 
     expect(mockClick).toHaveBeenCalled();
+    expect(mockRevokeObjectURL).toHaveBeenCalled();
   });
 });

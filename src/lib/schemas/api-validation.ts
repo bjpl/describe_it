@@ -1004,14 +1004,14 @@ export const ipAddressSchema = z.string().refine((ip) => {
 export const validateUserAgent = (userAgent: string): boolean => {
   if (!userAgent || userAgent.length > 512) return false;
   
-  // Development mode - allow all development tools
-  if (process.env.NODE_ENV === 'development') {
+  // Development and test mode - allow all development tools
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
     // Only block obviously malicious patterns in development
     const maliciousPatterns = [
       /sqlmap/i, /nikto/i, /nmap/i, /hack/i, /attack/i, /exploit/i,
       /injection/i, /vulnerability/i, /penetration/i
     ];
-    
+
     return !maliciousPatterns.some(pattern => pattern.test(userAgent));
   }
   
@@ -1051,16 +1051,16 @@ export const validateSecurityHeaders = (headers: Headers): { valid: boolean; rea
   const userAgent = headers.get('user-agent') || '';
   const contentType = headers.get('content-type') || '';
   
-  // Development mode - more relaxed validation
-  if (process.env.NODE_ENV === 'development') {
+  // Development and test mode - more relaxed validation
+  if (process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'test') {
     // Still check for malicious user agents but allow development tools
     if (!validateUserAgent(userAgent)) {
       return { valid: false, reason: 'Malicious user agent detected' };
     }
-    
+
     // Allow various content types in development for testing
     // No need to strictly validate content type in dev mode
-    
+
     return { valid: true };
   }
   

@@ -14,6 +14,7 @@ export const useExpensiveMemo = <T>(
 ): T => {
   const startTime = useRef<number | undefined>(undefined);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     if (process.env.NODE_ENV === 'development' && debugName) {
       startTime.current = performance.now();
@@ -29,6 +30,7 @@ export const useExpensiveMemo = <T>(
     }
 
     return result;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 };
 
@@ -40,10 +42,11 @@ export const usePerformanceCallback = <T extends (...args: any[]) => any>(
   deps: React.DependencyList,
   debugName?: string
 ): T => {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useCallback((...args: Parameters<T>) => {
     const startTime = performance.now();
     const result = callback(...args);
-    
+
     if (process.env.NODE_ENV === 'development' && debugName) {
       const duration = performance.now() - startTime;
       if (duration > 10) {

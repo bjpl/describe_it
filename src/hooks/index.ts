@@ -35,3 +35,6 @@ export {
   useContentGenerationLogging,
   useSessionAnalytics,
 } from "./useSessionLogger";
+
+// Error handling hooks
+export { useErrorHandler, useAsyncErrorHandler } from "./useErrorHandler";

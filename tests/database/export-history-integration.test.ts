@@ -16,7 +16,10 @@ vi.mock('@/lib/supabase/client', () => ({
   },
 }));
 
-describe('Export History Table Integration', () => {
+// Skip tests if database is not available
+const skipTests = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+describe.skipIf(skipTests)('Export History Table Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });

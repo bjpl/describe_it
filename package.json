@@ -96,6 +96,7 @@
     "@types/node-forge": "^1.3.14",
     "@vercel/blob": "^2.0.0",
     "@vercel/kv": "^1.0.1",
+    "agentdb": "^1.6.1",
     "axios": "^1.13.2",
     "bull": "^4.16.5",
     "chart.js": "^4.5.0",

@@ -242,7 +242,8 @@ export class ErrorMiddleware {
   async handleError(
     error: Error,
     context: RequestContext,
-    statusCode: number = 500
+    statusCode: number = 500,
+    duration: number = 0
   ): Promise<NextResponse<MiddlewareErrorResponse>> {
     const category = this.categorizeError(error, context);
     const severity = this.assessSeverity(error, category);
@@ -292,6 +293,16 @@ export class ErrorMiddleware {
       'X-Request-ID': context.requestId,
       'X-Error-Category': category,
       'X-Error-Severity': severity,
+    });
+
+    // Log performance metrics for error requests
+    this.logPerformanceMetrics({
+      requestId: context.requestId,
+      method: context.method,
+      url: context.url,
+      duration,
+      statusCode: httpStatusCode,
+      memoryUsage: process.memoryUsage(),
     });
 
     return NextResponse.json(errorResponse, {
@@ -359,26 +370,30 @@ export class ErrorMiddleware {
 
       } catch (error) {
         // Handle and log the error
+        const duration = Date.now() - startTime;
         response = await this.handleError(
           error as Error,
           context,
-          500
+          500,
+          duration
         );
 
         return response;
       } finally {
-        // Log performance metrics
-        const duration = Date.now() - startTime;
-        const memoryUsage = process.memoryUsage();
-        
-        this.logPerformanceMetrics({
-          requestId: context.requestId,
-          method: context.method,
-          url: context.url,
-          duration,
-          statusCode: response?.status || 500,
-          memoryUsage,
-        });
+        // Log performance metrics for successful requests (errors already logged in handleError)
+        if (response && response.status < 400) {
+          const duration = Date.now() - startTime;
+          const memoryUsage = process.memoryUsage();
+
+          this.logPerformanceMetrics({
+            requestId: context.requestId,
+            method: context.method,
+            url: context.url,
+            duration,
+            statusCode: response.status,
+            memoryUsage,
+          });
+        }
       }
     };
   };
@@ -390,6 +405,7 @@ export class ErrorMiddleware {
     }
 
     const durations = this.performanceMetrics.map(m => m.duration);
+    const sortedDurations = [...durations].sort((a, b) => a - b);
     const statusCodes = this.performanceMetrics.reduce((acc, m) => {
       acc[m.statusCode] = (acc[m.statusCode] || 0) + 1;
       return acc;
@@ -398,8 +414,8 @@ export class ErrorMiddleware {
     return {
       totalRequests: this.performanceMetrics.length,
       averageDuration: durations.reduce((a, b) => a + b, 0) / durations.length,
-      medianDuration: durations.sort()[Math.floor(durations.length / 2)],
-      p95Duration: durations.sort()[Math.floor(durations.length * 0.95)],
+      medianDuration: sortedDurations[Math.floor(sortedDurations.length / 2)],
+      p95Duration: sortedDurations[Math.floor(sortedDurations.length * 0.95)],
       statusCodeDistribution: statusCodes,
       slowRequests: this.performanceMetrics.filter(m => m.duration > 5000).length,
     };

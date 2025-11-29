@@ -6,11 +6,12 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { DatabaseVocabularyManager } from '@/components/Vocabulary/DatabaseVocabularyManager';
 import '@testing-library/jest-dom';
 
 // Mock the useVocabulary hook
-jest.mock('@/hooks/useVocabulary', () => ({
+vi.mock('@/hooks/useVocabulary', () => ({
   useVocabulary: () => ({
     items: [
       {
@@ -33,9 +34,9 @@ jest.mock('@/hooks/useVocabulary', () => ({
     error: null,
     connectionStatus: 'connected',
     filters: {},
-    setFilter: jest.fn(),
-    clearFilters: jest.fn(),
-    search: jest.fn(),
+    setFilter: vi.fn(),
+    clearFilters: vi.fn(),
+    search: vi.fn(),
     getUniqueCategories: () => ['greetings'],
     getUniqueDifficulties: () => [1],
     isConnected: true,
@@ -45,7 +46,7 @@ jest.mock('@/hooks/useVocabulary', () => ({
 
 describe('DatabaseVocabularyManager', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering (15 tests)', () => {
@@ -279,15 +280,15 @@ describe('DatabaseVocabularyManager', () => {
     });
 
     it('should handle search debouncing', async () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       const user = userEvent.setup({ delay: null });
       render(<DatabaseVocabularyManager />);
 
       const input = screen.getByPlaceholderText(/Search Spanish words/);
       await user.type(input, 'test');
 
-      jest.runAllTimers();
-      jest.useRealTimers();
+      vi.runAllTimers();
+      vi.useRealTimers();
     });
 
     it('should preserve filters when searching', async () => {
@@ -352,14 +353,14 @@ describe('DatabaseVocabularyManager', () => {
     });
 
     it('should update timestamp periodically', () => {
-      jest.useFakeTimers();
+      vi.useFakeTimers();
       render(<DatabaseVocabularyManager />);
 
       const initialTime = screen.getByText(/Last updated:/);
-      jest.advanceTimersByTime(5000);
+      vi.advanceTimersByTime(5000);
 
       expect(initialTime).toBeInTheDocument();
-      jest.useRealTimers();
+      vi.useRealTimers();
     });
 
     it('should stop updates when toggled off', async () => {

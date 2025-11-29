@@ -36,6 +36,7 @@ export function createMockRequest(
     method: options.method || 'GET',
     headers: {
       'Content-Type': 'application/json',
+      'User-Agent': 'Vitest/Test-Runner',
       ...options.headers
     }
   }

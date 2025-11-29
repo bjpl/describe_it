@@ -4,6 +4,11 @@ import { useFormStore, type FieldConfig, validationRules } from '@/lib/store/for
 
 describe('FormStore', () => {
   beforeEach(() => {
+    // Reset the store state before each test
+    const store = useFormStore.getState();
+    Object.keys(store.forms).forEach(formId => {
+      store.destroyForm(formId);
+    });
     useFormStore.setState({
       forms: {},
       activeFormId: null,
@@ -107,22 +112,16 @@ describe('FormStore', () => {
   });
 
   describe('Field Value Updates', () => {
-    beforeEach(() => {
-      const { result } = renderHook(() => useFormStore());
-      const config: Record<string, FieldConfig> = {
-        username: { name: 'username', defaultValue: '' },
-        email: { name: 'email', defaultValue: '' },
-      };
-
-      act(() => {
-        result.current.createForm('testForm', config);
-      });
-    });
+    const config: Record<string, FieldConfig> = {
+      username: { name: 'username', defaultValue: '' },
+      email: { name: 'email', defaultValue: '' },
+    };
 
     it('should update field value', () => {
       const { result } = renderHook(() => useFormStore());
 
       act(() => {
+        result.current.createForm('testForm', config);
         result.current.setFieldValue('testForm', 'username', 'johndoe');
       });
 
@@ -133,6 +132,7 @@ describe('FormStore', () => {
       const { result } = renderHook(() => useFormStore());
 
       act(() => {
+        result.current.createForm('testForm', config);
         result.current.setFieldValue('testForm', 'username', 'johndoe');
       });
 
@@ -143,6 +143,7 @@ describe('FormStore', () => {
       const { result } = renderHook(() => useFormStore());
 
       act(() => {
+        result.current.createForm('testForm', config);
         result.current.setFieldValue('testForm', 'username', 'johndoe');
       });
 
@@ -153,6 +154,7 @@ describe('FormStore', () => {
       const { result } = renderHook(() => useFormStore());
 
       act(() => {
+        result.current.createForm('testForm', config);
         result.current.setFieldValue('testForm', 'username', 'johndoe');
       });
 
@@ -271,9 +273,13 @@ describe('FormStore', () => {
         },
       };
 
+      // Create form first
       act(() => {
         result.current.createForm('submitForm', config);
       });
+
+      // Verify form was created
+      expect(result.current.forms.submitForm).toBeDefined();
 
       let submitResult;
       await act(async () => {
@@ -286,28 +292,42 @@ describe('FormStore', () => {
 
     it('should set submitting state during submission', async () => {
       const { result } = renderHook(() => useFormStore());
-      const submitMock = vi.fn().mockImplementation(() => {
-        return new Promise(resolve => setTimeout(() => resolve({ success: true }), 100));
+
+      let resolveSubmit: (value: any) => void;
+      const submitPromise = new Promise(resolve => {
+        resolveSubmit = resolve;
       });
+
+      const submitMock = vi.fn().mockImplementation(() => submitPromise);
 
       const config: Record<string, FieldConfig> = {
         test: { name: 'test', defaultValue: 'value' },
       };
 
+      // Create form first
       act(() => {
         result.current.createForm('asyncForm', config);
       });
 
-      const submitPromise = act(async () => {
+      // Verify form was created
+      expect(result.current.forms.asyncForm).toBeDefined();
+
+      // Start submission (don't await yet)
+      const submission = act(async () => {
         return result.current.submitForm('asyncForm', submitMock);
       });
 
       // Check submitting state is true during submission
       await waitFor(() => {
         expect(result.current.forms.asyncForm?.isSubmitting).toBe(true);
-      }, { timeout: 50 });
+      }, { timeout: 100 });
 
-      await submitPromise;
+      // Now resolve the submission
+      act(() => {
+        resolveSubmit!({ success: true });
+      });
+
+      await submission;
 
       expect(result.current.forms.asyncForm.isSubmitting).toBe(false);
     });
@@ -324,9 +344,13 @@ describe('FormStore', () => {
         },
       };
 
+      // Create form first
       act(() => {
         result.current.createForm('validatedForm', config);
       });
+
+      // Verify form was created
+      expect(result.current.forms.validatedForm).toBeDefined();
 
       await expect(
         act(async () => {
@@ -345,9 +369,13 @@ describe('FormStore', () => {
         test: { name: 'test', defaultValue: 'value' },
       };
 
+      // Create form first
       act(() => {
         result.current.createForm('countForm', config);
       });
+
+      // Verify form was created
+      expect(result.current.forms.countForm).toBeDefined();
 
       await act(async () => {
         await result.current.submitForm('countForm', submitMock);

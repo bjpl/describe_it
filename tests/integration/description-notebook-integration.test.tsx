@@ -24,6 +24,13 @@ vi.mock('@/lib/logger', () => ({
     info: vi.fn(),
     error: vi.fn(),
     warn: vi.fn(),
+    performance: vi.fn(),
+  },
+  performanceLogger: {
+    info: vi.fn(),
+    error: vi.fn(),
+    warn: vi.fn(),
+    performance: vi.fn(),
   },
 }));
 
@@ -74,20 +81,36 @@ describe('DescriptionNotebook Database Integration', () => {
     });
 
     it('should disable button during generation', async () => {
-      vi.mocked(APIClient.generateDescription).mockImplementation(
-        () => new Promise(resolve => setTimeout(resolve, 100))
+      // Mock fetch to resolve after a delay
+      let resolveFunc: any;
+      global.fetch = vi.fn().mockImplementation(
+        () => new Promise(resolve => {
+          resolveFunc = resolve;
+        })
       );
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
 
+      // Wait for the button text to change to loading state (check for "Generando..." in button)
       await waitFor(() => {
-        expect(button).toBeDisabled();
+        const loadingElements = screen.getAllByText(/generando/i);
+        expect(loadingElements.length).toBeGreaterThan(0);
       });
 
-      expect(screen.getByText(/generando/i)).toBeInTheDocument();
+      // Check that button is disabled during loading
+      expect(button).toBeDisabled();
+
+      // Resolve the promise to clean up
+      if (resolveFunc) {
+        resolveFunc({
+          ok: true,
+          json: async () => ({ data: { text: 'Test' }, error: null })
+        });
+      }
     });
 
     it('should not render button when no image is present', () => {
@@ -119,7 +142,9 @@ describe('DescriptionNotebook Database Integration', () => {
           json: async () => mockSpanishResponse,
         } as Response);
 
-      render(<DescriptionNotebook image={mockImage} />);
+      // Provide a mock onGenerateDescription to satisfy the condition
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
@@ -168,7 +193,8 @@ describe('DescriptionNotebook Database Integration', () => {
           json: async () => mockSpanishResponse,
         } as Response);
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
@@ -185,7 +211,8 @@ describe('DescriptionNotebook Database Integration', () => {
       global.fetch = vi.fn()
         .mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
@@ -206,7 +233,8 @@ describe('DescriptionNotebook Database Integration', () => {
         json: async () => mockResponse,
       } as Response);
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
@@ -221,20 +249,22 @@ describe('DescriptionNotebook Database Integration', () => {
     it('should display fallback content on API error', async () => {
       global.fetch = vi.fn().mockRejectedValue(new Error('API Error'));
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText(/failed to generate description/i)).toBeInTheDocument();
+        expect(screen.getByText(/Failed to generate description/i)).toBeInTheDocument();
       });
     });
 
     it('should still show fallback descriptions on error', async () => {
       global.fetch = vi.fn().mockRejectedValue(new Error('Network Error'));
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
@@ -251,13 +281,14 @@ describe('DescriptionNotebook Database Integration', () => {
         )
       );
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
 
       await waitFor(() => {
-        expect(screen.getByText(/failed to generate description/i)).toBeInTheDocument();
+        expect(screen.getByText(/Failed to generate description/i)).toBeInTheDocument();
       }, { timeout: 200 });
     });
 
@@ -267,7 +298,8 @@ describe('DescriptionNotebook Database Integration', () => {
         json: async () => ({ invalid: 'structure' }),
       } as Response);
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const button = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(button);
@@ -282,6 +314,7 @@ describe('DescriptionNotebook Database Integration', () => {
   describe('Parent Component Integration', () => {
     it('should call onDescriptionUpdate callback with generated text', async () => {
       const onDescriptionUpdate = vi.fn();
+      const mockOnGenerate = vi.fn();
       const mockResponse = {
         data: { text: 'Test Description' },
         error: null,
@@ -295,6 +328,7 @@ describe('DescriptionNotebook Database Integration', () => {
       render(
         <DescriptionNotebook
           image={mockImage}
+          onGenerateDescription={mockOnGenerate}
           onDescriptionUpdate={onDescriptionUpdate}
         />
       );
@@ -313,11 +347,13 @@ describe('DescriptionNotebook Database Integration', () => {
 
     it('should call onDescriptionUpdate even on error with fallback', async () => {
       const onDescriptionUpdate = vi.fn();
+      const mockOnGenerate = vi.fn();
       global.fetch = vi.fn().mockRejectedValue(new Error('API Error'));
 
       render(
         <DescriptionNotebook
           image={mockImage}
+          onGenerateDescription={mockOnGenerate}
           onDescriptionUpdate={onDescriptionUpdate}
         />
       );
@@ -338,33 +374,54 @@ describe('DescriptionNotebook Database Integration', () => {
       };
       Object.assign(navigator, { clipboard: mockClipboard });
 
-      const mockResponse = {
-        data: { text: 'Text to copy' },
+      const mockEnglishResponse = {
+        data: { text: 'Text to copy English' },
+        error: null,
+      };
+      const mockSpanishResponse = {
+        data: { text: 'Text to copy Spanish' },
         error: null,
       };
 
-      global.fetch = vi.fn().mockResolvedValue({
-        ok: true,
-        json: async () => mockResponse,
-      } as Response);
+      global.fetch = vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockEnglishResponse,
+        } as Response)
+        .mockResolvedValueOnce({
+          ok: true,
+          json: async () => mockSpanishResponse,
+        } as Response);
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      const { container } = render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       const generateButton = screen.getByRole('button', { name: /generar descripción/i });
       fireEvent.click(generateButton);
 
+      // Wait for English text to appear
       await waitFor(() => {
-        expect(screen.getByText('Text to copy')).toBeInTheDocument();
+        expect(screen.getByText('Text to copy English')).toBeInTheDocument();
       });
 
-      const copyButtons = screen.getAllByRole('button');
-      const copyButton = copyButtons.find(btn => btn.querySelector('svg'));
+      // Find copy buttons using container.querySelectorAll
+      // The copy buttons have Copy icons (lucide-copy class or similar)
+      const copyButtons = container.querySelectorAll('button');
+      const copyButtonsArray = Array.from(copyButtons).filter(btn => {
+        // Look for buttons with SVG that are not the main generate/save buttons
+        const hasSvg = btn.querySelector('svg');
+        const hasText = btn.textContent && btn.textContent.length > 5; // generate/save buttons have text
+        return hasSvg && !hasText;
+      });
 
-      if (copyButton) {
-        fireEvent.click(copyButton);
+      // Click the first copy button (English section)
+      if (copyButtonsArray.length > 0) {
+        fireEvent.click(copyButtonsArray[0]);
         await waitFor(() => {
-          expect(mockClipboard.writeText).toHaveBeenCalledWith('Text to copy');
+          expect(mockClipboard.writeText).toHaveBeenCalledWith('Text to copy English');
         });
+      } else {
+        throw new Error('No copy buttons found');
       }
     });
   });
@@ -381,7 +438,8 @@ describe('DescriptionNotebook Database Integration', () => {
         json: async () => mockResponse,
       } as Response);
 
-      render(<DescriptionNotebook image={mockImage} />);
+      const mockOnGenerate = vi.fn();
+      render(<DescriptionNotebook image={mockImage} onGenerateDescription={mockOnGenerate} />);
 
       // Select different style (assuming style selector exists)
       const button = screen.getByRole('button', { name: /generar descripción/i });

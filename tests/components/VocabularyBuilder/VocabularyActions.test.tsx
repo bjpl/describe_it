@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { VocabularyActions } from '@/components/VocabularyBuilder/VocabularyActions';
 import { CategorizedPhrase } from '@/types/api';
@@ -16,13 +17,13 @@ const defaultProps = {
   savedPhrases: mockSavedPhrases,
   showCreateSet: false,
   viewMode: { current: 'sets' as const },
-  onImportSet: jest.fn(),
-  onShowCreateSet: jest.fn(),
+  onImportSet: vi.fn(),
+  onShowCreateSet: vi.fn(),
 };
 
 describe('VocabularyActions', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders import button', () => {

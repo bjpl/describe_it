@@ -14,6 +14,7 @@
 
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { VocabularyList } from '@/components/VocabularyBuilder/VocabularyList';
 import { VocabularySet, ReviewItem, StudyStatistics } from '@/types/api';
 
@@ -78,10 +79,10 @@ const defaultProps = {
   vocabularySets: [createMockVocabularySet()],
   reviewItems: [createMockReviewItem()],
   statistics: createMockStatistics(),
-  onStartStudySession: jest.fn(),
-  onExportSet: jest.fn(),
-  onDeleteSet: jest.fn(),
-  calculateProgress: jest.fn(() => 50),
+  onStartStudySession: vi.fn(),
+  onExportSet: vi.fn(),
+  onDeleteSet: vi.fn(),
+  calculateProgress: vi.fn(() => 50),
 };
 
 // ============================================================================
@@ -90,7 +91,7 @@ const defaultProps = {
 
 describe('VocabularyList - Rendering', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders the component header correctly', () => {
@@ -181,7 +182,7 @@ describe('VocabularyList - Rendering', () => {
 
 describe('VocabularyList - List Item Display', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('displays set name', () => {
@@ -211,19 +212,19 @@ describe('VocabularyList - List Item Display', () => {
   });
 
   it('displays progress percentage from calculateProgress', () => {
-    const customCalculateProgress = jest.fn(() => 75);
+    const customCalculateProgress = vi.fn(() => 75);
     render(<VocabularyList {...defaultProps} calculateProgress={customCalculateProgress} />);
     expect(screen.getByText('Progress: 75%')).toBeInTheDocument();
   });
 
   it('displays zero progress', () => {
-    const zeroProgress = jest.fn(() => 0);
+    const zeroProgress = vi.fn(() => 0);
     render(<VocabularyList {...defaultProps} calculateProgress={zeroProgress} />);
     expect(screen.getByText('Progress: 0%')).toBeInTheDocument();
   });
 
   it('displays complete progress', () => {
-    const fullProgress = jest.fn(() => 100);
+    const fullProgress = vi.fn(() => 100);
     render(<VocabularyList {...defaultProps} calculateProgress={fullProgress} />);
     expect(screen.getByText('Progress: 100%')).toBeInTheDocument();
   });
@@ -279,7 +280,7 @@ describe('VocabularyList - List Item Display', () => {
 
 describe('VocabularyList - Interactions', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('calls onStartStudySession with flashcards mode', () => {
@@ -318,7 +319,7 @@ describe('VocabularyList - Interactions', () => {
   });
 
   it('calls onDeleteSet when delete is confirmed', () => {
-    window.confirm = jest.fn(() => true);
+    window.confirm = vi.fn(() => true);
     render(<VocabularyList {...defaultProps} />);
     const deleteButton = screen.getByTitle('Delete set');
     fireEvent.click(deleteButton);
@@ -327,7 +328,7 @@ describe('VocabularyList - Interactions', () => {
   });
 
   it('does not call onDeleteSet when delete is cancelled', () => {
-    window.confirm = jest.fn(() => false);
+    window.confirm = vi.fn(() => false);
     render(<VocabularyList {...defaultProps} />);
     const deleteButton = screen.getByTitle('Delete set');
     fireEvent.click(deleteButton);
@@ -451,7 +452,7 @@ describe('VocabularyList - Interactions', () => {
 
 describe('VocabularyList - Selection', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('handles single set selection via button click', () => {
@@ -512,7 +513,7 @@ describe('VocabularyList - Selection', () => {
   });
 
   it('handles delete selection with confirmation', () => {
-    window.confirm = jest.fn(() => true);
+    window.confirm = vi.fn(() => true);
     const multipleSets = [
       createMockVocabularySet({ id: 'set-1', name: 'Set 1' }),
       createMockVocabularySet({ id: 'set-2', name: 'Set 2' }),
@@ -525,7 +526,7 @@ describe('VocabularyList - Selection', () => {
   });
 
   it('prevents deletion when not confirmed', () => {
-    window.confirm = jest.fn(() => false);
+    window.confirm = vi.fn(() => false);
     render(<VocabularyList {...defaultProps} />);
 
     const deleteButton = screen.getByTitle('Delete set');
@@ -576,7 +577,7 @@ describe('VocabularyList - Selection', () => {
 
 describe('VocabularyList - Pagination', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('displays all sets when count is small', () => {
@@ -719,7 +720,7 @@ describe('VocabularyList - Pagination', () => {
 
 describe('VocabularyList - Performance', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders 100 items efficiently', () => {
@@ -835,7 +836,7 @@ describe('VocabularyList - Performance', () => {
   });
 
   it('optimizes callback functions with useCallback', () => {
-    const onDeleteSet = jest.fn();
+    const onDeleteSet = vi.fn();
     const { rerender } = render(
       <VocabularyList {...defaultProps} onDeleteSet={onDeleteSet} />
     );
@@ -858,7 +859,7 @@ describe('VocabularyList - Performance', () => {
 
 describe('VocabularyList - Accessibility', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('uses semantic HTML for list structure', () => {

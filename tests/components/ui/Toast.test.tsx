@@ -144,7 +144,7 @@ describe('Toast Components', () => {
   });
 
   describe('Toast Dismissal', () => {
-    it('should dismiss toast when close button is clicked', async () => {
+    it('should dismiss toast when close button is clicked', () => {
       function TestDismiss() {
         const { toast } = useToast();
         return (
@@ -166,9 +166,12 @@ describe('Toast Components', () => {
       const closeButton = screen.getByLabelText('Close notification');
       fireEvent.click(closeButton);
 
-      await waitFor(() => {
-        expect(screen.queryByText('Dismissible Toast')).not.toBeInTheDocument();
+      // Advance timers for the dismiss animation delay (150ms)
+      act(() => {
+        vi.advanceTimersByTime(150);
       });
+
+      expect(screen.queryByText('Dismissible Toast')).not.toBeInTheDocument();
     });
 
     it('should dismiss all toasts', () => {
@@ -194,7 +197,7 @@ describe('Toast Components', () => {
       expect(screen.queryByText('Error!')).not.toBeInTheDocument();
     });
 
-    it('should auto-dismiss after duration', async () => {
+    it('should auto-dismiss after duration', () => {
       function TestAutoDismiss() {
         const { toast } = useToast();
         return (
@@ -213,13 +216,12 @@ describe('Toast Components', () => {
       fireEvent.click(screen.getByText('Show Toast'));
       expect(screen.getByText('Auto dismiss')).toBeInTheDocument();
 
+      // Advance timers for auto-dismiss duration (1000ms) + dismiss animation delay (150ms)
       act(() => {
-        vi.advanceTimersByTime(1000);
+        vi.advanceTimersByTime(1150);
       });
 
-      await waitFor(() => {
-        expect(screen.queryByText('Auto dismiss')).not.toBeInTheDocument();
-      });
+      expect(screen.queryByText('Auto dismiss')).not.toBeInTheDocument();
     });
 
     it('should not auto-dismiss when duration is 0', async () => {
@@ -314,10 +316,10 @@ describe('Toast Components', () => {
         const { toast } = useToast();
         return (
           <div>
-            <button onClick={() => toast({ description: 'Toast 1' })}>Toast 1</button>
-            <button onClick={() => toast({ description: 'Toast 2' })}>Toast 2</button>
-            <button onClick={() => toast({ description: 'Toast 3' })}>Toast 3</button>
-            <button onClick={() => toast({ description: 'Toast 4' })}>Toast 4</button>
+            <button onClick={() => toast({ description: 'Toast 1' })}>Show Toast 1</button>
+            <button onClick={() => toast({ description: 'Toast 2' })}>Show Toast 2</button>
+            <button onClick={() => toast({ description: 'Toast 3' })}>Show Toast 3</button>
+            <button onClick={() => toast({ description: 'Toast 4' })}>Show Toast 4</button>
           </div>
         );
       }
@@ -328,12 +330,14 @@ describe('Toast Components', () => {
         </ToastProvider>
       );
 
-      fireEvent.click(screen.getByText('Toast 1'));
-      fireEvent.click(screen.getByText('Toast 2'));
-      fireEvent.click(screen.getByText('Toast 3'));
+      fireEvent.click(screen.getByText('Show Toast 1'));
+      fireEvent.click(screen.getByText('Show Toast 2'));
+      fireEvent.click(screen.getByText('Show Toast 3'));
 
+      // Toast 3 and Toast 2 should be visible (newest 2 toasts)
       expect(screen.getByText('Toast 3')).toBeInTheDocument();
       expect(screen.getByText('Toast 2')).toBeInTheDocument();
+      // Toast 1 should be removed (oldest, exceeds maxToasts limit)
       expect(screen.queryByText('Toast 1')).not.toBeInTheDocument();
     });
   });

@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { screen, fireEvent } from '@testing-library/react'
 import { renderWithProviders } from '../../utils/test-helpers'
 import { AppHeader } from '@/components/AppHeader'
@@ -16,108 +16,79 @@ describe('AppHeader', () => {
 
   it('should render application title', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
+
     expect(screen.getByText('Describe It')).toBeInTheDocument()
   })
 
   it('should render settings button', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    const settingsButton = screen.getByRole('button', { name: /settings/i })
+
+    const settingsButton = screen.getByTitle('Settings')
     expect(settingsButton).toBeInTheDocument()
   })
 
-  it('should render help button', () => {
+  it('should render about/info button', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    const helpButton = screen.getByRole('button', { name: /help/i })
-    expect(helpButton).toBeInTheDocument()
+
+    const infoButton = screen.getByTitle('About')
+    expect(infoButton).toBeInTheDocument()
   })
 
-  it('should open settings modal when settings button is clicked', () => {
+  it('should call onToggleSettings when settings button is clicked', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    const settingsButton = screen.getByRole('button', { name: /settings/i })
+
+    const settingsButton = screen.getByTitle('Settings')
     fireEvent.click(settingsButton)
-    
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText(/configuración/i)).toBeInTheDocument()
+
+    expect(mockProps.onToggleSettings).toHaveBeenCalledTimes(1)
   })
 
-  it('should open help modal when help button is clicked', () => {
+  it('should call onToggleInfo when about button is clicked', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    const helpButton = screen.getByRole('button', { name: /help/i })
-    fireEvent.click(helpButton)
-    
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    expect(screen.getByText(/ayuda/i)).toBeInTheDocument()
+
+    const infoButton = screen.getByTitle('About')
+    fireEvent.click(infoButton)
+
+    expect(mockProps.onToggleInfo).toHaveBeenCalledTimes(1)
   })
 
-  it('should close modals when close button is clicked', () => {
+  it('should render export button', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    // Open settings modal
-    const settingsButton = screen.getByRole('button', { name: /settings/i })
-    fireEvent.click(settingsButton)
-    
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
-    
-    // Close modal
-    const closeButton = screen.getByRole('button', { name: /close/i })
-    fireEvent.click(closeButton)
-    
-    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+
+    const exportButton = screen.getByTitle('Export session data in multiple formats')
+    expect(exportButton).toBeInTheDocument()
+    expect(exportButton).not.toBeDisabled()
   })
 
-  it('should display current language indicator', () => {
-    renderWithProviders(<AppHeader {...mockProps} />)
-    
-    // Should show Spanish by default
-    expect(screen.getByText(/es/i)).toBeInTheDocument()
+  it('should disable export button when canExport is false', () => {
+    renderWithProviders(<AppHeader {...mockProps} canExport={false} />)
+
+    const exportButton = screen.getByTitle('Use the app to generate some data first')
+    expect(exportButton).toBeInTheDocument()
+    expect(exportButton).toBeDisabled()
   })
 
-  it('should handle language toggle', () => {
+  it('should render analytics report button', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    const languageToggle = screen.getByRole('button', { name: /language/i })
-    fireEvent.click(languageToggle)
-    
-    // Should toggle between Spanish and English
-    expect(screen.getByText(/en/i)).toBeInTheDocument()
+
+    const analyticsButton = screen.getByTitle('View Session Analytics Report')
+    expect(analyticsButton).toBeInTheDocument()
   })
 
   it('should be accessible with keyboard navigation', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    const settingsButton = screen.getByRole('button', { name: /settings/i })
+
+    const settingsButton = screen.getByTitle('Settings')
     settingsButton.focus()
-    
+
     expect(document.activeElement).toBe(settingsButton)
-    
-    // Test Enter key
-    fireEvent.keyDown(settingsButton, { key: 'Enter', code: 'Enter' })
-    expect(screen.getByRole('dialog')).toBeInTheDocument()
   })
 
-  it('should have proper ARIA labels', () => {
+  it('should have focus styles on buttons', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    const settingsButton = screen.getByRole('button', { name: /settings/i })
-    const helpButton = screen.getByRole('button', { name: /help/i })
-    
-    expect(settingsButton).toHaveAttribute('aria-label')
-    expect(helpButton).toHaveAttribute('aria-label')
-  })
 
-  it('should display app version information', () => {
-    renderWithProviders(<AppHeader {...mockProps} />)
-    
-    // Open help modal to see version info
-    const helpButton = screen.getByRole('button', { name: /help/i })
-    fireEvent.click(helpButton)
-    
-    expect(screen.getByText(/versión/i)).toBeInTheDocument()
+    const settingsButton = screen.getByTitle('Settings')
+    expect(settingsButton).toHaveClass('focus:outline-none', 'focus:ring-2', 'focus:ring-blue-500')
   })
 
   it('should handle responsive design', () => {
@@ -129,27 +100,24 @@ describe('AppHeader', () => {
     })
 
     renderWithProviders(<AppHeader {...mockProps} />)
-    
+
     // Should still render essential elements on mobile
     expect(screen.getByText('Describe It')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /settings/i })).toBeInTheDocument()
+    expect(screen.getByTitle('Settings')).toBeInTheDocument()
   })
 
-  it('should persist settings across app usage', () => {
-    const mockLocalStorage = {
-      getItem: vi.fn().mockReturnValue('{"language": "en", "theme": "dark"}'),
-      setItem: vi.fn(),
-      removeItem: vi.fn(),
-      clear: vi.fn(),
-    }
-    
-    Object.defineProperty(window, 'localStorage', {
-      value: mockLocalStorage,
-    })
-
+  it('should display subtitle', () => {
     renderWithProviders(<AppHeader {...mockProps} />)
-    
-    // Should load saved language preference
-    expect(mockLocalStorage.getItem).toHaveBeenCalledWith('describe-it-settings')
+
+    expect(screen.getByText('Spanish Learning through Images')).toBeInTheDocument()
+  })
+
+  it('should render all action buttons', () => {
+    renderWithProviders(<AppHeader {...mockProps} />)
+
+    expect(screen.getByTitle('View Session Analytics Report')).toBeInTheDocument()
+    expect(screen.getByTitle('Export session data in multiple formats')).toBeInTheDocument()
+    expect(screen.getByTitle('Settings')).toBeInTheDocument()
+    expect(screen.getByTitle('About')).toBeInTheDocument()
   })
 })

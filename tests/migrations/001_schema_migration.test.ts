@@ -1,6 +1,9 @@
 /**
  * Comprehensive Tests for Database Schema Migration
  * Tests the execution of migration 001_initial_schema.sql and 20250111_create_analytics_tables.sql
+ *
+ * NOTE: These tests require a real Supabase database connection and are skipped by default.
+ * Set SUPABASE_RUN_INTEGRATION_TESTS=true to run them.
  */
 
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
@@ -20,7 +23,17 @@ import {
   SchemaSnapshot
 } from './test-helpers'
 
-describe('Database Schema Migration Tests', () => {
+// Skip all tests unless explicitly enabled via SUPABASE_RUN_INTEGRATION_TESTS=true
+// These tests require a real database with the correct schema set up
+const runIntegrationTests = process.env.SUPABASE_RUN_INTEGRATION_TESTS === 'true'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const hasValidConfig = supabaseUrl && supabaseUrl.length > 0 && supabaseKey && supabaseKey.length > 0
+
+// Only run if explicitly enabled AND config is valid
+const shouldRunTests = runIntegrationTests && hasValidConfig
+
+describe.skipIf(!shouldRunTests)('Database Schema Migration Tests', () => {
   let client: SupabaseClient
   let preMigrationSnapshot: SchemaSnapshot | null = null
   const MIGRATION_DIR = path.join(process.cwd(), 'supabase', 'migrations')

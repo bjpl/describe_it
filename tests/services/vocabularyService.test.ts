@@ -13,14 +13,16 @@
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Setup mocks before any imports
-const mockFrom = vi.fn();
-const mockLogger = {
-  error: vi.fn(),
-  info: vi.fn(),
-  warn: vi.fn(),
-  debug: vi.fn(),
-};
+// Setup mocks using vi.hoisted to ensure they're available during hoisting
+const { mockFrom, mockLogger } = vi.hoisted(() => ({
+  mockFrom: vi.fn(),
+  mockLogger: {
+    error: vi.fn(),
+    info: vi.fn(),
+    warn: vi.fn(),
+    debug: vi.fn(),
+  },
+}));
 
 vi.mock('@/lib/supabase/client', () => ({
   supabase: {

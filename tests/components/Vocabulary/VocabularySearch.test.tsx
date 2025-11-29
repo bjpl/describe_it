@@ -6,6 +6,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { VocabularySearch, VocabularyWord } from '@/components/Vocabulary/VocabularySearch';
 import '@testing-library/jest-dom';
 
@@ -33,17 +34,11 @@ const mockWords: VocabularyWord[] = [
 describe('VocabularySearch', () => {
   const defaultProps = {
     words: mockWords,
-    onSearch: jest.fn(),
+    onSearch: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
-    jest.useFakeTimers();
-  });
-
-  afterEach(() => {
-    jest.runOnlyPendingTimers();
-    jest.useRealTimers();
+    vi.clearAllMocks();
   });
 
   // Test suite with 75+ tests covering all functionality
@@ -53,10 +48,10 @@ describe('VocabularySearch', () => {
   });
 
   it('should handle search input changes', async () => {
-    const user = userEvent.setup({ delay: null });
+    const user = userEvent.setup();
     render(<VocabularySearch {...defaultProps} />);
 
-    const input = screen.getByRole('textbox');
+    const input = screen.getByRole('combobox', { name: /search vocabulary/i });
     await user.type(input, 'hola');
 
     expect(input).toHaveValue('hola');

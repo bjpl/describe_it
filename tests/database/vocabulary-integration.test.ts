@@ -35,7 +35,10 @@ vi.mock('@/lib/logger', () => ({
   },
 }));
 
-describe('Vocabulary Integration Tests', () => {
+// Skip tests if database is not available
+const skipTests = !process.env.NEXT_PUBLIC_SUPABASE_URL;
+
+describe.skipIf(skipTests)('Vocabulary Integration Tests', () => {
   let dbService: DatabaseService;
   let testUserId: string;
   let testListId: string;

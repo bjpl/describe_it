@@ -7,19 +7,18 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DatabaseService } from '@/lib/services/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-const mockSupabase = {
-  auth: {
-    signUp: vi.fn(),
-    signInWithPassword: vi.fn(),
-    signOut: vi.fn(),
-    getUser: vi.fn(),
-    updateUser: vi.fn(),
-  },
-  from: vi.fn(),
-} as unknown as SupabaseClient;
-
+// Mock modules at the top level - use inline functions to avoid hoisting issues
 vi.mock('@/lib/supabase/client', () => ({
-  supabase: mockSupabase,
+  supabase: {
+    auth: {
+      signUp: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signOut: vi.fn(),
+      getUser: vi.fn(),
+      updateUser: vi.fn(),
+    },
+    from: vi.fn(),
+  } as unknown as SupabaseClient,
 }));
 
 vi.mock('@/lib/logger', () => ({
@@ -28,9 +27,15 @@ vi.mock('@/lib/logger', () => ({
 
 describe('Authentication Flow Integration', () => {
   let dbService: DatabaseService;
+  let mockSupabase: any;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+
+    // Get the mocked supabase instance
+    const { supabase } = await import('@/lib/supabase/client');
+    mockSupabase = supabase;
+
     dbService = new DatabaseService({
       supabaseUrl: 'https://test.supabase.co',
       anonKey: 'test-key',
@@ -469,7 +474,9 @@ describe('Authentication Flow Integration', () => {
 
     it('should handle database errors during profile creation', async () => {
       (mockSupabase.from as any).mockReturnValue({
-        insert: vi.fn().mockResolvedValue({
+        insert: vi.fn().mockReturnThis(),
+        select: vi.fn().mockReturnThis(),
+        single: vi.fn().mockResolvedValue({
           data: null,
           error: {
             message: 'Database connection failed',

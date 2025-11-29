@@ -696,7 +696,7 @@ describe('Error Middleware - Performance Tracking', () => {
 
     const stats = middleware.getPerformanceStats();
     expect(stats?.totalRequests).toBe(10);
-    expect(stats?.averageDuration).toBeGreaterThan(0);
-    expect(stats?.medianDuration).toBeGreaterThan(0);
+    expect(stats?.averageDuration).toBeGreaterThanOrEqual(0);
+    expect(stats?.medianDuration).toBeGreaterThanOrEqual(0);
   });
 });

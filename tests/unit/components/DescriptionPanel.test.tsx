@@ -142,9 +142,9 @@ describe('DescriptionPanel', () => {
 
   it('should show selected style information', () => {
     renderWithProviders(<DescriptionPanel {...defaultProps} />)
-    
+
     expect(screen.getByText('Selected: Narrativo (Storytelling)')).toBeInTheDocument()
-    expect(screen.getByText('Cuenta una historia rica en detalles')).toBeInTheDocument()
+    expect(screen.getAllByText('Cuenta una historia rica en detalles').length).toBeGreaterThan(0)
   })
 
   it('should display error message when present', () => {
@@ -295,8 +295,8 @@ describe('DescriptionPanel', () => {
 
   it('should show appropriate icons for each style', () => {
     renderWithProviders(<DescriptionPanel {...defaultProps} />)
-    
-    expect(screen.getByTestId('book-icon')).toBeInTheDocument() // Narrativo
+
+    expect(screen.getAllByTestId('book-icon').length).toBeGreaterThan(0) // Narrativo
     expect(screen.getByTestId('feather-icon')).toBeInTheDocument() // Poetico
     expect(screen.getByTestId('graduation-icon')).toBeInTheDocument() // Academico
     expect(screen.getByTestId('message-icon')).toBeInTheDocument() // Conversacional
@@ -305,8 +305,8 @@ describe('DescriptionPanel', () => {
 
   it('should show style descriptions in tooltips', () => {
     renderWithProviders(<DescriptionPanel {...defaultProps} />)
-    
-    expect(screen.getByText('Cuenta una historia rica en detalles')).toBeInTheDocument()
+
+    expect(screen.getAllByText('Cuenta una historia rica en detalles').length).toBeGreaterThan(0)
     expect(screen.getByText('Lenguaje artístico y metafórico')).toBeInTheDocument()
     expect(screen.getByText('Formal y educativo, vocabulario avanzado')).toBeInTheDocument()
     expect(screen.getByText('Casual y amigable, expresiones coloquiales')).toBeInTheDocument()
@@ -328,8 +328,9 @@ describe('DescriptionPanel', () => {
 
   it('should apply correct color scheme for selected style', () => {
     renderWithProviders(<DescriptionPanel {...defaultProps} />)
-    
-    const selectedStyleInfo = screen.getByText('Selected: Narrativo (Storytelling)').closest('div')
+
+    const selectedStyleInfoText = screen.getByText('Selected: Narrativo (Storytelling)')
+    const selectedStyleInfo = selectedStyleInfoText.closest('div.bg-blue-50')
     expect(selectedStyleInfo).toHaveClass('bg-blue-50', 'border-current', 'text-blue-600')
   })
 })

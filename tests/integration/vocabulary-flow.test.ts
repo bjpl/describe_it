@@ -7,7 +7,13 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { DatabaseService } from '@/lib/services/database';
 import type { SupabaseClient } from '@supabase/supabase-js';
 
-const mockSupabase = { from: vi.fn(), auth: { getUser: vi.fn() } } as unknown as SupabaseClient;
+// Use vi.hoisted to create variables that can be used in mock factories
+const { mockSupabase } = vi.hoisted(() => ({
+  mockSupabase: {
+    from: vi.fn(),
+    auth: { getUser: vi.fn() }
+  } as unknown as SupabaseClient,
+}));
 
 vi.mock('@/lib/supabase/client', () => ({ supabase: mockSupabase }));
 vi.mock('@/lib/logger', () => ({ logger: { info: vi.fn(), error: vi.fn() } }));
@@ -27,8 +33,6 @@ describe('Vocabulary Flow Integration', () => {
   describe('Complete Vocabulary Management Flow', () => {
     it('should complete full vocabulary lifecycle', async () => {
       const userId = 'user-123';
-      let listId: string;
-      let itemId: string;
 
       // Step 1: Create vocabulary list
       (mockSupabase.from as any).mockReturnValue({
@@ -52,7 +56,7 @@ describe('Vocabulary Flow Integration', () => {
       });
 
       expect(listResult.success).toBe(true);
-      listId = listResult.data!.id;
+      const listId = listResult.data!.id;
 
       // Step 2: Add multiple vocabulary items
       const items = [
@@ -75,7 +79,7 @@ describe('Vocabulary Flow Integration', () => {
 
       expect(bulkResult.success).toBe(true);
       expect(bulkResult.data).toHaveLength(3);
-      itemId = bulkResult.data![0].id!;
+      const itemId = bulkResult.data![0].id!;
 
       // Step 3: Retrieve and view items
       (mockSupabase.from as any).mockReturnValue({

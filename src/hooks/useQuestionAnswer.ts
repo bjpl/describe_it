@@ -201,6 +201,7 @@ export function useQuestionAnswer(imageId: string) {
     }
 
     throw lastError;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const askQuestion = useCallback(

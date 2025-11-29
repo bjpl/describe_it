@@ -736,18 +736,19 @@ export class PhraseExtractor {
     adverbs: string[];
     keyPhrases: string[];
   } {
-    // Clean and prepare text
-    const cleanText = description
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "") // Remove accents temporarily for pattern matching
-      .toLowerCase();
-    
-    const words = cleanText.match(/\b[a-záéíóúñ]+\b/gi) || [];
+    // Extract words from original text (with accents preserved)
     const originalWords = description.match(/\b[a-záéíóúñ]+\b/gi) || [];
-    
+
+    // Create cleaned versions for pattern matching
+    const cleanedWords = originalWords.map(word =>
+      word.normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+    );
+
     // Create word frequency map to identify important words
     const wordFreq = new Map<string, number>();
-    words.forEach(word => {
+    cleanedWords.forEach(word => {
       if (word.length > 3 && !this.isCommonWord(word)) {
         wordFreq.set(word, (wordFreq.get(word) || 0) + 1);
       }
@@ -758,15 +759,19 @@ export class PhraseExtractor {
     const verbs: string[] = [];
     const adjectives: string[] = [];
     const adverbs: string[] = [];
-    
+
     originalWords.forEach((word, index) => {
-      const cleanWord = words[index];
-      
+      const cleanWord = cleanedWords[index];
+
       // Skip common articles, prepositions, etc.
       if (this.isCommonWord(cleanWord)) return;
-      
+
+      // Adverbs - check FIRST because -mente is very specific and can contain other patterns
+      if (cleanWord.match(/mente$/)) {
+        if (word.length > 6) adverbs.push(word);
+      }
       // Nouns - enhanced patterns
-      if (cleanWord.match(/[oae]s?$|cion$|sion$|dad$|tad$|eza$|ura$|miento$|ancia$|encia$|aje$|ismo$|ista$/)) {
+      else if (cleanWord.match(/[oae]s?$|cion$|sion$|dad$|tad$|eza$|ura$|miento$|ancia$|encia$|aje$|ismo$|ista$/)) {
         if (word.length > 3) nouns.push(word);
       }
       // Verbs - enhanced patterns (including conjugations)
@@ -776,10 +781,6 @@ export class PhraseExtractor {
       // Adjectives - enhanced patterns
       else if (cleanWord.match(/oso$|osa$|osos$|osas$|ivo$|iva$|ivos$|ivas$|ante$|ente$|iente$|able$|ible$|al$|il$|ico$|ica$/)) {
         if (word.length > 4) adjectives.push(word);
-      }
-      // Adverbs
-      else if (cleanWord.match(/mente$/)) {
-        if (word.length > 6) adverbs.push(word);
       }
       // High-frequency words that don't match patterns
       else if (wordFreq.get(cleanWord)! > 2 && word.length > 4) {
@@ -830,7 +831,8 @@ export class PhraseExtractor {
       'es', 'son', 'esta', 'estan', 'hay', 'ser', 'estar',
       'su', 'sus', 'mi', 'mis', 'tu', 'tus', 'este', 'esta',
       'ese', 'esa', 'aquel', 'aquella', 'lo', 'le', 'se',
-      'muy', 'mas', 'menos', 'tan', 'tanto', 'mucho', 'poco'
+      'muy', 'mas', 'menos', 'tan', 'tanto', 'mucho', 'poco',
+      'hola', 'adios', 'si', 'no'
     ]);
     return commonWords.has(word.toLowerCase());
   }

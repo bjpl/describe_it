@@ -265,7 +265,8 @@ export function useImageSearch() {
     }
 
     throw lastError;
-  }, [makeSearchRequest, createSearchError]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const searchImages = useCallback(
     async (query: string, page: number = 1, filters?: any) => {

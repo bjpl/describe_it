@@ -56,7 +56,7 @@ describe('ApiKeySetup', () => {
 
     // Default mock implementations
     vi.mocked(settingsManager.getSettings).mockReturnValue({
-      apiKeys: { unsplash: '', openai: '' },
+      apiKeys: { unsplash: '', openai: '', anthropic: '' },
       language: { ui: 'en', target: 'spanish' },
       study: { dailyGoal: 10, difficulty: 'intermediate' },
       theme: { mode: 'system', animations: true },
@@ -265,7 +265,8 @@ describe('ApiKeySetup', () => {
       vi.mocked(settingsManager.getSettings).mockReturnValue({
         apiKeys: {
           unsplash: 'local-unsplash-key-123456',
-          openai: 'sk-local-openai-key-1234567890abcdefghijklm'
+          openai: 'sk-local-openai-key-1234567890abcdefghijklm',
+          anthropic: ''
         }
       } as any);
 
@@ -300,7 +301,8 @@ describe('ApiKeySetup', () => {
       await waitFor(() => {
         expect(authManager.saveApiKeys).toHaveBeenCalledWith({
           unsplash: 'new-unsplash-key-123456789',
-          openai: ''
+          openai: '',
+          anthropic: ''
         });
         expect(mockOnNext).toHaveBeenCalled();
       });
@@ -322,7 +324,8 @@ describe('ApiKeySetup', () => {
       await waitFor(() => {
         expect(settingsManager.updateSection).toHaveBeenCalledWith('apiKeys', {
           unsplash: '',
-          openai: 'sk-new-openai-key-1234567890abcdefghijklmnopqr'
+          openai: 'sk-new-openai-key-1234567890abcdefghijklmnopqr',
+          anthropic: ''
         });
         expect(mockOnNext).toHaveBeenCalled();
       });

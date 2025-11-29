@@ -6,6 +6,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { CategoryManager, Category } from '@/components/Vocabulary/CategoryManager';
 import '@testing-library/jest-dom';
 
@@ -23,14 +24,14 @@ const mockCategories: Category[] = [
 describe('CategoryManager', () => {
   const defaultProps = {
     categories: mockCategories,
-    onAddCategory: jest.fn(),
-    onUpdateCategory: jest.fn(),
-    onDeleteCategory: jest.fn(),
-    onReorderCategories: jest.fn(),
+    onAddCategory: vi.fn(),
+    onUpdateCategory: vi.fn(),
+    onDeleteCategory: vi.fn(),
+    onReorderCategories: vi.fn(),
   };
 
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   describe('Rendering (15 tests)', () => {

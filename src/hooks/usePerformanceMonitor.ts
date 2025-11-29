@@ -81,7 +81,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
           ...prev,
           metrics: { ...prev.metrics, largestContentfulPaint: entry.startTime }
         }));
-        
+
         if (entry.startTime > 2500) { // LCP threshold
           setPerformanceState(prev => ({
             ...prev,
@@ -110,7 +110,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
             ...prev,
             metrics: { ...prev.metrics, cumulativeLayoutShift: value }
           }));
-          
+
           if (value > 0.1) { // CLS threshold
             setPerformanceState(prev => ({
               ...prev,
@@ -129,7 +129,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
           ...prev,
           metrics: { ...prev.metrics, firstInputDelay: fid }
         }));
-        
+
         if (fid > 100) { // FID threshold
           setPerformanceState(prev => ({
             ...prev,
@@ -144,11 +144,11 @@ export const usePerformanceMonitor = (componentName?: string) => {
       fcpObserver.observe({ entryTypes: ['paint'] });
       clsObserver.observe({ entryTypes: ['layout-shift'] });
       fidObserver.observe({ entryTypes: ['first-input'] });
-      
+
       observer.current = lcpObserver; // Store reference for cleanup
-      
+
       setPerformanceState(prev => ({ ...prev, isMonitoring: true }));
-      
+
       return () => {
         try {
           lcpObserver.disconnect();
@@ -164,7 +164,7 @@ export const usePerformanceMonitor = (componentName?: string) => {
       performanceLogger.warn('[PERFORMANCE] Failed to start Web Vitals monitoring:', toLogContext(error));
       return () => {}; // Return empty cleanup function
     }
-  }, [isBrowser]);
+  }, []);
 
   // Monitor memory usage (SSR-safe)
   const trackMemoryUsage = useCallback(() => {

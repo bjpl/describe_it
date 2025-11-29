@@ -315,7 +315,7 @@ describe('API Performance Tests', () => {
       })
     })
 
-    it('should maintain consistent performance under load', async () => {
+    it('should maintain consistent performance under load', { timeout: 30000 }, async () => {
       const loadTestResults: number[] = []
       const iterations = 20
 

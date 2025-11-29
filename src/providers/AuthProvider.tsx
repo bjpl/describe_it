@@ -147,6 +147,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       window.removeEventListener('auth-state-change', handleAuthChange);
       window.removeEventListener('storage', handleStorageChange);
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Additional effect to monitor auth state periodically and force updates

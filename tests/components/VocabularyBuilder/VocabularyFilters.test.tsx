@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { VocabularyFilters } from '@/components/VocabularyBuilder/VocabularyFilters';
 import { VocabularySet } from '@/types/api';
@@ -38,13 +39,13 @@ const defaultProps = {
   searchTerm: '',
   sortBy: 'created' as const,
   sortOrder: 'desc' as const,
-  onSearchChange: jest.fn(),
-  onSortChange: jest.fn(),
+  onSearchChange: vi.fn(),
+  onSortChange: vi.fn(),
 };
 
 describe('VocabularyFilters', () => {
   beforeEach(() => {
-    jest.clearAllMocks();
+    vi.clearAllMocks();
   });
 
   it('renders search input and sort dropdown', () => {
