@@ -2,14 +2,6 @@
 
 import React, { useState, useCallback, memo, Suspense } from 'react';
 import { logger } from '@/lib/logger';
-
-// PRODUCTION DEBUGGING - Moved after logger import
-logger.info('[HOMEPAGE] Starting to load, environment:', {
-  NODE_ENV: process.env.NODE_ENV,
-  NEXT_PUBLIC_ENVIRONMENT: process.env.NEXT_PUBLIC_ENVIRONMENT,
-  isClient: typeof window !== 'undefined',
-  timestamp: new Date().toISOString(),
-});
 import { motion } from 'framer-motion';
 import { MotionHeader, MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
 import {
@@ -78,8 +70,6 @@ interface HomePageState {
 }
 
 const HomePageBase: React.FC = () => {
-  logger.info('[HOMEPAGE] Component initializing...');
-
   // PRODUCTION DEBUGGING: Only initialize performance monitor in browser
   const [isClient, setIsClient] = React.useState(false);
 
@@ -436,12 +426,6 @@ const HomePageBase: React.FC = () => {
         )}
 
         {/* Settings Modal */}
-        {(() => {
-          logger.info('[HOMEPAGE] Rendering settings modal check:', {
-            showSettings: state.showSettings,
-          });
-          return null;
-        })()}
         {state.showSettings ? (
           <React.Suspense fallback={<div>Loading settings...</div>}>
             <SettingsModal
