@@ -68,7 +68,8 @@ exports[`Loading Components > Snapshot Tests > should match snapshot for Loading
           class="flex items-center justify-center"
         >
           <svg
-            class="lucide lucide-loader2 w-6 h-6 animate-spin"
+            aria-hidden="true"
+            class="lucide lucide-loader-circle w-6 h-6 animate-spin"
             fill="none"
             height="24"
             stroke="currentColor"
@@ -106,7 +107,8 @@ exports[`Loading Components > Snapshot Tests > should match snapshot for PageLoa
       class="flex items-center justify-center"
     >
       <svg
-        class="lucide lucide-loader2 w-12 h-12 animate-spin"
+        aria-hidden="true"
+        class="lucide lucide-loader-circle w-12 h-12 animate-spin"
         fill="none"
         height="24"
         stroke="currentColor"
