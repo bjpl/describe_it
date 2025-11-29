@@ -1,24 +1,6 @@
 /**
- * EMERGENCY FIX: Force all elements to be visible
- * Overrides Framer Motion inline styles
+ * Motion CSS utilities
+ * DO NOT use !important overrides as they break Framer Motion animations
  */
 
-/* Force visibility for all elements that might have opacity:0 from Framer Motion */
-header,
-nav,
-main,
-div,
-button,
-input {
-  opacity: 1 !important;
-  transform: none !important;
-}
-
-/* More specific targeting for motion elements */
-[style*="opacity"] {
-  opacity: 1 !important;
-}
-
-[style*="transform"] {
-  transform: none !important;
-}
+/* Removed aggressive overrides that were breaking Framer Motion */
