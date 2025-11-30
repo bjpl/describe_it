@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server';
-import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 import { logger } from '@/lib/logger';
 
 // Define log levels
@@ -21,46 +21,46 @@ const levels = {
 // Simple console logger for client-side
 class SimpleLogger {
   private context: string;
-  
+
   constructor(context: string = 'app') {
     this.context = context;
   }
-  
+
   private formatMessage(level: string, message: string, meta?: any) {
     const timestamp = new Date().toISOString();
     const metaStr = meta ? ` ${safeStringify(meta)}` : '';
     return `[${timestamp}] [${level.toUpperCase()}] [${this.context}] ${message}${metaStr}`;
   }
-  
+
   error(message: string, error?: Error | any, meta?: Record<string, any>) {
     logger.error(this.formatMessage('error', message, { ...meta, error: error?.message || error }));
   }
-  
+
   warn(message: string, meta?: Record<string, any>) {
     logger.warn(this.formatMessage('warn', message, meta));
   }
-  
+
   info(message: string, meta?: Record<string, any>) {
     logger.info(this.formatMessage('info', message, meta));
   }
-  
+
   debug(message: string, meta?: Record<string, any>) {
     if (process.env.NODE_ENV !== 'production') {
       logger.debug(this.formatMessage('debug', message, meta));
     }
   }
-  
+
   http(message: string, meta?: Record<string, any>) {
     if (process.env.NODE_ENV !== 'production') {
       logger.info(this.formatMessage('http', message, meta));
     }
   }
-  
+
   setContext(context: string) {
     this.context = context;
     return this;
   }
-  
+
   setRequest(meta: Record<string, any>) {
     return this; // For API compatibility
   }
@@ -72,7 +72,7 @@ let winstonLogger: any = null;
 if (typeof window === 'undefined') {
   try {
     const winston = require('winston');
-    
+
     // Define custom colors
     const colors = {
       error: 'red',
@@ -83,29 +83,28 @@ if (typeof window === 'undefined') {
       debug: 'white',
       silly: 'grey',
     };
-    
+
     winston.addColors(colors);
-    
+
     // Define format for development
     const devFormat = winston.format.combine(
       winston.format.colorize({ all: true }),
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-      winston.format.printf(
-        (info: any) => `${info.timestamp} ${info.level}: ${info.message}`
-      )
+      winston.format.printf((info: any) => `${info.timestamp} ${info.level}: ${info.message}`)
     );
-    
+
     // Define format for production
     const prodFormat = winston.format.combine(
       winston.format.timestamp(),
       winston.format.errors({ stack: true }),
       winston.format.json()
     );
-    
+
     // Create transports
     const transports: any[] = [];
-    
+
     // Console transport for all environments
+    // NOTE: File transports removed - Vercel serverless has read-only filesystem
     if (process.env.NODE_ENV !== 'test') {
       transports.push(
         new winston.transports.Console({
@@ -113,29 +112,7 @@ if (typeof window === 'undefined') {
         })
       );
     }
-    
-    // File transport for production (server-side only)
-    if (process.env.NODE_ENV === 'production') {
-      transports.push(
-        new winston.transports.File({
-          filename: 'logs/error.log',
-          level: 'error',
-          format: prodFormat,
-          maxsize: 5242880, // 5MB
-          maxFiles: 5,
-        })
-      );
-      
-      transports.push(
-        new winston.transports.File({
-          filename: 'logs/combined.log',
-          format: prodFormat,
-          maxsize: 5242880, // 5MB
-          maxFiles: 5,
-        })
-      );
-    }
-    
+
     // Create the Winston logger
     winstonLogger = winston.createLogger({
       level: process.env.LOG_LEVEL || (process.env.NODE_ENV === 'production' ? 'info' : 'debug'),
@@ -176,13 +153,15 @@ export class Logger {
       context: this.context,
       ...this.requestMeta,
       ...meta,
-      error: error ? {
-        message: error.message || error,
-        stack: error.stack,
-        name: error.name,
-      } : undefined,
+      error: error
+        ? {
+            message: error.message || error,
+            stack: error.stack,
+            name: error.name,
+          }
+        : undefined,
     };
-    
+
     if (winstonLogger) {
       winstonLogger.error(message, logData);
     } else {
@@ -199,7 +178,7 @@ export class Logger {
       ...this.requestMeta,
       ...meta,
     };
-    
+
     if (winstonLogger) {
       winstonLogger.warn(message, logData);
     } else {
@@ -216,7 +195,7 @@ export class Logger {
       ...this.requestMeta,
       ...meta,
     };
-    
+
     if (winstonLogger) {
       winstonLogger.info(message, logData);
     } else {
@@ -233,7 +212,7 @@ export class Logger {
       ...this.requestMeta,
       ...meta,
     };
-    
+
     if (winstonLogger) {
       winstonLogger.debug(message, logData);
     } else {
@@ -250,7 +229,7 @@ export class Logger {
       ...this.requestMeta,
       ...meta,
     };
-    
+
     if (winstonLogger) {
       winstonLogger.http(message, logData);
     } else {
@@ -315,7 +294,7 @@ export function createLogger(context: string): Logger {
  */
 export function createContextLogger(context: string, request?: NextRequest): Logger {
   const logger = new Logger(context);
-  
+
   if (request) {
     logger.setRequest({
       method: request.method,
@@ -324,7 +303,7 @@ export function createContextLogger(context: string, request?: NextRequest): Log
       ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip'),
     });
   }
-  
+
   return logger;
 }
 
