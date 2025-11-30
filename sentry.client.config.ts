@@ -1,113 +1,130 @@
 import * as Sentry from '@sentry/nextjs';
 
-Sentry.init({
-  dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
+// Guard against multiple initializations (causes "Multiple Sentry Session Replay instances" error)
+const SENTRY_INITIALIZED_KEY = '__SENTRY_INITIALIZED__';
 
-  // Performance Monitoring
-  tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
+if (typeof window !== 'undefined' && !(window as any)[SENTRY_INITIALIZED_KEY]) {
+  (window as any)[SENTRY_INITIALIZED_KEY] = true;
 
-  // Trace propagation targets
-  tracePropagationTargets: ['localhost', /^\//],
+  try {
+    Sentry.init({
+      dsn: process.env.NEXT_PUBLIC_SENTRY_DSN,
 
-  // Error Sampling
-  sampleRate: 1.0,
+      // Performance Monitoring
+      tracesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
-  // Session Replay
-  replaysSessionSampleRate: 0.1,
-  replaysOnErrorSampleRate: 1.0,
+      // Trace propagation targets
+      tracePropagationTargets: ['localhost', /^\//],
 
-  integrations: [
-    Sentry.replayIntegration({
-      maskAllText: true,
-      blockAllMedia: true,
-    }),
-    Sentry.browserTracingIntegration({
-      // Track component interactions
-      enableLongTask: true,
-      enableInp: true,
-    }),
-    // Web Vitals tracking
-    Sentry.browserProfilingIntegration(),
-  ],
+      // Error Sampling
+      sampleRate: 1.0,
 
-  // Environment
-  environment: process.env.NODE_ENV || 'development',
+      // DISABLED: Session Replay causes "Multiple instances" error that breaks React hydration
+      // replaysSessionSampleRate: 0.1,
+      // replaysOnErrorSampleRate: 1.0,
 
-  // Release tracking
-  release: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
+      integrations: [
+        // DISABLED: Replay integration causes hydration failure
+        // Sentry.replayIntegration({
+        //   maskAllText: true,
+        //   blockAllMedia: true,
+        // }),
+        Sentry.browserTracingIntegration({
+          // Track component interactions
+          enableLongTask: true,
+          enableInp: true,
+        }),
+        // Web Vitals tracking
+        Sentry.browserProfilingIntegration(),
+      ],
 
-  // Performance monitoring with custom spans
-  beforeSend(event, hint) {
-    // Filter out specific errors
-    if (event.exception) {
-      const error = hint.originalException;
+      // Environment
+      environment: process.env.NODE_ENV || 'development',
 
-      // Ignore network errors in development
-      if (process.env.NODE_ENV === 'development' && error instanceof TypeError) {
-        if (error.message.includes('fetch') || error.message.includes('network')) {
+      // Release tracking
+      release: process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
+
+      // Performance monitoring with custom spans
+      beforeSend(event, hint) {
+        // Filter out specific errors
+        if (event.exception) {
+          const error = hint.originalException;
+
+          // Ignore network errors in development
+          if (process.env.NODE_ENV === 'development' && error instanceof TypeError) {
+            if (error.message.includes('fetch') || error.message.includes('network')) {
+              return null;
+            }
+          }
+
+          // Ignore third-party script errors
+          if (
+            event.exception.values?.[0]?.stacktrace?.frames?.[0]?.filename?.includes('extensions')
+          ) {
+            return null;
+          }
+
+          // Enrich error context
+          event.contexts = {
+            ...event.contexts,
+            performance: {
+              navigation: performance.getEntriesByType('navigation')[0],
+              memory: (performance as any).memory,
+            },
+          };
+        }
+
+        return event;
+      },
+
+      // Breadcrumb filtering
+      beforeBreadcrumb(breadcrumb) {
+        // Filter out console logs in production
+        if (breadcrumb.category === 'console' && process.env.NODE_ENV === 'production') {
           return null;
         }
-      }
 
-      // Ignore third-party script errors
-      if (event.exception.values?.[0]?.stacktrace?.frames?.[0]?.filename?.includes('extensions')) {
-        return null;
-      }
+        // Add performance breadcrumbs
+        if (breadcrumb.category === 'navigation') {
+          breadcrumb.data = {
+            ...breadcrumb.data,
+            timing: performance.now(),
+          };
+        }
 
-      // Enrich error context
-      event.contexts = {
-        ...event.contexts,
-        performance: {
-          navigation: performance.getEntriesByType('navigation')[0],
-          memory: (performance as any).memory,
+        return breadcrumb;
+      },
+
+      // Additional context
+      initialScope: {
+        tags: {
+          'app.type': 'frontend',
+          'app.framework': 'nextjs',
+          'app.version': process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
         },
-      };
-    }
+        user: {
+          // Anonymous user tracking
+          id:
+            typeof window !== 'undefined'
+              ? window.localStorage.getItem('user-id') || undefined
+              : undefined,
+        },
+      },
 
-    return event;
-  },
+      // Performance thresholds
+      profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
 
-  // Breadcrumb filtering
-  beforeBreadcrumb(breadcrumb, hint) {
-    // Filter out console logs in production
-    if (breadcrumb.category === 'console' && process.env.NODE_ENV === 'production') {
-      return null;
-    }
-
-    // Add performance breadcrumbs
-    if (breadcrumb.category === 'navigation') {
-      breadcrumb.data = {
-        ...breadcrumb.data,
-        timing: performance.now(),
-      };
-    }
-
-    return breadcrumb;
-  },
-
-
-  // Additional context
-  initialScope: {
-    tags: {
-      'app.type': 'frontend',
-      'app.framework': 'nextjs',
-      'app.version': process.env.NEXT_PUBLIC_APP_VERSION || '0.1.0',
-    },
-    user: {
-      // Anonymous user tracking
-      id: typeof window !== 'undefined' ? (window.localStorage.getItem('user-id') || undefined) : undefined,
-    },
-  },
-
-  // Performance thresholds
-  profilesSampleRate: process.env.NODE_ENV === 'production' ? 0.1 : 1.0,
-
-  // Custom fingerprinting for better error grouping
-  beforeSendTransaction(transaction) {
-    // Filter out very fast transactions
-    if (transaction.spans && transaction.spans.length === 0) {
-      return null;
-    }
-    return transaction;
-  },
-});
+      // Custom fingerprinting for better error grouping
+      beforeSendTransaction(transaction) {
+        // Filter out very fast transactions
+        if (transaction.spans && transaction.spans.length === 0) {
+          return null;
+        }
+        return transaction;
+      },
+    });
+  } catch (error) {
+    // Don't let Sentry errors break the app
+    console.error('[Sentry] Failed to initialize:', error);
+  }
+}
