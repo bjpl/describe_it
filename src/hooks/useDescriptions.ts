@@ -1,13 +1,18 @@
-import { useState, useCallback, useRef, useMemo } from "react";
-import { Description, DescriptionRequest } from "@/types";
-import { logger } from "@/lib/logger";
-import { useStableCallback, useCleanupManager } from "@/lib/utils/storeUtils";
-import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+import { useState, useCallback, useRef, useMemo } from 'react';
+import { Description, DescriptionRequest } from '@/types';
+import { logger } from '@/lib/logger';
+import { useStableCallback, useCleanupManager } from '@/lib/utils/storeUtils';
+import {
+  safeParse,
+  safeStringify,
+  safeParseLocalStorage,
+  safeSetLocalStorage,
+} from '@/lib/utils/json-safe';
 
 // Enhanced error types for better error handling
 interface DescriptionError {
   message: string;
-  type: "network" | "validation" | "server" | "timeout" | "unknown";
+  type: 'network' | 'validation' | 'server' | 'timeout' | 'unknown';
   statusCode?: number;
   retryable: boolean;
 }
@@ -30,37 +35,31 @@ export function useDescriptions(imageId: string) {
   const retryCountRef = useRef(0);
 
   // Helper function to create detailed error information
-  const createDescriptionError = (
-    error: unknown,
-    response?: Response,
-  ): DescriptionError => {
+  const createDescriptionError = (error: unknown, response?: Response): DescriptionError => {
     if (error instanceof Error) {
       // Network errors
-      if (
-        error.name === "TypeError" &&
-        error.message.includes("Failed to fetch")
-      ) {
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
         return {
           message:
-            "Network connection failed. Please check your internet connection and try again.",
-          type: "network",
+            'Network connection failed. Please check your internet connection and try again.',
+          type: 'network',
           retryable: true,
         };
       }
 
       // Timeout errors
-      if (error.name === "AbortError") {
+      if (error.name === 'AbortError') {
         return {
           message:
-            "Request timed out. Description generation is taking too long. Please try again.",
-          type: "timeout",
+            'Request timed out. Description generation is taking too long. Please try again.',
+          type: 'timeout',
           retryable: true,
         };
       }
 
       return {
         message: error.message,
-        type: "unknown",
+        type: 'unknown',
         retryable: false,
       };
     }
@@ -68,44 +67,41 @@ export function useDescriptions(imageId: string) {
     // HTTP errors
     if (response && !response.ok) {
       const statusCode = response.status;
-      let message = "Failed to generate description";
-      let type: DescriptionError["type"] = "server";
+      let message = 'Failed to generate description';
+      let type: DescriptionError['type'] = 'server';
       let retryable = false;
 
       switch (statusCode) {
         case 400:
-          message =
-            "Invalid request. Please check the image URL and style selection.";
-          type = "validation";
+          message = 'Invalid request. Please check the image URL and style selection.';
+          type = 'validation';
           break;
         case 401:
-          message =
-            "Authentication failed. Please refresh the page and try again.";
-          type = "server";
+          message = 'Authentication failed. Please refresh the page and try again.';
+          type = 'server';
           retryable = true;
           break;
         case 403:
-          message = "Access forbidden. API service may be unavailable.";
-          type = "server";
+          message = 'Access forbidden. API service may be unavailable.';
+          type = 'server';
           break;
         case 429:
           message =
-            "Too many requests. Please wait a moment before generating another description.";
-          type = "server";
+            'Too many requests. Please wait a moment before generating another description.';
+          type = 'server';
           retryable = true;
           break;
         case 500:
         case 502:
         case 503:
         case 504:
-          message =
-            "AI service is temporarily unavailable. Please try again in a few moments.";
-          type = "server";
+          message = 'AI service is temporarily unavailable. Please try again in a few moments.';
+          type = 'server';
           retryable = true;
           break;
         default:
           message = `Service error (${statusCode}). Please try again later.`;
-          type = "server";
+          type = 'server';
           retryable = statusCode >= 500;
       }
 
@@ -113,16 +109,14 @@ export function useDescriptions(imageId: string) {
     }
 
     return {
-      message: "An unexpected error occurred while generating the description",
-      type: "unknown",
+      message: 'An unexpected error occurred while generating the description',
+      type: 'unknown',
       retryable: false,
     };
   };
 
   // Helper function to make API request with timeout and error handling
-  const makeDescriptionRequest = async (
-    request: DescriptionRequest,
-  ): Promise<Description[]> => {
+  const makeDescriptionRequest = async (request: DescriptionRequest): Promise<Description[]> => {
     // Cancel any existing request
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -140,26 +134,27 @@ export function useDescriptions(imageId: string) {
 
     try {
       // Get the user's API key from settings/localStorage
+      // FIXED: Use 'anthropic' service since we migrated from OpenAI to Claude
       const { apiKeyProvider } = await import('@/lib/api/keyProvider');
-      const openAIConfig = apiKeyProvider.getServiceConfig('openai');
-      
+      const anthropicConfig = apiKeyProvider.getServiceConfig('anthropic');
+
       logger.info('[useDescriptions] Sending API key to server:', {
-        hasKey: !!openAIConfig.apiKey,
-        keyLength: openAIConfig.apiKey?.length,
-        keyPrefix: openAIConfig.apiKey?.substring(0, 10) + '...',
-        isValid: openAIConfig.isValid
+        hasKey: !!anthropicConfig.apiKey,
+        keyLength: anthropicConfig.apiKey?.length,
+        keyPrefix: anthropicConfig.apiKey?.substring(0, 10) + '...',
+        isValid: anthropicConfig.isValid,
       });
-      
-      const response = await fetch("/api/descriptions/generate", {
-        method: "POST",
+
+      const response = await fetch('/api/descriptions/generate', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           ...request,
           // Pass the API key in the request body to bypass Vercel header restrictions
-          userApiKey: openAIConfig.apiKey || ''
+          userApiKey: anthropicConfig.apiKey || '',
         }),
         signal: abortControllerRef.current.signal,
       });
@@ -173,17 +168,19 @@ export function useDescriptions(imageId: string) {
         logger.info('[useDescriptions] Raw response:', {
           status: response.status,
           textLength: text.length,
-          textPreview: text.substring(0, 200)
+          textPreview: text.substring(0, 200),
         });
         data = safeParse(text);
         if (!data) {
-          logger.error('[useDescriptions] Failed to parse JSON from response:', { textPreview: text.substring(0, 500) });
-          throw new Error("Invalid JSON response from server");
+          logger.error('[useDescriptions] Failed to parse JSON from response:', {
+            textPreview: text.substring(0, 500),
+          });
+          throw new Error('Invalid JSON response from server');
         }
       } catch (parseError) {
         logger.error('[useDescriptions] Parse error:', parseError);
         const error = createDescriptionError(parseError, response);
-        error.message = "Failed to parse response from description service";
+        error.message = 'Failed to parse response from description service';
         throw error;
       }
 
@@ -194,8 +191,8 @@ export function useDescriptions(imageId: string) {
       }
 
       // Validate response structure - now expects an array of descriptions
-      if (!data || typeof data !== "object" || !data.success || !Array.isArray(data.data)) {
-        throw new Error("Invalid response format from description service");
+      if (!data || typeof data !== 'object' || !data.success || !Array.isArray(data.data)) {
+        throw new Error('Invalid response format from description service');
       }
 
       // Transform API response to match frontend expectations
@@ -216,9 +213,7 @@ export function useDescriptions(imageId: string) {
   };
 
   // Helper function to retry failed requests
-  const retryDescriptionRequest = async (
-    request: DescriptionRequest,
-  ): Promise<Description[]> => {
+  const retryDescriptionRequest = async (request: DescriptionRequest): Promise<Description[]> => {
     let lastError: unknown;
 
     for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
@@ -237,9 +232,7 @@ export function useDescriptions(imageId: string) {
 
         // Wait before retrying with progressive backoff
         if (attempt < MAX_RETRIES) {
-          await new Promise((resolve) =>
-            setTimeout(resolve, RETRY_DELAYS[attempt]),
-          );
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAYS[attempt]));
         }
       }
     }
@@ -248,6 +241,7 @@ export function useDescriptions(imageId: string) {
   };
 
   // Memoize helper functions to prevent recreation on every render
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- Intentionally stable reference
   const stableRetryDescriptionRequest = useMemo(() => retryDescriptionRequest, []);
 
   const generateDescription = useStableCallback(
@@ -259,13 +253,13 @@ export function useDescriptions(imageId: string) {
       try {
         // Validate request
         if (!request.imageUrl || !request.style) {
-          throw new Error("Image URL and style are required");
+          throw new Error('Image URL and style are required');
         }
 
         const newDescriptions = await stableRetryDescriptionRequest(request);
-        
+
         // Clear existing descriptions for this image/style and add new ones
-        setDescriptions((prev) => {
+        setDescriptions(prev => {
           const filtered = prev.filter(d => d.style !== request.style);
           return [...filtered, ...newDescriptions];
         });
@@ -274,14 +268,14 @@ export function useDescriptions(imageId: string) {
         return newDescriptions[0] as Description;
       } catch (err) {
         logger.error(
-          "Description generation failed",
+          'Description generation failed',
           err instanceof Error ? err : new Error(String(err)),
           {
-            component: "useDescriptions",
+            component: 'useDescriptions',
             imageUrl: request.imageUrl,
             style: request.style,
-            function: "generateDescription",
-          },
+            function: 'generateDescription',
+          }
         );
 
         const descriptionError = createDescriptionError(err);
@@ -296,18 +290,16 @@ export function useDescriptions(imageId: string) {
 
   const regenerateDescription = useStableCallback(
     async (descriptionId: string): Promise<Description> => {
-      const existingDescription = descriptions.find(
-        (d) => d.id === descriptionId,
-      );
+      const existingDescription = descriptions.find(d => d.id === descriptionId);
       if (!existingDescription) {
-        const error = new Error("Description not found. Unable to regenerate.");
+        const error = new Error('Description not found. Unable to regenerate.');
         setError(error.message);
         throw error;
       }
 
       try {
         // Remove the old descriptions for this style first
-        setDescriptions((prev) => prev.filter((d) => d.style !== existingDescription.style));
+        setDescriptions(prev => prev.filter(d => d.style !== existingDescription.style));
 
         // Generate new descriptions
         const newDescriptions = await generateDescription({
@@ -319,8 +311,8 @@ export function useDescriptions(imageId: string) {
         return newDescriptions;
       } catch (err) {
         // If regeneration fails, restore the old description
-        setDescriptions((prev) => {
-          const exists = prev.find((d) => d.id === descriptionId);
+        setDescriptions(prev => {
+          const exists = prev.find(d => d.id === descriptionId);
           if (!exists) {
             return [...prev, existingDescription];
           }
@@ -329,11 +321,11 @@ export function useDescriptions(imageId: string) {
         throw err;
       }
     },
-    [descriptions, generateDescription],
+    [descriptions, generateDescription]
   );
 
   const deleteDescription = useStableCallback((descriptionId: string) => {
-    setDescriptions((prev) => prev.filter((d) => d.id !== descriptionId));
+    setDescriptions(prev => prev.filter(d => d.id !== descriptionId));
   }, []);
 
   const clearDescriptions = useStableCallback(() => {
