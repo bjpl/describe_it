@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, memo, Suspense } from 'react';
 import { logger } from '@/lib/logger';
-import { MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
+// Removed MotionDiv/MotionButton - they cause SSR hydration failures with opacity:0
 import {
   Search,
   Settings,
@@ -209,13 +209,9 @@ const HomePageBase: React.FC = () => {
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='flex justify-between items-center py-4'>
               <div className='flex items-center space-x-3'>
-                <MotionDiv
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className='w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center'
-                >
+                <div className='w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center'>
                   <BookOpen className='w-6 h-6 text-white' />
-                </MotionDiv>
+                </div>
                 <div>
                   <h1 className='text-2xl font-bold text-gray-900 dark:text-white'>Describe It</h1>
                   <p className='text-sm text-gray-600 dark:text-gray-400'>
@@ -278,23 +274,21 @@ const HomePageBase: React.FC = () => {
                 const isActive = state.activeTab === tab.id;
 
                 return (
-                  <MotionButton
+                  <button
                     key={tab.id}
                     onClick={() => handleTabChange(tab.id as HomePageState['activeTab'])}
                     className={`
-                      flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors
+                      flex items-center space-x-2 py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors hover:scale-[1.02] active:scale-[0.98]
                       ${
                         isActive
                           ? 'border-blue-500 text-blue-600 dark:text-blue-400'
                           : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200'
                       }
                     `}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
                   >
                     <Icon className='w-4 h-4' />
                     <span>{tab.label}</span>
-                  </MotionButton>
+                  </button>
                 );
               })}
             </div>
@@ -314,13 +308,7 @@ const HomePageBase: React.FC = () => {
             }
             minHeight='400px'
           >
-            <MotionDiv
-              key={state.activeTab}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -20 }}
-              transition={{ duration: 0.3 }}
-            >
+            <div key={state.activeTab}>
               {state.activeTab === 'search' && (
                 <LazyImageSearch onImageSelect={handleImageSelect} className='space-y-6' />
               )}
@@ -380,11 +368,7 @@ const HomePageBase: React.FC = () => {
 
               {/* Empty state for tabs that require an image */}
               {state.activeTab !== 'search' && !state.selectedImage && (
-                <MotionDiv
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className='text-center py-20 space-y-4'
-                >
+                <div className='text-center py-20 space-y-4'>
                   <div className='text-6xl mb-4'>📸</div>
                   <h3 className='text-xl font-medium text-gray-700 dark:text-gray-300'>
                     No image selected
@@ -393,17 +377,15 @@ const HomePageBase: React.FC = () => {
                     Search and select an image from the Search tab to get started with{' '}
                     {tabConfig.find(t => t.id === state.activeTab)?.label.toLowerCase()}.
                   </p>
-                  <MotionButton
+                  <button
                     onClick={() => handleTabChange('search')}
-                    className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors'
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    className='px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 hover:scale-105 active:scale-95 transition-all'
                   >
                     Go to Search
-                  </MotionButton>
-                </MotionDiv>
+                  </button>
+                </div>
               )}
-            </MotionDiv>
+            </div>
           </LazyWrapper>
         </main>
 
