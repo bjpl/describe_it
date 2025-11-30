@@ -133,16 +133,16 @@ export function useDescriptions(imageId: string) {
     }, REQUEST_TIMEOUT);
 
     try {
-      // Get the user's API key from settings/localStorage
-      // FIXED: Use 'anthropic' service since we migrated from OpenAI to Claude
-      const { apiKeyProvider } = await import('@/lib/api/keyProvider');
-      const anthropicConfig = apiKeyProvider.getServiceConfig('anthropic');
+      // Get the user's API key from the unified keyManager
+      // FIXED: Use keyManager directly since apiKeyProvider reads from wrong storage location
+      const { keyManager } = await import('@/lib/keys/keyManager');
+      const anthropicKey = keyManager.get('anthropic');
 
       logger.info('[useDescriptions] Sending API key to server:', {
-        hasKey: !!anthropicConfig.apiKey,
-        keyLength: anthropicConfig.apiKey?.length,
-        keyPrefix: anthropicConfig.apiKey?.substring(0, 10) + '...',
-        isValid: anthropicConfig.isValid,
+        hasKey: !!anthropicKey,
+        keyLength: anthropicKey?.length,
+        keyPrefix: anthropicKey ? anthropicKey.substring(0, 10) + '...' : 'none',
+        isAnthropicFormat: anthropicKey?.startsWith('sk-ant-'),
       });
 
       const response = await fetch('/api/descriptions/generate', {
@@ -154,7 +154,7 @@ export function useDescriptions(imageId: string) {
         body: JSON.stringify({
           ...request,
           // Pass the API key in the request body to bypass Vercel header restrictions
-          userApiKey: anthropicConfig.apiKey || '',
+          userApiKey: anthropicKey || '',
         }),
         signal: abortControllerRef.current.signal,
       });
