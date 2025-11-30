@@ -480,11 +480,17 @@ IMPORTANT: Base your description ONLY on what you can SEE in this specific image
     performanceTracker.finish();
 
     // CRITICAL: Use console.error to ensure it appears in Vercel logs
+    // eslint-disable-next-line no-console, custom-rules/require-logger
     console.error('[CLAUDE_ERROR] Vision description failed:', error?.message || String(error));
+    // eslint-disable-next-line no-console, custom-rules/require-logger
     console.error('[CLAUDE_ERROR] Error type:', error?.constructor?.name);
+    // eslint-disable-next-line no-console, custom-rules/require-logger
     console.error('[CLAUDE_ERROR] Status code:', error?.status);
+    // eslint-disable-next-line no-console, custom-rules/require-logger
     console.error('[CLAUDE_ERROR] Error details:', error?.error);
+    // eslint-disable-next-line no-console, custom-rules/require-logger
     console.error('[CLAUDE_ERROR] Duration:', `${duration.toFixed(2)}ms`);
+    // eslint-disable-next-line no-console, custom-rules/require-logger
     console.error('[CLAUDE_ERROR] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error || {})));
 
     // Track error in Sentry

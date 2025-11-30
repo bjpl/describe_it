@@ -151,11 +151,14 @@ async function generateParallelDescriptions(
       };
     } catch (error) {
       // Use console.error to ensure it appears in Vercel logs
+      // eslint-disable-next-line no-console, custom-rules/require-logger
       console.error(
         `[VISION_ERROR] ${languageLabel} generation failed:`,
         error instanceof Error ? error.message : String(error)
       );
+      // eslint-disable-next-line no-console, custom-rules/require-logger
       console.error('[VISION_ERROR] Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      // eslint-disable-next-line no-console, custom-rules/require-logger
       console.error('[VISION_ERROR] Context:', {
         hasUserApiKey: !!userApiKey,
         userApiKeyPrefix: userApiKey?.substring(0, 15),
