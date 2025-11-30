@@ -284,12 +284,15 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     userApiKey = params.userApiKey || undefined;
 
     if (userApiKey) {
-      securityLogger.info('User API key received from request body', {
+      securityLogger.info('[route.ts] User API key received from request body', {
         hasKey: !!userApiKey,
+        keyLength: userApiKey.length,
+        keyPrefix: userApiKey.substring(0, 15) + '...',
+        startsWithSkAnt: userApiKey.startsWith('sk-ant-'),
         requestId,
       });
     } else {
-      requestLogger.debug('No user API key provided, using server default');
+      requestLogger.debug('[route.ts] No user API key provided, using server default');
     }
 
     // Additional validation for style parameter

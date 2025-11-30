@@ -48,28 +48,49 @@ export function getServerClaudeClient(userApiKey?: string): Anthropic | null {
     throw new Error('[Claude Server] This function can only be called server-side');
   }
 
+  // Debug logging for API key resolution
+  apiLogger.info('[getServerClaudeClient] Starting API key resolution', {
+    hasUserApiKey: !!userApiKey,
+    userKeyLength: userApiKey?.length,
+    userKeyPrefix: userApiKey ? userApiKey.substring(0, 15) + '...' : 'none',
+    userKeyStartsWithSkAnt: userApiKey?.startsWith('sk-ant-'),
+  });
+
   let apiKey: string | undefined;
 
   // Priority 1: User-provided API key (for user-specific calls)
   if (userApiKey && userApiKey.startsWith('sk-ant-')) {
     apiKey = userApiKey;
-    securityLogger.info('Using user-provided Anthropic API key');
+    securityLogger.info('[getServerClaudeClient] Using user-provided Anthropic API key', {
+      keyLength: apiKey.length,
+      keyPrefix: apiKey.substring(0, 15) + '...',
+    });
   }
   // Priority 2: Server environment variable (Vercel)
   else {
     apiKey = getServerKey('anthropic');
+    apiLogger.info('[getServerClaudeClient] Tried getServerKey result', {
+      hasEnvKey: !!apiKey,
+      envKeyLength: apiKey?.length,
+      envKeyPrefix: apiKey ? apiKey.substring(0, 15) + '...' : 'none',
+      whyNotUserKey: !userApiKey
+        ? 'no user key provided'
+        : !userApiKey.startsWith('sk-ant-')
+          ? 'user key has wrong prefix'
+          : 'unknown',
+    });
     if (apiKey) {
-      securityLogger.info('Using server environment Anthropic API key');
+      securityLogger.info('[getServerClaudeClient] Using server environment Anthropic API key');
     }
   }
 
   if (!apiKey) {
-    apiLogger.warn('No valid Anthropic API key available', {
+    apiLogger.warn('[getServerClaudeClient] No valid Anthropic API key available', {
       hasUserKey: !!userApiKey,
-      userKeyPrefix: userApiKey ? userApiKey.substring(0, 10) : 'none',
+      userKeyPrefix: userApiKey ? userApiKey.substring(0, 15) : 'none',
       hasEnvKey: !!process.env.ANTHROPIC_API_KEY,
       envKeyPrefix: process.env.ANTHROPIC_API_KEY
-        ? process.env.ANTHROPIC_API_KEY.substring(0, 10)
+        ? process.env.ANTHROPIC_API_KEY.substring(0, 15)
         : 'none',
     });
     return null;
@@ -77,14 +98,20 @@ export function getServerClaudeClient(userApiKey?: string): Anthropic | null {
 
   // Validate key format
   if (!apiKey.startsWith('sk-ant-')) {
-    apiLogger.error('Invalid Anthropic API key format', {
-      keyPrefix: apiKey.substring(0, 10),
+    apiLogger.error('[getServerClaudeClient] Invalid Anthropic API key format', {
+      keyPrefix: apiKey.substring(0, 15),
       keyLength: apiKey.length,
       expectedPrefix: 'sk-ant-',
       source: userApiKey?.startsWith('sk-ant-') ? 'user' : 'environment',
     });
     return null;
   }
+
+  apiLogger.info('[getServerClaudeClient] API key validated successfully', {
+    keyLength: apiKey.length,
+    keyPrefix: apiKey.substring(0, 15) + '...',
+    source: userApiKey?.startsWith('sk-ant-') ? 'user' : 'environment',
+  });
 
   try {
     const currentConfigHash = getConfigHash(apiKey);
