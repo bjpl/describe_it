@@ -27,8 +27,8 @@ let lastConfigHash: string | null = null;
 // Maximum image size limit (5MB) to prevent memory issues
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
-// Claude Sonnet 4.5 model identifier (with vision capabilities)
-const CLAUDE_MODEL = 'claude-sonnet-4-5-20250929';
+// Claude Sonnet 4.5 model identifier (alias auto-points to latest snapshot)
+const CLAUDE_MODEL = 'claude-sonnet-4-5';
 const CLAUDE_MAX_TOKENS = 8192; // Claude's max output tokens
 
 // Helper to calculate configuration hash for caching
