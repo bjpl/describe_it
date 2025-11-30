@@ -64,7 +64,25 @@ export function getServerClaudeClient(userApiKey?: string): Anthropic | null {
   }
 
   if (!apiKey) {
-    apiLogger.warn('No valid Anthropic API key available');
+    apiLogger.warn('No valid Anthropic API key available', {
+      hasUserKey: !!userApiKey,
+      userKeyPrefix: userApiKey ? userApiKey.substring(0, 10) : 'none',
+      hasEnvKey: !!process.env.ANTHROPIC_API_KEY,
+      envKeyPrefix: process.env.ANTHROPIC_API_KEY
+        ? process.env.ANTHROPIC_API_KEY.substring(0, 10)
+        : 'none',
+    });
+    return null;
+  }
+
+  // Validate key format
+  if (!apiKey.startsWith('sk-ant-')) {
+    apiLogger.error('Invalid Anthropic API key format', {
+      keyPrefix: apiKey.substring(0, 10),
+      keyLength: apiKey.length,
+      expectedPrefix: 'sk-ant-',
+      source: userApiKey?.startsWith('sk-ant-') ? 'user' : 'environment',
+    });
     return null;
   }
 

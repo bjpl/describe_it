@@ -488,7 +488,17 @@ export function getServerKey(service: ServiceType): string {
 
   switch (service) {
     case 'anthropic':
-      return process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY || '';
+      // IMPORTANT: Only return Anthropic keys (sk-ant-), NOT OpenAI keys
+      // The app has migrated to Claude and OpenAI keys won't work
+      const anthropicKey = process.env.ANTHROPIC_API_KEY || '';
+      if (anthropicKey && !anthropicKey.startsWith('sk-ant-')) {
+        logger.warn('[KeyManager] ANTHROPIC_API_KEY is set but has invalid format', {
+          keyPrefix: anthropicKey.substring(0, 10),
+          keyLength: anthropicKey.length,
+          expectedPrefix: 'sk-ant-',
+        });
+      }
+      return anthropicKey;
     case 'unsplash':
       return process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY || process.env.UNSPLASH_ACCESS_KEY || '';
     default:
