@@ -1,6 +1,6 @@
 import winston, { Logger, LoggerOptions, format } from 'winston';
 import path from 'path';
-import { safeParse, safeStringify } from "@/lib/utils/json-safe";
+import { safeParse, safeStringify } from '@/lib/utils/json-safe';
 
 export interface AuditEvent {
   action: string;
@@ -29,7 +29,8 @@ const DEFAULT_CONFIG: Required<AuditLoggerConfig> = {
   maxSize: '20m',
   maxFiles: '14d',
   enableConsole: process.env.NODE_ENV === 'development',
-  enableFile: true,
+  // DISABLED: File transports crash on Vercel serverless (read-only filesystem)
+  enableFile: false,
   sensitiveFields: ['password', 'token', 'key', 'secret', 'authorization'],
 };
 
@@ -50,15 +51,19 @@ class AuditLogger {
       format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
       format.errors({ stack: true }),
       format.json(),
-      format.printf((info) => {
+      format.printf(info => {
         const sanitized = this.sanitizeLog(info);
-        return safeStringify({
-          timestamp: sanitized.timestamp,
-          level: sanitized.level,
-          component,
-          message: sanitized.message,
-          ...sanitized,
-        }, '{}', 'audit-logger');
+        return safeStringify(
+          {
+            timestamp: sanitized.timestamp,
+            level: sanitized.level,
+            component,
+            message: sanitized.message,
+            ...sanitized,
+          },
+          '{}',
+          'audit-logger'
+        );
       })
     );
 
@@ -84,7 +89,7 @@ class AuditLogger {
           format: format.combine(
             format.colorize(),
             format.simple(),
-            format.printf((info) => {
+            format.printf(info => {
               const sanitized = this.sanitizeLog(info);
               return `${sanitized.timestamp} [${sanitized.level}] ${component}: ${sanitized.message}`;
             })
@@ -108,7 +113,7 @@ class AuditLogger {
     const units = { k: 1024, m: 1024 * 1024, g: 1024 * 1024 * 1024 };
     const match = size.toLowerCase().match(/^(\d+)([kmg]?)$/);
     if (!match) return 20 * 1024 * 1024; // Default 20MB
-    
+
     const value = parseInt(match[1], 10);
     const unit = match[2] as keyof typeof units;
     return value * (units[unit] || 1);
@@ -120,7 +125,7 @@ class AuditLogger {
     }
 
     const sanitized = { ...logData };
-    
+
     for (const field of this.config.sensitiveFields) {
       if (sanitized[field]) {
         sanitized[field] = '[REDACTED]';

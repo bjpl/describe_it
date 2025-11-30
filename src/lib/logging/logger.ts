@@ -1,11 +1,14 @@
+/* eslint-disable no-console, custom-rules/require-logger */
 /**
  * Centralized structured logging framework
  * Uses Winston on server, console on client
+ *
+ * NOTE: This file must NOT import from @/lib/logger to avoid circular dependencies
+ * Console usage is intentional here - this IS the logger infrastructure
  */
 
 import { NextRequest } from 'next/server';
-import { safeParse, safeStringify } from '@/lib/utils/json-safe';
-import { logger } from '@/lib/logger';
+import { safeStringify } from '@/lib/utils/json-safe';
 
 // Define log levels
 const levels = {
@@ -18,7 +21,7 @@ const levels = {
   silly: 6,
 };
 
-// Simple console logger for client-side
+// Simple console logger for client-side (uses console directly, no imports)
 class SimpleLogger {
   private context: string;
 
@@ -33,26 +36,28 @@ class SimpleLogger {
   }
 
   error(message: string, error?: Error | any, meta?: Record<string, any>) {
-    logger.error(this.formatMessage('error', message, { ...meta, error: error?.message || error }));
+    console.error(
+      this.formatMessage('error', message, { ...meta, error: error?.message || error })
+    );
   }
 
   warn(message: string, meta?: Record<string, any>) {
-    logger.warn(this.formatMessage('warn', message, meta));
+    console.warn(this.formatMessage('warn', message, meta));
   }
 
   info(message: string, meta?: Record<string, any>) {
-    logger.info(this.formatMessage('info', message, meta));
+    console.info(this.formatMessage('info', message, meta));
   }
 
   debug(message: string, meta?: Record<string, any>) {
     if (process.env.NODE_ENV !== 'production') {
-      logger.debug(this.formatMessage('debug', message, meta));
+      console.log(this.formatMessage('debug', message, meta));
     }
   }
 
   http(message: string, meta?: Record<string, any>) {
     if (process.env.NODE_ENV !== 'production') {
-      logger.info(this.formatMessage('http', message, meta));
+      console.log(this.formatMessage('http', message, meta));
     }
   }
 
@@ -120,7 +125,8 @@ if (typeof window === 'undefined') {
       transports,
     });
   } catch (error) {
-    logger.error('Failed to initialize Winston logger:', error);
+    // Use console directly to avoid circular dependency
+    console.error('Failed to initialize Winston logger:', error);
   }
 }
 
