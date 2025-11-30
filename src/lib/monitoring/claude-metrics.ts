@@ -64,72 +64,82 @@ export function calculateClaudeCost(
 
 /**
  * Track Claude API call performance in Sentry
+ * Note: In Sentry SDK v10.x, setMeasurement is not available on spans.
+ * We use breadcrumbs and scope context instead.
  */
 export function trackClaudeAPICall(metrics: ClaudeMetrics): void {
-  const scope = Sentry.getCurrentScope();
-  const span = Sentry.getActiveSpan();
+  try {
+    const scope = Sentry.getCurrentScope();
+    const span = Sentry.getActiveSpan();
 
-  if (!span) {
-    if (process.env.NODE_ENV !== 'production')
-      console.warn('[Sentry] No active span for Claude API metrics');
-    return;
-  }
-
-  const transaction = span as any; // Type assertion for compatibility
-
-  // Add custom measurements to transaction
-  transaction.setMeasurement('claude.tokens.input', metrics.inputTokens, 'none');
-  transaction.setMeasurement('claude.tokens.output', metrics.outputTokens, 'none');
-  transaction.setMeasurement('claude.tokens.total', metrics.totalTokens, 'none');
-  transaction.setMeasurement('claude.cost.estimated', metrics.estimatedCost, 'none');
-  transaction.setMeasurement('claude.response_time', metrics.responseTime, 'millisecond');
-
-  if (metrics.streaming && metrics.chunkCount) {
-    transaction.setMeasurement('claude.streaming.chunks', metrics.chunkCount, 'none');
-  }
-
-  // Set custom tags
-  transaction.setTag('claude.endpoint', metrics.endpoint);
-  transaction.setTag('claude.model', metrics.model);
-  transaction.setTag('claude.success', metrics.success);
-
-  if (metrics.errorType) {
-    transaction.setTag('claude.error_type', metrics.errorType);
-  }
-
-  // Set context data
-  transaction.setContext('claude_api', {
-    endpoint: metrics.endpoint,
-    model: metrics.model,
-    tokens: {
-      input: metrics.inputTokens,
-      output: metrics.outputTokens,
-      total: metrics.totalTokens,
-    },
-    performance: {
-      responseTime: metrics.responseTime,
-      streaming: metrics.streaming,
-      chunkCount: metrics.chunkCount,
-    },
-    cost: {
-      estimated: metrics.estimatedCost,
-      currency: 'USD',
-    },
-  });
-
-  // Create breadcrumb for tracking
-  Sentry.addBreadcrumb({
-    category: 'claude.api',
-    message: `Claude API call to ${metrics.endpoint}`,
-    level: metrics.success ? 'info' : 'error',
-    data: {
+    // Set scope context with all metrics (works in v10.x)
+    scope.setContext('claude_api_metrics', {
+      endpoint: metrics.endpoint,
       model: metrics.model,
-      tokens: metrics.totalTokens,
-      responseTime: metrics.responseTime,
-      cost: metrics.estimatedCost,
-      success: metrics.success,
-    },
-  });
+      tokens: {
+        input: metrics.inputTokens,
+        output: metrics.outputTokens,
+        total: metrics.totalTokens,
+      },
+      performance: {
+        responseTime: metrics.responseTime,
+        streaming: metrics.streaming,
+        chunkCount: metrics.chunkCount,
+      },
+      cost: {
+        estimated: metrics.estimatedCost,
+        currency: 'USD',
+      },
+    });
+
+    // Set tags on scope (works in v10.x)
+    scope.setTag('claude.endpoint', metrics.endpoint);
+    scope.setTag('claude.model', metrics.model);
+    scope.setTag('claude.success', String(metrics.success));
+
+    if (metrics.errorType) {
+      scope.setTag('claude.error_type', metrics.errorType);
+    }
+
+    // If we have an active span, add attributes (v10.x compatible)
+    if (span) {
+      try {
+        // Use setAttribute instead of setMeasurement (v10.x API)
+        if (typeof span.setAttribute === 'function') {
+          span.setAttribute('claude.tokens.input', metrics.inputTokens);
+          span.setAttribute('claude.tokens.output', metrics.outputTokens);
+          span.setAttribute('claude.tokens.total', metrics.totalTokens);
+          span.setAttribute('claude.cost.estimated', metrics.estimatedCost);
+          span.setAttribute('claude.response_time', metrics.responseTime);
+
+          if (metrics.streaming && metrics.chunkCount) {
+            span.setAttribute('claude.streaming.chunks', metrics.chunkCount);
+          }
+        }
+      } catch {
+        // Silently ignore span attribute errors
+      }
+    }
+
+    // Create breadcrumb for tracking (always works)
+    Sentry.addBreadcrumb({
+      category: 'claude.api',
+      message: `Claude API call to ${metrics.endpoint}`,
+      level: metrics.success ? 'info' : 'error',
+      data: {
+        model: metrics.model,
+        tokens: metrics.totalTokens,
+        responseTime: metrics.responseTime,
+        cost: metrics.estimatedCost,
+        success: metrics.success,
+      },
+    });
+  } catch (error) {
+    // Never let Sentry tracking crash the main API call
+    if (process.env.NODE_ENV !== 'production') {
+      console.warn('[Sentry] Failed to track Claude API metrics:', error);
+    }
+  }
 }
 
 /**
@@ -235,10 +245,8 @@ export class ClaudePerformanceTracker {
   }
 
   finish(): void {
-    const activeSpan = Sentry.getActiveSpan();
-
-    if (activeSpan) {
-      // Add all markers as breadcrumbs
+    try {
+      // Add all markers as breadcrumbs (always safe)
       this.getMarkersWithDurations().forEach(marker => {
         Sentry.addBreadcrumb({
           category: 'claude.performance',
@@ -251,10 +259,19 @@ export class ClaudePerformanceTracker {
         });
       });
 
-      // Set total duration on the active span
-      const span = activeSpan as any;
-      if (span.setMeasurement) {
-        span.setMeasurement('claude.total_duration', this.getDuration(), 'millisecond');
+      // Try to set duration on active span using v10.x compatible API
+      const activeSpan = Sentry.getActiveSpan();
+      if (activeSpan && typeof (activeSpan as any).setAttribute === 'function') {
+        try {
+          (activeSpan as any).setAttribute('claude.total_duration', this.getDuration());
+        } catch {
+          // Silently ignore - span API may vary
+        }
+      }
+    } catch (error) {
+      // Never let performance tracking crash the main API call
+      if (process.env.NODE_ENV !== 'production') {
+        console.warn('[Sentry] Performance tracker finish error:', error);
       }
     }
   }
