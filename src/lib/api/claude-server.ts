@@ -240,11 +240,106 @@ export async function generateClaudeVisionDescription(
     }
 
     // Build the user message with image and prompt
+    // Style-specific instructions for rich paragraph descriptions based on VISUAL ANALYSIS
+    const styleInstructions: Record<string, { es: string; en: string }> = {
+      narrativo: {
+        es: `MIRA CUIDADOSAMENTE ESTA IMAGEN y escribe una descripción narrativa detallada.
+
+Analiza visualmente: ¿Qué personas, objetos, lugares o acciones ves? ¿Qué colores dominan? ¿Cómo es la iluminación? ¿Qué emociones transmite la escena?
+
+Escribe como si fuera el comienzo de una historia cautivadora. Describe específicamente lo que VES: los detalles visuales concretos, la atmósfera que crea la imagen, las texturas, los gestos, las expresiones. Usa verbos de acción y adjetivos sensoriales para crear una narrativa envolvente que transporte al lector a esta escena específica.`,
+        en: `LOOK CAREFULLY AT THIS IMAGE and write a detailed narrative description.
+
+Visually analyze: What people, objects, places, or actions do you see? What colors dominate? How is the lighting? What emotions does the scene convey?
+
+Write as if it were the beginning of a captivating story. Describe specifically what you SEE: the concrete visual details, the atmosphere the image creates, the textures, gestures, expressions. Use action verbs and sensory adjectives to create an immersive narrative that transports the reader to this specific scene.`,
+      },
+      poetico: {
+        es: `CONTEMPLA ESTA IMAGEN como un poeta y crea una descripción lírica profunda.
+
+Observa con atención: ¿Qué belleza encuentras en los detalles? ¿Qué simbolismo sugieren los elementos visuales? ¿Qué emociones te evoca cada color, cada forma, cada luz y sombra?
+
+Transforma lo que VES en poesía: usa metáforas elaboradas para describir los colores específicos, símiles elegantes para las formas que observas, personificación para los objetos. Captura la esencia emocional de ESTA imagen particular, sus tonalidades únicas, su composición, su alma visual.`,
+        en: `CONTEMPLATE THIS IMAGE as a poet and create a deep lyrical description.
+
+Observe carefully: What beauty do you find in the details? What symbolism do the visual elements suggest? What emotions does each color, each shape, each light and shadow evoke?
+
+Transform what you SEE into poetry: use elaborate metaphors to describe the specific colors, elegant similes for the shapes you observe, personification for objects. Capture the emotional essence of THIS particular image, its unique tones, its composition, its visual soul.`,
+      },
+      academico: {
+        es: `EXAMINA ESTA IMAGEN de manera analítica y proporciona un análisis académico completo.
+
+Estudia sistemáticamente: ¿Cuál es la composición (regla de tercios, simetría, líneas guía)? ¿Qué técnicas de iluminación se utilizan? ¿Qué elementos visuales son el foco principal? ¿Qué contexto cultural o histórico sugiere?
+
+Describe objetivamente cada elemento que OBSERVAS: la paleta de colores específica, la perspectiva utilizada, el balance visual, los puntos focales, las relaciones entre elementos. Analiza el significado potencial y el mensaje que comunica esta imagen particular.`,
+        en: `EXAMINE THIS IMAGE analytically and provide a complete academic analysis.
+
+Study systematically: What is the composition (rule of thirds, symmetry, leading lines)? What lighting techniques are used? What visual elements are the main focus? What cultural or historical context does it suggest?
+
+Objectively describe each element you OBSERVE: the specific color palette, the perspective used, the visual balance, the focal points, the relationships between elements. Analyze the potential meaning and message this particular image communicates.`,
+      },
+      conversacional: {
+        es: `¡MIRA ESTA IMAGEN! Descríbela como si se la contaras a un amigo cercano.
+
+Fíjate bien: ¿Qué es lo primero que te llama la atención? ¿Qué detalles curiosos o interesantes notas? ¿Qué te hace sentir o pensar?
+
+Cuéntame de forma natural y entusiasta lo que VES: "¡Oye, mira esto...!" Usa expresiones coloquiales, comparte tus impresiones personales sobre los colores, las personas, los objetos específicos. Sé genuino y descriptivo, como si estuvieras compartiendo algo que te ha impresionado.`,
+        en: `LOOK AT THIS IMAGE! Describe it as if you were telling a close friend.
+
+Notice carefully: What first catches your attention? What curious or interesting details do you notice? What does it make you feel or think?
+
+Tell me naturally and enthusiastically what you SEE: "Hey, look at this...!" Use casual expressions, share your personal impressions about the colors, the people, the specific objects. Be genuine and descriptive, as if you were sharing something that impressed you.`,
+      },
+      infantil: {
+        es: `¡MIRA ESTA IMAGEN MÁGICA! Descríbela como si le contaras un cuento a un niño pequeño.
+
+Observa con ojos de niño: ¿Qué colores brillantes ves? ¿Qué formas divertidas hay? ¿Quién o qué aparece en la imagen? ¿Qué podría estar pasando?
+
+Cuenta lo que VES de forma mágica y emocionante: "¡Mira! ¿Ves ese...?" Usa palabras simples pero expresivas. Señala los colores bonitos, las formas curiosas, los personajes o animales. Hazlo lleno de asombro y diversión, como si cada detalle fuera un descubrimiento especial.`,
+        en: `LOOK AT THIS MAGICAL IMAGE! Describe it as if you were telling a story to a young child.
+
+Observe with a child's eyes: What bright colors do you see? What fun shapes are there? Who or what appears in the image? What might be happening?
+
+Tell what you SEE in a magical and exciting way: "Look! Do you see that...?" Use simple but expressive words. Point out the pretty colors, the curious shapes, the characters or animals. Make it full of wonder and fun, as if each detail were a special discovery.`,
+      },
+      creativo: {
+        es: `OBSERVA ESTA IMAGEN desde una perspectiva única y ofrece una descripción imaginativa.
+
+Mira más allá de lo obvio: ¿Qué historia oculta podrían contar estos elementos? ¿Qué conexiones inesperadas puedes hacer? ¿Qué significados alternativos sugieren los colores, las formas, la composición?
+
+Describe lo que VES de manera innovadora: encuentra lo extraordinario en los detalles ordinarios, imagina historias detrás de cada elemento visual, crea conexiones sorprendentes entre lo que observas. Invita al lector a ver esta imagen de una manera completamente nueva.`,
+        en: `OBSERVE THIS IMAGE from a unique perspective and offer an imaginative description.
+
+Look beyond the obvious: What hidden story could these elements tell? What unexpected connections can you make? What alternative meanings do the colors, shapes, composition suggest?
+
+Describe what you SEE in an innovative way: find the extraordinary in ordinary details, imagine stories behind each visual element, create surprising connections between what you observe. Invite the reader to see this image in a completely new way.`,
+      },
+      tecnico: {
+        es: `ANALIZA ESTA IMAGEN técnicamente como un experto en fotografía o arte visual.
+
+Evalúa profesionalmente: ¿Cómo está la exposición? ¿Qué tipo de iluminación se usa (natural, artificial, dura, suave)? ¿Cuál es la profundidad de campo? ¿Qué ángulo y perspectiva se emplean? ¿Cómo es el balance de blancos y la saturación de colores?
+
+Describe con precisión técnica lo que OBSERVAS: la composición específica, las características de la luz, la gama tonal, el enfoque, los valores de contraste. Incluye observaciones sobre técnica fotográfica o artística que esta imagen particular demuestra.`,
+        en: `ANALYZE THIS IMAGE technically as a photography or visual arts expert.
+
+Evaluate professionally: How is the exposure? What type of lighting is used (natural, artificial, hard, soft)? What is the depth of field? What angle and perspective are employed? How is the white balance and color saturation?
+
+Describe with technical precision what you OBSERVE: the specific composition, lighting characteristics, tonal range, focus, contrast values. Include observations about photographic or artistic technique that this particular image demonstrates.`,
+      },
+    };
+
+    const styleInstruction =
+      styleInstructions[style]?.[language] || styleInstructions['narrativo'][language];
+
     const userPrompt =
       customPrompt ||
       (language === 'es'
-        ? `Describe esta imagen de manera ${style}. Máximo ${maxLength} palabras. Usa español natural y expresivo.`
-        : `Describe this image in a ${style} style. Maximum ${maxLength} words. Use natural and expressive English.`);
+        ? `${styleInstruction}
+
+IMPORTANTE: Basa tu descripción ÚNICAMENTE en lo que puedes VER en esta imagen específica. Escribe ${maxLength} palabras aproximadamente en párrafos fluidos. NO incluyas títulos, encabezados ni listas. Solo texto descriptivo rico y expresivo.`
+        : `${styleInstruction}
+
+IMPORTANT: Base your description ONLY on what you can SEE in this specific image. Write approximately ${maxLength} words in flowing paragraphs. Do NOT include titles, headings, or lists. Only rich, expressive descriptive text.`);
 
     performanceTracker.mark('image_prepared');
 
