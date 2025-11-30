@@ -1,15 +1,9 @@
 'use client';
 
 import React, { useCallback, useMemo, memo } from 'react';
-import { motion } from 'framer-motion';
-import { MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
 import { Heart, Download, User, Calendar } from 'lucide-react';
 import { UnsplashImage } from '@/types';
-import {
-  performanceProfiler,
-  useRenderCount,
-  optimizeAnimations,
-} from '@/lib/utils/performance-helpers';
+import { performanceProfiler, useRenderCount } from '@/lib/utils/performance-helpers';
 
 interface ImageGridProps {
   images: UnsplashImage[];
@@ -22,11 +16,9 @@ const ImageItem = memo(
   ({
     image,
     onImageClick,
-    itemVariants,
   }: {
     image: UnsplashImage;
     onImageClick: (image: UnsplashImage) => void;
-    itemVariants: any;
   }) => {
     const handleClick = useCallback(() => onImageClick(image), [image, onImageClick]);
 
@@ -52,14 +44,8 @@ const ImageItem = memo(
     );
 
     return (
-      <MotionDiv
-        variants={itemVariants}
-        className='group relative aspect-square overflow-hidden rounded-xl cursor-pointer bg-gray-100'
-        whileHover={{
-          scale: 1.02,
-          transition: { duration: 0.2 },
-        }}
-        whileTap={{ scale: 0.98 }}
+      <div
+        className='group relative aspect-square overflow-hidden rounded-xl cursor-pointer bg-gray-100 hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200'
         onClick={handleClick}
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -126,14 +112,12 @@ const ImageItem = memo(
 
         {/* Quick Preview Button */}
         <div className='absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300'>
-          <MotionButton
+          <button
             onClick={handleViewClick}
-            className='bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 px-4 py-2 rounded-full font-medium transition-all duration-200 shadow-lg'
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            className='bg-white bg-opacity-90 hover:bg-opacity-100 text-gray-800 px-4 py-2 rounded-full font-medium transition-all duration-200 shadow-lg hover:scale-105 active:scale-95'
           >
             View Image
-          </MotionButton>
+          </button>
         </div>
 
         {/* Image Dimensions Indicator */}
@@ -146,7 +130,7 @@ const ImageItem = memo(
           <Calendar className='h-3 w-3' />
           <span>{new Date(image.created_at).toLocaleDateString()}</span>
         </div>
-      </MotionDiv>
+      </div>
     );
   },
   (prevProps, nextProps) => {
@@ -169,43 +153,6 @@ const ImageGridBase: React.FC<ImageGridProps> = ({ images, onImageClick, loading
     };
   });
 
-  // Memoize animation variants with reduced motion support
-  const containerVariants = useMemo(
-    () =>
-      optimizeAnimations.createOptimizedVariants({
-        hidden: { opacity: 0 },
-        visible: {
-          opacity: 1,
-          transition: {
-            staggerChildren: 0.1,
-            delayChildren: 0.2,
-          },
-        },
-      }),
-    []
-  );
-
-  const itemVariants = useMemo(
-    () =>
-      optimizeAnimations.createOptimizedVariants({
-        hidden: {
-          opacity: 0,
-          scale: 0.8,
-          y: 20,
-        },
-        visible: {
-          opacity: 1,
-          scale: 1,
-          y: 0,
-          transition: {
-            duration: 0.5,
-            ease: 'easeOut',
-          },
-        },
-      }),
-    []
-  );
-
   // Memoize loading skeleton
   const loadingSkeleton = useMemo(
     () => (
@@ -218,29 +165,16 @@ const ImageGridBase: React.FC<ImageGridProps> = ({ images, onImageClick, loading
     []
   );
 
-  // Memoize expensive calculations
-  const imageCount = useMemo(() => images.length, [images.length]);
-
   if (loading) {
     return loadingSkeleton;
   }
 
   return (
-    <MotionDiv
-      className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
-      variants={containerVariants}
-      initial='hidden'
-      animate='visible'
-    >
+    <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'>
       {images.map(image => (
-        <ImageItem
-          key={image.id}
-          image={image}
-          onImageClick={onImageClick}
-          itemVariants={itemVariants}
-        />
+        <ImageItem key={image.id} image={image} onImageClick={onImageClick} />
       ))}
-    </MotionDiv>
+    </div>
   );
 };
 
