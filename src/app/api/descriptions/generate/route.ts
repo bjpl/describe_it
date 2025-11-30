@@ -150,6 +150,21 @@ async function generateParallelDescriptions(
         createdAt: new Date().toISOString(),
       };
     } catch (error) {
+      // Use console.error to ensure it appears in Vercel logs
+      console.error(
+        `[VISION_ERROR] ${languageLabel} generation failed:`,
+        error instanceof Error ? error.message : String(error)
+      );
+      console.error('[VISION_ERROR] Full error:', JSON.stringify(error, Object.getOwnPropertyNames(error)));
+      console.error('[VISION_ERROR] Context:', {
+        hasUserApiKey: !!userApiKey,
+        userApiKeyPrefix: userApiKey?.substring(0, 15),
+        imageUrlType: imageUrl?.startsWith('data:') ? 'base64' : 'url',
+        imageUrlLength: imageUrl?.length,
+        style,
+        maxLength,
+      });
+
       apiLogger.error(`Critical failure in ${languageLabel} vision generation`, error, {
         step: 'vision_call_error',
         language: language,

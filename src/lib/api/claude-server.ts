@@ -479,6 +479,14 @@ IMPORTANT: Base your description ONLY on what you can SEE in this specific image
 
     performanceTracker.finish();
 
+    // CRITICAL: Use console.error to ensure it appears in Vercel logs
+    console.error('[CLAUDE_ERROR] Vision description failed:', error?.message || String(error));
+    console.error('[CLAUDE_ERROR] Error type:', error?.constructor?.name);
+    console.error('[CLAUDE_ERROR] Status code:', error?.status);
+    console.error('[CLAUDE_ERROR] Error details:', error?.error);
+    console.error('[CLAUDE_ERROR] Duration:', `${duration.toFixed(2)}ms`);
+    console.error('[CLAUDE_ERROR] Full error object:', JSON.stringify(error, Object.getOwnPropertyNames(error || {})));
+
     // Track error in Sentry
     trackClaudeError(error, {
       endpoint: '/api/descriptions/generate',
