@@ -1,6 +1,12 @@
+'use client';
+
 /**
  * Type-Safe Motion Wrapper Components
  * Properly typed Framer Motion components that resolve all TypeScript errors
+ *
+ * IMPORTANT: This file MUST have 'use client' directive because Framer Motion
+ * requires client-side JavaScript to run animations. Without this, SSR renders
+ * the initial state (opacity:0) and animations never run.
  */
 import React from 'react';
 import { motion, HTMLMotionProps, ForwardRefComponent } from 'framer-motion';
@@ -193,7 +199,4 @@ export default MotionComponents;
 /**
  * Type exports for advanced usage
  */
-export type {
-  HTMLMotionProps,
-  ForwardRefComponent,
-};
+export type { HTMLMotionProps, ForwardRefComponent };
