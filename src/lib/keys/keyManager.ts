@@ -87,7 +87,7 @@ class KeyManager {
     this.initialized = true;
     logger.info('[KeyManager] Initialized', {
       hasAnthropic: !!this.keys.anthropic,
-      hasUnsplash: !!this.keys.unsplash
+      hasUnsplash: !!this.keys.unsplash,
     });
   }
 
@@ -116,7 +116,7 @@ class KeyManager {
   set(service: ServiceType, key: string): boolean {
     logger.info(`[KeyManager] Setting key for ${service}`, {
       keyLength: key.length,
-      hasValue: !!key
+      hasValue: !!key,
     });
 
     this.keys[service] = key;
@@ -158,12 +158,12 @@ class KeyManager {
   setAll(keys: Partial<ApiKeys>): boolean {
     logger.info('[KeyManager] Setting all keys', {
       hasAnthropic: !!keys.anthropic,
-      hasUnsplash: !!keys.unsplash
+      hasUnsplash: !!keys.unsplash,
     });
 
     this.keys = {
       ...this.keys,
-      ...keys
+      ...keys,
     };
 
     const saved = this.saveToStorage();
@@ -201,7 +201,7 @@ class KeyManager {
       return {
         isValid: false,
         message: `Invalid ${service} key format`,
-        provider: service
+        provider: service,
       };
     }
 
@@ -217,7 +217,7 @@ class KeyManager {
       return {
         isValid: false,
         message: 'Validation failed - network error',
-        provider: service
+        provider: service,
       };
     }
 
@@ -304,7 +304,7 @@ class KeyManager {
       const data = {
         version: STORAGE_VERSION,
         ...this.keys,
-        updatedAt: new Date().toISOString()
+        updatedAt: new Date().toISOString(),
       };
 
       localStorage.setItem(STORAGE_KEY, safeStringify(data));
@@ -328,7 +328,8 @@ class KeyManager {
       const appSettings = safeParse(localStorage.getItem('app-settings') || '');
       if (appSettings?.settings?.apiKeys) {
         if (appSettings.settings.apiKeys.anthropic || appSettings.settings.apiKeys.openai) {
-          this.keys.anthropic = appSettings.settings.apiKeys.anthropic || appSettings.settings.apiKeys.openai || '';
+          this.keys.anthropic =
+            appSettings.settings.apiKeys.anthropic || appSettings.settings.apiKeys.openai || '';
           migrated = true;
           logger.info('[KeyManager] Migrated Anthropic/OpenAI key from app-settings');
         }
@@ -355,11 +356,14 @@ class KeyManager {
 
       // 3. Check cookies
       if (typeof document !== 'undefined') {
-        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-          const [key, value] = cookie.trim().split('=');
-          acc[key] = value;
-          return acc;
-        }, {} as Record<string, string>);
+        const cookies = document.cookie.split(';').reduce(
+          (acc, cookie) => {
+            const [key, value] = cookie.trim().split('=');
+            acc[key] = value;
+            return acc;
+          },
+          {} as Record<string, string>
+        );
 
         if (!this.keys.anthropic && (cookies.anthropic_key || cookies.openai_key)) {
           this.keys.anthropic = cookies.anthropic_key || cookies.openai_key || '';
@@ -410,13 +414,13 @@ class KeyManager {
         headers: {
           'Content-Type': 'application/json',
           'x-api-key': key,
-          'anthropic-version': '2023-06-01'
+          'anthropic-version': '2023-06-01',
         },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-5-20250629',
+          model: 'claude-sonnet-4-5-20250514',
           max_tokens: 10,
-          messages: [{ role: 'user', content: 'test' }]
-        })
+          messages: [{ role: 'user', content: 'test' }],
+        }),
       });
 
       if (response.ok) {
@@ -424,7 +428,11 @@ class KeyManager {
       } else if (response.status === 401) {
         return { isValid: false, message: 'Invalid API key', provider: 'anthropic' };
       } else {
-        return { isValid: false, message: `API returned ${response.status}`, provider: 'anthropic' };
+        return {
+          isValid: false,
+          message: `API returned ${response.status}`,
+          provider: 'anthropic',
+        };
       }
     } catch (error) {
       return { isValid: false, message: 'Network error during validation', provider: 'anthropic' };
@@ -438,8 +446,8 @@ class KeyManager {
     try {
       const response = await fetch('https://api.unsplash.com/photos/random', {
         headers: {
-          'Authorization': `Client-ID ${key}`
-        }
+          Authorization: `Client-ID ${key}`,
+        },
       });
 
       if (response.ok) {

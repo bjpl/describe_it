@@ -13,10 +13,10 @@
 
 import * as Sentry from '@sentry/nextjs';
 
-// Claude Sonnet 4.5 pricing (as of October 2025)
+// Claude Sonnet 4.5 pricing
 const CLAUDE_PRICING = {
-  'claude-sonnet-4-5-20250629': {
-    input: 0.003,  // $3 per 1M input tokens
+  'claude-sonnet-4-5-20250514': {
+    input: 0.003, // $3 per 1M input tokens
     output: 0.015, // $15 per 1M output tokens
   },
   'claude-sonnet-4-5': {
@@ -53,7 +53,8 @@ export function calculateClaudeCost(
   inputTokens: number,
   outputTokens: number
 ): number {
-  const pricing = CLAUDE_PRICING[model as keyof typeof CLAUDE_PRICING] || CLAUDE_PRICING['claude-sonnet-4-5'];
+  const pricing =
+    CLAUDE_PRICING[model as keyof typeof CLAUDE_PRICING] || CLAUDE_PRICING['claude-sonnet-4-5'];
 
   const inputCost = (inputTokens / 1_000_000) * pricing.input;
   const outputCost = (outputTokens / 1_000_000) * pricing.output;
@@ -69,7 +70,8 @@ export function trackClaudeAPICall(metrics: ClaudeMetrics): void {
   const span = Sentry.getActiveSpan();
 
   if (!span) {
-    if (process.env.NODE_ENV !== 'production') console.warn('[Sentry] No active span for Claude API metrics');
+    if (process.env.NODE_ENV !== 'production')
+      console.warn('[Sentry] No active span for Claude API metrics');
     return;
   }
 
@@ -133,14 +135,12 @@ export function trackClaudeAPICall(metrics: ClaudeMetrics): void {
 /**
  * Start a Claude API transaction span
  */
-export function startClaudeSpan(
-  operation: string,
-  description: string
-): Sentry.Span | undefined {
+export function startClaudeSpan(operation: string, description: string): Sentry.Span | undefined {
   const activeSpan = Sentry.getActiveSpan();
 
   if (!activeSpan) {
-    if (process.env.NODE_ENV !== 'production') console.warn('[Sentry] No active span for Claude span');
+    if (process.env.NODE_ENV !== 'production')
+      console.warn('[Sentry] No active span for Claude span');
     return undefined;
   }
 
@@ -239,7 +239,7 @@ export class ClaudePerformanceTracker {
 
     if (activeSpan) {
       // Add all markers as breadcrumbs
-      this.getMarkersWithDurations().forEach((marker) => {
+      this.getMarkersWithDurations().forEach(marker => {
         Sentry.addBreadcrumb({
           category: 'claude.performance',
           message: `${this.endpoint}: ${marker.name}`,
@@ -254,11 +254,7 @@ export class ClaudePerformanceTracker {
       // Set total duration on the active span
       const span = activeSpan as any;
       if (span.setMeasurement) {
-        span.setMeasurement(
-          'claude.total_duration',
-          this.getDuration(),
-          'millisecond'
-        );
+        span.setMeasurement('claude.total_duration', this.getDuration(), 'millisecond');
       }
     }
   }
@@ -354,10 +350,7 @@ export function checkTokenUsageSpike(
  */
 let errorCounts: Record<string, { total: number; errors: number }> = {};
 
-export function trackEndpointErrorRate(
-  endpoint: string,
-  isError: boolean
-): void {
+export function trackEndpointErrorRate(endpoint: string, isError: boolean): void {
   if (!errorCounts[endpoint]) {
     errorCounts[endpoint] = { total: 0, errors: 0 };
   }
@@ -386,6 +379,9 @@ export function trackEndpointErrorRate(
 }
 
 // Reset error counts periodically (every hour)
-setInterval(() => {
-  errorCounts = {};
-}, 60 * 60 * 1000);
+setInterval(
+  () => {
+    errorCounts = {};
+  },
+  60 * 60 * 1000
+);
