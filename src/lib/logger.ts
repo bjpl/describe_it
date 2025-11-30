@@ -35,7 +35,15 @@ export interface LogContext {
 }
 
 export interface ErrorCategory {
-  category: 'authentication' | 'validation' | 'external_api' | 'database' | 'system' | 'business_logic' | 'network' | 'security';
+  category:
+    | 'authentication'
+    | 'validation'
+    | 'external_api'
+    | 'database'
+    | 'system'
+    | 'business_logic'
+    | 'network'
+    | 'security';
   severity: 'low' | 'medium' | 'high' | 'critical';
   recoverable?: boolean;
   code?: string;
@@ -91,49 +99,12 @@ if (typeof window === 'undefined' && !isEdgeRuntime) {
     const logTransports: any[] = [];
 
     // Console transport (all environments except test)
+    // NOTE: File transports removed - Vercel serverless has read-only filesystem
     if (process.env.NODE_ENV !== 'test') {
       logTransports.push(
         new transports.Console({
           format: process.env.NODE_ENV === 'production' ? prodFormat : devFormat,
           level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
-        })
-      );
-    }
-
-    // File transports for production
-    if (process.env.NODE_ENV === 'production') {
-      // Error log file
-      logTransports.push(
-        new transports.File({
-          filename: 'logs/error.log',
-          level: 'error',
-          format: prodFormat,
-          maxsize: 10485760, // 10MB
-          maxFiles: 10,
-          tailable: true,
-        })
-      );
-
-      // Combined log file
-      logTransports.push(
-        new transports.File({
-          filename: 'logs/combined.log',
-          format: prodFormat,
-          maxsize: 10485760, // 10MB
-          maxFiles: 5,
-          tailable: true,
-        })
-      );
-
-      // HTTP requests log file
-      logTransports.push(
-        new transports.File({
-          filename: 'logs/http.log',
-          level: 'http',
-          format: prodFormat,
-          maxsize: 10485760, // 10MB
-          maxFiles: 3,
-          tailable: true,
         })
       );
     }
@@ -164,7 +135,7 @@ if (typeof window === 'undefined' && !isEdgeRuntime) {
       debug: 'white',
       silly: 'grey',
     });
-// Logger fallback when Winston initialization fails
+    // Logger fallback when Winston initialization fails
   } catch (error) {
     console.error('Failed to initialize Winston logger:', error);
   }
@@ -280,7 +251,7 @@ class Logger {
    */
   private writeToConsole(level: LogLevel, message: string, data: any): void {
     if (process.env.NODE_ENV === 'test') return;
-// Logger fallback console output (used when Winston is not available)
+    // Logger fallback console output (used when Winston is not available)
 
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [${level.toUpperCase()}] [${this.context}]`;
@@ -361,7 +332,7 @@ class Logger {
   private cleanOldErrors(daysToKeep: number = 7): void {
     if (!this.isClient) return;
 
-    const cutoffTime = Date.now() - (daysToKeep * 24 * 60 * 60 * 1000);
+    const cutoffTime = Date.now() - daysToKeep * 24 * 60 * 60 * 1000;
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -387,12 +358,14 @@ class Logger {
   error(message: string, error?: Error | any, context?: LogContext): void {
     const errorContext = {
       ...context,
-      error: error ? {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        code: error.code,
-      } : undefined,
+      error: error
+        ? {
+            name: error.name,
+            message: error.message,
+            stack: error.stack,
+            code: error.code,
+          }
+        : undefined,
     };
     this.writeLog('error', message, errorContext);
   }
@@ -436,7 +409,13 @@ class Logger {
   /**
    * Log API response
    */
-  apiResponse(method: string, url: string, statusCode: number, duration?: number, context?: LogContext): void {
+  apiResponse(
+    method: string,
+    url: string,
+    statusCode: number,
+    duration?: number,
+    context?: LogContext
+  ): void {
     const level = statusCode >= 500 ? 'error' : statusCode >= 400 ? 'warn' : 'info';
     this[level](`API Response: ${method} ${url} - ${statusCode}`, {
       type: 'api-response',
@@ -451,7 +430,11 @@ class Logger {
   /**
    * Log security event
    */
-  security(event: string, severity: 'low' | 'medium' | 'high' | 'critical', context?: LogContext): void {
+  security(
+    event: string,
+    severity: 'low' | 'medium' | 'high' | 'critical',
+    context?: LogContext
+  ): void {
     const level = severity === 'critical' || severity === 'high' ? 'error' : 'warn';
     this[level](`SECURITY: ${event}`, {
       type: 'security-event',
@@ -516,7 +499,11 @@ class Logger {
   /**
    * Log component lifecycle event
    */
-  componentLifecycle(component: string, event: 'mount' | 'unmount' | 'render', context?: LogContext): void {
+  componentLifecycle(
+    component: string,
+    event: 'mount' | 'unmount' | 'render',
+    context?: LogContext
+  ): void {
     this.debug(`COMPONENT: ${component} ${event}`, {
       type: 'component-lifecycle',
       component,
@@ -658,20 +645,22 @@ export const performanceLogger = createLogger('performance');
 export const logError = (message: string, error?: Error, context?: LogContext) =>
   logger.error(message, error, context);
 
-export const logWarn = (message: string, context?: LogContext) =>
-  logger.warn(message, context);
+export const logWarn = (message: string, context?: LogContext) => logger.warn(message, context);
 
-export const logInfo = (message: string, context?: LogContext) =>
-  logger.info(message, context);
+export const logInfo = (message: string, context?: LogContext) => logger.info(message, context);
 
-export const logDebug = (message: string, context?: LogContext) =>
-  logger.debug(message, context);
+export const logDebug = (message: string, context?: LogContext) => logger.debug(message, context);
 
 export const logApiCall = (method: string, url: string, context?: LogContext) =>
   apiLogger.apiRequest(method, url, context);
 
-export const logApiResponse = (method: string, url: string, status: number, duration?: number, context?: LogContext) =>
-  apiLogger.apiResponse(method, url, status, duration, context);
+export const logApiResponse = (
+  method: string,
+  url: string,
+  status: number,
+  duration?: number,
+  context?: LogContext
+) => apiLogger.apiResponse(method, url, status, duration, context);
 
 export const logPerformance = (operation: string, duration: number, context?: LogContext) =>
   performanceLogger.performance(operation, duration, context);
