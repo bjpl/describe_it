@@ -10,17 +10,22 @@ import {
 } from '@/lib/schemas/api-validation';
 import type { DescriptionStyle } from '@/types/api';
 import { z } from 'zod';
-import {
-  withSecurity,
-  getSecureApiKey,
-  type SecureRequest,
-} from '@/lib/security/secure-middleware';
-import { getAuditLogger } from '@/lib/security/audit-logger';
 import { safeStringify, safeParse } from '@/lib/utils/json-safe';
-import { apiLogger, securityLogger, performanceLogger } from '@/lib/logging/logger';
-import { asLogContext } from '@/lib/utils/typeGuards';
+import { logger } from '@/lib/logger';
 
-const logger = getAuditLogger('description-api');
+// Simple console-based logging for Vercel serverless compatibility
+const apiLogger = {
+  info: (msg: string, meta?: Record<string, unknown>) => logger.info(msg, meta),
+  debug: (msg: string, meta?: Record<string, unknown>) => logger.debug(msg, meta),
+  warn: (msg: string, meta?: Record<string, unknown>) => logger.warn(msg, meta),
+  error: (msg: string, err?: unknown, meta?: Record<string, unknown>) =>
+    logger.error(msg, err instanceof Error ? err : undefined, meta),
+  setRequest: (_opts: Record<string, unknown>) => apiLogger,
+  apiRequest: (method: string, path: string, meta?: Record<string, unknown>) =>
+    logger.info(`${method} ${path}`, meta),
+};
+const securityLogger = apiLogger;
+const performanceLogger = apiLogger;
 
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 60 seconds timeout - increased for parallel processing
@@ -414,23 +419,22 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
           });
         }
       } catch (error) {
-        requestLogger.warn(
-          'Image proxy error, using original URL',
-          asLogContext({ error: error instanceof Error ? error.message : String(error) })
-        );
+        requestLogger.warn('Image proxy error, using original URL', {
+          error: error instanceof Error ? error.message : String(error),
+        });
       }
     }
 
-    // Get secure API key for OpenAI operations
-    const secureApiKey = await getSecureApiKey('OPENAI_API_KEY', params.userApiKey);
+    // Get API key: prefer user's key, fall back to environment variable
+    const apiKey = userApiKey || process.env.ANTHROPIC_API_KEY;
 
-    if (!secureApiKey) {
-      securityLogger.error('Failed to retrieve secure API key');
+    if (!apiKey) {
+      securityLogger.error('No API key available', { requestId });
       return NextResponse.json(
         {
           success: false,
           error: 'API configuration error',
-          details: 'Failed to retrieve API key',
+          details: 'No API key configured. Please provide your Anthropic API key in settings.',
           requestId,
         },
         {
@@ -440,7 +444,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
       );
     }
 
-    // Generate descriptions for both languages in parallel using server-side OpenAI
+    // Generate descriptions for both languages in parallel using Claude API
     requestLogger.info('Starting parallel description generation');
     const descriptions = await generateParallelDescriptions(
       {
@@ -451,7 +455,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
         languages: ['en', 'es'] as const,
         originalImageUrl: params.imageUrl,
       },
-      secureApiKey
+      apiKey
     );
 
     // Save descriptions to database
@@ -481,7 +485,9 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
           userId,
         });
       } catch (dbError) {
-        requestLogger.warn('Failed to save descriptions to database', asLogContext(dbError));
+        requestLogger.warn('Failed to save descriptions to database', {
+          error: dbError instanceof Error ? dbError.message : String(dbError),
+        });
         // Don't fail the request if database save fails
       }
     }
