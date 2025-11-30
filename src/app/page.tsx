@@ -2,8 +2,7 @@
 
 import React, { useState, useCallback, memo, Suspense } from 'react';
 import { logger } from '@/lib/logger';
-import { motion } from 'framer-motion';
-import { MotionHeader, MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
+import { MotionDiv, MotionButton } from '@/components/ui/MotionComponents';
 import {
   Search,
   Settings,
@@ -205,13 +204,8 @@ const HomePageBase: React.FC = () => {
   return (
     <ErrorBoundary>
       <div className='min-h-screen bg-gray-50 dark:bg-gray-900'>
-        {/* Header */}
-        <MotionHeader
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className='bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700'
-        >
+        {/* Header - Using regular header to prevent SSR opacity:0 issue */}
+        <header className='bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700'>
           <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
             <div className='flex justify-between items-center py-4'>
               <div className='flex items-center space-x-3'>
@@ -273,7 +267,7 @@ const HomePageBase: React.FC = () => {
               </div>
             </div>
           </div>
-        </MotionHeader>
+        </header>
 
         {/* Navigation Tabs */}
         <nav className='bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700'>
