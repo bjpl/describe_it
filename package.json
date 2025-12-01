@@ -167,7 +167,7 @@
     "pg": "^8.16.3",
     "pg-to-ts": "^4.1.1",
     "postcss": "^8.4.33",
-    "prettier": "^3.1.1",
+    "prettier": "^3.7.3",
     "react-lazy-load-image-component": "^1.6.3",
     "supabase-cli": "^0.0.21",
     "supertest": "^7.1.4",
