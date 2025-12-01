@@ -4,7 +4,7 @@
 # ==============================================
 # Optimized for development with hot reload
 
-FROM node:20.11.0-alpine
+FROM node:25.2.1-alpine
 
 # Install development dependencies
 RUN apk update && \
