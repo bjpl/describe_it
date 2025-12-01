@@ -8,7 +8,7 @@
 # ==============================================
 # STAGE 1: Dependencies
 # ==============================================
-FROM node:20.11.0-alpine AS deps
+FROM node:25.2.1-alpine AS deps
 
 # Install security updates and required system dependencies
 RUN apk update && apk upgrade && \
@@ -30,7 +30,7 @@ RUN npm ci --frozen-lockfile && \
 # ==============================================
 # STAGE 2: Builder
 # ==============================================
-FROM node:20.11.0-alpine AS builder
+FROM node:25.2.1-alpine AS builder
 
 WORKDIR /app
 
@@ -51,7 +51,7 @@ RUN npm run build
 # ==============================================
 # STAGE 3: Production Runtime
 # ==============================================
-FROM node:20.11.0-alpine AS runner
+FROM node:25.2.1-alpine AS runner
 
 # Install security updates, dumb-init for proper signal handling, and sharp dependencies
 RUN apk update && apk upgrade && \
