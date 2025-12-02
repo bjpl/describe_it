@@ -316,7 +316,7 @@ class RuVectorClient {
       },
       points: {
         upsert: async (c, pts) => {
-          let coll = storage.get(c) || new Map();
+          const coll = storage.get(c) || new Map();
           storage.set(c, coll);
           pts.forEach(p => coll.set(p.id, p));
         },
