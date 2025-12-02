@@ -278,7 +278,7 @@ class GraphService implements IGraphService {
       id: node.id,
       word: node.properties.word as string,
       relationship: result.edges[idx]?.type || 'related',
-      weight: (result.edges[idx]?.properties?.weight as number) || 0,
+      weight: result.edges[idx]?.weight || 0,
     }));
   }
 

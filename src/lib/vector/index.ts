@@ -30,3 +30,6 @@ export {
   SpacedRepetitionBridge,
 } from './services/spaced-repetition-bridge';
 export { semanticCacheService, SemanticCacheService } from './services/cache';
+
+// Integration
+export { vectorStoreBridge, VectorStoreBridge } from './integration/vector-store-bridge';
