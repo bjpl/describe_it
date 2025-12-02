@@ -61,11 +61,13 @@ export async function GET(request: NextRequest) {
           name: 'EmbeddingService',
           status: testResult.vector.length > 0 ? 'healthy' : 'degraded',
           latencyMs: Date.now() - embedStart,
-          details: detailed ? {
-            dimensions: testResult.dimensions,
-            model: testResult.model,
-            cached: testResult.cached,
-          } : undefined,
+          details: detailed
+            ? {
+                dimensions: testResult.dimensions,
+                model: testResult.model,
+                cached: testResult.cached,
+              }
+            : undefined,
         });
       } catch (error) {
         services.push({
@@ -88,12 +90,14 @@ export async function GET(request: NextRequest) {
       services.push({
         name: 'GNNLearning',
         status: spacedRepetitionBridge.isGNNAvailable() ? 'healthy' : 'degraded',
-        details: detailed ? {
-          gnnAvailable: spacedRepetitionBridge.isGNNAvailable(),
-          bridgeConfig: spacedRepetitionBridge.getConfig(),
-        } : {
-          gnnAvailable: spacedRepetitionBridge.isGNNAvailable(),
-        },
+        details: detailed
+          ? {
+              gnnAvailable: spacedRepetitionBridge.isGNNAvailable(),
+              bridgeConfig: spacedRepetitionBridge.getConfig(),
+            }
+          : {
+              gnnAvailable: spacedRepetitionBridge.isGNNAvailable(),
+            },
       });
     } else {
       services.push({
@@ -108,12 +112,14 @@ export async function GET(request: NextRequest) {
       services.push({
         name: 'SemanticCache',
         status: 'healthy',
-        details: detailed ? {
-          enabled: config.cache.enabled,
-          ttlSeconds: config.cache.ttlSeconds,
-          maxSize: config.cache.maxSize,
-          similarityThreshold: config.cache.similarityThreshold,
-        } : undefined,
+        details: detailed
+          ? {
+              enabled: config.cache.enabled,
+              ttlSeconds: config.cache.ttlSeconds,
+              maxSize: config.cache.maxSize,
+              similarityThreshold: config.cache.similarityThreshold,
+            }
+          : undefined,
       });
     } else {
       services.push({
@@ -165,50 +171,58 @@ export async function GET(request: NextRequest) {
       latencyMs: latency,
     });
 
-    return NextResponse.json({
-      status: overallStatus,
-      services,
-      summary: {
-        healthy: healthyCount,
-        degraded: degradedCount,
-        unhealthy: unhealthyCount,
-        disabled: services.filter(s => s.status === 'disabled').length,
-        total: services.length,
+    return NextResponse.json(
+      {
+        status: overallStatus,
+        services,
+        summary: {
+          healthy: healthyCount,
+          degraded: degradedCount,
+          unhealthy: unhealthyCount,
+          disabled: services.filter(s => s.status === 'disabled').length,
+          total: services.length,
+        },
+        config: detailed
+          ? {
+              collections: config.collections,
+              embedding: config.embedding,
+              search: config.search,
+            }
+          : undefined,
+        meta: {
+          timestamp: new Date().toISOString(),
+          latencyMs: latency,
+          version: '1.0.0',
+        },
       },
-      config: detailed ? {
-        collections: config.collections,
-        embedding: config.embedding,
-        search: config.search,
-      } : undefined,
-      meta: {
-        timestamp: new Date().toISOString(),
-        latencyMs: latency,
-        version: '1.0.0',
-      },
-    }, {
-      status: overallStatus === 'unhealthy' ? 503 : 200,
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'X-Response-Time': `${latency}ms`,
-        'X-Health-Status': overallStatus,
-      },
-    });
+      {
+        status: overallStatus === 'unhealthy' ? 503 : 200,
+        headers: {
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'X-Response-Time': `${latency}ms`,
+          'X-Health-Status': overallStatus,
+        },
+      }
+    );
   } catch (error) {
     logger.error('[VectorHealthAPI] Health check failed', { error });
 
-    return NextResponse.json({
-      status: 'unhealthy',
-      error: error instanceof Error ? error.message : 'Unknown error',
-      meta: {
-        timestamp: new Date().toISOString(),
-        latencyMs: Date.now() - startTime,
+    return NextResponse.json(
+      {
+        status: 'unhealthy',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        meta: {
+          timestamp: new Date().toISOString(),
+          latencyMs: Date.now() - startTime,
+        },
       },
-    }, {
-      status: 503,
-      headers: {
-        'X-Health-Status': 'unhealthy',
-      },
-    });
+      {
+        status: 503,
+        headers: {
+          'X-Health-Status': 'unhealthy',
+        },
+      }
+    );
   }
 }
 

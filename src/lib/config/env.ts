@@ -1,6 +1,6 @@
 /**
  * Environment Configuration with Type Safety
- * 
+ *
  * This module provides typed access to environment variables and validates
  * that all required configuration is present. It separates client-side and
  * server-side variables to prevent accidental exposure of secrets.
@@ -17,12 +17,12 @@
 export interface ClientEnv {
   // App Configuration
   NEXT_PUBLIC_APP_URL: string;
-  
+
   // External Services (Public Keys Only)
   NEXT_PUBLIC_UNSPLASH_ACCESS_KEY: string;
   NEXT_PUBLIC_SUPABASE_URL: string;
   NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
-  
+
   // Environment
   NODE_ENV: 'development' | 'production' | 'test';
 }
@@ -37,23 +37,23 @@ export interface ServerEnv {
   SESSION_SECRET: string;
   VALID_API_KEYS?: string;
   DEV_API_KEY?: string;
-  
+
   // External Services (Private Keys)
   UNSPLASH_ACCESS_KEY: string;
   OPENAI_API_KEY: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
-  
+
   // Database & Caching
   REDIS_URL?: string;
   KV_REST_API_URL?: string;
   KV_REST_API_TOKEN?: string;
   DATABASE_URL?: string;
-  
+
   // CORS & Security
   ALLOWED_ORIGINS: string;
   CSP_ALLOWED_DOMAINS?: string;
   TRUSTED_PROXY_IPS?: string;
-  
+
   // Feature Flags
   ENABLE_DEMO_MODE?: string;
   DEMO_MODE_AUTO?: string;
@@ -64,13 +64,13 @@ export interface ServerEnv {
   ENABLE_PERFORMANCE_METRICS?: string;
   ENABLE_A_B_TESTING?: string;
   ENABLE_BETA_FEATURES?: string;
-  
+
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS?: string;
   RATE_LIMIT_MAX_REQUESTS?: string;
   API_RATE_LIMIT_MAX_REQUESTS?: string;
   IMAGE_SEARCH_RATE_LIMIT?: string;
-  
+
   // Logging & Monitoring
   LOG_LEVEL?: string;
   ERROR_REPORTING_LEVEL?: string;
@@ -79,24 +79,24 @@ export interface ServerEnv {
   ENABLE_PERFORMANCE_MONITORING?: string;
   DEBUG_ENDPOINT_ENABLED?: string;
   DEBUG_ALLOWED_IPS?: string;
-  
+
   // OpenAI Configuration
   OPENAI_MODEL?: string;
   OPENAI_MAX_TOKENS?: string;
   OPENAI_TEMPERATURE?: string;
-  
+
   // Cache Configuration
   MAX_CACHE_SIZE?: string;
   DEFAULT_CACHE_TTL?: string;
   CACHE_WRITE_THROUGH?: string;
   ENABLE_MEMORY_CACHE_FALLBACK?: string;
-  
+
   // SSL/TLS
   FORCE_HTTPS?: string;
   ENABLE_HSTS?: string;
   HSTS_MAX_AGE?: string;
   ENABLE_SECURITY_HEADERS?: string;
-  
+
   // Monitoring & Observability
   SENTRY_DSN?: string;
   SENTRY_ENVIRONMENT?: string;
@@ -211,23 +211,23 @@ export const serverEnv: ServerEnv = {
   SESSION_SECRET: requireEnv('SESSION_SECRET'),
   VALID_API_KEYS: getEnv('VALID_API_KEYS'),
   DEV_API_KEY: getEnv('DEV_API_KEY'),
-  
+
   // External Services
   UNSPLASH_ACCESS_KEY: requireEnv('UNSPLASH_ACCESS_KEY'),
   OPENAI_API_KEY: requireEnv('OPENAI_API_KEY'),
   SUPABASE_SERVICE_ROLE_KEY: requireEnv('SUPABASE_SERVICE_ROLE_KEY'),
-  
+
   // Database & Caching
   REDIS_URL: getEnv('REDIS_URL'),
   KV_REST_API_URL: getEnv('KV_REST_API_URL'),
   KV_REST_API_TOKEN: getEnv('KV_REST_API_TOKEN'),
   DATABASE_URL: getEnv('DATABASE_URL'),
-  
+
   // CORS & Security
   ALLOWED_ORIGINS: requireEnv('ALLOWED_ORIGINS', 'http://localhost:3000'),
   CSP_ALLOWED_DOMAINS: getEnv('CSP_ALLOWED_DOMAINS'),
   TRUSTED_PROXY_IPS: getEnv('TRUSTED_PROXY_IPS', '127.0.0.1,::1'),
-  
+
   // Feature Flags
   ENABLE_DEMO_MODE: getEnv('ENABLE_DEMO_MODE', 'false'),
   DEMO_MODE_AUTO: getEnv('DEMO_MODE_AUTO', 'true'),
@@ -238,13 +238,13 @@ export const serverEnv: ServerEnv = {
   ENABLE_PERFORMANCE_METRICS: getEnv('ENABLE_PERFORMANCE_METRICS', 'true'),
   ENABLE_A_B_TESTING: getEnv('ENABLE_A_B_TESTING', 'false'),
   ENABLE_BETA_FEATURES: getEnv('ENABLE_BETA_FEATURES', 'false'),
-  
+
   // Rate Limiting
   RATE_LIMIT_WINDOW_MS: getEnv('RATE_LIMIT_WINDOW_MS', '15000'),
   RATE_LIMIT_MAX_REQUESTS: getEnv('RATE_LIMIT_MAX_REQUESTS', '100'),
   API_RATE_LIMIT_MAX_REQUESTS: getEnv('API_RATE_LIMIT_MAX_REQUESTS', '50'),
   IMAGE_SEARCH_RATE_LIMIT: getEnv('IMAGE_SEARCH_RATE_LIMIT', '20'),
-  
+
   // Logging & Monitoring
   LOG_LEVEL: getEnv('LOG_LEVEL', 'info'),
   ERROR_REPORTING_LEVEL: getEnv('ERROR_REPORTING_LEVEL', 'info'),
@@ -253,24 +253,24 @@ export const serverEnv: ServerEnv = {
   ENABLE_PERFORMANCE_MONITORING: getEnv('ENABLE_PERFORMANCE_MONITORING', 'true'),
   DEBUG_ENDPOINT_ENABLED: getEnv('DEBUG_ENDPOINT_ENABLED', 'false'),
   DEBUG_ALLOWED_IPS: getEnv('DEBUG_ALLOWED_IPS', '127.0.0.1'),
-  
+
   // OpenAI Configuration
   OPENAI_MODEL: getEnv('OPENAI_MODEL', 'gpt-4o-mini'),
   OPENAI_MAX_TOKENS: getEnv('OPENAI_MAX_TOKENS', '1000'),
   OPENAI_TEMPERATURE: getEnv('OPENAI_TEMPERATURE', '0.7'),
-  
+
   // Cache Configuration
   MAX_CACHE_SIZE: getEnv('MAX_CACHE_SIZE', '1000'),
   DEFAULT_CACHE_TTL: getEnv('DEFAULT_CACHE_TTL', '3600'),
   CACHE_WRITE_THROUGH: getEnv('CACHE_WRITE_THROUGH', 'true'),
   ENABLE_MEMORY_CACHE_FALLBACK: getEnv('ENABLE_MEMORY_CACHE_FALLBACK', 'true'),
-  
+
   // SSL/TLS
   FORCE_HTTPS: getEnv('FORCE_HTTPS', 'false'),
   ENABLE_HSTS: getEnv('ENABLE_HSTS', 'false'),
   HSTS_MAX_AGE: getEnv('HSTS_MAX_AGE', '31536000'),
   ENABLE_SECURITY_HEADERS: getEnv('ENABLE_SECURITY_HEADERS', 'true'),
-  
+
   // Monitoring & Observability
   SENTRY_DSN: getEnv('SENTRY_DSN'),
   SENTRY_ENVIRONMENT: getEnv('SENTRY_ENVIRONMENT', process.env.NODE_ENV || 'development'),
@@ -285,7 +285,10 @@ export const serverEnv: ServerEnv = {
   RUVECTOR_ENDPOINT: getEnv('RUVECTOR_ENDPOINT', 'http://localhost:8080'),
   RUVECTOR_COLLECTION_VOCABULARY: getEnv('RUVECTOR_COLLECTION_VOCABULARY', 'vocabulary_embeddings'),
   RUVECTOR_COLLECTION_IMAGES: getEnv('RUVECTOR_COLLECTION_IMAGES', 'image_embeddings'),
-  RUVECTOR_COLLECTION_DESCRIPTIONS: getEnv('RUVECTOR_COLLECTION_DESCRIPTIONS', 'description_embeddings'),
+  RUVECTOR_COLLECTION_DESCRIPTIONS: getEnv(
+    'RUVECTOR_COLLECTION_DESCRIPTIONS',
+    'description_embeddings'
+  ),
   RUVECTOR_COLLECTION_LEARNING: getEnv('RUVECTOR_COLLECTION_LEARNING', 'learning_patterns'),
   RUVECTOR_EMBEDDING_MODEL: getEnv('RUVECTOR_EMBEDDING_MODEL', 'claude-3-5-sonnet-20241022'),
   RUVECTOR_EMBEDDING_DIMENSIONS: getEnv('RUVECTOR_EMBEDDING_DIMENSIONS', '1536'),
@@ -350,11 +353,20 @@ export const isClient = typeof window !== 'undefined';
 /**
  * Get feature flag value as boolean
  */
-export const getFeatureFlag = (flagName: keyof Pick<ServerEnv, 
-  'ENABLE_DEMO_MODE' | 'DEMO_MODE_AUTO' | 'ENABLE_IMAGE_SEARCH' | 
-  'ENABLE_AI_TRANSLATION' | 'ENABLE_SETTINGS_SYNC' | 'ENABLE_ERROR_REPORTING' |
-  'ENABLE_PERFORMANCE_METRICS' | 'ENABLE_A_B_TESTING' | 'ENABLE_BETA_FEATURES'
->): boolean => {
+export const getFeatureFlag = (
+  flagName: keyof Pick<
+    ServerEnv,
+    | 'ENABLE_DEMO_MODE'
+    | 'DEMO_MODE_AUTO'
+    | 'ENABLE_IMAGE_SEARCH'
+    | 'ENABLE_AI_TRANSLATION'
+    | 'ENABLE_SETTINGS_SYNC'
+    | 'ENABLE_ERROR_REPORTING'
+    | 'ENABLE_PERFORMANCE_METRICS'
+    | 'ENABLE_A_B_TESTING'
+    | 'ENABLE_BETA_FEATURES'
+  >
+): boolean => {
   const value = serverEnv[flagName];
   return value === 'true' || value === '1';
 };
@@ -400,32 +412,36 @@ export const getDebugAllowedIPs = (): string[] => {
  */
 export const validateEnvironment = (): void => {
   const errors: string[] = [];
-  
+
   // Check required client variables
   try {
     clientEnv;
   } catch (error) {
-    errors.push(`Client environment validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    errors.push(
+      `Client environment validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+    );
   }
-  
+
   // Check required server variables (only on server)
   if (isServer) {
     try {
       serverEnv;
     } catch (error) {
-      errors.push(`Server environment validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      errors.push(
+        `Server environment validation failed: ${error instanceof Error ? error.message : 'Unknown error'}`
+      );
     }
   }
-  
+
   // Additional validation
   if (isProduction() && getBooleanEnv('DEBUG_ENDPOINT_ENABLED', false)) {
     errors.push('DEBUG_ENDPOINT_ENABLED should be false in production');
   }
-  
+
   if (isProduction() && serverEnv.LOG_LEVEL === 'debug') {
     errors.push('LOG_LEVEL should not be debug in production');
   }
-  
+
   if (errors.length > 0) {
     throw new Error(`Environment validation failed:\n${errors.join('\n')}`);
   }

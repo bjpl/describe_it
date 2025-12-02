@@ -14,7 +14,9 @@ export const runtime = 'nodejs';
 
 const searchSchema = z.object({
   query: z.string().min(1).max(500),
-  collection: z.enum(['vocabulary', 'descriptions', 'images', 'learning_patterns']).default('vocabulary'),
+  collection: z
+    .enum(['vocabulary', 'descriptions', 'images', 'learning_patterns'])
+    .default('vocabulary'),
   limit: z.number().int().min(1).max(100).default(20),
   threshold: z.number().min(0).max(1).default(0.7),
   targetLanguage: z.string().optional(),
@@ -44,7 +46,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { query, collection, limit, threshold, targetLanguage, includeVectors, hybridSearch, sqlQuery } = validation.data;
+    const {
+      query,
+      collection,
+      limit,
+      threshold,
+      targetLanguage,
+      includeVectors,
+      hybridSearch,
+      sqlQuery,
+    } = validation.data;
 
     let results;
 
@@ -79,21 +90,24 @@ export async function POST(request: NextRequest) {
       latencyMs: latency,
     });
 
-    return NextResponse.json({
-      results,
-      meta: {
-        query,
-        collection,
-        count: results.length,
-        latencyMs: latency,
-        hybridSearch,
+    return NextResponse.json(
+      {
+        results,
+        meta: {
+          query,
+          collection,
+          count: results.length,
+          latencyMs: latency,
+          hybridSearch,
+        },
       },
-    }, {
-      headers: {
-        'X-Response-Time': `${latency}ms`,
-        'X-Result-Count': String(results.length),
-      },
-    });
+      {
+        headers: {
+          'X-Response-Time': `${latency}ms`,
+          'X-Result-Count': String(results.length),
+        },
+      }
+    );
   } catch (error) {
     logger.error('[VectorSearchAPI] Search failed', { error });
 
@@ -126,32 +140,33 @@ export async function GET(request: NextRequest) {
     const targetLanguage = searchParams.get('lang') || undefined;
 
     if (!query) {
-      return NextResponse.json(
-        { error: 'Query parameter "q" is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Query parameter "q" is required' }, { status: 400 });
     }
 
-    const results = collection === 'vocabulary' && targetLanguage
-      ? await vectorSearchService.searchVocabulary(query, { limit, threshold, targetLanguage })
-      : await vectorSearchService.search(query, collection, { limit, threshold });
+    const results =
+      collection === 'vocabulary' && targetLanguage
+        ? await vectorSearchService.searchVocabulary(query, { limit, threshold, targetLanguage })
+        : await vectorSearchService.search(query, collection, { limit, threshold });
 
     const latency = Date.now() - startTime;
 
-    return NextResponse.json({
-      results,
-      meta: {
-        query,
-        collection,
-        count: results.length,
-        latencyMs: latency,
+    return NextResponse.json(
+      {
+        results,
+        meta: {
+          query,
+          collection,
+          count: results.length,
+          latencyMs: latency,
+        },
       },
-    }, {
-      headers: {
-        'Cache-Control': 'public, max-age=60',
-        'X-Response-Time': `${latency}ms`,
-      },
-    });
+      {
+        headers: {
+          'Cache-Control': 'public, max-age=60',
+          'X-Response-Time': `${latency}ms`,
+        },
+      }
+    );
   } catch (error) {
     logger.error('[VectorSearchAPI] GET search failed', { error });
 

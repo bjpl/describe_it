@@ -21,14 +21,16 @@ const scheduleSchema = z.object({
 
 const hybridScheduleSchema = z.object({
   userId: z.string().min(1),
-  cards: z.array(z.object({
-    id: z.string(),
-    easeFactor: z.number().min(1.3).max(2.5),
-    interval: z.number().int().min(0),
-    repetitions: z.number().int().min(0),
-    nextReview: z.string().datetime(),
-    word: z.string().optional(),
-  })),
+  cards: z.array(
+    z.object({
+      id: z.string(),
+      easeFactor: z.number().min(1.3).max(2.5),
+      interval: z.number().int().min(0),
+      repetitions: z.number().int().min(0),
+      nextReview: z.string().datetime(),
+      word: z.string().optional(),
+    })
+  ),
 });
 
 /**
@@ -43,10 +45,7 @@ export async function GET(request: NextRequest) {
     const limit = limitParam ? parseInt(limitParam, 10) : 20;
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId query parameter is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'userId query parameter is required' }, { status: 400 });
     }
 
     const schedule = await learningService.getOptimalReviewSchedule(userId, limit);
@@ -59,29 +58,35 @@ export async function GET(request: NextRequest) {
       latencyMs: latency,
     });
 
-    return NextResponse.json({
-      schedule: schedule.map(item => ({
-        vocabularyId: item.vocabularyId,
-        scheduledDate: item.scheduledDate.toISOString(),
-        priority: item.priority,
-      })),
-      meta: {
-        userId,
-        count: schedule.length,
-        latencyMs: latency,
-        gnnEnabled: featureFlags.useGNNLearning(),
+    return NextResponse.json(
+      {
+        schedule: schedule.map(item => ({
+          vocabularyId: item.vocabularyId,
+          scheduledDate: item.scheduledDate.toISOString(),
+          priority: item.priority,
+        })),
+        meta: {
+          userId,
+          count: schedule.length,
+          latencyMs: latency,
+          gnnEnabled: featureFlags.useGNNLearning(),
+        },
       },
-    }, {
-      headers: {
-        'Cache-Control': 'private, max-age=60',
-        'X-Response-Time': `${latency}ms`,
-      },
-    });
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=60',
+          'X-Response-Time': `${latency}ms`,
+        },
+      }
+    );
   } catch (error) {
     logger.error('[ScheduleAPI] Schedule retrieval failed', { error });
 
     return NextResponse.json(
-      { error: 'Failed to retrieve schedule', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to retrieve schedule',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -123,33 +128,39 @@ export async function POST(request: NextRequest) {
       latencyMs: latency,
     });
 
-    return NextResponse.json({
-      schedule: hybridSchedule.map(item => ({
-        cardId: item.card.id,
-        word: item.card.word,
-        scheduledDate: item.scheduledDate.toISOString(),
-        confidenceScore: item.confidenceScore,
-        recommendedRelated: item.recommendedRelated,
-        source: item.source,
-      })),
-      meta: {
-        userId,
-        count: hybridSchedule.length,
-        latencyMs: latency,
-        gnnAvailable: spacedRepetitionBridge.isGNNAvailable(),
-        bridgeConfig: spacedRepetitionBridge.getConfig(),
+    return NextResponse.json(
+      {
+        schedule: hybridSchedule.map(item => ({
+          cardId: item.card.id,
+          word: item.card.word,
+          scheduledDate: item.scheduledDate.toISOString(),
+          confidenceScore: item.confidenceScore,
+          recommendedRelated: item.recommendedRelated,
+          source: item.source,
+        })),
+        meta: {
+          userId,
+          count: hybridSchedule.length,
+          latencyMs: latency,
+          gnnAvailable: spacedRepetitionBridge.isGNNAvailable(),
+          bridgeConfig: spacedRepetitionBridge.getConfig(),
+        },
       },
-    }, {
-      headers: {
-        'X-Response-Time': `${latency}ms`,
-        'X-GNN-Available': String(spacedRepetitionBridge.isGNNAvailable()),
-      },
-    });
+      {
+        headers: {
+          'X-Response-Time': `${latency}ms`,
+          'X-GNN-Available': String(spacedRepetitionBridge.isGNNAvailable()),
+        },
+      }
+    );
   } catch (error) {
     logger.error('[ScheduleAPI] Hybrid schedule generation failed', { error });
 
     return NextResponse.json(
-      { error: 'Failed to generate hybrid schedule', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to generate hybrid schedule',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
@@ -177,10 +188,7 @@ export async function PUT(request: NextRequest) {
     };
 
     if (!userId || !card) {
-      return NextResponse.json(
-        { error: 'userId and card are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'userId and card are required' }, { status: 400 });
     }
 
     const processedCard = {
@@ -192,31 +200,37 @@ export async function PUT(request: NextRequest) {
 
     const latency = Date.now() - startTime;
 
-    return NextResponse.json({
-      adaptedCard: {
-        ...adaptedCard,
-        nextReview: adaptedCard.nextReview.toISOString(),
+    return NextResponse.json(
+      {
+        adaptedCard: {
+          ...adaptedCard,
+          nextReview: adaptedCard.nextReview.toISOString(),
+        },
+        changes: {
+          easeFactorDelta: adaptedCard.easeFactor - card.easeFactor,
+          intervalDelta: adaptedCard.interval - card.interval,
+        },
+        meta: {
+          userId,
+          cardId: card.id,
+          latencyMs: latency,
+          gnnAvailable: spacedRepetitionBridge.isGNNAvailable(),
+        },
       },
-      changes: {
-        easeFactorDelta: adaptedCard.easeFactor - card.easeFactor,
-        intervalDelta: adaptedCard.interval - card.interval,
-      },
-      meta: {
-        userId,
-        cardId: card.id,
-        latencyMs: latency,
-        gnnAvailable: spacedRepetitionBridge.isGNNAvailable(),
-      },
-    }, {
-      headers: {
-        'X-Response-Time': `${latency}ms`,
-      },
-    });
+      {
+        headers: {
+          'X-Response-Time': `${latency}ms`,
+        },
+      }
+    );
   } catch (error) {
     logger.error('[ScheduleAPI] Difficulty adaptation failed', { error });
 
     return NextResponse.json(
-      { error: 'Failed to adapt difficulty', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to adapt difficulty',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

@@ -82,16 +82,19 @@ export async function POST(request: NextRequest) {
       cached: 'embeddings' in result ? result.embeddings[0]?.cached : result.cached,
     });
 
-    return NextResponse.json({
-      ...result,
-      meta: {
-        latencyMs: latency,
+    return NextResponse.json(
+      {
+        ...result,
+        meta: {
+          latencyMs: latency,
+        },
       },
-    }, {
-      headers: {
-        'X-Response-Time': `${latency}ms`,
-      },
-    });
+      {
+        headers: {
+          'X-Response-Time': `${latency}ms`,
+        },
+      }
+    );
   } catch (error) {
     logger.error('[EmbeddingAPI] Embedding generation failed', { error });
 
@@ -122,10 +125,7 @@ export async function PUT(request: NextRequest) {
     }
 
     if (vectorA.length !== vectorB.length) {
-      return NextResponse.json(
-        { error: 'Vectors must have the same dimensions' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Vectors must have the same dimensions' }, { status: 400 });
     }
 
     const similarity = embeddingService.getSimilarity(vectorA, vectorB);
@@ -139,7 +139,10 @@ export async function PUT(request: NextRequest) {
     logger.error('[EmbeddingAPI] Similarity calculation failed', { error });
 
     return NextResponse.json(
-      { error: 'Similarity calculation failed', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Similarity calculation failed',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }

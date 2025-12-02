@@ -23,12 +23,14 @@ const interactionSchema = z.object({
 
 const batchInteractionSchema = z.object({
   userId: z.string().min(1),
-  interactions: z.array(z.object({
-    vocabularyId: z.string().min(1),
-    success: z.boolean(),
-    responseTime: z.number().int().min(0).max(300000),
-    confusedWith: z.string().optional(),
-  })),
+  interactions: z.array(
+    z.object({
+      vocabularyId: z.string().min(1),
+      success: z.boolean(),
+      responseTime: z.number().int().min(0).max(300000),
+      confusedWith: z.string().optional(),
+    })
+  ),
 });
 
 export async function POST(request: NextRequest) {
@@ -60,7 +62,11 @@ export async function POST(request: NextRequest) {
           );
 
           if (interaction.confusedWith) {
-            await graphService.recordConfusion(userId, interaction.vocabularyId, interaction.confusedWith);
+            await graphService.recordConfusion(
+              userId,
+              interaction.vocabularyId,
+              interaction.confusedWith
+            );
           }
 
           successCount++;
@@ -83,20 +89,23 @@ export async function POST(request: NextRequest) {
         latencyMs: latency,
       });
 
-      return NextResponse.json({
-        recorded: successCount,
-        errors: errorCount,
-        total: interactions.length,
-        meta: {
-          userId,
-          latencyMs: latency,
+      return NextResponse.json(
+        {
+          recorded: successCount,
+          errors: errorCount,
+          total: interactions.length,
+          meta: {
+            userId,
+            latencyMs: latency,
+          },
         },
-      }, {
-        status: errorCount > 0 && successCount === 0 ? 500 : 200,
-        headers: {
-          'X-Response-Time': `${latency}ms`,
-        },
-      });
+        {
+          status: errorCount > 0 && successCount === 0 ? 500 : 200,
+          headers: {
+            'X-Response-Time': `${latency}ms`,
+          },
+        }
+      );
     }
 
     // Single interaction
@@ -127,18 +136,21 @@ export async function POST(request: NextRequest) {
       latencyMs: latency,
     });
 
-    return NextResponse.json({
-      recorded: true,
-      meta: {
-        userId,
-        vocabularyId,
-        latencyMs: latency,
+    return NextResponse.json(
+      {
+        recorded: true,
+        meta: {
+          userId,
+          vocabularyId,
+          latencyMs: latency,
+        },
       },
-    }, {
-      headers: {
-        'X-Response-Time': `${latency}ms`,
-      },
-    });
+      {
+        headers: {
+          'X-Response-Time': `${latency}ms`,
+        },
+      }
+    );
   } catch (error) {
     logger.error('[InteractionsAPI] Recording failed', { error });
 

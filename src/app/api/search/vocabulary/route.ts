@@ -5,7 +5,8 @@ import { featureFlags } from '@/lib/vector/config';
 import { vectorSearchService } from '@/lib/vector/services/search';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // RRF fusion constant
 const RRF_K = 60;
@@ -27,10 +28,7 @@ export async function GET(request: NextRequest) {
 
   try {
     if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json(
-        { error: 'Database configuration missing' },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'Database configuration missing' }, { status: 500 });
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
@@ -82,43 +80,46 @@ export async function GET(request: NextRequest) {
     }
 
     // Group by category for better organization
-    const groupedResults = results.reduce((acc, item) => {
-      const cat = item.category || 'Uncategorized';
-      if (!acc[cat]) {
-        acc[cat] = [];
-      }
-      acc[cat].push(item);
-      return acc;
-    }, {} as Record<string, VocabularyItem[]>);
+    const groupedResults = results.reduce(
+      (acc, item) => {
+        const cat = item.category || 'Uncategorized';
+        if (!acc[cat]) {
+          acc[cat] = [];
+        }
+        acc[cat].push(item);
+        return acc;
+      },
+      {} as Record<string, VocabularyItem[]>
+    );
 
     const latency = Date.now() - startTime;
 
-    return NextResponse.json({
-      results,
-      grouped: groupedResults,
-      count: results.length,
-      query,
-      filters: {
-        difficulty,
-        category
+    return NextResponse.json(
+      {
+        results,
+        grouped: groupedResults,
+        count: results.length,
+        query,
+        filters: {
+          difficulty,
+          category,
+        },
+        meta: {
+          searchMode,
+          vectorEnabled: featureFlags.useVectorSearch(),
+          latencyMs: latency,
+        },
       },
-      meta: {
-        searchMode,
-        vectorEnabled: featureFlags.useVectorSearch(),
-        latencyMs: latency,
+      {
+        headers: {
+          'X-Search-Mode': searchMode,
+          'X-Response-Time': `${latency}ms`,
+        },
       }
-    }, {
-      headers: {
-        'X-Search-Mode': searchMode,
-        'X-Response-Time': `${latency}ms`,
-      }
-    });
+    );
   } catch (error) {
     logger.error('Search vocabulary error:', { error });
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -133,9 +134,7 @@ async function performSqlSearch(
   userId: string | null,
   limit: number
 ): Promise<VocabularyItem[]> {
-  let dbQuery = supabase
-    .from('vocabulary_items')
-    .select('*');
+  let dbQuery = supabase.from('vocabulary_items').select('*');
 
   if (query.trim()) {
     dbQuery = dbQuery.or(
@@ -155,9 +154,7 @@ async function performSqlSearch(
     dbQuery = dbQuery.eq('user_id', userId);
   }
 
-  dbQuery = dbQuery
-    .order('created_at', { ascending: false })
-    .limit(limit);
+  dbQuery = dbQuery.order('created_at', { ascending: false }).limit(limit);
 
   const { data, error } = await dbQuery;
 

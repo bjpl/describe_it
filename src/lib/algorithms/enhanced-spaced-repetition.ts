@@ -55,11 +55,7 @@ export class EnhancedSpacedRepetitionAlgorithm extends BaseAlgorithm {
   /**
    * Standard SM-2 interval calculation (used as fallback)
    */
-  calculateNextInterval(
-    currentInterval: number,
-    quality: number,
-    easeFactor: number
-  ): number {
+  calculateNextInterval(currentInterval: number, quality: number, easeFactor: number): number {
     return this.sm2Algorithm.calculateNextInterval(currentInterval, quality, easeFactor);
   }
 
@@ -188,21 +184,19 @@ export class EnhancedSpacedRepetitionAlgorithm extends BaseAlgorithm {
     try {
       const schedule = await spacedRepetitionBridge.getHybridSchedule(userId, bridgeCards);
 
-      return schedule
-        .slice(0, limit)
-        .map((item, index) => {
-          const originalCard = cards.find(c => c.id === item.card.id);
-          return {
-            ...(originalCard || SpacedRepetitionUtils.createCard(item.card.id, item.card.word || '')),
-            nextReviewDate: item.scheduledDate,
-            gnnEnhanced: item.source !== 'sm2',
-            predictedSuccess: item.confidenceScore,
-            suggestedRelatedWords: item.recommendedRelated,
-            confidenceScore: item.confidenceScore,
-            priority: schedule.length - index, // Higher priority for earlier items
-            source: item.source,
-          };
-        });
+      return schedule.slice(0, limit).map((item, index) => {
+        const originalCard = cards.find(c => c.id === item.card.id);
+        return {
+          ...(originalCard || SpacedRepetitionUtils.createCard(item.card.id, item.card.word || '')),
+          nextReviewDate: item.scheduledDate,
+          gnnEnhanced: item.source !== 'sm2',
+          predictedSuccess: item.confidenceScore,
+          suggestedRelatedWords: item.recommendedRelated,
+          confidenceScore: item.confidenceScore,
+          priority: schedule.length - index, // Higher priority for earlier items
+          source: item.source,
+        };
+      });
     } catch (error) {
       logger.warn('[EnhancedSR] Failed to get optimized schedule, using basic sorting', { error });
 
@@ -223,11 +217,13 @@ export class EnhancedSpacedRepetitionAlgorithm extends BaseAlgorithm {
   /**
    * Get confusion pairs for focused practice
    */
-  async getConfusionPairs(userId: string): Promise<Array<{
-    word1: string;
-    word2: string;
-    confusionRate: number;
-  }>> {
+  async getConfusionPairs(userId: string): Promise<
+    Array<{
+      word1: string;
+      word2: string;
+      confusionRate: number;
+    }>
+  > {
     return vectorStoreBridge.getConfusionPairs(userId);
   }
 
@@ -255,33 +251,20 @@ export class EnhancedSpacedRepetitionAlgorithm extends BaseAlgorithm {
   /**
    * Blend SM-2 and GNN intervals
    */
-  private blendIntervals(
-    sm2Interval: number,
-    gnnInterval: number,
-    confidence: number
-  ): number {
+  private blendIntervals(sm2Interval: number, gnnInterval: number, confidence: number): number {
     // Adjust weights based on confidence
     const dynamicGNNWeight = this.gnnWeight * (0.5 + confidence * 0.5);
     const dynamicSM2Weight = 1 - dynamicGNNWeight;
 
-    const blended = Math.round(
-      sm2Interval * dynamicSM2Weight + gnnInterval * dynamicGNNWeight
-    );
+    const blended = Math.round(sm2Interval * dynamicSM2Weight + gnnInterval * dynamicGNNWeight);
 
-    return Math.max(
-      this.config.minInterval,
-      Math.min(blended, this.config.maxInterval)
-    );
+    return Math.max(this.config.minInterval, Math.min(blended, this.config.maxInterval));
   }
 
   /**
    * Blend SM-2 and GNN ease factors
    */
-  private blendEaseFactors(
-    sm2EF: number,
-    gnnEF: number,
-    confidence: number
-  ): number {
+  private blendEaseFactors(sm2EF: number, gnnEF: number, confidence: number): number {
     const dynamicGNNWeight = this.gnnWeight * (0.5 + confidence * 0.5);
     const dynamicSM2Weight = 1 - dynamicGNNWeight;
 

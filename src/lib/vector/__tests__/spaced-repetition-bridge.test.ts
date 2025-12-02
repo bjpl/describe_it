@@ -126,8 +126,9 @@ describe('SpacedRepetitionBridge', () => {
       const schedule = await bridge.getHybridSchedule('user-1', cards);
 
       for (let i = 1; i < schedule.length; i++) {
-        expect(schedule[i].scheduledDate.getTime())
-          .toBeGreaterThanOrEqual(schedule[i - 1].scheduledDate.getTime());
+        expect(schedule[i].scheduledDate.getTime()).toBeGreaterThanOrEqual(
+          schedule[i - 1].scheduledDate.getTime()
+        );
       }
     });
   });

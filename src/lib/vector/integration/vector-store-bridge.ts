@@ -10,7 +10,12 @@ import { featureFlags } from '../config';
 import { logger } from '@/lib/logger';
 
 interface ActivityRecord {
-  type: 'image_viewed' | 'description_completed' | 'question_answered' | 'phrase_selected' | 'vocabulary_reviewed';
+  type:
+    | 'image_viewed'
+    | 'description_completed'
+    | 'question_answered'
+    | 'phrase_selected'
+    | 'vocabulary_reviewed';
   correct?: boolean;
   points?: number;
   responseTime?: number;
@@ -157,11 +162,19 @@ class VectorStoreBridge {
   /**
    * Get GNN-enhanced predictions for vocabulary
    */
-  public async getEnhancedPredictions(userId: string, vocabularyIds: string[]): Promise<Map<string, {
-    predictedSuccess: number;
-    nextReviewDate: Date;
-    difficulty: 'easy' | 'medium' | 'hard';
-  }>> {
+  public async getEnhancedPredictions(
+    userId: string,
+    vocabularyIds: string[]
+  ): Promise<
+    Map<
+      string,
+      {
+        predictedSuccess: number;
+        nextReviewDate: Date;
+        difficulty: 'easy' | 'medium' | 'hard';
+      }
+    >
+  > {
     const predictions = new Map();
 
     if (!featureFlags.useGNNLearning()) {
@@ -170,7 +183,7 @@ class VectorStoreBridge {
 
     try {
       await Promise.all(
-        vocabularyIds.map(async (vocabId) => {
+        vocabularyIds.map(async vocabId => {
           const prediction = await learningService.getPrediction(userId, vocabId);
           predictions.set(vocabId, {
             predictedSuccess: prediction.predictedSuccessRate,
@@ -194,11 +207,13 @@ class VectorStoreBridge {
   /**
    * Get confusion pairs for a user
    */
-  public async getConfusionPairs(userId: string): Promise<Array<{
-    word1: string;
-    word2: string;
-    confusionRate: number;
-  }>> {
+  public async getConfusionPairs(userId: string): Promise<
+    Array<{
+      word1: string;
+      word2: string;
+      confusionRate: number;
+    }>
+  > {
     if (!featureFlags.useGNNLearning()) {
       return [];
     }
@@ -214,11 +229,16 @@ class VectorStoreBridge {
   /**
    * Get optimal review schedule
    */
-  public async getReviewSchedule(userId: string, limit: number = 20): Promise<Array<{
-    vocabularyId: string;
-    scheduledDate: Date;
-    priority: number;
-  }>> {
+  public async getReviewSchedule(
+    userId: string,
+    limit: number = 20
+  ): Promise<
+    Array<{
+      vocabularyId: string;
+      scheduledDate: Date;
+      priority: number;
+    }>
+  > {
     if (!featureFlags.useGNNLearning()) {
       return [];
     }

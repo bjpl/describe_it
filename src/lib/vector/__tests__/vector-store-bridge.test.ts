@@ -16,12 +16,12 @@ vi.mock('../services/learning', () => ({
       suggestedRelatedWords: [],
     }),
     recordInteraction: vi.fn().mockResolvedValue(undefined),
-    getConfusionPairs: vi.fn().mockResolvedValue([
-      { word1: 'ser', word2: 'estar', confusionRate: 0.6 },
-    ]),
-    getOptimalReviewSchedule: vi.fn().mockResolvedValue([
-      { vocabularyId: 'vocab-1', scheduledDate: new Date(), priority: 10 },
-    ]),
+    getConfusionPairs: vi
+      .fn()
+      .mockResolvedValue([{ word1: 'ser', word2: 'estar', confusionRate: 0.6 }]),
+    getOptimalReviewSchedule: vi
+      .fn()
+      .mockResolvedValue([{ vocabularyId: 'vocab-1', scheduledDate: new Date(), priority: 10 }]),
   },
 }));
 

@@ -56,25 +56,28 @@ export async function POST(request: NextRequest) {
       latencyMs: latency,
     });
 
-    return NextResponse.json({
-      prediction: {
-        nextReviewDate: prediction.nextReviewDate.toISOString(),
-        predictedSuccessRate: prediction.predictedSuccessRate,
-        confidence: prediction.confidence,
-        recommendedDifficulty: prediction.recommendedDifficulty,
-        suggestedRelatedWords: prediction.suggestedRelatedWords,
+    return NextResponse.json(
+      {
+        prediction: {
+          nextReviewDate: prediction.nextReviewDate.toISOString(),
+          predictedSuccessRate: prediction.predictedSuccessRate,
+          confidence: prediction.confidence,
+          recommendedDifficulty: prediction.recommendedDifficulty,
+          suggestedRelatedWords: prediction.suggestedRelatedWords,
+        },
+        meta: {
+          userId,
+          vocabularyId,
+          latencyMs: latency,
+          gnnEnabled: featureFlags.useGNNLearning(),
+        },
       },
-      meta: {
-        userId,
-        vocabularyId,
-        latencyMs: latency,
-        gnnEnabled: featureFlags.useGNNLearning(),
-      },
-    }, {
-      headers: {
-        'X-Response-Time': `${latency}ms`,
-      },
-    });
+      {
+        headers: {
+          'X-Response-Time': `${latency}ms`,
+        },
+      }
+    );
   } catch (error) {
     logger.error('[PredictionsAPI] Prediction failed', { error });
 
@@ -105,10 +108,7 @@ export async function GET(request: NextRequest) {
     const userId = request.nextUrl.searchParams.get('userId');
 
     if (!userId) {
-      return NextResponse.json(
-        { error: 'userId query parameter is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'userId query parameter is required' }, { status: 400 });
     }
 
     const confusionPairs = await learningService.getConfusionPairs(userId);
@@ -121,24 +121,30 @@ export async function GET(request: NextRequest) {
       latencyMs: latency,
     });
 
-    return NextResponse.json({
-      confusionPairs,
-      meta: {
-        userId,
-        count: confusionPairs.length,
-        latencyMs: latency,
+    return NextResponse.json(
+      {
+        confusionPairs,
+        meta: {
+          userId,
+          count: confusionPairs.length,
+          latencyMs: latency,
+        },
       },
-    }, {
-      headers: {
-        'Cache-Control': 'private, max-age=300',
-        'X-Response-Time': `${latency}ms`,
-      },
-    });
+      {
+        headers: {
+          'Cache-Control': 'private, max-age=300',
+          'X-Response-Time': `${latency}ms`,
+        },
+      }
+    );
   } catch (error) {
     logger.error('[PredictionsAPI] Confusion pairs retrieval failed', { error });
 
     return NextResponse.json(
-      { error: 'Failed to retrieve confusion pairs', message: error instanceof Error ? error.message : 'Unknown error' },
+      {
+        error: 'Failed to retrieve confusion pairs',
+        message: error instanceof Error ? error.message : 'Unknown error',
+      },
       { status: 500 }
     );
   }
