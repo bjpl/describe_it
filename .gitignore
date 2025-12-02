@@ -128,6 +128,10 @@ hive-mind-prompt-*.txt
 # Sentry Config File
 .env.sentry-build-plugin
 
+
+# Removed Windows wrapper files per user request
+hive-mind-prompt-*.txt
+
 # Claude Flow generated files
 .claude/settings.local.json
 .mcp.json
