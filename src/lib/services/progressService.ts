@@ -668,7 +668,7 @@ export class ProgressService {
         .insert([session]);
 
       if (error) {
-        logger.warn("Failed to save session to database:", error);
+        logger.warn("Failed to save session to database:", { error });
       }
     }
   }

@@ -929,7 +929,7 @@ export class SessionReportGenerator {
     };
 
     const score = chunk.reduce((sum, interaction) => {
-      const weight = (weights as any)[interaction.type] || 1;
+      const weight = weights[interaction.type as keyof typeof weights] || 1;
       return sum + weight;
     }, 0);
 

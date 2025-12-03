@@ -6,7 +6,7 @@
 import { supabase } from '../supabase/client';
 import { hybridStorage } from '../storage/HybridStorageManager';
 import { logger } from '../logger';
-import { authLogger, securityLogger } from '@/lib/logging/logger';
+import { authLogger, securityLogger } from '@/lib/logger';
 import type { User, Session } from '@supabase/supabase-js';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
 

@@ -82,7 +82,7 @@ export class SentryErrorBoundary extends Component<Props, State> {
       this.props.onError(error, errorInfo);
     }
 
-    logger.error('Error caught by boundary:', error, errorInfo);
+    logger.error('Error caught by boundary:', error, { componentStack: errorInfo?.componentStack });
   }
 
   handleRetry = () => {

@@ -245,7 +245,7 @@ async function handleDescriptionGenerate(request: AuthenticatedRequest): Promise
     // Parse and validate request body with size limits
     apiLogger.info('[API Route] Parsing request body...');
     const body = await request.json();
-    apiLogger.info('[API Route] Request body keys:', Object.keys(body));
+    apiLogger.info('[API Route] Request body keys:', { keys: Object.keys(body) });
     
     if (!validateRequestSize(body, 50 * 1024)) { // 50KB limit
       return NextResponse.json(

@@ -29,33 +29,34 @@ class SimpleLogger {
     this.context = context;
   }
 
-  private formatMessage(level: string, message: string, meta?: any) {
+  private formatMessage(level: string, message: string, meta?: Record<string, unknown>) {
     const timestamp = new Date().toISOString();
     const metaStr = meta ? ` ${safeStringify(meta)}` : '';
     return `[${timestamp}] [${level.toUpperCase()}] [${this.context}] ${message}${metaStr}`;
   }
 
-  error(message: string, error?: Error | any, meta?: Record<string, any>) {
+  error(message: string, error?: Error | unknown, meta?: Record<string, unknown>) {
+    const errorMessage = error instanceof Error ? error.message : error ? String(error) : undefined;
     console.error(
-      this.formatMessage('error', message, { ...meta, error: error?.message || error })
+      this.formatMessage('error', message, { ...meta, error: errorMessage })
     );
   }
 
-  warn(message: string, meta?: Record<string, any>) {
+  warn(message: string, meta?: Record<string, unknown>) {
     console.warn(this.formatMessage('warn', message, meta));
   }
 
-  info(message: string, meta?: Record<string, any>) {
+  info(message: string, meta?: Record<string, unknown>) {
     console.info(this.formatMessage('info', message, meta));
   }
 
-  debug(message: string, meta?: Record<string, any>) {
+  debug(message: string, meta?: Record<string, unknown>) {
     if (process.env.NODE_ENV !== 'production') {
       console.log(this.formatMessage('debug', message, meta));
     }
   }
 
-  http(message: string, meta?: Record<string, any>) {
+  http(message: string, meta?: Record<string, unknown>) {
     if (process.env.NODE_ENV !== 'production') {
       console.log(this.formatMessage('http', message, meta));
     }
@@ -66,13 +67,14 @@ class SimpleLogger {
     return this;
   }
 
-  setRequest(meta: Record<string, any>) {
+  setRequest(meta: Record<string, unknown>) {
     return this; // For API compatibility
   }
 }
 
 // Server-side Winston logger
-let winstonLogger: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let winstonLogger: ReturnType<typeof import('winston').createLogger> | null = null;
 
 if (typeof window === 'undefined') {
   try {
@@ -95,7 +97,7 @@ if (typeof window === 'undefined') {
     const devFormat = winston.format.combine(
       winston.format.colorize({ all: true }),
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-      winston.format.printf((info: any) => `${info.timestamp} ${info.level}: ${info.message}`)
+      winston.format.printf((info: Record<string, unknown>) => `${info.timestamp} ${info.level}: ${info.message}`)
     );
 
     // Define format for production
@@ -106,7 +108,7 @@ if (typeof window === 'undefined') {
     );
 
     // Create transports
-    const transports: any[] = [];
+    const transports: Array<InstanceType<typeof winston.transports.Console>> = [];
 
     // Console transport for all environments
     // NOTE: File transports removed - Vercel serverless has read-only filesystem
@@ -135,8 +137,9 @@ if (typeof window === 'undefined') {
  */
 export class Logger {
   private context: string;
-  private logger: any;
-  private requestMeta: Record<string, any> = {};
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private logger: ReturnType<typeof import('winston').createLogger> | SimpleLogger;
+  private requestMeta: Record<string, unknown> = {};
 
   constructor(context: string = 'app') {
     this.context = context;
@@ -146,7 +149,7 @@ export class Logger {
   /**
    * Set request-specific metadata
    */
-  setRequest(meta: Record<string, any>) {
+  setRequest(meta: Record<string, unknown>) {
     this.requestMeta = meta;
     return this;
   }
@@ -154,18 +157,22 @@ export class Logger {
   /**
    * Log an error
    */
-  error(message: string, error?: Error | any, meta?: Record<string, any>) {
+  error(message: string, error?: Error | unknown, meta?: Record<string, unknown>) {
+    const errorDetails = error instanceof Error
+      ? {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+        }
+      : error
+        ? { message: String(error) }
+        : undefined;
+
     const logData = {
       context: this.context,
       ...this.requestMeta,
       ...meta,
-      error: error
-        ? {
-            message: error.message || error,
-            stack: error.stack,
-            name: error.name,
-          }
-        : undefined,
+      error: errorDetails,
     };
 
     if (winstonLogger) {
@@ -178,7 +185,7 @@ export class Logger {
   /**
    * Log a warning
    */
-  warn(message: string, meta?: Record<string, any>) {
+  warn(message: string, meta?: Record<string, unknown>) {
     const logData = {
       context: this.context,
       ...this.requestMeta,
@@ -195,7 +202,7 @@ export class Logger {
   /**
    * Log an info message
    */
-  info(message: string, meta?: Record<string, any>) {
+  info(message: string, meta?: Record<string, unknown>) {
     const logData = {
       context: this.context,
       ...this.requestMeta,
@@ -212,7 +219,7 @@ export class Logger {
   /**
    * Log a debug message
    */
-  debug(message: string, meta?: Record<string, any>) {
+  debug(message: string, meta?: Record<string, unknown>) {
     const logData = {
       context: this.context,
       ...this.requestMeta,
@@ -229,7 +236,7 @@ export class Logger {
   /**
    * Log an HTTP request
    */
-  http(message: string, meta?: Record<string, any>) {
+  http(message: string, meta?: Record<string, unknown>) {
     const logData = {
       context: this.context,
       ...this.requestMeta,

@@ -190,7 +190,7 @@ export const environmentConfig = EnvironmentConfig.getInstance();
 // Validate configuration on load
 const validation = environmentConfig.validateConfiguration();
 if (!validation.valid) {
-  securityLogger.warn('[SECURITY] Environment configuration issues:', validation.issues);
+  securityLogger.warn('[SECURITY] Environment configuration issues:', { issues: validation.issues });
   
   // In production, these should be treated as errors
   if (process.env.NODE_ENV === 'production') {

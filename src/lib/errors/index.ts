@@ -62,7 +62,7 @@ export enum ErrorSeverity {
  * Context object for additional error information
  */
 export interface ErrorContext {
-  [key: string]: any;
+  [key: string]: unknown;
   component?: string;
   operation?: string;
   userId?: string;

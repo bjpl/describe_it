@@ -138,7 +138,7 @@ export function logEnvironmentStatus(): void {
   if (status.isValid) {
     logger.info("✅ All required environment variables are set");
   } else {
-    logger.warn("❌ Missing required environment variables:", status.missing);
+    logger.warn("❌ Missing required environment variables:", { missing: status.missing });
   }
 
   if (status.warnings.length > 0) {

@@ -1,0 +1,509 @@
+{
+  "plan_metadata": {
+    "plan_name": "describe-it-comprehensive-evaluation",
+    "created_at": "2025-12-02T22:28:00Z",
+    "planner": "GOAP Agent",
+    "target_project": "describe-it",
+    "project_type": "Next.js 15.5 Language Learning Application",
+    "estimated_duration": "6-8 hours",
+    "coordination_topology": "hierarchical"
+  },
+
+  "world_state_variables": {
+    "initial_state": {
+      "codebase_analyzed": false,
+      "architecture_evaluated": false,
+      "tests_assessed": false,
+      "performance_profiled": false,
+      "security_reviewed": false,
+      "debt_identified": false,
+      "dependencies_audited": false,
+      "code_quality_measured": false,
+      "report_generated": false
+    },
+    "goal_state": {
+      "codebase_analyzed": true,
+      "architecture_evaluated": true,
+      "tests_assessed": true,
+      "performance_profiled": true,
+      "security_reviewed": true,
+      "debt_identified": true,
+      "dependencies_audited": true,
+      "code_quality_measured": true,
+      "report_generated": true
+    }
+  },
+
+  "action_definitions": [
+    {
+      "action_id": "A1",
+      "name": "analyze_codebase_structure",
+      "description": "Map project structure, identify patterns, count components and modules",
+      "preconditions": {},
+      "effects": {
+        "codebase_analyzed": true,
+        "structure_mapped": true
+      },
+      "tools_required": ["Glob", "Read", "Grep", "Bash"],
+      "execution_mode": "code",
+      "cost": 2,
+      "estimated_time": "30 minutes",
+      "agent_type": "code-analyzer",
+      "success_criteria": [
+        "Complete file tree generated",
+        "Component hierarchy documented",
+        "Module boundaries identified",
+        "Import relationships mapped"
+      ]
+    },
+    {
+      "action_id": "A2",
+      "name": "evaluate_architecture_patterns",
+      "description": "Assess architectural decisions, design patterns, separation of concerns",
+      "preconditions": {
+        "codebase_analyzed": true
+      },
+      "effects": {
+        "architecture_evaluated": true,
+        "patterns_identified": true
+      },
+      "tools_required": ["Read", "Grep", "code-analyzer"],
+      "execution_mode": "hybrid",
+      "cost": 3,
+      "estimated_time": "45 minutes",
+      "agent_type": "system-architect",
+      "success_criteria": [
+        "Architecture style documented (layered, microservices, etc.)",
+        "Design patterns identified (Factory, Repository, etc.)",
+        "State management approach evaluated",
+        "API design assessed",
+        "Data flow patterns analyzed"
+      ]
+    },
+    {
+      "action_id": "A3",
+      "name": "assess_test_coverage",
+      "description": "Evaluate test suite completeness, types of tests, coverage metrics",
+      "preconditions": {
+        "codebase_analyzed": true
+      },
+      "effects": {
+        "tests_assessed": true,
+        "coverage_measured": true
+      },
+      "tools_required": ["Bash", "Read", "Grep"],
+      "execution_mode": "code",
+      "cost": 2,
+      "estimated_time": "40 minutes",
+      "agent_type": "tester",
+      "success_criteria": [
+        "Test count and types documented",
+        "Coverage metrics calculated",
+        "Testing frameworks identified",
+        "Missing test areas identified",
+        "Test quality assessed"
+      ]
+    },
+    {
+      "action_id": "A4",
+      "name": "profile_performance_characteristics",
+      "description": "Analyze bundle size, load times, optimization opportunities",
+      "preconditions": {
+        "codebase_analyzed": true
+      },
+      "effects": {
+        "performance_profiled": true,
+        "bottlenecks_identified": true
+      },
+      "tools_required": ["Bash", "Read", "perf-analyzer"],
+      "execution_mode": "hybrid",
+      "cost": 3,
+      "estimated_time": "50 minutes",
+      "agent_type": "perf-analyzer",
+      "success_criteria": [
+        "Bundle size analyzed",
+        "Critical rendering path evaluated",
+        "Lazy loading opportunities identified",
+        "Image optimization assessed",
+        "Caching strategies reviewed"
+      ]
+    },
+    {
+      "action_id": "A5",
+      "name": "conduct_security_review",
+      "description": "Identify security vulnerabilities, authentication issues, data protection",
+      "preconditions": {
+        "codebase_analyzed": true
+      },
+      "effects": {
+        "security_reviewed": true,
+        "vulnerabilities_identified": true
+      },
+      "tools_required": ["Grep", "Read", "security-manager"],
+      "execution_mode": "hybrid",
+      "cost": 4,
+      "estimated_time": "60 minutes",
+      "agent_type": "security-manager",
+      "success_criteria": [
+        "Authentication mechanism reviewed",
+        "Authorization patterns assessed",
+        "Input validation checked",
+        "XSS/CSRF protections verified",
+        "API security evaluated",
+        "Secrets management reviewed"
+      ]
+    },
+    {
+      "action_id": "A6",
+      "name": "identify_technical_debt",
+      "description": "Find code smells, duplication, outdated patterns, TODOs",
+      "preconditions": {
+        "codebase_analyzed": true,
+        "architecture_evaluated": true
+      },
+      "effects": {
+        "debt_identified": true,
+        "refactoring_targets": true
+      },
+      "tools_required": ["Grep", "Read", "code-analyzer"],
+      "execution_mode": "hybrid",
+      "cost": 3,
+      "estimated_time": "45 minutes",
+      "agent_type": "code-analyzer",
+      "success_criteria": [
+        "Code duplication identified",
+        "Complex functions flagged",
+        "TODO/FIXME comments cataloged",
+        "Deprecated code found",
+        "Inconsistent patterns noted"
+      ]
+    },
+    {
+      "action_id": "A7",
+      "name": "audit_dependencies",
+      "description": "Review package.json, check for vulnerabilities, outdated packages",
+      "preconditions": {
+        "codebase_analyzed": true
+      },
+      "effects": {
+        "dependencies_audited": true,
+        "security_risks_known": true
+      },
+      "tools_required": ["Bash", "Read"],
+      "execution_mode": "code",
+      "cost": 2,
+      "estimated_time": "30 minutes",
+      "agent_type": "reviewer",
+      "success_criteria": [
+        "Dependency tree analyzed",
+        "Vulnerabilities identified",
+        "Outdated packages listed",
+        "Unused dependencies found",
+        "License compliance checked"
+      ]
+    },
+    {
+      "action_id": "A8",
+      "name": "measure_code_quality",
+      "description": "Assess code style, complexity, maintainability metrics",
+      "preconditions": {
+        "codebase_analyzed": true
+      },
+      "effects": {
+        "code_quality_measured": true,
+        "metrics_collected": true
+      },
+      "tools_required": ["Bash", "Read", "Grep"],
+      "execution_mode": "code",
+      "cost": 2,
+      "estimated_time": "35 minutes",
+      "agent_type": "code-analyzer",
+      "success_criteria": [
+        "Cyclomatic complexity calculated",
+        "Lines of code counted",
+        "Code style consistency checked",
+        "Documentation coverage assessed",
+        "Type safety verified"
+      ]
+    },
+    {
+      "action_id": "A9",
+      "name": "generate_comprehensive_report",
+      "description": "Compile all findings into structured evaluation report",
+      "preconditions": {
+        "codebase_analyzed": true,
+        "architecture_evaluated": true,
+        "tests_assessed": true,
+        "performance_profiled": true,
+        "security_reviewed": true,
+        "debt_identified": true,
+        "dependencies_audited": true,
+        "code_quality_measured": true
+      },
+      "effects": {
+        "report_generated": true
+      },
+      "tools_required": ["Write", "memory"],
+      "execution_mode": "llm",
+      "cost": 3,
+      "estimated_time": "45 minutes",
+      "agent_type": "analyst",
+      "success_criteria": [
+        "Executive summary created",
+        "All sections completed",
+        "Recommendations prioritized",
+        "Metrics visualized",
+        "Action items defined"
+      ]
+    }
+  ],
+
+  "optimal_action_sequence": [
+    {
+      "sequence_id": 1,
+      "phase": "Foundation",
+      "actions": ["A1"],
+      "parallelizable": false,
+      "rationale": "Must understand project structure before all other analyses"
+    },
+    {
+      "sequence_id": 2,
+      "phase": "Parallel Analysis",
+      "actions": ["A2", "A3", "A4", "A5", "A7", "A8"],
+      "parallelizable": true,
+      "rationale": "These analyses can run concurrently as they all depend only on A1"
+    },
+    {
+      "sequence_id": 3,
+      "phase": "Synthesis",
+      "actions": ["A6"],
+      "parallelizable": false,
+      "rationale": "Technical debt requires architecture evaluation to be complete"
+    },
+    {
+      "sequence_id": 4,
+      "phase": "Reporting",
+      "actions": ["A9"],
+      "parallelizable": false,
+      "rationale": "Final report compilation requires all analyses to be complete"
+    }
+  ],
+
+  "project_context": {
+    "total_source_files": "~500+",
+    "total_lines_of_code": 162031,
+    "test_files": "~90+",
+    "primary_tech_stack": [
+      "Next.js 15.5",
+      "React 19",
+      "TypeScript 5.9 (strict)",
+      "Supabase 2.84.0",
+      "Anthropic Claude SDK 0.70.1",
+      "TanStack Query 5.90",
+      "Zustand 4.4",
+      "Vitest 3.2.4",
+      "Playwright 1.55.1"
+    ],
+    "key_integrations": [
+      "Anthropic API (AI descriptions)",
+      "Unsplash API (image search)",
+      "Supabase (auth, database, storage)",
+      "Sentry (monitoring)",
+      "Vercel (deployment)"
+    ],
+    "deployment_status": "Production (https://describe-it.vercel.app)"
+  },
+
+  "evaluation_areas": {
+    "1_architecture": {
+      "focus_points": [
+        "Next.js App Router usage patterns",
+        "API route organization and design",
+        "State management with Zustand + TanStack Query",
+        "Component hierarchy and reusability",
+        "Separation of concerns",
+        "Database schema and migrations",
+        "Caching strategies (multi-layer)",
+        "Error handling patterns"
+      ]
+    },
+    "2_code_quality": {
+      "focus_points": [
+        "TypeScript strict mode compliance",
+        "Code duplication analysis",
+        "Cyclomatic complexity",
+        "Function/file size metrics",
+        "Naming conventions consistency",
+        "Documentation coverage",
+        "ESLint configuration and adherence",
+        "Import organization"
+      ]
+    },
+    "3_testing": {
+      "focus_points": [
+        "Unit test coverage (Vitest)",
+        "Integration test completeness",
+        "E2E test scenarios (Playwright)",
+        "Component testing strategy",
+        "API endpoint testing",
+        "Mock data quality",
+        "Test organization and naming",
+        "Testing utilities and helpers"
+      ]
+    },
+    "4_performance": {
+      "focus_points": [
+        "Bundle size analysis",
+        "Code splitting effectiveness",
+        "Image optimization",
+        "Lazy loading implementation",
+        "Core Web Vitals metrics",
+        "Caching strategies",
+        "API response times",
+        "Database query optimization"
+      ]
+    },
+    "5_security": {
+      "focus_points": [
+        "Authentication implementation (Supabase Auth)",
+        "Authorization (Row-Level Security)",
+        "API key management",
+        "Input validation (Zod schemas)",
+        "XSS/CSRF protection",
+        "Rate limiting",
+        "CORS configuration",
+        "Security headers",
+        "Secrets management"
+      ]
+    },
+    "6_dependencies": {
+      "focus_points": [
+        "Vulnerability scanning",
+        "Outdated package identification",
+        "Unused dependencies",
+        "License compliance",
+        "Dependency bloat",
+        "Peer dependency conflicts",
+        "Optional dependencies usage"
+      ]
+    },
+    "7_technical_debt": {
+      "focus_points": [
+        "TODO/FIXME comments analysis",
+        "Deprecated code patterns",
+        "Code duplication",
+        "Complex functions needing refactoring",
+        "Inconsistent patterns",
+        "Missing error handling",
+        "Hardcoded values",
+        "Legacy code remnants"
+      ]
+    },
+    "8_maintainability": {
+      "focus_points": [
+        "Documentation quality",
+        "Code readability",
+        "Component modularity",
+        "API design consistency",
+        "Error messages clarity",
+        "Logging practices",
+        "Development workflow",
+        "Deployment process"
+      ]
+    }
+  },
+
+  "success_metrics": {
+    "completeness": {
+      "target": "100% of planned actions executed",
+      "measurement": "9/9 actions completed"
+    },
+    "depth": {
+      "target": "All 8 evaluation areas thoroughly assessed",
+      "measurement": "Detailed findings for each area"
+    },
+    "actionability": {
+      "target": "Prioritized recommendations with clear next steps",
+      "measurement": "High/Medium/Low priority tasks identified"
+    },
+    "honesty": {
+      "target": "Balanced critique with both strengths and weaknesses",
+      "measurement": "No false positives, realistic assessment"
+    }
+  },
+
+  "coordination_protocol": {
+    "swarm_topology": "hierarchical",
+    "coordinator_agent": "system-architect",
+    "agent_assignments": {
+      "A1": "code-analyzer",
+      "A2": "system-architect",
+      "A3": "tester",
+      "A4": "perf-analyzer",
+      "A5": "security-manager",
+      "A6": "code-analyzer",
+      "A7": "reviewer",
+      "A8": "code-analyzer",
+      "A9": "analyst"
+    },
+    "memory_keys": {
+      "codebase_structure": "goap/structure",
+      "architecture_findings": "goap/architecture",
+      "test_results": "goap/tests",
+      "performance_metrics": "goap/performance",
+      "security_issues": "goap/security",
+      "technical_debt": "goap/debt",
+      "dependency_audit": "goap/dependencies",
+      "code_metrics": "goap/quality",
+      "final_report": "goap/report"
+    },
+    "hooks_integration": {
+      "pre_task": "npx claude-flow@alpha hooks pre-task --description '{action_name}'",
+      "post_task": "npx claude-flow@alpha hooks post-task --task-id '{action_id}'",
+      "memory_store": "npx claude-flow@alpha hooks post-edit --memory-key '{memory_key}'"
+    }
+  },
+
+  "replanning_triggers": {
+    "action_failure": "Replan from current state if action fails",
+    "unexpected_findings": "Adjust priorities if critical issues discovered",
+    "time_constraints": "Skip low-priority actions if running over time",
+    "dependency_changes": "Reorder actions if preconditions can't be met"
+  },
+
+  "deliverables": {
+    "1_evaluation_report": {
+      "filename": "docs/evaluation-report.md",
+      "sections": [
+        "Executive Summary",
+        "Project Overview",
+        "Architecture Assessment",
+        "Code Quality Analysis",
+        "Test Coverage Review",
+        "Performance Profile",
+        "Security Audit",
+        "Technical Debt Inventory",
+        "Dependency Audit",
+        "Recommendations (Prioritized)",
+        "Conclusion"
+      ]
+    },
+    "2_metrics_dashboard": {
+      "filename": "docs/evaluation-metrics.json",
+      "contents": "Quantitative metrics in JSON format"
+    },
+    "3_action_items": {
+      "filename": "docs/evaluation-action-items.md",
+      "contents": "Prioritized list of recommended actions"
+    }
+  },
+
+  "estimated_timeline": {
+    "phase_1_foundation": "30 minutes",
+    "phase_2_parallel_analysis": "60-90 minutes (parallel execution)",
+    "phase_3_synthesis": "45 minutes",
+    "phase_4_reporting": "45 minutes",
+    "buffer": "30-60 minutes",
+    "total": "6-8 hours (with parallelization)"
+  }
+}

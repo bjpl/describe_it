@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       apiLogger.warn('[Analytics] Supabase not configured, using in-memory storage');
       // Log events to console in development mode
       if (process.env.NODE_ENV === 'development') {
-        apiLogger.info('[Analytics] Events received:', validEvents);
+        apiLogger.info('[Analytics] Events received:', { events: validEvents });
       }
       
       return createSuccessResponse({
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
           
           // Log to console in development
           if (process.env.NODE_ENV === 'development') {
-            apiLogger.info('[Analytics] Events that would be stored:', eventsToStore);
+            apiLogger.info('[Analytics] Events that would be stored:', { events: eventsToStore });
           }
           
           return createSuccessResponse({

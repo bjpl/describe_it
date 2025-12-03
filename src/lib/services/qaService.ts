@@ -7,8 +7,7 @@ import { openAIService } from "./openaiService";
 import { translationService } from "./translationService";
 import { supabase } from "../supabase";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
-import { createLogger, dbLogger } from "@/lib/logging/logger";
-import { logger } from '@/lib/logger';
+import { createLogger, dbLogger, logger } from '@/lib/logger';
 
 const qaLogger = createLogger('QAService');
 

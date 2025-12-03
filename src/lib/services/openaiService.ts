@@ -3,7 +3,7 @@ import { APIError } from "../../types/api";
 import { withRetry, RetryResult, RetryConfig } from "../utils/error-retry";
 import { getEnvironment } from "../../config/env";
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
-import { apiLogger, createLogger } from "@/lib/logging/logger";
+import { apiLogger, createLogger } from "@/lib/logger";
 
 const serviceLogger = createLogger('OpenAIService');
 

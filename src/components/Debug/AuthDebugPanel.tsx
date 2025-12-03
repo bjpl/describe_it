@@ -255,7 +255,7 @@ export const AuthDebugPanel: React.FC<AuthDebugPanelProps> = ({
               </button>
               <button
                 onClick={() => {
-                  authLogger.info('[AUTH_DEBUG] Current state:', captureDebugState());
+                  authLogger.info('[AUTH_DEBUG] Current state:', { state: captureDebugState() });
                 }}
                 style={{
                   backgroundColor: '#4444ff',

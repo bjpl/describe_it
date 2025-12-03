@@ -6,7 +6,7 @@
 import { logger, type ErrorContext } from './logger';
 import { metrics } from './metrics';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
-import { createLogger } from '@/lib/logging/logger';
+import { createLogger } from '@/lib/logger';
 
 const errorTrackingLogger = createLogger('ErrorTracking');
 

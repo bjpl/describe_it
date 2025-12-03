@@ -67,14 +67,15 @@ export function createComponentLogger(componentName: string) {
  *   { component: 'UserService' }
  * );
  */
-export function withLogging<T extends (...args: any[]) => any>(
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function withLogging<T extends (...args: unknown[]) => unknown>(
   fn: T,
   fnName: string,
   context?: LogContext
 ): T {
   const logger = createLogger(fnName);
 
-  return ((...args: any[]) => {
+  return ((...args: unknown[]) => {
     const startTime = Date.now();
     const callContext = {
       ...context,
@@ -308,8 +309,8 @@ export async function batchLog(
     operationCount: operations.length,
   });
 
-  const results: any[] = [];
-  const errors: any[] = [];
+  const results: Array<{ name: string; success: boolean; duration: number }> = [];
+  const errors: Array<{ name: string; error: Error; duration: number }> = [];
 
   for (const { name, fn } of operations) {
     const opStartTime = Date.now();
@@ -333,7 +334,7 @@ export async function batchLog(
         operationName: name,
         duration,
       });
-      errors.push({ name, error, duration });
+      errors.push({ name, error: error as Error, duration });
     }
   }
 
@@ -405,7 +406,7 @@ export function createDatabaseLogger(operation: string, table: string) {
  * devOnly('Debug info', { state, props });
  * // Only logs in development
  */
-export function devOnly(message: string, data?: any): void {
+export function devOnly(message: string, data?: Record<string, unknown>): void {
   if (process.env.NODE_ENV === 'development') {
     const logger = createLogger('dev');
     logger.debug(message, data);

@@ -3,7 +3,7 @@
  * Epsilon-5 Integration Component
  */
 
-import { createLogger } from '@/lib/logging/logger';
+import { createLogger } from '@/lib/logger';
 
 const retryLogger = createLogger('ErrorRetry');
 

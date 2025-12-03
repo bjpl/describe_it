@@ -5,7 +5,7 @@
 
 import OpenAI from "openai";
 import { apiKeyProvider } from "./keyProvider";
-import { apiLogger, securityLogger, performanceLogger } from "@/lib/logging/logger";
+import { apiLogger, securityLogger, performanceLogger } from "@/lib/logger";
 import type { 
   DescriptionStyle, 
   DescriptionRequest, 

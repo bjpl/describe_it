@@ -27,7 +27,8 @@ export const log = {
    * @param message - Log message
    * @param args - Additional data to log
    */
-  debug: (message: string, ...args: any[]): void => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  debug: (message: string, ...args: unknown[]): void => {
     const context: LogContext = args.length > 0 ? { data: args } : {};
     logger.debug(message, context);
   },
@@ -37,7 +38,7 @@ export const log = {
    * @param message - Log message
    * @param args - Additional data to log
    */
-  info: (message: string, ...args: any[]): void => {
+  info: (message: string, ...args: unknown[]): void => {
     const context: LogContext = args.length > 0 ? { data: args } : {};
     logger.info(message, context);
   },
@@ -47,7 +48,7 @@ export const log = {
    * @param message - Warning message
    * @param args - Additional data to log
    */
-  warn: (message: string, ...args: any[]): void => {
+  warn: (message: string, ...args: unknown[]): void => {
     const context: LogContext = args.length > 0 ? { data: args } : {};
     logger.warn(message, context);
   },
@@ -58,7 +59,7 @@ export const log = {
    * @param errorOrContext - Error object or first context argument
    * @param args - Additional data to log
    */
-  error: (message: string, errorOrContext?: Error | any, ...args: any[]): void => {
+  error: (message: string, errorOrContext?: Error | unknown, ...args: unknown[]): void => {
     if (errorOrContext instanceof Error) {
       const context: LogContext = args.length > 0 ? { data: args } : {};
       logger.error(message, errorOrContext, context);
@@ -74,7 +75,7 @@ export const log = {
    * @param message - Log message
    * @param args - Additional data to log
    */
-  verbose: (message: string, ...args: any[]): void => {
+  verbose: (message: string, ...args: unknown[]): void => {
     const context: LogContext = args.length > 0 ? { data: args } : {};
     logger.verbose(message, context);
   },
@@ -85,7 +86,7 @@ export const log = {
  * @param data - Array of objects or single object to display as table
  * @param columns - Optional column names to display
  */
-export const table = (data: any, columns?: string[]): void => {
+export const table = (data: unknown, columns?: string[]): void => {
   if (process.env.NODE_ENV === 'development') {
     console.table(data, columns);
   }
@@ -142,7 +143,7 @@ export const timeEnd = (label: string): void => {
  * @param message - Trace message
  * @param args - Additional data
  */
-export const trace = (message: string, ...args: any[]): void => {
+export const trace = (message: string, ...args: unknown[]): void => {
   const stack = new Error().stack;
   const context: LogContext = {
     data: args,
@@ -160,7 +161,7 @@ export const trace = (message: string, ...args: any[]): void => {
  * @param message - Message if assertion fails
  * @param args - Additional data
  */
-export const assert = (condition: boolean, message: string, ...args: any[]): void => {
+export const assert = (condition: boolean, message: string, ...args: unknown[]): void => {
   if (!condition) {
     const context: LogContext = args.length > 0 ? { data: args } : {};
     logger.error(`ASSERTION FAILED: ${message}`, undefined, context);

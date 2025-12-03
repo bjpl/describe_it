@@ -263,7 +263,7 @@ export class SessionPersistence {
   }
 
   // Settings persistence
-  public async saveSettings(settings: any): Promise<void> {
+  public async saveSettings(settings: Record<string, unknown>): Promise<void> {
     try {
       const storage = this.getStorage();
       storage.setItem(this.settingsKey, safeStringify(settings));
@@ -407,7 +407,7 @@ export class SessionPersistence {
     }
   }
 
-  private compressData(data: SessionStorage): any {
+  private compressData(data: SessionStorage): SessionStorage {
     // Simple compression: remove redundant metadata
     const compressed = {
       ...data,
@@ -420,19 +420,19 @@ export class SessionPersistence {
     return compressed;
   }
 
-  private decompressData(data: any): SessionStorage {
+  private decompressData(data: SessionStorage): SessionStorage {
     // Restore metadata if needed
     if (data.currentSession) {
-      data.interactions = data.interactions.map((interaction: any) => ({
+      data.interactions = data.interactions.map((interaction) => ({
         ...interaction,
-        metadata: data.currentSession,
+        metadata: data.currentSession ?? undefined,
       }));
     }
 
     return data;
   }
 
-  private isStorageQuotaExceeded(error: any): boolean {
+  private isStorageQuotaExceeded(error: unknown): boolean {
     return (
       error instanceof DOMException &&
       (error.code === 22 || // QUOTA_EXCEEDED_ERR

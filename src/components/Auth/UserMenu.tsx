@@ -66,7 +66,7 @@ export function UserMenu() {
 
   // Custom event handler for auth state changes
   const handleAuthChange = useCallback((e: CustomEvent<AuthStateDetail>) => {
-    authLogger.info('[UserMenu] Custom auth event received:', e.detail);
+    authLogger.info('[UserMenu] Custom auth event received:', { detail: e.detail });
     const { isAuthenticated: authState, user: userData, profile: profileData } = e.detail;
     
     // Force immediate UI update
@@ -247,7 +247,7 @@ export function UserMenu() {
 
     // Log critical divergences as warnings
     if (divergences.length > 0) {
-      authLogger.warn('[UserMenu] AUTH STATE DIVERGENCE DETECTED:', divergences);
+      authLogger.warn('[UserMenu] AUTH STATE DIVERGENCE DETECTED:', { divergences });
     }
   }, [isAuthenticated, localIsAuthenticated, user, localUser, profile, localProfile, isLoading]);
 

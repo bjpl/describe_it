@@ -82,7 +82,7 @@ export function withMonitoring<T extends NextRequest>(
         
         // Record error metrics
         metrics.recordError(
-          logContext.endpoint,
+          String(logContext.endpoint || '/unknown'),
           error.constructor.name,
           errorContext.category,
           errorContext.severity,
@@ -117,14 +117,14 @@ export function withMonitoring<T extends NextRequest>(
     if (monitoringConfig.enablePerformanceTracking) {
       metrics.endRequest(
         requestId,
-        logContext.endpoint || '/unknown',
-        logContext.method || 'GET',
+        String(logContext.endpoint || '/unknown'),
+        String(logContext.method || 'GET'),
         response.status,
         requestTracking.startTime,
         requestSize,
         responseSize,
-        logContext.userId,
-        logContext.userTier
+        logContext.userId as string | undefined,
+        logContext.userTier as string | undefined
       );
     }
 

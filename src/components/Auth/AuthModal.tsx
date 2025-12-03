@@ -62,7 +62,7 @@ export function AuthModal({ isOpen, onClose, initialMode = 'signin', onAuthSucce
           : await directSignUp(email, password, { full_name: fullName });
       }
       
-      authLogger.info('[AuthModal] Result:', result);
+      authLogger.info('[AuthModal] Result:', { result });
 
       if (result?.success) {
         setSuccess(true);

@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
-import { createLogger } from '@/lib/logging/logger';
+import { createLogger } from '@/lib/logger';
 
 const debugLogger = createLogger('ProductionDebugger');
 

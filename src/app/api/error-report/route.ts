@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       validatedData = errorReportSchema.parse(errorData);
     } catch (error) {
       if (error instanceof z.ZodError) {
-        apiLogger.warn(`[SECURITY] Zod validation failed from ${identifier}:`, error.errors);
+        apiLogger.warn(`[SECURITY] Zod validation failed from ${identifier}:`, { validationErrors: error.errors });
         return NextResponse.json(
           { 
             success: false, 

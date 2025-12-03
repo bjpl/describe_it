@@ -7,7 +7,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { keyManager, getServerKey } from '@/lib/keys/keyManager';
-import { apiLogger, securityLogger, performanceLogger } from '@/lib/logging/logger';
+import { apiLogger, securityLogger, performanceLogger } from '@/lib/logger';
 import type { DescriptionStyle, DescriptionRequest, GeneratedDescription } from '../../types/api';
 import * as Sentry from '@sentry/nextjs';
 import {
@@ -460,7 +460,8 @@ IMPORTANT: Base your description ONLY on what you can SEE in this specific image
 
     performanceLogger.info('Claude vision description complete', {
       step: 'vision_complete',
-      duration: `${duration.toFixed(2)}ms`,
+      duration,
+      durationFormatted: `${duration.toFixed(2)}ms`,
       model: response.model,
       inputTokens,
       outputTokens,
@@ -607,7 +608,8 @@ export async function generateClaudeCompletion(
 
     performanceLogger.info('Claude completion finished', {
       step: 'completion_complete',
-      duration: `${duration.toFixed(2)}ms`,
+      duration,
+      durationFormatted: `${duration.toFixed(2)}ms`,
       inputTokens,
       outputTokens,
       totalTokens,

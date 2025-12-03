@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import Redis from 'ioredis';
 import { recordApiRequest } from '@/lib/monitoring/prometheus';
 import { safeParse } from '@/lib/utils/json-safe';
-import { createContextLogger } from '@/lib/logging/logger';
+import { createRequestLogger } from '@/lib/logger';
 
 // Prevent prerendering during build (Redis not available)
 export const dynamic = 'force-dynamic';
@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(response);
   } catch (error) {
-    const logger = createContextLogger('analytics-dashboard');
+    const logger = createRequestLogger('analytics-dashboard');
     logger.error('Analytics dashboard API error', error);
     
     const duration = (Date.now() - startTime) / 1000;
@@ -90,7 +90,7 @@ async function getMetricsData(startTime: number, endTime: number) {
 
     return metrics;
   } catch (error) {
-    createContextLogger('analytics-metrics').error('Failed to fetch metrics data', { error: error instanceof Error ? error.message : error });
+    createRequestLogger('analytics-metrics').error('Failed to fetch metrics data', { error: error instanceof Error ? error.message : error });
     return [];
   }
 }
@@ -116,13 +116,13 @@ async function getApiKeysData(startTime: number, endTime: number) {
           rateLimitHits: parseInt(data.rateLimitHits || '0'),
         });
       } catch (error) {
-        createContextLogger('analytics-apikeys').error('Error processing API key data', { key, error: error instanceof Error ? error.message : error });
+        createRequestLogger('analytics-apikeys').error('Error processing API key data', { key, error: error instanceof Error ? error.message : error });
       }
     }
 
     return apiKeysData.sort((a, b) => b.requests - a.requests);
   } catch (error) {
-    createContextLogger('analytics-apikeys').error('Failed to fetch API keys data', { error: error instanceof Error ? error.message : error });
+    createRequestLogger('analytics-apikeys').error('Failed to fetch API keys data', { error: error instanceof Error ? error.message : error });
     return [];
   }
 }
@@ -146,7 +146,7 @@ async function getAlertsData(startTime: number, endTime: number) {
           }
         }
       } catch (error) {
-        createContextLogger('analytics-alerts').error('Error processing alerts data', { key, error: error instanceof Error ? error.message : error });
+        createRequestLogger('analytics-alerts').error('Error processing alerts data', { key, error: error instanceof Error ? error.message : error });
       }
     }
 
@@ -154,7 +154,7 @@ async function getAlertsData(startTime: number, endTime: number) {
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 50); // Return last 50 alerts
   } catch (error) {
-    createContextLogger('analytics-alerts').error('Failed to fetch alerts data', { error: error instanceof Error ? error.message : error });
+    createRequestLogger('analytics-alerts').error('Failed to fetch alerts data', { error: error instanceof Error ? error.message : error });
     return [];
   }
 }

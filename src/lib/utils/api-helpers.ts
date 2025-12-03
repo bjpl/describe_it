@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { descriptionCache } from "@/lib/cache/tiered-cache";
-import { performanceLogger, createLogger } from "@/lib/logging/logger";
+import { performanceLogger, createLogger } from "@/lib/logger";
 
 const apiHelperLogger = createLogger('APIHelpers');
 

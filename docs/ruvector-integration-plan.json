@@ -1,0 +1,426 @@
+{
+  "title": "RuVector Integration Coordination Plan",
+  "version": "1.0.0",
+  "issued_by": "queen-coordinator",
+  "issued_at": "2025-12-01T00:00:00Z",
+  "architecture_analysis": {
+    "existing_infrastructure": {
+      "vector_services": [
+        "EmbeddingService",
+        "VectorSearchService",
+        "GraphService",
+        "LearningService",
+        "SpacedRepetitionBridge",
+        "SemanticCacheService"
+      ],
+      "api_layer": {
+        "pattern": "Next.js App Router",
+        "location": "/src/app/api",
+        "endpoints": 53,
+        "db_client": "Supabase"
+      },
+      "stores": {
+        "status": "NO EXISTING STORES FOUND",
+        "required": "learningSessionStore",
+        "location_needed": "/src/stores"
+      },
+      "algorithms": {
+        "current": "SM-2 Spaced Repetition",
+        "location": "/src/lib/algorithms/spaced-repetition.ts",
+        "bridge_ready": true
+      },
+      "search": {
+        "current": "SQL LIKE queries",
+        "location": "/src/app/api/search/vocabulary/route.ts",
+        "upgrade_needed": "Hybrid vector+SQL"
+      }
+    },
+    "integration_requirements": {
+      "missing_components": [
+        "Store layer (learningSessionStore)",
+        "Vector API endpoints (/api/vector/*)",
+        "Environment configuration (RUVECTOR_* vars)",
+        "Integration tests",
+        "Migration strategy"
+      ],
+      "dependencies": {
+        "agentdb": "^1.6.1",
+        "zustand": "^4.4.7",
+        "@anthropic-ai/sdk": "^0.70.1"
+      }
+    }
+  },
+  "phases": [
+    {
+      "phase": 1,
+      "name": "API Layer Foundation",
+      "priority": "CRITICAL",
+      "status": "pending",
+      "parallel_execution": true,
+      "files_to_create": [
+        {
+          "path": "/src/app/api/vector/embed/route.ts",
+          "purpose": "POST endpoint for generating embeddings",
+          "dependencies": ["EmbeddingService"],
+          "exports": ["POST /api/vector/embed"]
+        },
+        {
+          "path": "/src/app/api/vector/search/route.ts",
+          "purpose": "GET endpoint for semantic vector search",
+          "dependencies": ["VectorSearchService"],
+          "exports": ["GET /api/vector/search?q=query&collection=vocab"]
+        },
+        {
+          "path": "/src/app/api/vector/predict/route.ts",
+          "purpose": "POST endpoint for GNN learning predictions",
+          "dependencies": ["LearningService"],
+          "exports": ["POST /api/vector/predict"]
+        },
+        {
+          "path": "/src/app/api/vector/cache/route.ts",
+          "purpose": "GET endpoint for semantic cache queries",
+          "dependencies": ["SemanticCacheService"],
+          "exports": ["GET /api/vector/cache?query=text"]
+        },
+        {
+          "path": "/src/app/api/vector/graph/route.ts",
+          "purpose": "POST/GET endpoints for knowledge graph operations",
+          "dependencies": ["GraphService"],
+          "exports": ["POST /api/vector/graph/add", "GET /api/vector/graph/query"]
+        }
+      ],
+      "files_to_modify": [],
+      "success_criteria": [
+        "All 5 vector endpoints respond 200 OK",
+        "Endpoints use logger from @/lib/logger",
+        "Error handling matches existing API pattern",
+        "Rate limiting applied per route.ts pattern"
+      ],
+      "rollback_strategy": "Delete /src/app/api/vector directory",
+      "estimated_time": "2 hours",
+      "checkpoint": "Vector API endpoints operational"
+    },
+    {
+      "phase": 2,
+      "name": "Store Layer Integration",
+      "priority": "CRITICAL",
+      "status": "pending",
+      "parallel_execution": false,
+      "dependencies": ["Phase 1"],
+      "files_to_create": [
+        {
+          "path": "/src/stores/learningSessionStore.ts",
+          "purpose": "Zustand store for learning session state with GNN integration",
+          "dependencies": ["zustand", "SpacedRepetitionBridge", "LearningService"],
+          "exports": [
+            "useLearningSessionStore",
+            "recordActivity",
+            "updateSessionStats",
+            "getGNNPredictions",
+            "syncWithVector"
+          ]
+        },
+        {
+          "path": "/src/stores/vectorSearchStore.ts",
+          "purpose": "Zustand store for vector search state and caching",
+          "dependencies": ["zustand", "VectorSearchService"],
+          "exports": [
+            "useVectorSearchStore",
+            "performSearch",
+            "getCachedResults",
+            "clearCache"
+          ]
+        }
+      ],
+      "files_to_modify": [
+        {
+          "path": "/src/lib/algorithms/spaced-repetition.ts",
+          "changes": [
+            "Import spacedRepetitionBridge",
+            "Add optional GNN enhancement to updateCard method",
+            "Add getHybridSchedule wrapper function"
+          ],
+          "backwards_compatible": true
+        }
+      ],
+      "success_criteria": [
+        "learningSessionStore created with type safety",
+        "Bridge integration tested with mock data",
+        "SM-2 algorithm remains functional without GNN",
+        "Store state persists across page reloads"
+      ],
+      "rollback_strategy": "Revert spaced-repetition.ts, delete store files",
+      "estimated_time": "3 hours",
+      "checkpoint": "Stores operational with GNN bridge"
+    },
+    {
+      "phase": 3,
+      "name": "Search Enhancement (Hybrid Vector+SQL)",
+      "priority": "HIGH",
+      "status": "pending",
+      "parallel_execution": false,
+      "dependencies": ["Phase 1", "Phase 2"],
+      "files_to_modify": [
+        {
+          "path": "/src/app/api/search/vocabulary/route.ts",
+          "changes": [
+            "Import VectorSearchService",
+            "Add feature flag check for vector search",
+            "Implement hybrid search: vector search for semantic, SQL for exact",
+            "Merge and rank results by relevance + recency",
+            "Fallback to SQL if vector search fails"
+          ],
+          "backwards_compatible": true,
+          "feature_flag": "RUVECTOR_ENABLED"
+        }
+      ],
+      "files_to_create": [
+        {
+          "path": "/src/lib/search/hybrid-search.ts",
+          "purpose": "Utility for merging vector and SQL search results",
+          "dependencies": ["VectorSearchService", "@supabase/supabase-js"],
+          "exports": [
+            "hybridVocabularySearch",
+            "mergeResults",
+            "rankByRelevance"
+          ]
+        }
+      ],
+      "success_criteria": [
+        "Hybrid search returns combined results when vector enabled",
+        "Falls back to SQL when RUVECTOR_ENABLED=false",
+        "Results ranked by semantic similarity + recency",
+        "Response time < 500ms for typical queries",
+        "Existing SQL search tests still pass"
+      ],
+      "rollback_strategy": "Revert vocabulary/route.ts to SQL-only version",
+      "estimated_time": "2 hours",
+      "checkpoint": "Hybrid search operational with graceful fallback"
+    },
+    {
+      "phase": 4,
+      "name": "Algorithm Bridge Activation",
+      "priority": "HIGH",
+      "status": "pending",
+      "parallel_execution": false,
+      "dependencies": ["Phase 2"],
+      "files_to_modify": [
+        {
+          "path": "/src/stores/learningSessionStore.ts",
+          "changes": [
+            "Wire recordActivity to spacedRepetitionBridge.syncLearningData",
+            "Add getEnhancedSchedule method using bridge.getHybridSchedule",
+            "Add updateCardWithGNN method for enhanced SM-2",
+            "Track GNN availability status"
+          ]
+        }
+      ],
+      "files_to_create": [
+        {
+          "path": "/src/lib/algorithms/hybrid-scheduler.ts",
+          "purpose": "High-level API for SM-2 + GNN scheduling",
+          "dependencies": ["SpacedRepetitionBridge", "SpacedRepetitionAlgorithm"],
+          "exports": [
+            "scheduleNextReview",
+            "batchScheduleCards",
+            "getOptimalReviewTime",
+            "adaptDifficulty"
+          ]
+        }
+      ],
+      "success_criteria": [
+        "GNN predictions enhance SM-2 scheduling when enabled",
+        "SM-2 functions normally when GNN unavailable",
+        "Session results sync to vector graph after each session",
+        "Hybrid schedule properly weights GNN vs SM-2",
+        "Confidence scores included in all predictions"
+      ],
+      "rollback_strategy": "Disable GNN feature flag, revert store changes",
+      "estimated_time": "3 hours",
+      "checkpoint": "GNN-enhanced scheduling active"
+    },
+    {
+      "phase": 5,
+      "name": "Environment, Testing & Validation",
+      "priority": "CRITICAL",
+      "status": "pending",
+      "parallel_execution": true,
+      "dependencies": ["Phase 1", "Phase 2", "Phase 3", "Phase 4"],
+      "files_to_modify": [
+        {
+          "path": "/.env.example",
+          "changes": [
+            "Add RUVECTOR_* environment variables section",
+            "Document required vs optional settings",
+            "Add default values for all RUVECTOR_ vars"
+          ]
+        }
+      ],
+      "files_to_create": [
+        {
+          "path": "/tests/integration/vector-api.test.ts",
+          "purpose": "Integration tests for vector API endpoints",
+          "dependencies": ["vitest", "msw"],
+          "tests": [
+            "POST /api/vector/embed returns embeddings",
+            "GET /api/vector/search returns ranked results",
+            "POST /api/vector/predict returns GNN predictions",
+            "Error handling with invalid inputs",
+            "Rate limiting enforcement"
+          ]
+        },
+        {
+          "path": "/tests/unit/spaced-repetition-bridge.test.ts",
+          "purpose": "Unit tests for SpacedRepetitionBridge",
+          "dependencies": ["vitest"],
+          "tests": [
+            "Hybrid scheduling merges SM-2 and GNN correctly",
+            "Fallback to SM-2 when GNN unavailable",
+            "Session sync updates graph correctly",
+            "Difficulty adaptation uses GNN predictions"
+          ]
+        },
+        {
+          "path": "/tests/unit/hybrid-search.test.ts",
+          "purpose": "Unit tests for hybrid search utility",
+          "dependencies": ["vitest"],
+          "tests": [
+            "Vector + SQL results merged correctly",
+            "Ranking by relevance works",
+            "Fallback to SQL on vector failure",
+            "Deduplication of results"
+          ]
+        },
+        {
+          "path": "/docs/ruvector-integration-guide.md",
+          "purpose": "Documentation for RuVector integration",
+          "sections": [
+            "Setup instructions",
+            "Environment configuration",
+            "API usage examples",
+            "Feature flags",
+            "Troubleshooting"
+          ]
+        },
+        {
+          "path": "/scripts/validate-ruvector.ts",
+          "purpose": "Validation script for RuVector setup",
+          "dependencies": ["tsx"],
+          "checks": [
+            "Environment variables present",
+            "Vector client initializes",
+            "Collections exist",
+            "API endpoints respond",
+            "GNN model available (if enabled)"
+          ]
+        }
+      ],
+      "success_criteria": [
+        "All environment variables documented in .env.example",
+        "Integration tests pass (minimum 3 test files)",
+        "Validation script confirms proper setup",
+        "Documentation covers all features",
+        "Zero breaking changes to existing tests (122 existing tests)"
+      ],
+      "rollback_strategy": "Revert all .env changes, disable feature flags",
+      "estimated_time": "4 hours",
+      "checkpoint": "Integration validated and documented"
+    }
+  ],
+  "execution_strategy": {
+    "approach": "Phased with checkpoints",
+    "parallelization": {
+      "phase_1": "All 5 API endpoints created concurrently",
+      "phase_2": "Sequential (store depends on API)",
+      "phase_3": "Sequential (depends on store)",
+      "phase_4": "Sequential (depends on store)",
+      "phase_5": "Tests and docs created concurrently"
+    },
+    "total_estimated_time": "14 hours",
+    "critical_path": "Phase 1 → Phase 2 → Phase 4",
+    "risk_mitigation": [
+      "Feature flags for gradual rollout",
+      "Backwards compatibility at every phase",
+      "Fallback to existing functionality on errors",
+      "Rollback strategy for each phase",
+      "Existing tests must remain passing"
+    ]
+  },
+  "environment_configuration": {
+    "required_variables": [
+      {
+        "name": "RUVECTOR_ENABLED",
+        "default": "false",
+        "description": "Master switch for RuVector features",
+        "required": true
+      },
+      {
+        "name": "RUVECTOR_API_KEY",
+        "default": null,
+        "description": "RuVector API key (optional if using agentdb locally)",
+        "required": false
+      },
+      {
+        "name": "RUVECTOR_ENDPOINT",
+        "default": "http://localhost:8080",
+        "description": "RuVector service endpoint",
+        "required": false
+      }
+    ],
+    "optional_variables": [
+      {
+        "name": "RUVECTOR_GNN_ENABLED",
+        "default": "false",
+        "description": "Enable GNN learning predictions"
+      },
+      {
+        "name": "RUVECTOR_CACHE_ENABLED",
+        "default": "true",
+        "description": "Enable semantic cache"
+      },
+      {
+        "name": "RUVECTOR_SEARCH_THRESHOLD",
+        "default": "0.7",
+        "description": "Minimum similarity threshold for search results"
+      }
+    ]
+  },
+  "quality_gates": {
+    "phase_1": [
+      "All vector API endpoints respond correctly",
+      "Error handling matches existing pattern",
+      "Logger integration confirmed"
+    ],
+    "phase_2": [
+      "learningSessionStore created and tested",
+      "SpacedRepetitionBridge integrated",
+      "No breaking changes to SM-2 algorithm"
+    ],
+    "phase_3": [
+      "Hybrid search functional",
+      "Fallback to SQL confirmed",
+      "Performance acceptable (<500ms)"
+    ],
+    "phase_4": [
+      "GNN predictions enhance scheduling",
+      "Session sync to graph works",
+      "Graceful degradation without GNN"
+    ],
+    "phase_5": [
+      "All tests pass (existing + new)",
+      "Environment documented",
+      "Validation script succeeds"
+    ]
+  },
+  "royal_decree": {
+    "mandate": "This integration shall proceed in phases with strict checkpoints. Each phase must complete successfully before the next begins. Backwards compatibility is NON-NEGOTIABLE.",
+    "succession_protocol": "If the Queen Coordinator becomes unavailable, the collective-intelligence-coordinator shall assume command using this plan.",
+    "reporting_frequency": "Every phase completion",
+    "metrics_tracking": [
+      "Files created/modified",
+      "Tests passing/failing",
+      "API response times",
+      "GNN prediction accuracy"
+    ]
+  }
+}

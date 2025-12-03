@@ -209,8 +209,8 @@ export class SessionLogger {
 
   public logSettingsChange(
     settingName: string,
-    oldValue: any,
-    newValue: any,
+    oldValue: unknown,
+    newValue: unknown,
   ): void {
     this.logInteraction("settings_changed", {
       settingName,
@@ -715,12 +715,12 @@ export function getSessionLogger(): SessionLogger {
       logPhraseExtraction: () => {},
       logError: () => {},
       logSettingsChange: () => {},
-      generateSummary: () => ({}) as any,
-      getLearningMetrics: () => ({}) as any,
+      generateSummary: () => ({}) as ReturnType<SessionLogger['generateSummary']>,
+      getLearningMetrics: () => ({}) as ReturnType<SessionLogger['getLearningMetrics']>,
       getSessionId: () => "ssr-mock",
       getInteractions: () => [],
-      getSessionMetadata: () => ({}) as any,
-      getSettings: () => ({}) as any,
+      getSessionMetadata: () => ({}) as ReturnType<SessionLogger['getSessionMetadata']>,
+      getSettings: () => ({}) as ReturnType<SessionLogger['getSettings']>,
       clearSession: () => {},
       exportSession: () => "{}",
     } as unknown as SessionLogger;

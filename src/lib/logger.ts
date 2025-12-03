@@ -13,7 +13,7 @@ import { safeParse, safeStringify } from './utils/json-safe';
 export type LogLevel = 'error' | 'warn' | 'info' | 'http' | 'verbose' | 'debug' | 'silly';
 
 export interface LogContext {
-  [key: string]: any;
+  [key: string]: unknown;
   userId?: string;
   sessionId?: string;
   requestId?: string;
@@ -51,6 +51,7 @@ export interface ErrorCategory {
 }
 
 // Winston logger instance (server-side only)
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let winstonLogger: any = null;
 
 // Detect Edge Runtime - EdgeRuntime is a global in edge runtime
@@ -68,16 +69,17 @@ if (typeof window === 'undefined' && !isEdgeRuntime) {
       format.colorize({ all: true }),
       format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
       format.errors({ stack: true }),
-      format.printf((info: any) => {
+      format.printf((info: Record<string, unknown>) => {
         const { timestamp, level, message, context, error, ...meta } = info;
         let log = `${timestamp} [${level}]`;
 
         if (context) log += ` [${context}]`;
         log += `: ${message}`;
 
-        if (error) {
-          log += `\n  Error: ${error.message}`;
-          if (error.stack) log += `\n  Stack: ${error.stack}`;
+        if (error && typeof error === 'object' && error !== null) {
+          const err = error as { message?: unknown; stack?: unknown };
+          if (err.message) log += `\n  Error: ${String(err.message)}`;
+          if (err.stack) log += `\n  Stack: ${String(err.stack)}`;
         }
 
         if (Object.keys(meta).length > 0) {
@@ -96,6 +98,7 @@ if (typeof window === 'undefined' && !isEdgeRuntime) {
     );
 
     // Create transports based on environment
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const logTransports: any[] = [];
 
     // Console transport (all environments except test)
@@ -206,7 +209,7 @@ class Logger {
   /**
    * Format log data for Winston or console
    */
-  private formatLogData(message: string, context?: LogContext): any {
+  private formatLogData(message: string, context?: LogContext): Record<string, unknown> {
     return {
       message,
       context: this.context,
@@ -249,7 +252,7 @@ class Logger {
   /**
    * Write to console with proper formatting
    */
-  private writeToConsole(level: LogLevel, message: string, data: any): void {
+  private writeToConsole(level: LogLevel, message: string, data: Record<string, unknown>): void {
     if (process.env.NODE_ENV === 'test') return;
     // Logger fallback console output (used when Winston is not available)
 
@@ -283,7 +286,7 @@ class Logger {
   /**
    * Store error in localStorage for debugging
    */
-  private storeError(message: string, data: any): void {
+  private storeError(message: string, data: Record<string, unknown>): void {
     try {
       const errorData = {
         message,
@@ -303,7 +306,11 @@ class Logger {
   /**
    * Send to external monitoring service (Sentry, DataDog, etc.)
    */
-  private async sendToExternalMonitoring(level: string, message: string, data: any): Promise<void> {
+  private async sendToExternalMonitoring(
+    level: string,
+    message: string,
+    data: Record<string, unknown>
+  ): Promise<void> {
     try {
       // Sentry integration
       if (process.env.NEXT_PUBLIC_SENTRY_DSN && this.isClient) {
@@ -355,17 +362,20 @@ class Logger {
   // Public Logging Methods
   // =====================
 
-  error(message: string, error?: Error | any, context?: LogContext): void {
+  error(message: string, error?: Error | unknown, context?: LogContext): void {
     const errorContext = {
       ...context,
-      error: error
-        ? {
-            name: error.name,
-            message: error.message,
-            stack: error.stack,
-            code: error.code,
-          }
-        : undefined,
+      error:
+        error && typeof error === 'object' && 'message' in error
+          ? {
+              name: 'name' in error ? String(error.name) : 'Error',
+              message: String(error.message),
+              stack: 'stack' in error ? String(error.stack) : undefined,
+              code: 'code' in error ? String(error.code) : undefined,
+            }
+          : error
+            ? { message: String(error) }
+            : undefined,
     };
     this.writeLog('error', message, errorContext);
   }
@@ -563,17 +573,20 @@ class Logger {
   /**
    * Get stored errors from localStorage
    */
-  getStoredErrors(): any[] {
+  getStoredErrors(): Array<Record<string, unknown>> {
     if (!this.isClient) return [];
 
-    const errors: any[] = [];
+    const errors: Array<Record<string, unknown>> = [];
     try {
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
         if (key?.startsWith('app-error-')) {
           const item = localStorage.getItem(key);
           if (item) {
-            errors.push(safeParse(item));
+            const parsed = safeParse<Record<string, unknown>>(item);
+            if (parsed) {
+              errors.push(parsed);
+            }
           }
         }
       }
@@ -581,7 +594,11 @@ class Logger {
       // Silent fail
     }
 
-    return errors.sort((a, b) => b.storedAt - a.storedAt);
+    return errors.sort((a, b) => {
+      const aTime = typeof a.storedAt === 'number' ? a.storedAt : 0;
+      const bTime = typeof b.storedAt === 'number' ? b.storedAt : 0;
+      return bTime - aTime;
+    });
   }
 
   /**
@@ -669,7 +686,7 @@ export const logUserAction = (action: string, context?: LogContext) =>
   logger.userAction(action, context);
 
 // Development-only logging helpers
-export const devLog = (message: string, ...args: any[]) => {
+export const devLog = (message: string, ...args: unknown[]) => {
   if (process.env.NODE_ENV === 'development') {
     logger.debug(message, { args });
   }

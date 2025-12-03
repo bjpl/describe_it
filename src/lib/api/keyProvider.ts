@@ -1,6 +1,6 @@
 import { settingsManager } from '../settings/settingsManager';
 import { safeParse, safeStringify } from "@/lib/utils/json-safe";
-import { securityLogger, createLogger } from "@/lib/logging/logger";
+import { securityLogger, createLogger } from "@/lib/logger";
 
 const keyProviderLogger = createLogger('KeyProvider');
 
