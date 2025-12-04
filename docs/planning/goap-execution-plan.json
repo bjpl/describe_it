@@ -1,0 +1,701 @@
+{
+  "meta": {
+    "document_type": "GOAP Execution Plan",
+    "project": "describe_it",
+    "created": "2025-12-03",
+    "version": "1.0.0",
+    "status": "Active",
+    "methodology": "Goal-Oriented Action Planning"
+  },
+  "executive_summary": {
+    "current_state": {
+      "test_coverage": "69.2% (36 passing, 16 failing out of 52 database integration tests)",
+      "typescript_errors": "679 (reduced from 913)",
+      "features_implemented": [
+        "Database integration with Supabase",
+        "RuVector semantic search integration",
+        "GNN learning capabilities",
+        "Auto-save functionality in DescriptionNotebook",
+        "Progress tracking endpoints",
+        "Vocabulary builder components"
+      ],
+      "recent_work": [
+        "Fixed TypeScript errors and added claude-flow integration",
+        "Added RuVector module type declarations",
+        "Completed RuVector integration Phase 2",
+        "Implemented semantic search and GNN learning"
+      ]
+    },
+    "goal_state": {
+      "plan_a_complete": "95%+ test pass rate, all API signatures aligned, security validated",
+      "plan_b_complete": "Auto-save, export/import, progress dashboard, offline support, flashcard review, search/filter",
+      "plan_c_complete": "Database optimization, pagination, caching, code splitting, performance benchmarks"
+    },
+    "estimated_completion": "14-21 days (2-3 weeks)",
+    "critical_path": [
+      "Fix remaining 16 failing database tests",
+      "Resolve 679 TypeScript errors",
+      "Complete Plan A (test stability)",
+      "Implement Plan B features",
+      "Optimize Plan C performance"
+    ]
+  },
+  "plans_analysis": {
+    "plan_a": {
+      "title": "Core Stability & Test Infrastructure",
+      "status": "70% Complete",
+      "completed": [
+        "Database integration (52 tests, 69.2% pass rate)",
+        "DescriptionNotebook auto-save implemented",
+        "Progress endpoints created (/api/progress GET/POST)",
+        "TypeScript error reduction (913→679)"
+      ],
+      "remaining": [
+        "Fix DescriptionNotebook API signature alignment",
+        "Implement security validation for progress endpoints",
+        "Increase test pass rate to 95%+ (currently 69.2%)",
+        "Resolve 679 TypeScript errors",
+        "Add comprehensive error handling"
+      ],
+      "priority": "CRITICAL",
+      "blockers": [
+        "16 failing database integration tests",
+        "TypeScript strict mode violations",
+        "API signature mismatches"
+      ]
+    },
+    "plan_b": {
+      "title": "Feature Enhancement & User Experience",
+      "status": "40% Complete",
+      "completed": [
+        "Auto-save in DescriptionNotebook (30s interval)",
+        "Basic progress tracking (GET /api/progress)"
+      ],
+      "remaining": [
+        "Export/import functionality (JSON/CSV)",
+        "Progress dashboard UI",
+        "Offline support (PWA)",
+        "Flashcard review system",
+        "Advanced search/filter capabilities"
+      ],
+      "priority": "HIGH",
+      "blockers": [
+        "Plan A must be 95% complete",
+        "Database schema finalization needed"
+      ]
+    },
+    "plan_c": {
+      "title": "Performance & Optimization",
+      "status": "25% Complete",
+      "completed": [
+        "RuVector semantic search integration",
+        "GNN learning capabilities",
+        "Basic caching in progress endpoints"
+      ],
+      "remaining": [
+        "Database query optimization",
+        "Pagination for large datasets",
+        "Multi-layer caching strategy",
+        "Code splitting optimization",
+        "Image optimization",
+        "Rate limiting implementation",
+        "Error monitoring (Sentry integration)",
+        "Performance benchmark suite"
+      ],
+      "priority": "MEDIUM",
+      "blockers": [
+        "Plan A must be 90% complete",
+        "Plan B core features needed for benchmarking"
+      ]
+    }
+  },
+  "goap_action_graph": {
+    "world_state": {
+      "current": {
+        "tests_passing": 0.692,
+        "typescript_clean": false,
+        "api_aligned": false,
+        "security_validated": false,
+        "auto_save_working": true,
+        "export_implemented": false,
+        "dashboard_ready": false,
+        "offline_support": false,
+        "flashcards_ready": false,
+        "search_advanced": false,
+        "db_optimized": false,
+        "pagination_ready": false,
+        "caching_complete": false,
+        "code_split": false,
+        "monitoring_active": false
+      },
+      "goal": {
+        "tests_passing": 0.95,
+        "typescript_clean": true,
+        "api_aligned": true,
+        "security_validated": true,
+        "auto_save_working": true,
+        "export_implemented": true,
+        "dashboard_ready": true,
+        "offline_support": true,
+        "flashcards_ready": true,
+        "search_advanced": true,
+        "db_optimized": true,
+        "pagination_ready": true,
+        "caching_complete": true,
+        "code_split": true,
+        "monitoring_active": true
+      }
+    },
+    "actions": [
+      {
+        "id": "A1",
+        "name": "Fix Database Integration Tests",
+        "preconditions": {
+          "database_connected": true,
+          "test_suite_exists": true
+        },
+        "effects": {
+          "tests_passing": "+0.258",
+          "database_stable": true
+        },
+        "cost": 8,
+        "estimated_hours": 8,
+        "dependencies": []
+      },
+      {
+        "id": "A2",
+        "name": "Resolve TypeScript Errors",
+        "preconditions": {
+          "typescript_configured": true
+        },
+        "effects": {
+          "typescript_clean": true,
+          "build_stable": true
+        },
+        "cost": 12,
+        "estimated_hours": 12,
+        "dependencies": []
+      },
+      {
+        "id": "A3",
+        "name": "Align API Signatures",
+        "preconditions": {
+          "typescript_clean": true
+        },
+        "effects": {
+          "api_aligned": true,
+          "type_safety": true
+        },
+        "cost": 6,
+        "estimated_hours": 6,
+        "dependencies": ["A2"]
+      },
+      {
+        "id": "A4",
+        "name": "Implement Security Validation",
+        "preconditions": {
+          "api_aligned": true,
+          "auth_system_ready": true
+        },
+        "effects": {
+          "security_validated": true,
+          "auth_working": true
+        },
+        "cost": 8,
+        "estimated_hours": 8,
+        "dependencies": ["A3"]
+      },
+      {
+        "id": "B1",
+        "name": "Build Export/Import System",
+        "preconditions": {
+          "tests_passing": 0.95,
+          "api_aligned": true
+        },
+        "effects": {
+          "export_implemented": true,
+          "data_portable": true
+        },
+        "cost": 10,
+        "estimated_hours": 10,
+        "dependencies": ["A1", "A3"]
+      },
+      {
+        "id": "B2",
+        "name": "Create Progress Dashboard",
+        "preconditions": {
+          "progress_api_ready": true,
+          "typescript_clean": true
+        },
+        "effects": {
+          "dashboard_ready": true,
+          "analytics_visible": true
+        },
+        "cost": 12,
+        "estimated_hours": 12,
+        "dependencies": ["A2"]
+      },
+      {
+        "id": "B3",
+        "name": "Implement Offline Support",
+        "preconditions": {
+          "pwa_configured": true,
+          "cache_strategy_ready": true
+        },
+        "effects": {
+          "offline_support": true,
+          "pwa_ready": true
+        },
+        "cost": 16,
+        "estimated_hours": 16,
+        "dependencies": ["B1", "C3"]
+      },
+      {
+        "id": "B4",
+        "name": "Build Flashcard Review System",
+        "preconditions": {
+          "vocabulary_system_ready": true,
+          "spaced_repetition_logic": true
+        },
+        "effects": {
+          "flashcards_ready": true,
+          "study_system_complete": true
+        },
+        "cost": 14,
+        "estimated_hours": 14,
+        "dependencies": ["A1", "A3"]
+      },
+      {
+        "id": "B5",
+        "name": "Advanced Search/Filter",
+        "preconditions": {
+          "ruvector_integrated": true,
+          "database_optimized": true
+        },
+        "effects": {
+          "search_advanced": true,
+          "semantic_search_ready": true
+        },
+        "cost": 10,
+        "estimated_hours": 10,
+        "dependencies": ["C1", "C2"]
+      },
+      {
+        "id": "C1",
+        "name": "Optimize Database Queries",
+        "preconditions": {
+          "database_stable": true,
+          "tests_passing": 0.95
+        },
+        "effects": {
+          "db_optimized": true,
+          "query_performance": "+50%"
+        },
+        "cost": 8,
+        "estimated_hours": 8,
+        "dependencies": ["A1"]
+      },
+      {
+        "id": "C2",
+        "name": "Implement Pagination",
+        "preconditions": {
+          "api_aligned": true,
+          "db_optimized": true
+        },
+        "effects": {
+          "pagination_ready": true,
+          "scalability": "+100%"
+        },
+        "cost": 6,
+        "estimated_hours": 6,
+        "dependencies": ["A3", "C1"]
+      },
+      {
+        "id": "C3",
+        "name": "Multi-Layer Caching",
+        "preconditions": {
+          "redis_available": true,
+          "cache_strategy_designed": true
+        },
+        "effects": {
+          "caching_complete": true,
+          "response_time": "-60%"
+        },
+        "cost": 10,
+        "estimated_hours": 10,
+        "dependencies": ["A3"]
+      },
+      {
+        "id": "C4",
+        "name": "Code Splitting Optimization",
+        "preconditions": {
+          "build_stable": true,
+          "bundle_analyzed": true
+        },
+        "effects": {
+          "code_split": true,
+          "bundle_size": "-30%"
+        },
+        "cost": 8,
+        "estimated_hours": 8,
+        "dependencies": ["A2"]
+      },
+      {
+        "id": "C5",
+        "name": "Error Monitoring Setup",
+        "preconditions": {
+          "sentry_configured": true,
+          "production_ready": true
+        },
+        "effects": {
+          "monitoring_active": true,
+          "error_visibility": "+100%"
+        },
+        "cost": 6,
+        "estimated_hours": 6,
+        "dependencies": ["A4", "C4"]
+      },
+      {
+        "id": "C6",
+        "name": "Performance Benchmark Suite",
+        "preconditions": {
+          "all_features_ready": true,
+          "monitoring_active": true
+        },
+        "effects": {
+          "benchmarks_complete": true,
+          "performance_validated": true
+        },
+        "cost": 8,
+        "estimated_hours": 8,
+        "dependencies": ["C1", "C3", "C4", "C5"]
+      }
+    ]
+  },
+  "execution_plan": {
+    "phases": [
+      {
+        "phase": 1,
+        "name": "Critical Stability (Plan A Focus)",
+        "duration_days": "5-7 days",
+        "goal": "Achieve 95%+ test pass rate, resolve TypeScript errors, align APIs",
+        "milestones": [
+          {
+            "id": "M1.1",
+            "name": "Database Tests Passing",
+            "actions": ["A1"],
+            "deliverable": "52/52 database tests passing (95%+)",
+            "verification": "npm run test:integration -- --grep database",
+            "estimated_hours": 8,
+            "priority": "P0"
+          },
+          {
+            "id": "M1.2",
+            "name": "TypeScript Clean Build",
+            "actions": ["A2"],
+            "deliverable": "0 TypeScript errors (from 679)",
+            "verification": "npm run typecheck",
+            "estimated_hours": 12,
+            "priority": "P0"
+          },
+          {
+            "id": "M1.3",
+            "name": "API Signatures Aligned",
+            "actions": ["A3"],
+            "deliverable": "All API endpoints type-safe and documented",
+            "verification": "API signature validation tests passing",
+            "estimated_hours": 6,
+            "priority": "P0"
+          },
+          {
+            "id": "M1.4",
+            "name": "Security Validation Complete",
+            "actions": ["A4"],
+            "deliverable": "Auth middleware, input validation, rate limiting active",
+            "verification": "npm run test -- --grep security",
+            "estimated_hours": 8,
+            "priority": "P0"
+          }
+        ],
+        "total_hours": 34,
+        "success_criteria": [
+          "All database integration tests passing",
+          "Zero TypeScript errors",
+          "API contracts validated",
+          "Security middleware active",
+          "CI/CD pipeline green"
+        ]
+      },
+      {
+        "phase": 2,
+        "name": "Feature Enhancement (Plan B Core)",
+        "duration_days": "6-8 days",
+        "goal": "Complete export/import, dashboard, and flashcard systems",
+        "milestones": [
+          {
+            "id": "M2.1",
+            "name": "Export/Import System",
+            "actions": ["B1"],
+            "deliverable": "Export to JSON/CSV, import with validation",
+            "verification": "Export/import e2e tests passing",
+            "estimated_hours": 10,
+            "priority": "P1"
+          },
+          {
+            "id": "M2.2",
+            "name": "Progress Dashboard",
+            "actions": ["B2"],
+            "deliverable": "Dashboard UI with charts, stats, achievements",
+            "verification": "Dashboard component tests + manual QA",
+            "estimated_hours": 12,
+            "priority": "P1"
+          },
+          {
+            "id": "M2.3",
+            "name": "Flashcard Review System",
+            "actions": ["B4"],
+            "deliverable": "Spaced repetition, review queue, mastery tracking",
+            "verification": "Flashcard e2e user flow tests",
+            "estimated_hours": 14,
+            "priority": "P1"
+          },
+          {
+            "id": "M2.4",
+            "name": "Database Optimization",
+            "actions": ["C1"],
+            "deliverable": "Indexes, query optimization, connection pooling",
+            "verification": "Query performance benchmarks",
+            "estimated_hours": 8,
+            "priority": "P2"
+          },
+          {
+            "id": "M2.5",
+            "name": "Pagination Implementation",
+            "actions": ["C2"],
+            "deliverable": "Cursor-based pagination for all list endpoints",
+            "verification": "Pagination tests for large datasets",
+            "estimated_hours": 6,
+            "priority": "P2"
+          }
+        ],
+        "total_hours": 50,
+        "success_criteria": [
+          "Export/import working for all data types",
+          "Dashboard showing real-time progress",
+          "Flashcard system functional",
+          "Database queries <100ms average",
+          "Pagination handles 10k+ items"
+        ]
+      },
+      {
+        "phase": 3,
+        "name": "Performance & Polish (Plan B+C)",
+        "duration_days": "5-7 days",
+        "goal": "Offline support, advanced search, caching, monitoring",
+        "milestones": [
+          {
+            "id": "M3.1",
+            "name": "Multi-Layer Caching",
+            "actions": ["C3"],
+            "deliverable": "Browser + CDN + App + DB caching strategy",
+            "verification": "Cache hit rate >80%, response time <50ms",
+            "estimated_hours": 10,
+            "priority": "P1"
+          },
+          {
+            "id": "M3.2",
+            "name": "Advanced Search/Filter",
+            "actions": ["B5"],
+            "deliverable": "Semantic search, filters, sorting, facets",
+            "verification": "Search relevance tests, performance benchmarks",
+            "estimated_hours": 10,
+            "priority": "P1"
+          },
+          {
+            "id": "M3.3",
+            "name": "Offline Support (PWA)",
+            "actions": ["B3"],
+            "deliverable": "Service worker, offline mode, sync queue",
+            "verification": "Offline e2e tests, PWA audit passing",
+            "estimated_hours": 16,
+            "priority": "P2"
+          },
+          {
+            "id": "M3.4",
+            "name": "Code Splitting",
+            "actions": ["C4"],
+            "deliverable": "Dynamic imports, route splitting, lazy loading",
+            "verification": "Bundle size <500kb, load time <2s",
+            "estimated_hours": 8,
+            "priority": "P2"
+          },
+          {
+            "id": "M3.5",
+            "name": "Error Monitoring",
+            "actions": ["C5"],
+            "deliverable": "Sentry integration, error tracking, alerts",
+            "verification": "Error capture tests, Sentry dashboard configured",
+            "estimated_hours": 6,
+            "priority": "P2"
+          },
+          {
+            "id": "M3.6",
+            "name": "Performance Benchmarks",
+            "actions": ["C6"],
+            "deliverable": "Benchmark suite, regression detection, CI integration",
+            "verification": "All benchmarks passing, documented baselines",
+            "estimated_hours": 8,
+            "priority": "P2"
+          }
+        ],
+        "total_hours": 58,
+        "success_criteria": [
+          "Caching reduces API calls by 60%",
+          "Search returns results in <200ms",
+          "PWA works offline",
+          "Bundle size optimized",
+          "Error monitoring active",
+          "Performance benchmarks established"
+        ]
+      }
+    ],
+    "total_estimated_hours": 142,
+    "total_estimated_days": "16-22 days",
+    "critical_path": ["A1", "A2", "A3", "A4", "B1", "B2", "B4", "C1", "C2", "C3", "B5", "B3", "C4", "C5", "C6"],
+    "parallel_opportunities": [
+      ["A1", "A2"],
+      ["B1", "B2", "C1"],
+      ["C3", "C4"],
+      ["B3", "C5", "C6"]
+    ]
+  },
+  "resource_requirements": {
+    "developer_time": "142 hours (3.5 weeks full-time)",
+    "skills_needed": [
+      "TypeScript/React (advanced)",
+      "Next.js App Router (intermediate)",
+      "Supabase/PostgreSQL (intermediate)",
+      "Testing (Jest/Vitest, Playwright)",
+      "Performance optimization",
+      "PWA development"
+    ],
+    "external_services": [
+      "Supabase (database, auth)",
+      "Vercel (hosting, KV cache)",
+      "Sentry (error monitoring)",
+      "Redis (optional, for advanced caching)"
+    ],
+    "estimated_cost": "$50-100/month for services"
+  },
+  "risk_mitigation": {
+    "risks": [
+      {
+        "risk": "TypeScript errors prove intractable",
+        "probability": "Medium",
+        "impact": "High",
+        "mitigation": "Incremental fixing, use any types as last resort, separate PR per module"
+      },
+      {
+        "risk": "Database tests remain unstable",
+        "probability": "Low",
+        "impact": "Critical",
+        "mitigation": "Isolate test database, use transactions, add retry logic"
+      },
+      {
+        "risk": "Offline support complexity",
+        "probability": "High",
+        "impact": "Medium",
+        "mitigation": "Start with read-only offline, defer sync conflicts to Phase 4"
+      },
+      {
+        "risk": "Performance benchmarks fail",
+        "probability": "Medium",
+        "impact": "Medium",
+        "mitigation": "Set realistic baselines, optimize hot paths first, monitor production"
+      },
+      {
+        "risk": "Scope creep during implementation",
+        "probability": "High",
+        "impact": "High",
+        "mitigation": "Strict adherence to action plan, defer nice-to-haves, weekly review"
+      }
+    ]
+  },
+  "success_metrics": {
+    "plan_a": {
+      "test_pass_rate": "≥95% (target: 100%)",
+      "typescript_errors": "0",
+      "api_test_coverage": "≥90%",
+      "security_audit_passing": true,
+      "ci_cd_green": true
+    },
+    "plan_b": {
+      "export_formats": "≥2 (JSON, CSV)",
+      "dashboard_components": "≥5 (stats, charts, achievements, streak, activity)",
+      "flashcard_coverage": "100% of vocabulary",
+      "search_response_time": "<200ms",
+      "offline_features": "≥3 (browse, study, flashcards)"
+    },
+    "plan_c": {
+      "db_query_performance": "<100ms average",
+      "cache_hit_rate": ">80%",
+      "bundle_size_reduction": "≥30%",
+      "error_monitoring_coverage": "100%",
+      "performance_score": "≥90 (Lighthouse)"
+    }
+  },
+  "next_actions": {
+    "immediate": [
+      {
+        "action": "A1: Fix Database Integration Tests",
+        "start": "Day 1",
+        "duration": "1 day",
+        "owner": "Backend developer",
+        "deliverable": "All 52 database tests passing"
+      },
+      {
+        "action": "A2: Resolve TypeScript Errors (Phase 1)",
+        "start": "Day 1",
+        "duration": "2 days",
+        "owner": "TypeScript specialist",
+        "deliverable": "50% reduction in errors (679 → 340)"
+      }
+    ],
+    "week_1": [
+      "Complete Phase 1 (Critical Stability)",
+      "Resolve all P0 blockers",
+      "Achieve 95%+ test pass rate",
+      "Zero TypeScript errors",
+      "API signatures aligned"
+    ],
+    "week_2": [
+      "Start Phase 2 (Feature Enhancement)",
+      "Implement export/import system",
+      "Build progress dashboard",
+      "Optimize database queries",
+      "Add pagination support"
+    ],
+    "week_3": [
+      "Complete Phase 2",
+      "Start Phase 3 (Performance & Polish)",
+      "Implement caching strategy",
+      "Build advanced search",
+      "Code splitting optimization"
+    ],
+    "week_4": [
+      "Complete Phase 3",
+      "Offline support (PWA)",
+      "Error monitoring active",
+      "Performance benchmarks",
+      "Final QA and deployment prep"
+    ]
+  },
+  "documentation_updates": [
+    "Update API documentation with aligned signatures",
+    "Document export/import formats",
+    "Create dashboard user guide",
+    "Write flashcard system documentation",
+    "Performance optimization guide",
+    "Deployment checklist updates"
+  ]
+}

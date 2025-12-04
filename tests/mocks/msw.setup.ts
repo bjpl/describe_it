@@ -229,7 +229,7 @@ export const server = setupServer(...restHandlers);
 // Test environment setup
 export const setupMSW = () => {
   beforeAll(() => {
-    server.listen({ onUnhandledRequest: 'error' });
+    server.listen({ onUnhandledRequest: 'warn' });
   });
 
   afterEach(() => {

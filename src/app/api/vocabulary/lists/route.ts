@@ -5,6 +5,8 @@ import { DatabaseService } from "@/lib/supabase";
 import { z } from "zod";
 import { apiLogger } from "@/lib/logger";
 import { asLogContext } from "@/lib/utils/typeGuards";
+import { queryCache, generateCacheKey } from "@/lib/cache/query-cache";
+import { monitorApiResponse } from "@/lib/monitoring/performance-alerts";
 
 // Validation schemas
 const createListSchema = z.object({
@@ -42,23 +44,42 @@ async function handleGetLists(request: AuthenticatedRequest) {
       offset: searchParams.get("offset"),
     });
 
-    // SECURITY FIX: Filter lists by user ownership or public lists only
-    const lists = await DatabaseService.getVocabularyLists();
+    // Generate cache key for this query
+    const cacheKey = generateCacheKey('vocabulary/lists', { userId, limit, offset });
 
-    // Apply pagination
-    const paginatedLists = lists.slice(offset, offset + limit);
+    // Use query cache with deduplication
+    const result = await queryCache.fetch(
+      cacheKey,
+      async () => {
+        // SECURITY FIX: Filter lists by user ownership or public lists only
+        const lists = await DatabaseService.getVocabularyLists();
 
+        // Apply pagination
+        const paginatedLists = lists.slice(offset, offset + limit);
+
+        return {
+          lists: paginatedLists,
+          total: lists.length,
+        };
+      },
+      { ttl: 300 } // Cache for 5 minutes
+    );
+
+    const { lists: paginatedLists, total } = result;
     const responseTime = performance.now() - startTime;
+
+    // Monitor API performance
+    monitorApiResponse('/api/vocabulary/lists', responseTime, 200);
 
     return NextResponse.json(
       {
         success: true,
         data: paginatedLists,
         pagination: {
-          total: lists.length,
+          total,
           offset,
           limit,
-          hasMore: offset + limit < lists.length,
+          hasMore: offset + limit < total,
         },
         metadata: {
           responseTime: `${responseTime.toFixed(2)}ms`,
@@ -135,7 +156,13 @@ async function handleCreateList(request: AuthenticatedRequest) {
       throw new Error("Failed to create vocabulary list");
     }
 
+    // Invalidate cache for this user's vocabulary lists
+    await queryCache.invalidate(`query:vocabulary/lists:*${userId}*`);
+
     const responseTime = performance.now() - startTime;
+
+    // Monitor API performance
+    monitorApiResponse('/api/vocabulary/lists', responseTime, 201);
 
     return NextResponse.json(
       {
