@@ -79,10 +79,7 @@
         "Advanced search/filter capabilities"
       ],
       "priority": "HIGH",
-      "blockers": [
-        "Plan A must be 95% complete",
-        "Database schema finalization needed"
-      ]
+      "blockers": ["Plan A must be 95% complete", "Database schema finalization needed"]
     },
     "plan_c": {
       "title": "Performance & Optimization",
@@ -103,10 +100,7 @@
         "Performance benchmark suite"
       ],
       "priority": "MEDIUM",
-      "blockers": [
-        "Plan A must be 90% complete",
-        "Plan B core features needed for benchmarking"
-      ]
+      "blockers": ["Plan A must be 90% complete", "Plan B core features needed for benchmarking"]
     }
   },
   "goap_action_graph": {
@@ -561,7 +555,23 @@
     ],
     "total_estimated_hours": 142,
     "total_estimated_days": "16-22 days",
-    "critical_path": ["A1", "A2", "A3", "A4", "B1", "B2", "B4", "C1", "C2", "C3", "B5", "B3", "C4", "C5", "C6"],
+    "critical_path": [
+      "A1",
+      "A2",
+      "A3",
+      "A4",
+      "B1",
+      "B2",
+      "B4",
+      "C1",
+      "C2",
+      "C3",
+      "B5",
+      "B3",
+      "C4",
+      "C5",
+      "C6"
+    ],
     "parallel_opportunities": [
       ["A1", "A2"],
       ["B1", "B2", "C1"],

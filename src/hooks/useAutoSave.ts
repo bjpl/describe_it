@@ -1,6 +1,6 @@
-import { useEffect, useRef, useCallback } from "react";
-import { useDebounce } from "./useDebounce";
-import { logger } from "@/lib/logger";
+import { useEffect, useRef, useCallback } from 'react';
+import { useDebounce } from './useDebounce';
+import { logger } from '@/lib/logger';
 
 export interface UseAutoSaveOptions<T> {
   data: T;
@@ -56,7 +56,7 @@ export function useAutoSave<T>({
       } catch (error) {
         const err = error instanceof Error ? error : new Error(String(error));
         errorRef.current = err;
-        logger.error("Auto-save failed:", err);
+        logger.error('Auto-save failed:', err);
 
         if (onError) {
           onError(err);
@@ -81,10 +81,7 @@ export function useAutoSave<T>({
     }
 
     // Only save if data has actually changed
-    if (
-      enabled &&
-      JSON.stringify(debouncedData) !== JSON.stringify(previousDataRef.current)
-    ) {
+    if (enabled && JSON.stringify(debouncedData) !== JSON.stringify(previousDataRef.current)) {
       save(debouncedData);
     }
   }, [debouncedData, enabled, save]);

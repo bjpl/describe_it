@@ -8,6 +8,17 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
 
+  // External packages that should not be bundled (native modules)
+  serverExternalPackages: [
+    'ruvector',
+    '@ruvector/core',
+    '@ruvector/attention',
+    '@ruvector/attention-linux-x64-gnu',
+    '@ruvector/attention-darwin-arm64',
+    '@ruvector/attention-darwin-x64',
+    '@ruvector/attention-win32-x64-msvc',
+  ],
+
   // Image optimization with blur placeholders
   images: {
     remotePatterns: [
@@ -85,6 +96,19 @@ const nextConfig = {
 
   // Webpack configuration for optimal bundling
   webpack: (config, { isServer, webpack, dev }) => {
+    // Completely ignore ruvector packages - code has mock fallback
+    config.plugins.push(
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^ruvector$/,
+      }),
+      new webpack.IgnorePlugin({
+        resourceRegExp: /^@ruvector\//,
+      }),
+      new webpack.IgnorePlugin({
+        resourceRegExp: /\.node$/,
+      })
+    );
+
     if (isServer) {
       // Ignore DOMPurify's browser-specific stylesheets
       config.plugins.push(

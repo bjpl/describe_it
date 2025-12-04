@@ -30,11 +30,7 @@ export class QueryCache {
   /**
    * Execute a function with caching and deduplication
    */
-  async fetch<T>(
-    key: string,
-    fetcher: () => Promise<T>,
-    options: CacheOptions = {}
-  ): Promise<T> {
+  async fetch<T>(key: string, fetcher: () => Promise<T>, options: CacheOptions = {}): Promise<T> {
     const { ttl = 3600, revalidate = false, skipCache = false } = options;
 
     this.requestCount++;
@@ -66,7 +62,7 @@ export class QueryCache {
 
     // Execute the fetcher
     const promise = fetcher().then(
-      async (result) => {
+      async result => {
         // Store in cache
         if (!skipCache) {
           await tieredCache.set(key, result, { redisTTL: ttl });
@@ -75,7 +71,7 @@ export class QueryCache {
         this.pendingRequests.delete(key);
         return result;
       },
-      (error) => {
+      error => {
         // Remove from pending on error
         this.pendingRequests.delete(key);
         throw error;
@@ -150,10 +146,7 @@ export const queryCache = new QueryCache();
 /**
  * Generate cache key from request parameters
  */
-export function generateCacheKey(
-  endpoint: string,
-  params?: Record<string, any>
-): string {
+export function generateCacheKey(endpoint: string, params?: Record<string, any>): string {
   if (!params) {
     return `query:${endpoint}`;
   }
@@ -161,10 +154,13 @@ export function generateCacheKey(
   // Sort params for consistent keys
   const sortedParams = Object.keys(params)
     .sort()
-    .reduce((acc, key) => {
-      acc[key] = params[key];
-      return acc;
-    }, {} as Record<string, any>);
+    .reduce(
+      (acc, key) => {
+        acc[key] = params[key];
+        return acc;
+      },
+      {} as Record<string, any>
+    );
 
   const paramString = JSON.stringify(sortedParams);
   return `query:${endpoint}:${paramString}`;

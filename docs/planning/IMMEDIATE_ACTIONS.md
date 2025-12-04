@@ -11,11 +11,13 @@
 You have **two critical paths** to start immediately. These can run in parallel if you have multiple developers, or sequentially if working solo.
 
 ### Path 1: Fix Database Integration Tests (A1)
+
 **Owner:** Backend Developer
 **Duration:** 8 hours (1 day)
 **Priority:** P0 (Blocker)
 
 ### Path 2: Resolve TypeScript Errors (A2)
+
 **Owner:** TypeScript Specialist
 **Duration:** 12 hours (1.5 days)
 **Priority:** P0 (Blocker)
@@ -25,17 +27,20 @@ You have **two critical paths** to start immediately. These can run in parallel 
 ## 📋 Action A1: Fix Database Integration Tests
 
 ### Current State
+
 - 52 database integration tests
 - 36 passing (69.2%)
 - **16 failing** (30.8%) ❌
 
 ### Goal
+
 - 52/52 tests passing (100%) ✅
 - Or at minimum 50/52 (96.2%) ✅
 
 ### Step-by-Step Instructions
 
 #### 1. Identify Failing Tests (15 minutes)
+
 ```bash
 cd /mnt/c/Users/brand/Development/Project_Workspace/active-development/describe_it
 
@@ -49,7 +54,9 @@ npm run test:integration -- --grep database --reporter=json > test-failures.json
 **Expected Output:** List of 16 failing tests with error messages
 
 #### 2. Categorize Failures (30 minutes)
+
 Common failure patterns to look for:
+
 - ✅ Connection timeouts
 - ✅ Transaction isolation issues
 - ✅ Mock data inconsistencies
@@ -58,15 +65,18 @@ Common failure patterns to look for:
 - ✅ Type mismatches (related to TypeScript errors)
 
 **Create a file:** `docs/planning/test-failure-analysis.md`
+
 ```markdown
 # Test Failure Analysis
 
 ## Category 1: Connection Issues
+
 - Test: `supabase-client.test.ts:45`
 - Error: Connection timeout
 - Fix: Increase timeout, check connection pool
 
 ## Category 2: Transaction Isolation
+
 - Test: `database-transactions.test.ts:12`
 - Error: Dirty read from previous test
 - Fix: Add proper transaction rollback
@@ -75,13 +85,16 @@ Common failure patterns to look for:
 ```
 
 #### 3. Fix High-Impact Issues First (3 hours)
+
 **Priority order:**
+
 1. **Connection/setup issues** (affects multiple tests)
 2. **Transaction isolation** (data contamination)
 3. **Mock data consistency** (predictable test data)
 4. **Individual test logic** (specific test failures)
 
 **Files to examine:**
+
 ```bash
 # Primary test files
 tests/integration/database/supabase-client.test.ts
@@ -96,6 +109,7 @@ src/lib/database/DatabaseService.ts
 #### 4. Common Fixes
 
 **Fix 1: Transaction Isolation**
+
 ```typescript
 // Before each test
 beforeEach(async () => {
@@ -109,6 +123,7 @@ afterEach(async () => {
 ```
 
 **Fix 2: Connection Pooling**
+
 ```typescript
 // src/lib/supabase/client.ts
 import { createClient } from '@supabase/supabase-js';
@@ -118,21 +133,22 @@ export const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
   {
     db: {
-      schema: 'public'
+      schema: 'public',
     },
     auth: {
-      persistSession: false // Important for tests
+      persistSession: false, // Important for tests
     },
     global: {
       headers: {
-        'x-test-mode': process.env.NODE_ENV === 'test' ? 'true' : 'false'
-      }
-    }
+        'x-test-mode': process.env.NODE_ENV === 'test' ? 'true' : 'false',
+      },
+    },
   }
 );
 ```
 
 **Fix 3: Mock Data Consistency**
+
 ```typescript
 // tests/fixtures/vocabulary-fixtures.ts
 export const mockVocabularyItem = {
@@ -146,6 +162,7 @@ export const mockVocabularyItem = {
 ```
 
 #### 5. Run Tests Iteratively (3 hours)
+
 ```bash
 # Run single test to verify fix
 npm run test:integration -- --grep "specific test name"
@@ -159,11 +176,14 @@ npm run test:integration -- --grep database
 ```
 
 #### 6. Document Fixes (1 hour)
+
 Update `docs/planning/test-fixes-log.md`:
+
 ```markdown
 # Test Fixes Log
 
 ## Fix 1: Connection Timeout (2025-12-03)
+
 - **Issue:** Supabase client timing out in CI
 - **Root Cause:** Default timeout too short
 - **Solution:** Increased timeout to 10s, added retry logic
@@ -171,16 +191,19 @@ Update `docs/planning/test-fixes-log.md`:
 - **Files Modified:** `src/lib/supabase/client.ts`
 
 ## Fix 2: Transaction Isolation
+
 ... (continue)
 ```
 
 ### Verification Checklist
+
 - [ ] At least 50/52 tests passing (96.2%)
 - [ ] No test pollution (tests pass individually and in suite)
 - [ ] CI pipeline green for database tests
 - [ ] Documentation updated with fixes
 
 ### Estimated Time Breakdown
+
 - Identify failures: 15 min
 - Categorize: 30 min
 - Fix connection/setup: 1 hour
@@ -195,6 +218,7 @@ Update `docs/planning/test-fixes-log.md`:
 ## 📋 Action A2: Resolve TypeScript Errors
 
 ### Current State
+
 - 679 TypeScript errors ❌
 - Many related to:
   - Strict null checks
@@ -203,11 +227,13 @@ Update `docs/planning/test-fixes-log.md`:
   - Component prop types
 
 ### Goal
+
 - 0 TypeScript errors ✅
 
 ### Step-by-Step Instructions
 
 #### 1. Analyze Error Categories (30 minutes)
+
 ```bash
 # Run typecheck and save to file
 npm run typecheck 2>&1 | tee typecheck-errors.txt
@@ -217,6 +243,7 @@ grep "error TS" typecheck-errors.txt | cut -d: -f4 | sort | uniq -c | sort -rn
 ```
 
 **Expected output:**
+
 ```
 150 error TS2345: Argument of type 'X' is not assignable to parameter of type 'Y'
 120 error TS2322: Type 'X' is not assignable to type 'Y'
@@ -233,6 +260,7 @@ grep "error TS" typecheck-errors.txt | cut -d: -f4 | sort | uniq -c | sort -rn
 These are usually quick wins with high impact (100-200 errors).
 
 **Common patterns:**
+
 ```typescript
 // Before (error)
 const user = await getUser();
@@ -247,11 +275,13 @@ console.log(user.id); // ✅
 ```
 
 **Files to fix first:**
+
 - `src/lib/api-client.ts`
 - `src/components/VocabularyBuilder/DescriptionNotebook.tsx`
 - `src/app/api/progress/route.ts`
 
 **Strategy:**
+
 1. Add null checks with early returns
 2. Use optional chaining: `user?.id`
 3. Use nullish coalescing: `user ?? defaultUser`
@@ -262,6 +292,7 @@ console.log(user.id); // ✅
 **Priority 2: API Response Types (TS2345, TS2322)**
 
 **Example: Fix DescriptionNotebook API signature**
+
 ```typescript
 // Current issue in DescriptionNotebook.tsx
 const { error } = await APIClient.updateDescription(descriptionId, {
@@ -299,10 +330,12 @@ export interface DescriptionRecord {
 **Priority 3: Module Type Declarations**
 
 **Files to update:**
+
 - `src/types/ruvector.d.ts` (already exists, verify completeness)
 - `src/lib/vector/ruvector-client.ts`
 
 **Example fix:**
+
 ```typescript
 // src/types/ruvector.d.ts
 declare module 'ruvector' {
@@ -325,6 +358,7 @@ declare module 'ruvector' {
 #### 5. Incremental Verification (2 hours)
 
 **After each category of fixes:**
+
 ```bash
 # Run typecheck
 npm run typecheck
@@ -338,6 +372,7 @@ npm run typecheck
 ```
 
 **If stuck on stubborn errors:**
+
 ```typescript
 // Last resort: Use @ts-expect-error with explanation
 // @ts-expect-error TODO: Fix after RuVector types are properly defined
@@ -347,6 +382,7 @@ const result = await ruVectorClient.search(query);
 ### Common Error Patterns and Fixes
 
 **Pattern 1: Async/Await Type Issues**
+
 ```typescript
 // Error
 const data = await fetch('/api/data'); // Type 'Response'
@@ -358,6 +394,7 @@ const data: MyDataType = await response.json();
 ```
 
 **Pattern 2: Event Handlers**
+
 ```typescript
 // Error
 const handleClick = (e) => { ... }; // TS7006: Parameter 'e' implicitly has 'any' type
@@ -367,6 +404,7 @@ const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => { ... };
 ```
 
 **Pattern 3: Zustand Store Types**
+
 ```typescript
 // Error in store definition
 create((set) => ({ ... })); // Implicit any
@@ -381,12 +419,14 @@ create<AppState>((set) => ({ ... }));
 ```
 
 ### Verification Checklist
+
 - [ ] `npm run typecheck` shows 0 errors
 - [ ] `npm run build` completes successfully
 - [ ] No new runtime errors introduced
 - [ ] All @ts-expect-error comments have TODO explanations
 
 ### Estimated Time Breakdown
+
 - Analyze errors: 30 min
 - Fix null/undefined checks: 4 hours
 - Fix type mismatches: 4 hours
@@ -399,9 +439,11 @@ create<AppState>((set) => ({ ... }));
 ## 🔄 After Completing A1 and A2
 
 ### Checkpoint (Day 2-3)
+
 Once both A1 and A2 are complete (or at 90%+ progress):
 
 1. **Run Full Test Suite**
+
    ```bash
    npm run test
    npm run test:integration
@@ -424,9 +466,11 @@ Once both A1 and A2 are complete (or at 90%+ progress):
    - Estimated: 8 hours (1 day)
 
 ### Decision Point (Day 7)
+
 After completing A1-A4 (Phase 1):
 
 **Go/No-Go Decision for Phase 2:**
+
 - ✅ All P0 blockers resolved?
 - ✅ Test pass rate ≥95%?
 - ✅ TypeScript errors = 0?
@@ -440,6 +484,7 @@ After completing A1-A4 (Phase 1):
 ## 🆘 If You Get Stuck
 
 ### Database Tests Not Passing
+
 1. **Check Supabase connection:**
    ```bash
    npm run test:supabase
@@ -453,6 +498,7 @@ After completing A1-A4 (Phase 1):
    ```
 
 ### TypeScript Errors Overwhelming
+
 1. **Focus on one file at a time:**
    ```bash
    npx tsc --noEmit src/lib/api-client.ts
@@ -466,6 +512,7 @@ After completing A1-A4 (Phase 1):
    - Use AI to explain specific errors
 
 ### Need More Context
+
 - **Full execution plan:** `docs/planning/EXECUTION_PLAN_SUMMARY.md`
 - **Detailed GOAP plan:** `docs/planning/goap-execution-plan.json`
 - **Visual dependency graph:** `docs/planning/action-dependency-graph.md`

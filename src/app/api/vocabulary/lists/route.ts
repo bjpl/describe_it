@@ -1,18 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import { withBasicAuth } from "@/lib/middleware/withAuth";
-import type { AuthenticatedRequest } from "@/lib/middleware/auth";
-import { DatabaseService } from "@/lib/supabase";
-import { z } from "zod";
-import { apiLogger } from "@/lib/logger";
-import { asLogContext } from "@/lib/utils/typeGuards";
-import { queryCache, generateCacheKey } from "@/lib/cache/query-cache";
-import { monitorApiResponse } from "@/lib/monitoring/performance-alerts";
+import { NextRequest, NextResponse } from 'next/server';
+import { withBasicAuth } from '@/lib/middleware/withAuth';
+import type { AuthenticatedRequest } from '@/lib/middleware/auth';
+import { DatabaseService } from '@/lib/supabase';
+import { z } from 'zod';
+import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
+import { queryCache, generateCacheKey } from '@/lib/cache/query-cache';
+import { monitorApiResponse } from '@/lib/monitoring/performance-alerts';
 
 // Validation schemas
 const createListSchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
-  language: z.enum(["es", "en"]).default("es"),
+  language: z.enum(['es', 'en']).default('es'),
   difficulty_level: z.number().int().min(1).max(3).default(1),
 });
 
@@ -21,7 +21,7 @@ const querySchema = z.object({
   offset: z.coerce.number().int().min(0).optional().default(0),
 });
 
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 /**
  * GET /api/vocabulary/lists - Get all vocabulary lists
@@ -31,17 +31,14 @@ async function handleGetLists(request: AuthenticatedRequest) {
   const userId = request.user?.id;
 
   if (!userId) {
-    return NextResponse.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
   }
 
   try {
     const { searchParams } = new URL(request.url);
     const { limit, offset } = querySchema.parse({
-      limit: searchParams.get("limit"),
-      offset: searchParams.get("offset"),
+      limit: searchParams.get('limit'),
+      offset: searchParams.get('offset'),
     });
 
     // Generate cache key for this query
@@ -89,8 +86,8 @@ async function handleGetLists(request: AuthenticatedRequest) {
       },
       {
         headers: {
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
-          "Cache-Control": "private, max-age=300",
+          'X-Response-Time': `${responseTime.toFixed(2)}ms`,
+          'Cache-Control': 'private, max-age=300',
         },
       }
     );
@@ -101,31 +98,31 @@ async function handleGetLists(request: AuthenticatedRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid query parameters",
+          error: 'Invalid query parameters',
           details: error.errors,
         },
         {
           status: 400,
           headers: {
-            "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+            'X-Response-Time': `${responseTime.toFixed(2)}ms`,
           },
         }
       );
     }
 
-    apiLogger.error("Failed to get vocabulary lists:", asLogContext(error));
+    apiLogger.error('Failed to get vocabulary lists:', asLogContext(error));
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to retrieve vocabulary lists",
-        message: "An error occurred. Please try again.",
+        error: 'Failed to retrieve vocabulary lists',
+        message: 'An error occurred. Please try again.',
       },
       {
         status: 500,
         headers: {
-          "Retry-After": "30",
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+          'Retry-After': '30',
+          'X-Response-Time': `${responseTime.toFixed(2)}ms`,
         },
       }
     );
@@ -140,10 +137,7 @@ async function handleCreateList(request: AuthenticatedRequest) {
   const userId = request.user?.id;
 
   if (!userId) {
-    return NextResponse.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
   }
 
   try {
@@ -153,7 +147,7 @@ async function handleCreateList(request: AuthenticatedRequest) {
     const newList = await DatabaseService.createVocabularyList(validatedData);
 
     if (!newList) {
-      throw new Error("Failed to create vocabulary list");
+      throw new Error('Failed to create vocabulary list');
     }
 
     // Invalidate cache for this user's vocabulary lists
@@ -177,7 +171,7 @@ async function handleCreateList(request: AuthenticatedRequest) {
       {
         status: 201,
         headers: {
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+          'X-Response-Time': `${responseTime.toFixed(2)}ms`,
           Location: `/api/vocabulary/lists/${newList.id}`,
         },
       }
@@ -189,31 +183,31 @@ async function handleCreateList(request: AuthenticatedRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request parameters",
+          error: 'Invalid request parameters',
           details: error.errors,
         },
         {
           status: 400,
           headers: {
-            "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+            'X-Response-Time': `${responseTime.toFixed(2)}ms`,
           },
         }
       );
     }
 
-    apiLogger.error("Failed to create vocabulary list:", asLogContext(error));
+    apiLogger.error('Failed to create vocabulary list:', asLogContext(error));
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to create vocabulary list",
-        message: "An error occurred. Please try again.",
+        error: 'Failed to create vocabulary list',
+        message: 'An error occurred. Please try again.',
       },
       {
         status: 500,
         headers: {
-          "Retry-After": "30",
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+          'Retry-After': '30',
+          'X-Response-Time': `${responseTime.toFixed(2)}ms`,
         },
       }
     );
@@ -222,9 +216,9 @@ async function handleCreateList(request: AuthenticatedRequest) {
 
 // Export authenticated handlers
 export const GET = withBasicAuth(handleGetLists, {
-  requiredFeatures: ["vocabulary_save"],
+  requiredFeatures: ['vocabulary_save'],
 });
 
 export const POST = withBasicAuth(handleCreateList, {
-  requiredFeatures: ["vocabulary_save"],
+  requiredFeatures: ['vocabulary_save'],
 });

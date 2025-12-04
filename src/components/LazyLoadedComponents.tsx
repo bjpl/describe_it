@@ -11,13 +11,13 @@ import React from 'react';
 
 // Skeleton loading components
 const LoadingFallback = () => (
-  <div className="flex items-center justify-center p-8">
-    <LoadingSpinner size="lg" />
+  <div className='flex items-center justify-center p-8'>
+    <LoadingSpinner size='lg' />
   </div>
 );
 
 const MinimalLoading = () => (
-  <div className="animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg h-48" />
+  <div className='animate-pulse bg-gray-200 dark:bg-gray-700 rounded-lg h-48' />
 );
 
 // Heavy components that should be lazy loaded
@@ -31,13 +31,10 @@ export const LazyEnhancedQAPanel = dynamic(() => import('./EnhancedQAPanel'), {
   ssr: false,
 });
 
-export const LazyEnhancedVocabularyPanel = dynamic(
-  () => import('./EnhancedVocabularyPanel'),
-  {
-    loading: LoadingFallback,
-    ssr: false,
-  }
-);
+export const LazyEnhancedVocabularyPanel = dynamic(() => import('./EnhancedVocabularyPanel'), {
+  loading: LoadingFallback,
+  ssr: false,
+});
 
 export const LazyExportModal = dynamic(() => import('./ExportModal'), {
   loading: LoadingFallback,
@@ -64,13 +61,10 @@ export const LazyPerformanceDashboard = dynamic(
 );
 
 // Progress tracking components
-export const LazyProgressDashboard = dynamic(
-  () => import('./ProgressTracking/ProgressDashboard'),
-  {
-    loading: MinimalLoading,
-    ssr: true, // Can SSR
-  }
-);
+export const LazyProgressDashboard = dynamic(() => import('./ProgressTracking/ProgressDashboard'), {
+  loading: MinimalLoading,
+  ssr: true, // Can SSR
+});
 
 export const LazyEnhancedProgressDashboard = dynamic(
   () => import('./ProgressTracking/EnhancedProgressDashboard'),
@@ -87,81 +81,55 @@ export const LazyImageViewer = dynamic(() => import('./ImageViewer/ImageViewer')
 });
 
 // Charts (Chart.js is heavy)
-export const LazyChartComponent = dynamic(
-  () => import('react-chartjs-2').then((mod) => mod.Line),
-  {
-    loading: MinimalLoading,
-    ssr: false,
-  }
-);
+export const LazyChartComponent = dynamic(() => import('react-chartjs-2').then(mod => mod.Line), {
+  loading: MinimalLoading,
+  ssr: false,
+});
 
 // Error monitoring dashboard
-export const LazyErrorDashboard = dynamic(
-  () => import('./Monitoring/ErrorDashboard'),
-  {
-    loading: LoadingFallback,
-    ssr: false,
-  }
-);
+export const LazyErrorDashboard = dynamic(() => import('./Monitoring/ErrorDashboard'), {
+  loading: LoadingFallback,
+  ssr: false,
+});
 
 // Export manager with file generation
-export const LazyEnhancedExportManager = dynamic(
-  () => import('./Export/EnhancedExportManager'),
-  {
-    loading: LoadingFallback,
-    ssr: false,
-  }
-);
+export const LazyEnhancedExportManager = dynamic(() => import('./Export/EnhancedExportManager'), {
+  loading: LoadingFallback,
+  ssr: false,
+});
 
 // Onboarding wizard (only needed for new users)
-export const LazyOnboardingWizard = dynamic(
-  () => import('./Onboarding/OnboardingWizard'),
-  {
-    loading: LoadingFallback,
-    ssr: false,
-  }
-);
+export const LazyOnboardingWizard = dynamic(() => import('./Onboarding/OnboardingWizard'), {
+  loading: LoadingFallback,
+  ssr: false,
+});
 
 // Web vitals reporter
-export const LazyWebVitalsReporter = dynamic(
-  () => import('./analytics/WebVitalsReporter'),
-  {
-    loading: () => null,
-    ssr: false,
-  }
-);
+export const LazyWebVitalsReporter = dynamic(() => import('./analytics/WebVitalsReporter'), {
+  loading: () => null,
+  ssr: false,
+});
 
 // API key setup wizard
-export const LazyApiKeySetupWizard = dynamic(
-  () => import('./ApiKeySetupWizard'),
-  {
-    loading: LoadingFallback,
-    ssr: false,
-  }
-);
+export const LazyApiKeySetupWizard = dynamic(() => import('./ApiKeySetupWizard'), {
+  loading: LoadingFallback,
+  ssr: false,
+});
 
 // Category manager
-export const LazyCategoryManager = dynamic(
-  () => import('./Vocabulary/CategoryManager'),
-  {
-    loading: LoadingFallback,
-    ssr: false,
-  }
-);
+export const LazyCategoryManager = dynamic(() => import('./Vocabulary/CategoryManager'), {
+  loading: LoadingFallback,
+  ssr: false,
+});
 
 // Review session for spaced repetition
-export const LazyReviewSession = dynamic(
-  () => import('./SpacedRepetition/ReviewSession'),
-  {
-    loading: LoadingFallback,
-    ssr: false,
-  }
-);
+export const LazyReviewSession = dynamic(() => import('./SpacedRepetition/ReviewSession'), {
+  loading: LoadingFallback,
+  ssr: false,
+});
 
 // Helper to preload a component
-export function preloadComponent(
-  component: keyof typeof componentMap
-): void {
+export function preloadComponent(component: keyof typeof componentMap): void {
   const LazyComponent = componentMap[component];
   if (LazyComponent && 'preload' in LazyComponent) {
     (LazyComponent as any).preload();

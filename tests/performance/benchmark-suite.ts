@@ -38,26 +38,41 @@ async function benchmark(
   }
   const avgDuration = durations.reduce((a, b) => a + b, 0) / durations.length;
   const threshold = THRESHOLDS[name as keyof typeof THRESHOLDS] || 1000;
-  return { name, duration: avgDuration, threshold, passed: avgDuration < threshold, iterations, avgDuration };
+  return {
+    name,
+    duration: avgDuration,
+    threshold,
+    passed: avgDuration < threshold,
+    iterations,
+    avgDuration,
+  };
 }
 
 describe('Performance Benchmarks', () => {
-  let results: BenchmarkResult[] = [];
+  const results: BenchmarkResult[] = [];
   beforeAll(() => console.log('\n📊 Running Performance Benchmarks...\n'));
 
   it('should benchmark cache operations', async () => {
     const { tieredCache } = await import('@/lib/cache/tiered-cache');
     await tieredCache.set('benchmark_test', { data: 'test' });
-    const result = await benchmark('CACHE_GET', async () => {
-      await tieredCache.get('benchmark_test');
-    }, 100);
+    const result = await benchmark(
+      'CACHE_GET',
+      async () => {
+        await tieredCache.get('benchmark_test');
+      },
+      100
+    );
     results.push(result);
     expect(result.passed).toBe(true);
   });
 
   it('should print results', () => {
     console.log('\n📈 Benchmark Results:\n');
-    results.forEach(r => console.log(`${r.name}: ${r.avgDuration.toFixed(2)}ms (threshold: ${r.threshold}ms) ${r.passed ? '✅' : '❌'}`));
+    results.forEach(r =>
+      console.log(
+        `${r.name}: ${r.avgDuration.toFixed(2)}ms (threshold: ${r.threshold}ms) ${r.passed ? '✅' : '❌'}`
+      )
+    );
     expect(results.every(r => r.passed)).toBe(true);
   });
 });

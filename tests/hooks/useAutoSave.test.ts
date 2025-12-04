@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { useAutoSave } from "../../src/hooks/useAutoSave";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { useAutoSave } from '../../src/hooks/useAutoSave';
 
-describe("useAutoSave", () => {
+describe('useAutoSave', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -12,9 +12,9 @@ describe("useAutoSave", () => {
     vi.useRealTimers();
   });
 
-  it("should not save on initial render", async () => {
+  it('should not save on initial render', async () => {
     const onSave = vi.fn();
-    const data = { value: "test" };
+    const data = { value: 'test' };
 
     renderHook(() =>
       useAutoSave({
@@ -28,9 +28,9 @@ describe("useAutoSave", () => {
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it("should save after delay when data changes", async () => {
+  it('should save after delay when data changes', async () => {
     const onSave = vi.fn();
-    let data = { value: "initial" };
+    let data = { value: 'initial' };
 
     const { rerender } = renderHook(() =>
       useAutoSave({
@@ -40,16 +40,16 @@ describe("useAutoSave", () => {
       })
     );
 
-    data = { value: "updated" };
+    data = { value: 'updated' };
     rerender();
 
     await vi.advanceTimersByTimeAsync(1500);
-    expect(onSave).toHaveBeenCalledWith({ value: "updated" });
+    expect(onSave).toHaveBeenCalledWith({ value: 'updated' });
   });
 
-  it("should debounce multiple rapid changes", async () => {
+  it('should debounce multiple rapid changes', async () => {
     const onSave = vi.fn();
-    let data = { value: "initial" };
+    let data = { value: 'initial' };
 
     const { rerender } = renderHook(() =>
       useAutoSave({
@@ -60,26 +60,26 @@ describe("useAutoSave", () => {
     );
 
     // Rapid changes
-    data = { value: "change1" };
+    data = { value: 'change1' };
     rerender();
     await vi.advanceTimersByTimeAsync(500);
 
-    data = { value: "change2" };
+    data = { value: 'change2' };
     rerender();
     await vi.advanceTimersByTimeAsync(500);
 
-    data = { value: "change3" };
+    data = { value: 'change3' };
     rerender();
     await vi.advanceTimersByTimeAsync(1500);
 
     // Should only save once with final value
     expect(onSave).toHaveBeenCalledTimes(1);
-    expect(onSave).toHaveBeenCalledWith({ value: "change3" });
+    expect(onSave).toHaveBeenCalledWith({ value: 'change3' });
   });
 
-  it("should respect enabled flag", async () => {
+  it('should respect enabled flag', async () => {
     const onSave = vi.fn();
-    let data = { value: "initial" };
+    let data = { value: 'initial' };
 
     const { rerender } = renderHook(() =>
       useAutoSave({
@@ -90,17 +90,17 @@ describe("useAutoSave", () => {
       })
     );
 
-    data = { value: "updated" };
+    data = { value: 'updated' };
     rerender();
 
     await vi.advanceTimersByTimeAsync(2000);
     expect(onSave).not.toHaveBeenCalled();
   });
 
-  it("should call onSuccess callback", async () => {
+  it('should call onSuccess callback', async () => {
     const onSave = vi.fn();
     const onSuccess = vi.fn();
-    let data = { value: "initial" };
+    let data = { value: 'initial' };
 
     const { rerender } = renderHook(() =>
       useAutoSave({
@@ -111,7 +111,7 @@ describe("useAutoSave", () => {
       })
     );
 
-    data = { value: "updated" };
+    data = { value: 'updated' };
     rerender();
 
     await vi.advanceTimersByTimeAsync(1500);
@@ -120,11 +120,11 @@ describe("useAutoSave", () => {
     });
   });
 
-  it("should call onError callback on save failure", async () => {
-    const error = new Error("Save failed");
+  it('should call onError callback on save failure', async () => {
+    const error = new Error('Save failed');
     const onSave = vi.fn().mockRejectedValue(error);
     const onError = vi.fn();
-    let data = { value: "initial" };
+    let data = { value: 'initial' };
 
     const { rerender } = renderHook(() =>
       useAutoSave({
@@ -135,7 +135,7 @@ describe("useAutoSave", () => {
       })
     );
 
-    data = { value: "updated" };
+    data = { value: 'updated' };
     rerender();
 
     await vi.advanceTimersByTimeAsync(1500);
@@ -144,9 +144,9 @@ describe("useAutoSave", () => {
     });
   });
 
-  it("should support force save", async () => {
+  it('should support force save', async () => {
     const onSave = vi.fn();
-    const data = { value: "test" };
+    const data = { value: 'test' };
 
     const { result } = renderHook(() =>
       useAutoSave({

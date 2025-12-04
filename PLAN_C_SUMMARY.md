@@ -60,13 +60,13 @@ Implemented critical performance optimizations focused on quick wins with immedi
 
 ### Before vs After
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Initial Load Time | ~4.5s | ~2.8s | **-37%** |
-| Time to Interactive | ~3.2s | ~1.8s | **-44%** |
-| Main Bundle Size | ~800KB | ~500KB | **-37.5%** |
-| API Cache Hit Rate | 0% | 70-85% | **+∞** |
-| Concurrent Dedup | 0% | 95% | **+95%** |
+| Metric              | Before | After  | Improvement |
+| ------------------- | ------ | ------ | ----------- |
+| Initial Load Time   | ~4.5s  | ~2.8s  | **-37%**    |
+| Time to Interactive | ~3.2s  | ~1.8s  | **-44%**    |
+| Main Bundle Size    | ~800KB | ~500KB | **-37.5%**  |
+| API Cache Hit Rate  | 0%     | 70-85% | **+∞**      |
+| Concurrent Dedup    | 0%     | 95%    | **+95%**    |
 
 ### Key Improvements
 
@@ -94,15 +94,21 @@ Implemented critical performance optimizations focused on quick wins with immedi
 **Problem Solved:** Multiple concurrent requests for same data causing unnecessary API calls and database queries.
 
 **Solution:**
+
 ```typescript
 // Automatic deduplication and caching
 const cacheKey = generateCacheKey('vocabulary/lists', { userId, limit, offset });
-const data = await queryCache.fetch(cacheKey, async () => {
-  return await DatabaseService.getVocabularyLists();
-}, { ttl: 300 });
+const data = await queryCache.fetch(
+  cacheKey,
+  async () => {
+    return await DatabaseService.getVocabularyLists();
+  },
+  { ttl: 300 }
+);
 ```
 
 **Benefits:**
+
 - Reduces database load by 70-85%
 - Eliminates race conditions
 - Automatic cache invalidation
@@ -113,12 +119,14 @@ const data = await queryCache.fetch(cacheKey, async () => {
 **Problem Solved:** Large initial bundle blocking page load and interactivity.
 
 **Solution:**
+
 - Split 15+ heavy components into lazy chunks
 - Strategic SSR configuration
 - Loading fallbacks for UX
 - Preloading for critical paths
 
 **Benefits:**
+
 - 37.5% smaller main bundle
 - 1-2s faster initial load
 - Better progressive enhancement
@@ -129,12 +137,14 @@ const data = await queryCache.fetch(cacheKey, async () => {
 **Problem Solved:** No visibility into performance degradation or bottlenecks.
 
 **Solution:**
+
 - Real-time monitoring of API, DB, memory, cache
 - Automatic alerting to Sentry
 - Alert deduplication to prevent spam
 - Performance metrics as distributions
 
 **Benefits:**
+
 - Proactive issue detection
 - Data-driven optimization decisions
 - Performance regression prevention
@@ -149,6 +159,7 @@ const data = await queryCache.fetch(cacheKey, async () => {
 **Location:** `tests/performance/benchmark-suite.ts`
 
 **Tests:**
+
 - Cache operations (get, set, memory)
 - Query cache hit/miss performance
 - Pagination efficiency
@@ -156,12 +167,14 @@ const data = await queryCache.fetch(cacheKey, async () => {
 - Concurrent request deduplication
 
 **Run Commands:**
+
 ```bash
 npm run perf:benchmark    # Run benchmarks
 npm run test              # Full test suite
 ```
 
 **Expected Results:**
+
 - All benchmarks <threshold
 - Cache hit 10x faster than miss
 - Deduplication reduces to 1 actual call
@@ -170,6 +183,7 @@ npm run test              # Full test suite
 ### Performance Monitoring
 
 **Thresholds Configured:**
+
 - API response: 3s warning, 5s critical
 - DB queries: 500ms warning, 1s critical
 - Memory usage: 512MB warning, 1GB critical
@@ -183,6 +197,7 @@ npm run test              # Full test suite
 ### For Developers
 
 **Adding Cache to New APIs:**
+
 ```typescript
 import { queryCache, generateCacheKey } from '@/lib/cache/query-cache';
 
@@ -191,6 +206,7 @@ const data = await queryCache.fetch(cacheKey, fetcher, { ttl: 600 });
 ```
 
 **Adding New Lazy Components:**
+
 ```typescript
 // In LazyLoadedComponents.tsx
 export const LazyNewComponent = dynamic(() => import('./NewComponent'), {
@@ -200,6 +216,7 @@ export const LazyNewComponent = dynamic(() => import('./NewComponent'), {
 ```
 
 **Monitoring Custom Operations:**
+
 ```typescript
 import { monitorApiResponse } from '@/lib/monitoring/performance-alerts';
 
@@ -211,16 +228,19 @@ monitorApiResponse('/api/custom', performance.now() - start, 200);
 ### Maintenance Tasks
 
 **Weekly:**
+
 - [ ] Review Sentry performance alerts
 - [ ] Check cache hit rates
 - [ ] Monitor bundle size trends
 
 **Monthly:**
+
 - [ ] Run full benchmark suite
 - [ ] Review slow query logs
 - [ ] Audit lazy loading coverage
 
 **Quarterly:**
+
 - [ ] Performance optimization sprint
 - [ ] Update thresholds based on data
 - [ ] Review and update documentation
@@ -258,11 +278,13 @@ monitorApiResponse('/api/custom', performance.now() - start, 200);
 ### Production Monitoring
 
 **Core Web Vitals:**
+
 - Largest Contentful Paint (LCP) < 2.5s
 - First Input Delay (FID) < 100ms
 - Cumulative Layout Shift (CLS) < 0.1
 
 **Custom Metrics:**
+
 - API P95 response time
 - Cache hit rate
 - Bundle size
@@ -270,6 +292,7 @@ monitorApiResponse('/api/custom', performance.now() - start, 200);
 - Memory usage
 
 **Tracking Tools:**
+
 - Sentry Performance Monitoring
 - Google Analytics Core Web Vitals
 - Custom performance dashboard
@@ -320,6 +343,7 @@ monitorApiResponse('/api/custom', performance.now() - start, 200);
 ## ✅ Validation Checklist
 
 ### Implementation Complete
+
 - [x] Query cache created and integrated
 - [x] Code splitting implemented for 15+ components
 - [x] Performance monitoring configured
@@ -328,6 +352,7 @@ monitorApiResponse('/api/custom', performance.now() - start, 200);
 - [x] Vocabulary API optimized with caching
 
 ### Pending Validation
+
 - [ ] Build passes without errors
 - [ ] All benchmarks pass
 - [ ] Cache hit rate >60% in production
@@ -336,6 +361,7 @@ monitorApiResponse('/api/custom', performance.now() - start, 200);
 - [ ] Team review and approval
 
 ### Deployment Checklist
+
 - [ ] Run full test suite
 - [ ] Run performance benchmarks
 - [ ] Build production bundle

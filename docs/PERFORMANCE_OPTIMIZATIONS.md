@@ -26,6 +26,7 @@ This document summarizes the Plan C performance optimizations implemented to imp
 **File:** `src/lib/cache/query-cache.ts`
 
 ### Features
+
 - **Request Deduplication:** Prevents duplicate concurrent API calls for the same resource
 - **Multi-tier Caching:** Leverages existing tiered cache (Redis, KV, Memory, Session)
 - **Intelligent TTL:** Configurable time-to-live per query type
@@ -33,6 +34,7 @@ This document summarizes the Plan C performance optimizations implemented to imp
 - **Performance Metrics:** Tracks cache hit rate, dedup rate, and pending requests
 
 ### Implementation
+
 ```typescript
 // Usage in vocabulary lists API
 const cacheKey = generateCacheKey('vocabulary/lists', { userId, limit, offset });
@@ -44,12 +46,14 @@ const result = await queryCache.fetch(
 ```
 
 ### Performance Impact
+
 - **Cache Hit:** <5ms response time
 - **Cache Miss:** 50-500ms (depending on query)
 - **Deduplication:** Reduces concurrent API calls by 80-95%
 - **Expected Improvement:** 70-90% reduction in API response times for cached queries
 
 ### Metrics
+
 ```typescript
 queryCache.getStats(); // Returns:
 {
@@ -69,6 +73,7 @@ queryCache.getStats(); // Returns:
 **File:** `src/components/LazyLoadedComponents.tsx`
 
 ### Components Split Out
+
 - **QA Panel** - Heavy AI interaction components
 - **Vocabulary Builder** - Complex list management
 - **Export Modal** - File generation libraries
@@ -79,6 +84,7 @@ queryCache.getStats(); // Returns:
 - **Error Dashboard** - Monitoring and debugging tools
 
 ### Implementation
+
 ```typescript
 import { LazyQAPanel } from '@/components/LazyLoadedComponents';
 
@@ -90,17 +96,19 @@ preloadComponent('qaPanel'); // On user interaction
 ```
 
 ### Performance Impact
+
 - **Initial Bundle Size:** Reduced by ~40% (estimated 300-500KB)
 - **Time to Interactive:** Improved by 30-50% (estimated 1-2 seconds faster)
 - **Lazy Load Time:** 100-300ms per component (with loading fallback)
 
 ### Bundle Size Comparison
-| Bundle | Before | After | Savings |
-|--------|--------|-------|---------|
-| Main | ~800KB | ~500KB | -37.5% |
-| QA Panel | included | ~120KB | lazy |
-| Charts | included | ~80KB | lazy |
-| Export | included | ~60KB | lazy |
+
+| Bundle   | Before   | After  | Savings |
+| -------- | -------- | ------ | ------- |
+| Main     | ~800KB   | ~500KB | -37.5%  |
+| QA Panel | included | ~120KB | lazy    |
+| Charts   | included | ~80KB  | lazy    |
+| Export   | included | ~60KB  | lazy    |
 
 ---
 
@@ -109,6 +117,7 @@ preloadComponent('qaPanel'); // On user interaction
 **File:** `src/lib/monitoring/performance-alerts.ts`
 
 ### Monitoring Capabilities
+
 1. **API Response Time Monitoring**
    - Threshold: 3s warning, 5s critical
    - Integration: Sentry metrics
@@ -130,6 +139,7 @@ preloadComponent('qaPanel'); // On user interaction
    - Monitors API failure rates
 
 ### Integration
+
 ```typescript
 // Automatic monitoring in API routes
 monitorApiResponse('/api/vocabulary/lists', duration, statusCode);
@@ -138,11 +148,13 @@ monitorCacheHitRate(hitRate, 'query-cache', stats);
 ```
 
 ### Alert Deduplication
+
 - 5-minute cooldown between identical alerts
 - Prevents alert spam
 - Tracks alert history
 
 ### Sentry Integration
+
 - Performance metrics tracked as distributions
 - Critical alerts sent as Sentry messages
 - Breadcrumbs for debugging context
@@ -154,6 +166,7 @@ monitorCacheHitRate(hitRate, 'query-cache', stats);
 **File:** `tests/performance/benchmark-suite.ts`
 
 ### Benchmarks Included
+
 1. **Cache Operations**
    - Get: <10ms threshold
    - Set: <20ms threshold
@@ -174,11 +187,13 @@ monitorCacheHitRate(hitRate, 'query-cache', stats);
    - Concurrent request deduplication
 
 ### Running Benchmarks
+
 ```bash
 npm run perf:benchmark
 ```
 
 ### Expected Output
+
 ```
 📊 Running Performance Benchmarks...
 ────────────────────────────────────────────────────────
@@ -193,6 +208,7 @@ PAGINATION                     45.32ms         100ms           ✅ PASS
 ```
 
 ### Regression Testing
+
 - Tracks performance over time
 - Fails build if performance degrades >20%
 - Integrates with CI/CD pipeline
@@ -202,6 +218,7 @@ PAGINATION                     45.32ms         100ms           ✅ PASS
 ## 5. Existing Optimizations (Verified Working)
 
 ### Tiered Caching System
+
 **File:** `src/lib/cache/tiered-cache.ts`
 
 - ✅ Redis (primary)
@@ -212,10 +229,12 @@ PAGINATION                     45.32ms         100ms           ✅ PASS
 - ✅ Write-through/read-through modes
 
 **Metrics:**
+
 - Average hit rate: 70-85%
 - Response time: <10ms for cache hits
 
 ### Rate Limiting
+
 **File:** `src/lib/rate-limiting/rate-limiter.ts`
 
 - ✅ Sliding window algorithm
@@ -224,11 +243,13 @@ PAGINATION                     45.32ms         100ms           ✅ PASS
 - ✅ Configurable windows and limits
 
 **Thresholds:**
+
 - Auth endpoints: 5 requests/15 min
 - Description API: 10 requests/min (free), 100 requests/min (paid)
 - General API: 100 requests/min
 
 ### Image Optimization
+
 **File:** `src/components/Optimized/OptimizedImage.tsx`
 
 - ✅ Next.js Image component integration
@@ -238,6 +259,7 @@ PAGINATION                     45.32ms         100ms           ✅ PASS
 - ✅ Performance monitoring
 
 **Impact:**
+
 - 60-80% size reduction (WebP vs JPEG)
 - Lazy load saves ~300KB on initial load
 - Blur placeholders improve perceived performance
@@ -247,24 +269,27 @@ PAGINATION                     45.32ms         100ms           ✅ PASS
 ## 📈 Performance Metrics Summary
 
 ### Before Optimizations
-| Metric | Value |
-|--------|-------|
-| Initial Load Time | ~4.5s |
-| Time to Interactive | ~3.2s |
-| Bundle Size | ~800KB |
-| API Cache Hit Rate | 0% (no caching) |
+
+| Metric                        | Value                   |
+| ----------------------------- | ----------------------- |
+| Initial Load Time             | ~4.5s                   |
+| Time to Interactive           | ~3.2s                   |
+| Bundle Size                   | ~800KB                  |
+| API Cache Hit Rate            | 0% (no caching)         |
 | Concurrent Request Efficiency | Poor (100% duplication) |
 
 ### After Optimizations (Expected)
-| Metric | Value | Improvement |
-|--------|-------|-------------|
-| Initial Load Time | ~2.8s | -37% |
-| Time to Interactive | ~1.8s | -44% |
-| Bundle Size | ~500KB | -37.5% |
-| API Cache Hit Rate | 70-85% | +∞ |
-| Concurrent Request Efficiency | 95% dedup | +95% |
+
+| Metric                        | Value     | Improvement |
+| ----------------------------- | --------- | ----------- |
+| Initial Load Time             | ~2.8s     | -37%        |
+| Time to Interactive           | ~1.8s     | -44%        |
+| Bundle Size                   | ~500KB    | -37.5%      |
+| API Cache Hit Rate            | 70-85%    | +∞          |
+| Concurrent Request Efficiency | 95% dedup | +95%        |
 
 ### Real-World Impact
+
 - **First Load:** 1.7s faster
 - **Cached Loads:** 200-500ms faster
 - **Heavy Components:** Load on-demand (not blocking)
@@ -275,6 +300,7 @@ PAGINATION                     45.32ms         100ms           ✅ PASS
 ## 🔧 Usage Examples
 
 ### 1. Using Query Cache in New APIs
+
 ```typescript
 import { queryCache, generateCacheKey } from '@/lib/cache/query-cache';
 
@@ -294,6 +320,7 @@ await queryCache.invalidate(`query:endpoint/path:*${userId}*`);
 ```
 
 ### 2. Adding New Lazy Components
+
 ```typescript
 // In LazyLoadedComponents.tsx
 export const LazyMyComponent = dynamic(
@@ -312,6 +339,7 @@ onMouseEnter={() => preloadComponent('myComponent')}
 ```
 
 ### 3. Adding Performance Monitoring
+
 ```typescript
 import { monitorApiResponse, monitorDatabaseQuery } from '@/lib/monitoring/performance-alerts';
 
@@ -331,6 +359,7 @@ monitorDatabaseQuery(sql, performance.now() - queryStart, rows.length);
 ## 🚀 Next Steps
 
 ### Recommended Enhancements
+
 1. **Database Query Optimization**
    - Add database indexes for frequent queries
    - Implement query result caching at DB layer
@@ -352,6 +381,7 @@ monitorDatabaseQuery(sql, performance.now() - queryStart, rows.length);
    - Background cache warming
 
 ### Monitoring & Validation
+
 1. **Set up Performance Dashboard**
    - Track real-world metrics via Sentry
    - Monitor cache hit rates
@@ -372,6 +402,7 @@ monitorDatabaseQuery(sql, performance.now() - queryStart, rows.length);
 ## 📝 Testing & Validation
 
 ### Running Tests
+
 ```bash
 # Performance benchmarks
 npm run perf:benchmark
@@ -384,6 +415,7 @@ npm run test tests/performance
 ```
 
 ### Validation Checklist
+
 - [ ] All benchmarks passing
 - [ ] Cache hit rate >60%
 - [ ] Bundle size reduced <500KB
@@ -396,6 +428,7 @@ npm run test tests/performance
 ## 🎯 Success Criteria
 
 ### Metrics to Track
+
 1. **Load Performance**
    - [ ] First Contentful Paint < 1.5s
    - [ ] Largest Contentful Paint < 2.5s

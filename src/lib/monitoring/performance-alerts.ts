@@ -97,11 +97,7 @@ function sendAlert(alert: PerformanceAlert): void {
 /**
  * Monitor API response time
  */
-export function monitorApiResponse(
-  endpoint: string,
-  duration: number,
-  statusCode: number
-): void {
+export function monitorApiResponse(endpoint: string, duration: number, statusCode: number): void {
   if (duration > THRESHOLDS.API_VERY_SLOW) {
     sendAlert({
       type: 'slow_api',
@@ -143,11 +139,7 @@ export function monitorApiResponse(
 /**
  * Monitor database query performance
  */
-export function monitorDatabaseQuery(
-  query: string,
-  duration: number,
-  rowCount?: number
-): void {
+export function monitorDatabaseQuery(query: string, duration: number, rowCount?: number): void {
   if (duration > THRESHOLDS.QUERY_VERY_SLOW) {
     sendAlert({
       type: 'slow_query',

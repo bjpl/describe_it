@@ -12,7 +12,7 @@ export const createMockApiResponse = <T,>(data: T, success = true) => ({
   success,
   data,
   timestamp: new Date().toISOString(),
-  ...(success ? {} : { error: 'Mock error', message: 'Mock error message' })
+  ...(success ? {} : { error: 'Mock error', message: 'Mock error message' }),
 });
 
 /**
@@ -25,10 +25,10 @@ export const mockFetch = (response: any, ok = true, status = 200) => {
     json: vi.fn().mockResolvedValue(response),
     text: vi.fn().mockResolvedValue(JSON.stringify(response)),
     headers: new Headers({
-      'Content-Type': 'application/json'
-    })
+      'Content-Type': 'application/json',
+    }),
   };
-  
+
   (global.fetch as any) = vi.fn().mockResolvedValue(mockResponse);
   return mockResponse;
 };
@@ -63,18 +63,19 @@ export const mockTimeoutError = () => {
 /**
  * Creates a test QueryClient with disabled retries and cache
  */
-export const createTestQueryClient = () => new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: false,
-      gcTime: 0,
-      staleTime: 0,
+export const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+        gcTime: 0,
+        staleTime: 0,
+      },
+      mutations: {
+        retry: false,
+      },
     },
-    mutations: {
-      retry: false,
-    },
-  },
-});
+  });
 
 /**
  * Custom render function with providers
@@ -88,9 +89,7 @@ export const renderWithProviders = (
   { queryClient = createTestQueryClient(), ...renderOptions }: CustomRenderOptions = {}
 ) => {
   const Wrapper = ({ children }: { children: React.ReactNode }) => (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   );
 
   return render(ui, { wrapper: Wrapper, ...renderOptions });
@@ -101,7 +100,7 @@ export const renderWithProviders = (
  */
 export const createMockLocalStorage = () => {
   const store: Record<string, string> = {};
-  
+
   return {
     getItem: vi.fn((key: string) => store[key] || null),
     setItem: vi.fn((key: string, value: string) => {
@@ -136,9 +135,9 @@ export const createMockIntersectionObserver = () => {
     takeRecords: vi.fn(() => []),
     root: null,
     rootMargin: '',
-    thresholds: []
+    thresholds: [],
   };
-  
+
   global.IntersectionObserver = vi.fn(() => mockObserver) as any;
   return mockObserver;
 };
@@ -150,9 +149,9 @@ export const createMockResizeObserver = () => {
   const mockObserver = {
     observe: vi.fn(),
     unobserve: vi.fn(),
-    disconnect: vi.fn()
+    disconnect: vi.fn(),
   };
-  
+
   global.ResizeObserver = vi.fn(() => mockObserver) as any;
   return mockObserver;
 };
@@ -171,12 +170,12 @@ export const mockMatchMedia = (matches = false) => {
     removeEventListener: vi.fn(),
     dispatchEvent: vi.fn(),
   }));
-  
+
   Object.defineProperty(window, 'matchMedia', {
     writable: true,
     value: mockMatchMedia,
   });
-  
+
   return mockMatchMedia;
 };
 
@@ -195,19 +194,19 @@ export const createMockUnsplashImage = (overrides: Partial<any> = {}) => ({
     small: 'https://example.com/small.jpg',
     regular: 'https://example.com/regular.jpg',
     full: 'https://example.com/full.jpg',
-    raw: 'https://example.com/raw.jpg'
+    raw: 'https://example.com/raw.jpg',
   },
   user: {
     id: 'mock-user-id',
     name: 'Mock User',
-    username: 'mockuser'
+    username: 'mockuser',
   },
   description: 'Mock image description',
   alt_description: 'Mock alt description',
   width: 1920,
   height: 1080,
   likes: 42,
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -220,7 +219,7 @@ export const createMockDescription = (overrides: Partial<any> = {}) => ({
   content: 'Mock description content',
   language: 'english',
   createdAt: new Date(),
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -233,14 +232,14 @@ export const createMockQAData = (overrides: Partial<any> = {}) => ({
       question: '¿Qué se ve en la imagen?',
       options: ['Montaña', 'Río', 'Ciudad', 'Bosque'],
       correctAnswer: 0,
-      explanation: 'La imagen muestra una montaña.'
-    }
+      explanation: 'La imagen muestra una montaña.',
+    },
   ],
   metadata: {
     difficulty: 'beginner',
-    totalQuestions: 1
+    totalQuestions: 1,
   },
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -251,7 +250,7 @@ export const createMockVocabularyPhrase = (overrides: Partial<any> = {}) => ({
   english: 'the mountain',
   difficulty: 'beginner',
   context: 'nature',
-  ...overrides
+  ...overrides,
 });
 
 /**
@@ -259,11 +258,11 @@ export const createMockVocabularyPhrase = (overrides: Partial<any> = {}) => ({
  */
 export const mockConsole = () => {
   const originalConsole = { ...console };
-  
+
   Object.keys(console).forEach(method => {
     (console as any)[method] = vi.fn();
   });
-  
+
   return {
     restore: () => {
       Object.assign(console, originalConsole);
@@ -272,8 +271,8 @@ export const mockConsole = () => {
       log: console.log,
       error: console.error,
       warn: console.warn,
-      info: console.info
-    }
+      info: console.info,
+    },
   };
 };
 
@@ -282,7 +281,7 @@ export const mockConsole = () => {
  */
 export const mockPerformanceTiming = (overrides: Partial<PerformanceTiming> = {}) => {
   const baseTiming = Date.now();
-  
+
   return {
     navigationStart: baseTiming,
     unloadEventStart: baseTiming + 10,
@@ -305,29 +304,25 @@ export const mockPerformanceTiming = (overrides: Partial<PerformanceTiming> = {}
     domComplete: baseTiming + 800,
     loadEventStart: baseTiming + 820,
     loadEventEnd: baseTiming + 850,
-    ...overrides
+    ...overrides,
   };
 };
 
 /**
  * Simulate user typing with delay
  */
-export const simulateTyping = async (
-  element: HTMLElement,
-  text: string,
-  delay = 50
-) => {
+export const simulateTyping = async (element: HTMLElement, text: string, delay = 50) => {
   for (const char of text) {
     element.dispatchEvent(new KeyboardEvent('keydown', { key: char }));
     element.dispatchEvent(new KeyboardEvent('keypress', { key: char }));
-    
+
     if (element instanceof HTMLInputElement) {
       element.value += char;
       element.dispatchEvent(new Event('input', { bubbles: true }));
     }
-    
+
     element.dispatchEvent(new KeyboardEvent('keyup', { key: char }));
-    
+
     await new Promise(resolve => setTimeout(resolve, delay));
   }
 };
@@ -335,15 +330,11 @@ export const simulateTyping = async (
 /**
  * Create mock file for file upload testing
  */
-export const createMockFile = (
-  name = 'test.jpg',
-  type = 'image/jpeg',
-  size = 1024
-) => {
+export const createMockFile = (name = 'test.jpg', type = 'image/jpeg', size = 1024) => {
   const file = new File([''], name, { type });
   Object.defineProperty(file, 'size', {
     value: size,
-    writable: false
+    writable: false,
   });
   return file;
 };
@@ -355,16 +346,16 @@ export const mockCreateObjectURL = () => {
   const mockUrl = 'blob:https://example.com/mock-object-url';
   const originalCreateObjectURL = URL.createObjectURL;
   const originalRevokeObjectURL = URL.revokeObjectURL;
-  
+
   URL.createObjectURL = vi.fn(() => mockUrl);
   URL.revokeObjectURL = vi.fn();
-  
+
   return {
     mockUrl,
     restore: () => {
       URL.createObjectURL = originalCreateObjectURL;
       URL.revokeObjectURL = originalRevokeObjectURL;
-    }
+    },
   };
 };
 
@@ -378,12 +369,12 @@ export const mockClipboardAPI = () => {
     write: vi.fn().mockResolvedValue(undefined),
     read: vi.fn().mockResolvedValue([]),
   };
-  
+
   Object.defineProperty(navigator, 'clipboard', {
     value: clipboard,
-    writable: true
+    writable: true,
   });
-  
+
   return clipboard;
 };
 
@@ -400,7 +391,7 @@ export const expectToHaveClasses = (element: Element, classes: string[]) => {
  * Assert that element has expected ARIA attributes
  */
 export const expectToHaveAriaAttributes = (
-  element: Element, 
+  element: Element,
   attributes: Record<string, string>
 ) => {
   Object.entries(attributes).forEach(([attr, value]) => {
@@ -423,7 +414,7 @@ export const createDeferred = <T = any,>() => {
   return {
     promise,
     resolve: resolve!,
-    reject: reject!
+    reject: reject!,
   };
 };
 
@@ -431,17 +422,19 @@ export const createDeferred = <T = any,>() => {
  * Generate test vocabulary items for testing
  */
 export const generateTestVocabularyItems = (count = 5) => {
-  return Array(count).fill(null).map((_, i) => ({
-    id: `vocab-${i + 1}`,
-    vocabulary_list_id: 'test-list',
-    spanish_text: `palabra${i + 1}`,
-    english_translation: `word${i + 1}`,
-    category: i % 2 === 0 ? 'greetings' : 'food',
-    difficulty_level: (i % 3) + 1,
-    part_of_speech: 'noun' as const,
-    frequency_score: 50 + (i * 10),
-    created_at: new Date().toISOString(),
-  }));
+  return Array(count)
+    .fill(null)
+    .map((_, i) => ({
+      id: `vocab-${i + 1}`,
+      vocabulary_list_id: 'test-list',
+      spanish_text: `palabra${i + 1}`,
+      english_translation: `word${i + 1}`,
+      category: i % 2 === 0 ? 'greetings' : 'food',
+      difficulty_level: (i % 3) + 1,
+      part_of_speech: 'noun' as const,
+      frequency_score: 50 + i * 10,
+      created_at: new Date().toISOString(),
+    }));
 };
 
 /**
@@ -469,18 +462,22 @@ export const generateTestPhrases = () => ({
  * Generate test QA data for testing
  */
 export const generateTestQAData = (count = 3) => {
-  return Array(count).fill(null).map((_, i) => ({
-    question: `¿Pregunta de prueba ${i + 1}?`,
-    answer: `Respuesta de prueba ${i + 1}`,
-    difficulty: 'facil' as const,
-    category: 'prueba',
-  }));
+  return Array(count)
+    .fill(null)
+    .map((_, i) => ({
+      question: `¿Pregunta de prueba ${i + 1}?`,
+      answer: `Respuesta de prueba ${i + 1}`,
+      difficulty: 'facil' as const,
+      category: 'prueba',
+    }));
 };
 
 /**
  * Measure performance of an async operation
  */
-export const measurePerformance = async <T,>(fn: () => Promise<T>): Promise<{ duration: number; result: T }> => {
+export const measurePerformance = async <T,>(
+  fn: () => Promise<T>
+): Promise<{ duration: number; result: T }> => {
   const start = performance.now();
   const result = await fn();
   const end = performance.now();

@@ -3,14 +3,14 @@
  * Handles importing data from various formats
  */
 
-import { logger } from "@/lib/logger";
-import { safeParse } from "@/lib/utils/json-safe";
+import { logger } from '@/lib/logger';
+import { safeParse } from '@/lib/utils/json-safe';
 import type {
   VocabularyExportItem,
   DescriptionExportItem,
   QAExportItem,
   SessionExportItem,
-} from "@/types/export";
+} from '@/types/export';
 
 export interface ImportResult {
   success: boolean;
@@ -28,10 +28,10 @@ export interface ImportedData {
 }
 
 export interface ImportOptions {
-  format: "json" | "csv" | "anki";
+  format: 'json' | 'csv' | 'anki';
   validateData?: boolean;
   skipDuplicates?: boolean;
-  mergeStrategy?: "replace" | "merge" | "skip";
+  mergeStrategy?: 'replace' | 'merge' | 'skip';
 }
 
 /**
@@ -39,7 +39,7 @@ export interface ImportOptions {
  */
 export async function importFromJSON(
   file: File,
-  options: ImportOptions = { format: "json" }
+  options: ImportOptions = { format: 'json' }
 ): Promise<ImportResult> {
   try {
     const text = await file.text();
@@ -49,7 +49,7 @@ export async function importFromJSON(
       return {
         success: false,
         itemsImported: 0,
-        errors: ["Invalid JSON format"],
+        errors: ['Invalid JSON format'],
         warnings: [],
       };
     }
@@ -97,7 +97,7 @@ export async function importFromJSON(
     }
 
     if (totalItems === 0) {
-      warnings.push("No valid data found in file");
+      warnings.push('No valid data found in file');
     }
 
     return {
@@ -108,13 +108,11 @@ export async function importFromJSON(
       data,
     };
   } catch (error) {
-    logger.error("JSON import failed:", error);
+    logger.error('JSON import failed:', error);
     return {
       success: false,
       itemsImported: 0,
-      errors: [
-        error instanceof Error ? error.message : "Unknown import error",
-      ],
+      errors: [error instanceof Error ? error.message : 'Unknown import error'],
       warnings: [],
     };
   }
@@ -125,17 +123,17 @@ export async function importFromJSON(
  */
 export async function importFromCSV(
   file: File,
-  options: ImportOptions = { format: "csv" }
+  options: ImportOptions = { format: 'csv' }
 ): Promise<ImportResult> {
   try {
     const text = await file.text();
-    const lines = text.split("\n").filter((line) => line.trim());
+    const lines = text.split('\n').filter(line => line.trim());
 
     if (lines.length === 0) {
       return {
         success: false,
         itemsImported: 0,
-        errors: ["Empty CSV file"],
+        errors: ['Empty CSV file'],
         warnings: [],
       };
     }
@@ -146,13 +144,11 @@ export async function importFromCSV(
 
     // Parse header
     const headers = parseCSVLine(lines[0]);
-    const requiredFields = ["spanish_text", "english_translation"];
-    const missingFields = requiredFields.filter(
-      (field) => !headers.includes(field)
-    );
+    const requiredFields = ['spanish_text', 'english_translation'];
+    const missingFields = requiredFields.filter(field => !headers.includes(field));
 
     if (missingFields.length > 0) {
-      errors.push(`Missing required fields: ${missingFields.join(", ")}`);
+      errors.push(`Missing required fields: ${missingFields.join(', ')}`);
       return {
         success: false,
         itemsImported: 0,
@@ -177,23 +173,21 @@ export async function importFromCSV(
 
         // Convert to VocabularyExportItem
         const vocabItem: VocabularyExportItem = {
-          spanish: item.spanish_text || "",
-          english: item.english_translation || "",
-          category: item.category || "general",
-          difficulty: (item.difficulty || "beginner") as any,
-          partOfSpeech: item.part_of_speech || "noun",
+          spanish: item.spanish_text || '',
+          english: item.english_translation || '',
+          category: item.category || 'general',
+          difficulty: (item.difficulty || 'beginner') as any,
+          partOfSpeech: item.part_of_speech || 'noun',
           context: {
-            spanish: item.context_sentence_spanish || "",
-            english: item.context_sentence_english || "",
+            spanish: item.context_sentence_spanish || '',
+            english: item.context_sentence_english || '',
           },
           dateAdded: item.created_at || new Date().toISOString(),
         };
 
         vocabulary.push(vocabItem);
       } catch (error) {
-        warnings.push(
-          `Row ${i + 1}: ${error instanceof Error ? error.message : "Parse error"}`
-        );
+        warnings.push(`Row ${i + 1}: ${error instanceof Error ? error.message : 'Parse error'}`);
       }
     }
 
@@ -205,13 +199,11 @@ export async function importFromCSV(
       data: { vocabulary },
     };
   } catch (error) {
-    logger.error("CSV import failed:", error);
+    logger.error('CSV import failed:', error);
     return {
       success: false,
       itemsImported: 0,
-      errors: [
-        error instanceof Error ? error.message : "Unknown import error",
-      ],
+      errors: [error instanceof Error ? error.message : 'Unknown import error'],
       warnings: [],
     };
   }
@@ -222,7 +214,7 @@ export async function importFromCSV(
  */
 function parseCSVLine(line: string): string[] {
   const result: string[] = [];
-  let current = "";
+  let current = '';
   let inQuotes = false;
 
   for (let i = 0; i < line.length; i++) {
@@ -235,9 +227,9 @@ function parseCSVLine(line: string): string[] {
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (char === "," && !inQuotes) {
+    } else if (char === ',' && !inQuotes) {
       result.push(current.trim());
-      current = "";
+      current = '';
     } else {
       current += char;
     }
@@ -252,11 +244,11 @@ function parseCSVLine(line: string): string[] {
  */
 export async function importFromAnki(
   file: File,
-  options: ImportOptions = { format: "anki" }
+  options: ImportOptions = { format: 'anki' }
 ): Promise<ImportResult> {
   try {
     const text = await file.text();
-    const lines = text.split("\n").filter((line) => line.trim());
+    const lines = text.split('\n').filter(line => line.trim());
 
     const vocabulary: VocabularyExportItem[] = [];
     const warnings: string[] = [];
@@ -266,7 +258,7 @@ export async function importFromAnki(
       if (!line) continue;
 
       // Anki format: front\tback\ttags (tab-separated)
-      const parts = line.split("\t");
+      const parts = line.split('\t');
       if (parts.length < 2) {
         warnings.push(`Line ${i + 1}: Invalid Anki format`);
         continue;
@@ -275,12 +267,12 @@ export async function importFromAnki(
       const vocabItem: VocabularyExportItem = {
         spanish: parts[0].trim(),
         english: parts[1].trim(),
-        category: parts[2] ? parts[2].trim() : "general",
-        difficulty: "beginner",
-        partOfSpeech: "noun",
+        category: parts[2] ? parts[2].trim() : 'general',
+        difficulty: 'beginner',
+        partOfSpeech: 'noun',
         context: {
-          spanish: "",
-          english: "",
+          spanish: '',
+          english: '',
         },
         dateAdded: new Date().toISOString(),
       };
@@ -296,13 +288,11 @@ export async function importFromAnki(
       data: { vocabulary },
     };
   } catch (error) {
-    logger.error("Anki import failed:", error);
+    logger.error('Anki import failed:', error);
     return {
       success: false,
       itemsImported: 0,
-      errors: [
-        error instanceof Error ? error.message : "Unknown import error",
-      ],
+      errors: [error instanceof Error ? error.message : 'Unknown import error'],
       warnings: [],
     };
   }
@@ -311,16 +301,13 @@ export async function importFromAnki(
 /**
  * Main import function that delegates to format-specific handlers
  */
-export async function importData(
-  file: File,
-  options: ImportOptions
-): Promise<ImportResult> {
+export async function importData(file: File, options: ImportOptions): Promise<ImportResult> {
   switch (options.format) {
-    case "json":
+    case 'json':
       return importFromJSON(file, options);
-    case "csv":
+    case 'csv':
       return importFromCSV(file, options);
-    case "anki":
+    case 'anki':
       return importFromAnki(file, options);
     default:
       return {
@@ -344,9 +331,7 @@ export function validateImportedData(data: ImportedData): {
   if (data.vocabulary) {
     data.vocabulary.forEach((item, index) => {
       if (!item.spanish || !item.english) {
-        errors.push(
-          `Vocabulary item ${index + 1}: Missing required fields`
-        );
+        errors.push(`Vocabulary item ${index + 1}: Missing required fields`);
       }
     });
   }
@@ -354,9 +339,7 @@ export function validateImportedData(data: ImportedData): {
   if (data.descriptions) {
     data.descriptions.forEach((item, index) => {
       if (!item.spanish || !item.english) {
-        errors.push(
-          `Description item ${index + 1}: Missing required fields`
-        );
+        errors.push(`Description item ${index + 1}: Missing required fields`);
       }
     });
   }

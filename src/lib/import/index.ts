@@ -7,4 +7,4 @@ export {
   type ImportResult,
   type ImportedData,
   type ImportOptions,
-} from "./importManager";
+} from './importManager';

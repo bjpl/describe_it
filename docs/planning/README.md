@@ -12,6 +12,7 @@
 This directory contains a comprehensive GOAP-based execution plan for completing Plans A, B, and C. Read the documents in this order:
 
 ### 1. 🎯 **START HERE:** [IMMEDIATE_ACTIONS.md](./IMMEDIATE_ACTIONS.md)
+
 **Read this first if you want to start working right now.**
 
 - Step-by-step instructions for the first two critical actions
@@ -25,6 +26,7 @@ This directory contains a comprehensive GOAP-based execution plan for completing
 ---
 
 ### 2. 📊 **OVERVIEW:** [EXECUTION_PLAN_SUMMARY.md](./EXECUTION_PLAN_SUMMARY.md)
+
 **Read this for the complete picture.**
 
 - Executive summary of current state vs. goal state
@@ -39,6 +41,7 @@ This directory contains a comprehensive GOAP-based execution plan for completing
 ---
 
 ### 3. 📈 **VISUALIZATION:** [action-dependency-graph.md](./action-dependency-graph.md)
+
 **Read this for visual understanding of action dependencies.**
 
 - Mermaid diagrams showing action dependencies
@@ -53,6 +56,7 @@ This directory contains a comprehensive GOAP-based execution plan for completing
 ---
 
 ### 4. 🔧 **TECHNICAL DETAILS:** [goap-execution-plan.json](./goap-execution-plan.json)
+
 **Read this for complete GOAP algorithm details.**
 
 - Structured JSON representation of the entire plan
@@ -91,6 +95,7 @@ This directory contains a comprehensive GOAP-based execution plan for completing
 ## 📊 Executive Summary
 
 ### Current State (December 3, 2025)
+
 - **Test Coverage:** 69.2% (36/52 database tests passing)
 - **TypeScript Health:** 679 errors (reduced from 913)
 - **Features Implemented:**
@@ -102,17 +107,20 @@ This directory contains a comprehensive GOAP-based execution plan for completing
 - **Overall Progress:** ~45% toward production-ready
 
 ### Goal State (Plans A+B+C Complete)
+
 - **Plan A:** 95%+ test pass rate, 0 TS errors, API alignment, security validated
 - **Plan B:** Export/import, dashboard, offline PWA, flashcards, advanced search
 - **Plan C:** DB optimization, caching, code splitting, monitoring, benchmarks
 
 ### Timeline
+
 - **Phase 1 (Critical Stability):** 5-7 days
 - **Phase 2 (Feature Enhancement):** 6-8 days
 - **Phase 3 (Performance & Polish):** 5-7 days
 - **Total:** 16-22 days (3-4 weeks)
 
 ### Resource Requirements
+
 - **Developer Time:** 142 hours
 - **Skills:** TypeScript, React, Next.js, Supabase, Testing, Performance
 - **Services:** Supabase, Vercel, Sentry
@@ -123,15 +131,18 @@ This directory contains a comprehensive GOAP-based execution plan for completing
 ## 🔄 GOAP Methodology Explained
 
 ### What is GOAP?
+
 Goal-Oriented Action Planning is an AI planning algorithm that:
+
 1. Defines a **world state** (current conditions)
 2. Defines a **goal state** (desired conditions)
 3. Identifies **actions** that transform the world state
 4. Each action has **preconditions** (what must be true to execute)
 5. Each action has **effects** (how it changes the world state)
-6. Uses **A* pathfinding** to find the optimal action sequence
+6. Uses **A\* pathfinding** to find the optimal action sequence
 
 ### Why GOAP for This Project?
+
 - **Complex dependencies:** 16 actions with intricate prerequisites
 - **Parallel opportunities:** Multiple actions can run concurrently
 - **Dynamic replanning:** Can adjust if actions fail or conditions change
@@ -139,30 +150,34 @@ Goal-Oriented Action Planning is an AI planning algorithm that:
 - **Novel solutions:** Combines known patterns in optimal ways
 
 ### GOAP vs. Traditional Planning
-| Traditional | GOAP |
-|-------------|------|
-| Linear task list | Dynamic action graph |
-| Fixed order | Optimal ordering |
+
+| Traditional          | GOAP                   |
+| -------------------- | ---------------------- |
+| Linear task list     | Dynamic action graph   |
+| Fixed order          | Optimal ordering       |
 | Sequential execution | Parallel when possible |
-| Manual replanning | Automatic adaptation |
-| Hard to optimize | Cost-optimized path |
+| Manual replanning    | Automatic adaptation   |
+| Hard to optimize     | Cost-optimized path    |
 
 ---
 
 ## 📋 Plan Summaries
 
 ### Plan A: Core Stability & Test Infrastructure
+
 **Status:** 70% Complete
 **Priority:** CRITICAL (P0)
 **Timeline:** Days 1-7
 
 **Completed:**
+
 - ✅ Database integration (52 tests, 69.2% pass rate)
 - ✅ DescriptionNotebook auto-save
 - ✅ Progress endpoints (/api/progress)
 - ✅ TypeScript error reduction (913→679)
 
 **Remaining:**
+
 - ❌ Fix 16 failing database tests → 95%+ pass rate
 - ❌ Resolve 679 TypeScript errors → 0 errors
 - ❌ Align API signatures (DescriptionNotebook, APIClient)
@@ -174,15 +189,18 @@ Goal-Oriented Action Planning is an AI planning algorithm that:
 ---
 
 ### Plan B: Feature Enhancement & User Experience
+
 **Status:** 40% Complete
 **Priority:** HIGH (P1)
 **Timeline:** Days 8-15
 
 **Completed:**
+
 - ✅ Auto-save in DescriptionNotebook (30s interval)
 - ✅ Basic progress tracking (GET /api/progress)
 
 **Remaining:**
+
 - ❌ Export/import functionality (JSON/CSV)
 - ❌ Progress dashboard UI (charts, stats, achievements)
 - ❌ Offline support (PWA with service worker)
@@ -195,16 +213,19 @@ Goal-Oriented Action Planning is an AI planning algorithm that:
 ---
 
 ### Plan C: Performance & Optimization
+
 **Status:** 25% Complete
 **Priority:** MEDIUM (P2)
 **Timeline:** Days 10-22
 
 **Completed:**
+
 - ✅ RuVector semantic search integration
 - ✅ GNN learning capabilities
 - ✅ Basic caching in progress endpoints
 
 **Remaining:**
+
 - ❌ Database query optimization (indexes, connection pooling)
 - ❌ Pagination for large datasets (cursor-based)
 - ❌ Multi-layer caching strategy (Browser+CDN+App+DB)
@@ -253,6 +274,7 @@ GOAL (Production Ready)
 ## ✅ Success Criteria
 
 ### Plan A Success Metrics
+
 - ✅ Test pass rate ≥95% (target: 100%)
 - ✅ TypeScript errors = 0
 - ✅ API test coverage ≥90%
@@ -260,6 +282,7 @@ GOAL (Production Ready)
 - ✅ CI/CD pipeline green
 
 ### Plan B Success Metrics
+
 - ✅ Export formats ≥2 (JSON, CSV)
 - ✅ Dashboard components ≥5 (stats, charts, achievements, streak, activity)
 - ✅ Flashcard coverage: 100% of vocabulary
@@ -267,6 +290,7 @@ GOAL (Production Ready)
 - ✅ Offline features ≥3 (browse, study, flashcards)
 
 ### Plan C Success Metrics
+
 - ✅ DB query performance <100ms average
 - ✅ Cache hit rate >80%
 - ✅ Bundle size reduction ≥30%
@@ -278,17 +302,20 @@ GOAL (Production Ready)
 ## 🆘 Support & Resources
 
 ### If You Get Stuck
+
 1. Check [IMMEDIATE_ACTIONS.md](./IMMEDIATE_ACTIONS.md) troubleshooting section
 2. Review [action-dependency-graph.md](./action-dependency-graph.md) risk heatmap
 3. Consult [goap-execution-plan.json](./goap-execution-plan.json) for detailed preconditions
 
 ### Additional Documentation
+
 - **Project README:** `../../README.md`
 - **Development Roadmap:** `../development/DEVELOPMENT_ROADMAP.md`
 - **Architecture:** `../architecture/ARCHITECTURE.md`
 - **Testing Summary:** `../testing/testing-summary.md`
 
 ### External Resources
+
 - **Next.js 15 Docs:** https://nextjs.org/docs
 - **Supabase Docs:** https://supabase.com/docs
 - **TypeScript Handbook:** https://www.typescriptlang.org/docs/
@@ -299,17 +326,21 @@ GOAL (Production Ready)
 ## 📅 Review Schedule
 
 ### Daily Progress Updates
+
 Update this README with:
+
 - [ ] Actions completed
 - [ ] Blockers encountered
 - [ ] Metrics progress (tests passing, TS errors)
 
 ### Weekly Review (End of Each Phase)
+
 - [ ] Phase objectives met?
 - [ ] Timeline adjustments needed?
 - [ ] Resource reallocation required?
 
 ### Decision Points
+
 - **Day 7 (After Phase 1):** Go/No-Go for Phase 2
 - **Day 15 (After Phase 2):** Go/No-Go for Phase 3
 - **Day 22 (After Phase 3):** Production deployment decision
@@ -335,6 +366,7 @@ Update this README with:
 ## 📝 Changelog
 
 ### 2025-12-03 - Initial GOAP Plan Created
+
 - Analyzed current state (69.2% tests, 679 TS errors)
 - Identified 16 actions across 3 plans
 - Established critical path and dependencies
