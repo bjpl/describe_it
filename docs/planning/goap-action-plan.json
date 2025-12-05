@@ -1,0 +1,621 @@
+{
+  "metadata": {
+    "created": "2025-12-04",
+    "version": "1.0",
+    "planner": "GOAP Specialist",
+    "target_score": 9.0,
+    "current_score": 6.7
+  },
+  "world_state": {
+    "current": {
+      "type_safety": false,
+      "type_safety_score": 0.15,
+      "any_usages": 1088,
+      "has_repository_layer": false,
+      "has_service_layer": false,
+      "zustand_implemented": false,
+      "auth_simplified": false,
+      "auth_polling_interval": 1000,
+      "tests_realistic": false,
+      "api_routes_modular": false,
+      "largest_route_size": 673,
+      "type_files_consolidated": false,
+      "code_quality_score": 6.5,
+      "test_quality_score": 6.5,
+      "architecture_score": 7.2,
+      "overall_score": 6.7,
+      "dependencies_used": {
+        "zustand": "unused",
+        "agentdb": "unused",
+        "react-query": "partial"
+      }
+    },
+    "goal": {
+      "type_safety": true,
+      "type_safety_score": 0.95,
+      "any_usages": 10,
+      "has_repository_layer": true,
+      "has_service_layer": true,
+      "zustand_implemented": true,
+      "auth_simplified": true,
+      "auth_polling_interval": 300000,
+      "tests_realistic": true,
+      "api_routes_modular": true,
+      "largest_route_size": 300,
+      "type_files_consolidated": true,
+      "code_quality_score": 9.0,
+      "test_quality_score": 9.0,
+      "architecture_score": 9.0,
+      "overall_score": 9.0,
+      "dependencies_used": {
+        "zustand": "active",
+        "agentdb": "active",
+        "react-query": "active"
+      }
+    }
+  },
+  "actions": [
+    {
+      "id": "A1",
+      "name": "Consolidate Type Definitions",
+      "description": "Merge duplicate type definitions from legacy and modular systems into single source of truth",
+      "agent_type": "code-analyzer",
+      "preconditions": {
+        "type_files_consolidated": false
+      },
+      "effects": {
+        "type_files_consolidated": true,
+        "any_usages": "reduce_by_150"
+      },
+      "cost": 8,
+      "priority": "critical",
+      "estimated_hours": 6,
+      "files_affected": [
+        "src/types/index.ts",
+        "src/types/unified.ts",
+        "src/types/database.ts",
+        "src/types/comprehensive.ts"
+      ],
+      "validation_criteria": [
+        "No duplicate type definitions",
+        "All imports resolve correctly",
+        "Build passes with no type errors"
+      ]
+    },
+    {
+      "id": "A2",
+      "name": "Create Repository Layer",
+      "description": "Extract database operations from routes into repository pattern with typed interfaces",
+      "agent_type": "backend-dev",
+      "preconditions": {
+        "type_files_consolidated": true
+      },
+      "effects": {
+        "has_repository_layer": true,
+        "any_usages": "reduce_by_200"
+      },
+      "cost": 15,
+      "priority": "critical",
+      "estimated_hours": 12,
+      "files_affected": [
+        "src/lib/repositories/UserRepository.ts",
+        "src/lib/repositories/VocabularyRepository.ts",
+        "src/lib/repositories/SessionRepository.ts",
+        "src/lib/repositories/ProgressRepository.ts",
+        "src/lib/repositories/ImageRepository.ts",
+        "src/lib/repositories/DescriptionRepository.ts"
+      ],
+      "validation_criteria": [
+        "All DB operations abstracted",
+        "Repository interfaces fully typed",
+        "Unit tests for each repository"
+      ]
+    },
+    {
+      "id": "A3",
+      "name": "Create Service Layer",
+      "description": "Extract business logic from routes into service layer with proper separation of concerns",
+      "agent_type": "backend-dev",
+      "preconditions": {
+        "has_repository_layer": true
+      },
+      "effects": {
+        "has_service_layer": true,
+        "any_usages": "reduce_by_150"
+      },
+      "cost": 12,
+      "priority": "critical",
+      "estimated_hours": 10,
+      "files_affected": [
+        "src/lib/services/AuthService.ts",
+        "src/lib/services/VocabularyService.ts",
+        "src/lib/services/LearningService.ts",
+        "src/lib/services/AnalyticsService.ts"
+      ],
+      "validation_criteria": [
+        "Business logic isolated from routes",
+        "Services use repository layer only",
+        "All services have unit tests"
+      ]
+    },
+    {
+      "id": "A4",
+      "name": "Refactor API Routes to Thin Controllers",
+      "description": "Refactor 673-line route files into thin controllers that delegate to services",
+      "agent_type": "backend-dev",
+      "preconditions": {
+        "has_service_layer": true
+      },
+      "effects": {
+        "api_routes_modular": true,
+        "largest_route_size": 150,
+        "any_usages": "reduce_by_100"
+      },
+      "cost": 10,
+      "priority": "high",
+      "estimated_hours": 8,
+      "files_affected": ["src/app/api/*/route.ts"],
+      "validation_criteria": [
+        "All route files < 200 lines",
+        "Routes only handle HTTP concerns",
+        "Integration tests pass"
+      ]
+    },
+    {
+      "id": "A5",
+      "name": "Implement Zustand State Management",
+      "description": "Replace useState chaos with Zustand stores for global state",
+      "agent_type": "coder",
+      "preconditions": {
+        "type_files_consolidated": true
+      },
+      "effects": {
+        "zustand_implemented": true,
+        "any_usages": "reduce_by_80"
+      },
+      "cost": 12,
+      "priority": "high",
+      "estimated_hours": 10,
+      "files_affected": [
+        "src/store/useImageStore.ts",
+        "src/store/useDescriptionStore.ts",
+        "src/store/useVocabularyStore.ts",
+        "src/store/useAuthStore.ts",
+        "src/store/useUIStore.ts"
+      ],
+      "validation_criteria": [
+        "All global state in Zustand",
+        "No prop drilling",
+        "Devtools integration working"
+      ]
+    },
+    {
+      "id": "A6",
+      "name": "Optimize Auth Polling",
+      "description": "Replace 1-second polling with event-driven auth state updates",
+      "agent_type": "backend-dev",
+      "preconditions": {
+        "zustand_implemented": true
+      },
+      "effects": {
+        "auth_simplified": true,
+        "auth_polling_interval": 300000
+      },
+      "cost": 6,
+      "priority": "high",
+      "estimated_hours": 4,
+      "files_affected": ["src/lib/auth/AuthManager.ts", "src/store/useAuthStore.ts"],
+      "validation_criteria": [
+        "Auth state updates via events",
+        "Polling interval >= 5 minutes",
+        "Auth tests pass"
+      ]
+    },
+    {
+      "id": "A7",
+      "name": "Replace Global Mocks with Realistic Tests",
+      "description": "Remove vi.mock at top level, use scoped mocking and real implementations",
+      "agent_type": "tester",
+      "preconditions": {
+        "has_repository_layer": true,
+        "has_service_layer": true
+      },
+      "effects": {
+        "tests_realistic": true,
+        "test_quality_score": 9.0
+      },
+      "cost": 14,
+      "priority": "high",
+      "estimated_hours": 12,
+      "files_affected": ["tests/**/*.test.ts", "tests/setup.ts"],
+      "validation_criteria": [
+        "No global vi.mock statements",
+        "Tests use test containers",
+        "95% code coverage maintained"
+      ]
+    },
+    {
+      "id": "A8",
+      "name": "Eliminate 'any' Types - Phase 1",
+      "description": "Replace 400 any usages with proper types in utils and helpers",
+      "agent_type": "code-analyzer",
+      "preconditions": {
+        "type_files_consolidated": true
+      },
+      "effects": {
+        "any_usages": "reduce_by_400",
+        "type_safety_score": 0.6
+      },
+      "cost": 10,
+      "priority": "medium",
+      "estimated_hours": 8,
+      "files_affected": ["src/lib/utils/**/*.ts", "src/lib/helpers/**/*.ts"],
+      "validation_criteria": [
+        "Utils 100% typed",
+        "TSC strict mode passes",
+        "No runtime type errors"
+      ]
+    },
+    {
+      "id": "A9",
+      "name": "Eliminate 'any' Types - Phase 2",
+      "description": "Replace 300 any usages in services and API clients",
+      "agent_type": "code-analyzer",
+      "preconditions": {
+        "has_service_layer": true,
+        "any_usages": "less_than_700"
+      },
+      "effects": {
+        "any_usages": "reduce_by_300",
+        "type_safety_score": 0.85
+      },
+      "cost": 10,
+      "priority": "medium",
+      "estimated_hours": 8,
+      "files_affected": ["src/lib/services/**/*.ts", "src/lib/api/**/*.ts"],
+      "validation_criteria": ["Services 100% typed", "API responses typed", "Zod schemas complete"]
+    },
+    {
+      "id": "A10",
+      "name": "Eliminate 'any' Types - Phase 3",
+      "description": "Final cleanup of remaining any usages to <10",
+      "agent_type": "code-analyzer",
+      "preconditions": {
+        "any_usages": "less_than_400"
+      },
+      "effects": {
+        "any_usages": 8,
+        "type_safety": true,
+        "type_safety_score": 0.98,
+        "code_quality_score": 9.0
+      },
+      "cost": 8,
+      "priority": "medium",
+      "estimated_hours": 6,
+      "files_affected": ["src/**/*.ts"],
+      "validation_criteria": [
+        "< 10 any usages total",
+        "All anys documented with reason",
+        "TSC strict mode clean"
+      ]
+    },
+    {
+      "id": "A11",
+      "name": "Implement AgentDB Integration",
+      "description": "Add AgentDB for vector search and pattern learning",
+      "agent_type": "ml-developer",
+      "preconditions": {
+        "has_repository_layer": true
+      },
+      "effects": {
+        "dependencies_used.agentdb": "active"
+      },
+      "cost": 8,
+      "priority": "low",
+      "estimated_hours": 6,
+      "files_affected": ["src/lib/vector/agentdb-client.ts", "src/lib/services/LearningService.ts"],
+      "validation_criteria": [
+        "AgentDB storing patterns",
+        "Vector search working",
+        "Learning loops active"
+      ]
+    },
+    {
+      "id": "A12",
+      "name": "Integration Testing Suite",
+      "description": "Create comprehensive integration tests for all services",
+      "agent_type": "tester",
+      "preconditions": {
+        "has_service_layer": true,
+        "has_repository_layer": true,
+        "tests_realistic": true
+      },
+      "effects": {
+        "test_quality_score": 9.5
+      },
+      "cost": 10,
+      "priority": "medium",
+      "estimated_hours": 8,
+      "files_affected": ["tests/integration/**/*.test.ts"],
+      "validation_criteria": ["All services covered", "DB integration tested", "E2E scenarios pass"]
+    },
+    {
+      "id": "A13",
+      "name": "Performance Optimization",
+      "description": "Optimize bundle size, lazy loading, and runtime performance",
+      "agent_type": "perf-analyzer",
+      "preconditions": {
+        "zustand_implemented": true,
+        "api_routes_modular": true
+      },
+      "effects": {
+        "architecture_score": 9.0
+      },
+      "cost": 8,
+      "priority": "medium",
+      "estimated_hours": 6,
+      "files_affected": ["next.config.js", "src/components/**/*.tsx"],
+      "validation_criteria": ["Bundle < 500KB", "LCP < 2.5s", "Lighthouse score > 90"]
+    },
+    {
+      "id": "A14",
+      "name": "Code Review and Documentation",
+      "description": "Final code review, documentation updates, and polish",
+      "agent_type": "reviewer",
+      "preconditions": {
+        "type_safety": true,
+        "api_routes_modular": true,
+        "tests_realistic": true
+      },
+      "effects": {
+        "overall_score": 9.0
+      },
+      "cost": 6,
+      "priority": "low",
+      "estimated_hours": 4,
+      "files_affected": ["README.md", "docs/**/*.md"],
+      "validation_criteria": ["All code reviewed", "Docs up to date", "No TODOs remaining"]
+    }
+  ],
+  "critical_path": {
+    "sequence": ["A1", "A2", "A3", "A4", "A7", "A8", "A9", "A10", "A12", "A14"],
+    "total_cost": 93,
+    "total_hours": 76,
+    "estimated_weeks": 3.8
+  },
+  "parallel_execution_groups": [
+    {
+      "phase": 1,
+      "name": "Foundation",
+      "actions": ["A1"],
+      "can_run_parallel": false,
+      "estimated_hours": 6,
+      "blocking": true
+    },
+    {
+      "phase": 2,
+      "name": "Architecture Setup",
+      "actions": ["A2"],
+      "can_run_parallel": false,
+      "estimated_hours": 12,
+      "blocking": true
+    },
+    {
+      "phase": 3,
+      "name": "Service Layer and State",
+      "actions": ["A3", "A5"],
+      "can_run_parallel": true,
+      "estimated_hours": 10,
+      "blocking": false
+    },
+    {
+      "phase": 4,
+      "name": "API Refactoring and Auth",
+      "actions": ["A4", "A6"],
+      "can_run_parallel": true,
+      "estimated_hours": 8,
+      "blocking": false
+    },
+    {
+      "phase": 5,
+      "name": "Type Safety Phase 1",
+      "actions": ["A7", "A8"],
+      "can_run_parallel": true,
+      "estimated_hours": 12,
+      "blocking": false
+    },
+    {
+      "phase": 6,
+      "name": "Type Safety Phase 2",
+      "actions": ["A9", "A11"],
+      "can_run_parallel": true,
+      "estimated_hours": 8,
+      "blocking": false
+    },
+    {
+      "phase": 7,
+      "name": "Final Cleanup",
+      "actions": ["A10", "A12", "A13"],
+      "can_run_parallel": true,
+      "estimated_hours": 8,
+      "blocking": false
+    },
+    {
+      "phase": 8,
+      "name": "Polish",
+      "actions": ["A14"],
+      "can_run_parallel": false,
+      "estimated_hours": 4,
+      "blocking": false
+    }
+  ],
+  "milestone_checkpoints": [
+    {
+      "milestone": "M1",
+      "name": "Type System Unified",
+      "completed_actions": ["A1"],
+      "world_state": {
+        "type_files_consolidated": true,
+        "any_usages": 938,
+        "overall_score": 7.0
+      },
+      "validation": ["Build passes", "No duplicate types", "Import graph clean"]
+    },
+    {
+      "milestone": "M2",
+      "name": "Clean Architecture Achieved",
+      "completed_actions": ["A1", "A2", "A3", "A4"],
+      "world_state": {
+        "has_repository_layer": true,
+        "has_service_layer": true,
+        "api_routes_modular": true,
+        "any_usages": 488,
+        "overall_score": 7.8
+      },
+      "validation": [
+        "All routes < 200 lines",
+        "Business logic in services",
+        "DB access in repositories"
+      ]
+    },
+    {
+      "milestone": "M3",
+      "name": "Modern State Management",
+      "completed_actions": ["A1", "A2", "A3", "A4", "A5", "A6"],
+      "world_state": {
+        "zustand_implemented": true,
+        "auth_simplified": true,
+        "any_usages": 408,
+        "overall_score": 8.2
+      },
+      "validation": ["Zustand fully integrated", "Auth polling optimized", "State management clean"]
+    },
+    {
+      "milestone": "M4",
+      "name": "Production-Grade Type Safety",
+      "completed_actions": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10"],
+      "world_state": {
+        "type_safety": true,
+        "tests_realistic": true,
+        "any_usages": 8,
+        "type_safety_score": 0.98,
+        "overall_score": 8.8
+      },
+      "validation": ["< 10 any usages", "Tests realistic", "TSC strict passing"]
+    },
+    {
+      "milestone": "M5",
+      "name": "Production Ready",
+      "completed_actions": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "A6",
+        "A7",
+        "A8",
+        "A9",
+        "A10",
+        "A11",
+        "A12",
+        "A13",
+        "A14"
+      ],
+      "world_state": {
+        "type_safety": true,
+        "has_repository_layer": true,
+        "has_service_layer": true,
+        "zustand_implemented": true,
+        "auth_simplified": true,
+        "tests_realistic": true,
+        "api_routes_modular": true,
+        "type_files_consolidated": true,
+        "any_usages": 8,
+        "code_quality_score": 9.0,
+        "test_quality_score": 9.5,
+        "architecture_score": 9.0,
+        "overall_score": 9.0
+      },
+      "validation": [
+        "All actions complete",
+        "All tests passing",
+        "Performance benchmarks met",
+        "Documentation complete"
+      ]
+    }
+  ],
+  "dependency_graph": {
+    "A1": [],
+    "A2": ["A1"],
+    "A3": ["A2"],
+    "A4": ["A3"],
+    "A5": ["A1"],
+    "A6": ["A5"],
+    "A7": ["A2", "A3"],
+    "A8": ["A1"],
+    "A9": ["A3", "A8"],
+    "A10": ["A9"],
+    "A11": ["A2"],
+    "A12": ["A2", "A3", "A7"],
+    "A13": ["A5", "A4"],
+    "A14": ["A4", "A7", "A10"]
+  },
+  "execution_strategy": {
+    "approach": "phased_parallel",
+    "rationale": "Execute critical path actions sequentially while running independent actions in parallel",
+    "optimization_notes": [
+      "Phase 1 (A1) blocks everything - must complete first",
+      "Phase 2 (A2) enables repository pattern - critical blocker",
+      "Phases 3-7 can have parallel execution within each phase",
+      "Type safety cleanup (A8-A10) can proceed incrementally",
+      "Testing (A7, A12) runs parallel to type cleanup"
+    ]
+  },
+  "risk_analysis": {
+    "high_risk_actions": [
+      {
+        "action": "A2",
+        "risk": "Breaking existing functionality during repository extraction",
+        "mitigation": "Create repositories alongside existing code, migrate gradually with tests"
+      },
+      {
+        "action": "A7",
+        "risk": "Test suite may reveal hidden bugs when mocks removed",
+        "mitigation": "Fix one test file at a time, use test containers for DB"
+      }
+    ],
+    "medium_risk_actions": [
+      {
+        "action": "A4",
+        "risk": "API refactoring could break client apps",
+        "mitigation": "Keep API contracts stable, only change internals"
+      }
+    ]
+  },
+  "success_metrics": {
+    "quantitative": {
+      "any_usages": {
+        "current": 1088,
+        "target": 10,
+        "reduction": "99.1%"
+      },
+      "largest_route": {
+        "current": 673,
+        "target": 200,
+        "reduction": "70.3%"
+      },
+      "overall_score": {
+        "current": 6.7,
+        "target": 9.0,
+        "improvement": "34.3%"
+      }
+    },
+    "qualitative": [
+      "Code is maintainable by new developers",
+      "Adding features requires minimal changes",
+      "Tests give confidence in refactoring",
+      "Type system catches bugs at compile time"
+    ]
+  }
+}
