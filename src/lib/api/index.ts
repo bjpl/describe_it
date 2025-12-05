@@ -245,3 +245,72 @@ export const apiHelpers = {
     throw lastError!;
   },
 };
+
+// ============================================================================
+// NEW TYPE-SAFE API CLIENT (Result-based pattern)
+// ============================================================================
+
+// Main API Client
+export { ApiClient as TypeSafeApiClient, createApiClient as createTypeSafeClient, apiClient as typeSafeClient } from './api-client';
+export type { ApiClientConfig as TypeSafeClientConfig } from './api-client';
+
+// Result Type and Utilities
+export {
+  ok,
+  err,
+  isOk,
+  isErr,
+  unwrap,
+  unwrapOr,
+  map,
+  mapErr,
+  andThen,
+  createApiError,
+} from './result';
+export type { Result, ApiError as ApiErrorResult } from './result';
+
+// Base Client
+export { BaseApiClient } from './client-base';
+export type {
+  BaseClientConfig,
+  RequestInterceptor,
+  ResponseInterceptor,
+  ErrorInterceptor,
+  RequestConfig,
+} from './client-base';
+
+// Individual API Modules
+export { VocabularyApi } from './vocabulary';
+export type {
+  VocabularyListParams,
+  CreateVocabularyDTO,
+  UpdateVocabularyDTO,
+  BulkCreateVocabularyDTO,
+  VocabularySearchParams,
+} from './vocabulary';
+
+export { DescriptionsApi } from './descriptions';
+export type {
+  DescriptionListParams,
+  GenerateDescriptionDTO,
+  CreateDescriptionDTO,
+  UpdateDescriptionDTO,
+  GeneratedDescription,
+} from './descriptions';
+
+export { SessionsApi } from './sessions';
+export type {
+  SessionEntity,
+  SessionListParams,
+  CreateSessionDTO,
+  UpdateSessionDTO,
+  CompleteSessionDTO,
+  SessionStats,
+} from './sessions';
+
+// Validation
+export { validate, validateArray, sanitizeString, sanitizeObject, rules } from './validation';
+export type { ValidationRule, Schema, ValidationErrorDetails } from './validation';
+
+// Endpoints
+export { API_ENDPOINTS as TYPE_SAFE_ENDPOINTS, buildQueryString } from './endpoints';

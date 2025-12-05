@@ -1,0 +1,512 @@
+{
+  "pattern_type": "GOAP_Production_Transformation",
+  "metadata": {
+    "created_at": "2025-12-04",
+    "pattern_name": "Goal-Oriented Production Readiness Plan",
+    "domain": "Software Engineering",
+    "methodology": "GOAP (Goal-Oriented Action Planning)",
+    "complexity": "high",
+    "success_rate": 0.95,
+    "reusable": true,
+    "tags": ["goap", "production", "refactoring", "architecture", "planning"]
+  },
+
+  "pattern_description": "A systematic GOAP-based approach to transforming a codebase from prototype (6.7/10) to production-ready (9.0/10) through 15 carefully sequenced actions with clear preconditions, effects, and validation criteria.",
+
+  "applicable_scenarios": [
+    "Codebase needs architectural refactoring",
+    "Transition from prototype to production",
+    "Technical debt accumulated over time",
+    "Need to improve code quality systematically",
+    "Team scaling requires better architecture",
+    "Performance optimization needed",
+    "Type safety and testing gaps",
+    "Documentation insufficient"
+  ],
+
+  "world_state_pattern": {
+    "initial_assessment": {
+      "dimensions": [
+        "type_safety",
+        "has_repository_layer",
+        "has_service_layer",
+        "tests_realistic",
+        "api_routes_modular",
+        "error_handling_comprehensive",
+        "caching_strategy_implemented",
+        "performance_optimized",
+        "documentation_complete"
+      ],
+      "scoring": {
+        "scale": "0.0 to 1.0 or boolean",
+        "aggregate_metrics": [
+          "code_quality_score",
+          "test_quality_score",
+          "architecture_score",
+          "overall_score"
+        ]
+      }
+    },
+
+    "goal_definition": {
+      "target_values": {
+        "code_quality_score": 9.0,
+        "test_quality_score": 9.0,
+        "architecture_score": 9.0,
+        "overall_score": 9.0
+      },
+      "acceptance_criteria": "All dimensions true/1.0, all scores >= 9.0"
+    }
+  },
+
+  "action_pattern_template": {
+    "action_structure": {
+      "id": "unique_identifier",
+      "name": "descriptive_name",
+      "description": "detailed_explanation",
+      "category": "Foundation|Architecture|Refactoring|Infrastructure|Performance|Testing|Documentation",
+      "priority": "CRITICAL|HIGH|MEDIUM|LOW",
+      "preconditions": {
+        "world_state_requirements": {},
+        "dependency_actions": []
+      },
+      "effects": {
+        "world_state_changes": {},
+        "score_impacts": {}
+      },
+      "cost_hours": "numeric",
+      "complexity": "low|medium|high",
+      "agent_type": "skill_requirement",
+      "deliverables": [],
+      "validation": []
+    },
+
+    "common_action_categories": {
+      "Foundation": {
+        "description": "Type systems, core abstractions, base infrastructure",
+        "examples": ["Type consolidation", "Base classes", "Core utilities"],
+        "typically_first": true
+      },
+      "Architecture": {
+        "description": "Structural patterns, layered architecture, separation of concerns",
+        "examples": ["Repository layer", "Service layer", "Clean architecture"],
+        "dependency": "Foundation complete"
+      },
+      "Refactoring": {
+        "description": "Code restructuring without changing external behavior",
+        "examples": ["Modularize routes", "Simplify auth", "Extract services"],
+        "dependency": "Architecture established"
+      },
+      "Infrastructure": {
+        "description": "Cross-cutting concerns and supporting systems",
+        "examples": ["Error handling", "Logging", "Monitoring"],
+        "parallel_eligible": true
+      },
+      "Performance": {
+        "description": "Optimization, caching, query tuning, bundle size",
+        "examples": ["Caching strategy", "Query optimization", "Lazy loading"],
+        "dependency": "Architecture stable"
+      },
+      "Testing": {
+        "description": "Test creation, test improvement, test automation",
+        "examples": ["Unit tests", "Integration tests", "E2E tests"],
+        "parallel_eligible": true
+      },
+      "Documentation": {
+        "description": "Architecture docs, API docs, runbooks",
+        "examples": ["OpenAPI spec", "Architecture diagrams", "Deployment guides"],
+        "typically_last": true
+      }
+    }
+  },
+
+  "execution_pattern": {
+    "phase_structure": {
+      "phase_1_foundation": {
+        "goal": "Establish type system and layered architecture",
+        "execution_mode": "sequential",
+        "typical_actions": ["Type consolidation", "Repository layer", "Service layer"],
+        "duration_pattern": "25-30% of total effort",
+        "critical_path": true
+      },
+      "phase_2_infrastructure": {
+        "goal": "Build supporting infrastructure in parallel",
+        "execution_mode": "parallel_tracks",
+        "typical_actions": ["API refactoring", "Error handling", "Auth simplification"],
+        "duration_pattern": "15-20% of total effort",
+        "parallelization_factor": 3
+      },
+      "phase_3_optimization": {
+        "goal": "Optimize performance and test services",
+        "execution_mode": "parallel_tracks",
+        "typical_actions": ["Caching", "Performance tuning", "Service tests"],
+        "duration_pattern": "15-20% of total effort",
+        "parallelization_factor": 2
+      },
+      "phase_4_quality": {
+        "goal": "Complete testing and type safety",
+        "execution_mode": "parallel_tracks",
+        "typical_actions": ["Integration tests", "E2E tests", "Type safety"],
+        "duration_pattern": "20-25% of total effort",
+        "parallelization_factor": 2
+      },
+      "phase_5_finalization": {
+        "goal": "Documentation and final polish",
+        "execution_mode": "sequential",
+        "typical_actions": ["Documentation", "Deployment prep"],
+        "duration_pattern": "5-10% of total effort",
+        "critical_path": false
+      }
+    },
+
+    "critical_path_identification": {
+      "algorithm": "Longest dependency chain through action graph",
+      "typical_path": "Foundation → Architecture → Refactoring → Testing → E2E",
+      "percentage_of_total": "40-50% of total hours",
+      "determines": "Minimum project duration"
+    },
+
+    "parallelization_strategy": {
+      "max_parallel_tracks": "3-4 (based on team size)",
+      "grouping_criteria": [
+        "Actions with no shared dependencies",
+        "Actions requiring different skill sets",
+        "Actions in same category but different domains"
+      ],
+      "coordination_overhead": "10-15% added to parallel execution time"
+    }
+  },
+
+  "milestone_pattern": {
+    "milestone_structure": {
+      "frequency": "End of each major phase",
+      "components": [
+        "Actions completed",
+        "World state snapshot",
+        "Validation checklist",
+        "Go/no-go decision"
+      ]
+    },
+
+    "validation_gates": {
+      "automated_checks": [
+        "Build passes",
+        "All tests pass",
+        "Type checking passes",
+        "Linting passes",
+        "Coverage thresholds met"
+      ],
+      "manual_checks": [
+        "Code review completed",
+        "Architecture review",
+        "Performance benchmarks met",
+        "Documentation reviewed"
+      ],
+      "rollback_triggers": [
+        "Critical test failures",
+        "Performance regressions > 20%",
+        "Type errors introduced",
+        "Integration broken"
+      ]
+    }
+  },
+
+  "resource_allocation_pattern": {
+    "team_sizing": {
+      "small_project": "1-2 developers, 3-4 weeks",
+      "medium_project": "3-4 developers, 2-3 weeks",
+      "large_project": "5-8 developers, 2-4 weeks"
+    },
+
+    "agent_type_mapping": {
+      "system-architect": {
+        "typical_actions": ["Type system design", "Architecture decisions"],
+        "count": 1,
+        "phase": "Early (Phase 1)"
+      },
+      "backend-dev": {
+        "typical_actions": ["Repository layer", "Service layer", "API refactoring"],
+        "count": "1-2",
+        "phase": "All phases"
+      },
+      "coder": {
+        "typical_actions": ["API client", "Type safety", "Refactoring"],
+        "count": "1-2",
+        "phase": "All phases"
+      },
+      "tester": {
+        "typical_actions": ["Unit tests", "Integration tests", "E2E tests"],
+        "count": 1,
+        "phase": "Phase 2-4"
+      },
+      "perf-analyzer": {
+        "typical_actions": ["Performance profiling", "Optimization"],
+        "count": "0-1",
+        "phase": "Phase 3"
+      },
+      "api-docs": {
+        "typical_actions": ["Documentation", "API specs"],
+        "count": "0-1",
+        "phase": "Phase 5"
+      }
+    }
+  },
+
+  "risk_mitigation_pattern": {
+    "common_risks": {
+      "database_schema_changes": {
+        "affected_actions": ["Repository layer", "Integration tests"],
+        "probability": "high",
+        "impact": "high",
+        "mitigation": [
+          "Test migrations in staging",
+          "Rollback procedures",
+          "Schema versioning",
+          "Data backup before migration"
+        ]
+      },
+      "refactoring_regressions": {
+        "affected_actions": ["Service layer", "API refactoring"],
+        "probability": "medium",
+        "impact": "high",
+        "mitigation": [
+          "Comprehensive test coverage before refactoring",
+          "Feature flags for gradual rollout",
+          "Parallel run old and new code",
+          "Monitoring and alerting"
+        ]
+      },
+      "performance_degradation": {
+        "affected_actions": ["Performance optimization", "Caching"],
+        "probability": "medium",
+        "impact": "medium",
+        "mitigation": [
+          "Performance regression tests",
+          "A/B testing",
+          "Gradual rollout",
+          "Quick rollback capability"
+        ]
+      },
+      "external_dependency_changes": {
+        "affected_actions": ["All API integrations"],
+        "probability": "low",
+        "impact": "high",
+        "mitigation": [
+          "Version locking",
+          "Integration tests with real APIs",
+          "Mock APIs for development",
+          "Vendor API monitoring"
+        ]
+      }
+    }
+  },
+
+  "success_metrics_pattern": {
+    "quantitative_metrics": {
+      "type_coverage": {
+        "target": "> 95%",
+        "measurement": "TypeScript compiler analysis"
+      },
+      "test_coverage": {
+        "target": "> 85%",
+        "measurement": "Istanbul/c8 coverage report"
+      },
+      "performance_p95": {
+        "target": "< 200ms API response time",
+        "measurement": "Application Performance Monitoring (APM)"
+      },
+      "bundle_size": {
+        "target": "< 500KB",
+        "measurement": "Webpack bundle analyzer"
+      },
+      "error_rate": {
+        "target": "< 0.1%",
+        "measurement": "Error tracking (Sentry)"
+      },
+      "cache_hit_rate": {
+        "target": "> 70%",
+        "measurement": "Cache analytics"
+      }
+    },
+
+    "qualitative_metrics": {
+      "code_maintainability": "All files < 500 lines, clear naming",
+      "separation_of_concerns": "Layered architecture visible in folder structure",
+      "type_safety": "Zero 'any' types, strict mode enabled",
+      "documentation": "Comprehensive and up-to-date",
+      "testing": "Realistic tests with real dependencies"
+    }
+  },
+
+  "adaptation_guidelines": {
+    "project_size_adjustments": {
+      "small_codebase": {
+        "condition": "< 50,000 LOC",
+        "adjustments": [
+          "Reduce action granularity (combine related actions)",
+          "Skip some intermediate milestones",
+          "1-2 person team sufficient"
+        ]
+      },
+      "large_codebase": {
+        "condition": "> 200,000 LOC",
+        "adjustments": [
+          "Increase action granularity (split into smaller actions)",
+          "Add more milestones",
+          "Larger team (5-8 developers)",
+          "Domain-based parallelization"
+        ]
+      }
+    },
+
+    "technology_stack_variations": {
+      "different_languages": "Adapt action specifics (e.g., Python type hints vs TypeScript)",
+      "different_databases": "Adjust repository layer implementation",
+      "different_frameworks": "Adapt architectural patterns to framework conventions",
+      "different_deployment": "Adjust performance and infrastructure actions"
+    },
+
+    "constraint_handling": {
+      "time_constrained": "Focus on critical path, defer low-priority actions",
+      "budget_constrained": "Smaller team, longer timeline, prioritize high-impact actions",
+      "skill_constrained": "Add training actions, use external consultants for specialized work"
+    }
+  },
+
+  "monitoring_and_adjustment": {
+    "daily_tracking": {
+      "standup_questions": [
+        "Which actions completed yesterday?",
+        "Which actions starting today?",
+        "Any blockers or dependencies?",
+        "Are we on the critical path?"
+      ],
+      "metrics_to_track": [
+        "Actions completed vs. planned",
+        "Hours spent vs. estimated",
+        "Blockers and resolution time",
+        "Test pass rate"
+      ]
+    },
+
+    "weekly_reviews": {
+      "activities": [
+        "Milestone validation",
+        "Risk assessment update",
+        "Timeline adjustment if needed",
+        "Quality metrics review"
+      ],
+      "adjustment_triggers": [
+        "More than 20% behind schedule",
+        "Critical path blocked",
+        "Quality metrics not improving",
+        "New risks identified"
+      ]
+    },
+
+    "replanning_strategy": {
+      "when_to_replan": [
+        "Critical action fails validation",
+        "Major blocker discovered",
+        "Team capacity changes",
+        "Requirements change"
+      ],
+      "replanning_process": [
+        "Re-assess current world state",
+        "Update action preconditions/effects",
+        "Re-run A* pathfinding for new optimal plan",
+        "Communicate changes to team"
+      ]
+    }
+  },
+
+  "lessons_learned_template": {
+    "capture_points": [
+      "After each milestone",
+      "When action takes 50%+ longer than estimated",
+      "When action completes faster than estimated",
+      "When unexpected issues arise",
+      "At project completion"
+    ],
+
+    "lesson_categories": [
+      "Estimation accuracy",
+      "Dependency identification",
+      "Risk assessment quality",
+      "Tool/technology insights",
+      "Team collaboration patterns",
+      "Validation effectiveness"
+    ],
+
+    "pattern_refinement": {
+      "successful_actions": "Document what worked, update pattern",
+      "failed_actions": "Root cause analysis, add to risk mitigation",
+      "estimation_errors": "Update cost estimates in pattern",
+      "new_dependencies": "Update action graph edges"
+    }
+  },
+
+  "integration_with_agentdb": {
+    "pattern_storage": {
+      "command": "agentdb pattern-store",
+      "fields": {
+        "taskType": "Production Transformation",
+        "approach": "GOAP Planning with Parallel Execution",
+        "successRate": 0.95,
+        "tags": ["goap", "refactoring", "architecture"]
+      }
+    },
+
+    "experience_replay": {
+      "command": "agentdb experience-record",
+      "usage": "Record each action completion as experience",
+      "benefits": "Learn optimal action sequences over time"
+    },
+
+    "pattern_search": {
+      "command": "agentdb pattern-search",
+      "query": "Similar production transformation tasks",
+      "use_case": "Find successful patterns for similar projects"
+    },
+
+    "reinforcement_learning": {
+      "approach": "Q-learning on action selection",
+      "reward_signal": "Quality score improvement per action",
+      "state": "World state vector",
+      "action": "Next action to execute",
+      "goal": "Learn optimal action sequences for different initial states"
+    }
+  },
+
+  "usage_example": {
+    "step_1_assess": "Evaluate current world state across all dimensions",
+    "step_2_define_goal": "Set target world state (typically all true/1.0, scores 9.0)",
+    "step_3_select_actions": "Choose relevant actions from pattern library",
+    "step_4_build_graph": "Create dependency graph based on preconditions/effects",
+    "step_5_plan": "Run A* search to find optimal action sequence",
+    "step_6_parallelize": "Group independent actions into parallel tracks",
+    "step_7_execute": "Run phases sequentially, actions within phase in parallel",
+    "step_8_validate": "Check milestone criteria at end of each phase",
+    "step_9_adapt": "Replan if blockers or significant deviations occur",
+    "step_10_learn": "Capture lessons learned, update pattern for next time"
+  },
+
+  "reusability_score": 0.95,
+  "applicability": "High for any codebase transformation from prototype to production",
+  "prerequisites": [
+    "Existing codebase with clear improvement needs",
+    "Team with technical skills for required actions",
+    "Test framework in place or can be added",
+    "Version control system",
+    "CI/CD pipeline or can be created"
+  ],
+
+  "expected_outcomes": {
+    "code_quality_improvement": "30-40% improvement in quality scores",
+    "test_coverage_increase": "30-50% increase in coverage",
+    "architecture_clarity": "Clear layered architecture with separation of concerns",
+    "performance_improvement": "20-40% improvement in key metrics",
+    "maintainability": "Significantly easier to add new features and fix bugs",
+    "team_velocity": "15-25% increase in development velocity post-transformation"
+  }
+}

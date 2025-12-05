@@ -46,7 +46,49 @@ vi.mock('../../src/lib/logger', () => ({
     warn: vi.fn(),
     info: vi.fn(),
     debug: vi.fn()
-  }
+  },
+  authLogger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    auth: vi.fn()
+  },
+  securityLogger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    security: vi.fn()
+  },
+  apiLogger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    apiRequest: vi.fn(),
+    apiResponse: vi.fn()
+  },
+  dbLogger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    database: vi.fn()
+  },
+  performanceLogger: {
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn(),
+    performance: vi.fn()
+  },
+  createLogger: vi.fn(() => ({
+    error: vi.fn(),
+    warn: vi.fn(),
+    info: vi.fn(),
+    debug: vi.fn()
+  }))
 }));
 
 vi.mock('../../src/lib/logging/logger', () => ({

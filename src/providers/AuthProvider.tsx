@@ -59,10 +59,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [version, setVersion] = useState(0);
 
   useEffect(() => {
-    // Verify session with Supabase (async validation)
-    const checkSession = async () => {
+    // Initialize auth and set up event-driven listeners (NO POLLING)
+    const initAuth = async () => {
       const currentState = authManager.getAuthState();
-      authLogger.info('[AuthProvider] Verifying session:', {
+      authLogger.info('[AuthProvider] Initializing event-driven auth:', {
         isAuthenticated: currentState.isAuthenticated,
         hasUser: !!currentState.user
       });
@@ -79,19 +79,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      // Update state if needed
-      if (currentState.isAuthenticated !== authState.isAuthenticated) {
-        setAuthState(currentState);
-        setVersion(v => v + 1);
-        forceUpdate();
-      }
-      
-      // Also check Supabase directly
+      // Set initial state
+      setAuthState(currentState);
+      setVersion(v => v + 1);
+      forceUpdate();
+
+      // Check Supabase directly for initial session
       const { authHelpers } = await import('@/lib/supabase/client');
       const session = await authHelpers.getCurrentSession();
       if (session && !currentState.isAuthenticated) {
-        authLogger.info('[AuthProvider] Found session but auth state not updated, forcing update');
-        // Force auth manager to recognize the session
+        authLogger.info('[AuthProvider] Found session, initializing auth manager');
         await authManager.initialize();
         const updatedState = authManager.getAuthState();
         setAuthState(updatedState);
@@ -99,38 +96,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         forceUpdate();
       }
     };
-    
-    checkSession();
 
-    // Subscribe to auth state changes
+    initAuth();
+
+    // Subscribe to auth state changes from AuthManager (event-driven via Supabase onAuthStateChange)
     const unsubscribe = authManager.subscribe((state) => {
-      authLogger.info('[AuthProvider] Auth state changed:', {
+      authLogger.info('[AuthProvider] Auth state changed (event-driven):', {
         isAuthenticated: state.isAuthenticated,
         userEmail: state.user?.email,
         hasProfile: !!state.profile
       });
-      
+
       setAuthState(state);
       setVersion(v => v + 1);
-      forceUpdate(); // Force re-render on any auth change
+      forceUpdate();
     });
 
-    // Also listen for custom auth events
+    // Listen for custom auth events
     const handleAuthChange = (event: Event) => {
       const customEvent = event as CustomEvent;
       authLogger.info('[AuthProvider] Custom auth event received:', customEvent.detail);
-      // Force a re-fetch of auth state
       setAuthState(authManager.getAuthState());
       setVersion(v => v + 1);
-      forceUpdate(); // Force re-render on custom auth events
+      forceUpdate();
     };
-    
+
     window.addEventListener('auth-state-change', handleAuthChange);
 
     // Listen for storage changes (cross-tab auth changes)
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === 'describe-it-auth' || e.key?.startsWith('supabase.auth.token')) {
-        authLogger.info('[AuthProvider] Storage change detected, forcing auth state sync');
+        authLogger.info('[AuthProvider] Storage change detected (cross-tab sync)');
         setTimeout(() => {
           const currentState = authManager.getAuthState();
           setAuthState(currentState);
@@ -149,28 +145,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Additional effect to monitor auth state periodically and force updates
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const currentState = authManager.getAuthState();
-      
-      // Check if there's a mismatch between our state and the auth manager's state
-      if (currentState.isAuthenticated !== authState.isAuthenticated ||
-          currentState.user?.id !== authState.user?.id) {
-        authLogger.info('[AuthProvider] Detected state mismatch, forcing sync:', {
-          current: { isAuth: currentState.isAuthenticated, userId: currentState.user?.id },
-          local: { isAuth: authState.isAuthenticated, userId: authState.user?.id }
-        });
-        
-        setAuthState(currentState);
-        setVersion(v => v + 1);
-        forceUpdate();
-      }
-    }, 1000); // Check every second
-
-    return () => clearInterval(interval);
-  }, [authState]);
 
 
   // Create context value with forced refresh triggers

@@ -11,6 +11,8 @@ import {
   BookOpen,
   MessageCircle,
   Brain,
+  TrendingUp,
+  CreditCard,
 } from 'lucide-react';
 import { LazyWrapper, preloadCriticalComponents } from '@/components/LazyComponents';
 import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
@@ -57,10 +59,24 @@ const LazyPhrasesPanel = React.lazy(() =>
   })
 );
 
+const LazyProgressDashboard = React.lazy(() =>
+  import('@/components/ProgressDashboard').catch(error => {
+    logger.error('[DYNAMIC IMPORT] Failed to load ProgressDashboard:', error);
+    throw error;
+  })
+);
+
+const LazyFlashcardReview = React.lazy(() =>
+  import('@/components/FlashcardReview').catch(error => {
+    logger.error('[DYNAMIC IMPORT] Failed to load FlashcardReview:', error);
+    throw error;
+  })
+);
+
 import { SettingsModal } from '@/components/SettingsModal';
 
 interface HomePageState {
-  activeTab: 'search' | 'description' | 'qa' | 'phrases';
+  activeTab: 'search' | 'description' | 'qa' | 'phrases' | 'progress' | 'flashcard';
   selectedImage: any;
   searchQuery: string;
   showSettings: boolean;
@@ -187,6 +203,8 @@ const HomePageBase: React.FC = () => {
       { id: 'description', label: 'Descriptions', icon: BookOpen, component: LazyDescriptionPanel },
       { id: 'qa', label: 'Q&A Practice', icon: MessageCircle, component: LazyQAPanel },
       { id: 'phrases', label: 'Vocabulary', icon: Brain, component: LazyPhrasesPanel },
+      { id: 'progress', label: 'Progress', icon: TrendingUp, component: LazyProgressDashboard },
+      { id: 'flashcard', label: 'Flashcards', icon: CreditCard, component: LazyFlashcardReview },
     ],
     []
   );
@@ -366,8 +384,22 @@ const HomePageBase: React.FC = () => {
                 />
               )}
 
+              {state.activeTab === 'progress' && (
+                <LazyProgressDashboard />
+              )}
+
+              {state.activeTab === 'flashcard' && (
+                <LazyFlashcardReview
+                  items={[]}
+                  onComplete={(results) => {
+                    logger.info('[HOMEPAGE] Flashcard review completed', { results });
+                  }}
+                  onCancel={() => handleTabChange('search')}
+                />
+              )}
+
               {/* Empty state for tabs that require an image */}
-              {state.activeTab !== 'search' && !state.selectedImage && (
+              {state.activeTab !== 'search' && state.activeTab !== 'progress' && state.activeTab !== 'flashcard' && !state.selectedImage && (
                 <div className='text-center py-20 space-y-4'>
                   <div className='text-6xl mb-4'>📸</div>
                   <h3 className='text-xl font-medium text-gray-700 dark:text-gray-300'>

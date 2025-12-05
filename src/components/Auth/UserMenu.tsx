@@ -91,10 +91,15 @@ export function UserMenu() {
     };
   }, [handleAuthChange]);
 
-  // Polling mechanism as backup for localStorage changes
+  // Event-driven storage listener (NO POLLING)
   useEffect(() => {
-    const interval = setInterval(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      // Only react to auth-related storage changes
+      if (e.key !== 'describe-it-auth' && !e.key?.startsWith('supabase.auth')) return;
+
       try {
+        authLogger.info('[UserMenu] Storage event detected:', { key: e.key });
+
         const stored = localStorage.getItem('describe-it-auth');
         const recentSignIn = sessionStorage.getItem('recent-auth-success');
 
@@ -106,12 +111,11 @@ export function UserMenu() {
 
             // Only update if there's a meaningful change
             if (hasToken !== localIsAuthenticated) {
-              authLogger.info('[UserMenu] Polling detected auth change:', { hasToken });
+              authLogger.info('[UserMenu] Event-driven auth change detected:', { hasToken });
               setLocalIsAuthenticated(hasToken);
               setLocalUser(storedUser as any || null);
 
               if (hasToken && recentSignIn) {
-                // Clear the recent sign-in flag
                 sessionStorage.removeItem('recent-auth-success');
                 setIsLoading(false);
               }
@@ -124,17 +128,40 @@ export function UserMenu() {
           }
         } else if (localIsAuthenticated) {
           // No stored auth but local state says authenticated - clear it
-          authLogger.info('[UserMenu] Polling detected sign out');
+          authLogger.info('[UserMenu] Event-driven sign out detected');
           setLocalIsAuthenticated(false);
           setLocalUser(null);
           setLocalProfile(null);
         }
       } catch (error) {
-        authLogger.error('[UserMenu] Polling error:', error);
+        authLogger.error('[UserMenu] Storage event error:', error);
       }
-    }, 1000); // Check every second
+    };
 
-    return () => clearInterval(interval);
+    // Listen for storage events (cross-tab sync)
+    window.addEventListener('storage', handleStorageChange);
+
+    // Also do initial check on mount
+    const checkInitialAuth = () => {
+      try {
+        const stored = localStorage.getItem('describe-it-auth');
+        if (stored) {
+          const parsedData = safeParse<StoredAuthData>(stored, undefined);
+          if (parsedData && 'access_token' in parsedData && parsedData.access_token) {
+            setLocalIsAuthenticated(true);
+            setLocalUser(parsedData.user as any || null);
+          }
+        }
+      } catch (error) {
+        authLogger.error('[UserMenu] Initial auth check error:', error);
+      }
+    };
+
+    checkInitialAuth();
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [localIsAuthenticated]);
 
   // Monitor session storage for recent auth success

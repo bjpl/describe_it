@@ -3,7 +3,37 @@
  * Centralized access to all caching functionality
  */
 
-// Core cache implementations
+// ========================================
+// UNIFIED CACHE SYSTEM (Recommended)
+// ========================================
+
+// Primary unified cache manager with all strategies
+export { CacheManager, cacheManager, cache } from "./cache-manager";
+
+// Cache key management
+export { CacheKeys, CachePatterns, CacheKey } from "./cache-keys";
+export type { CacheKeyType, CacheKeyOptions, CacheKeyPrefix } from "./cache-keys";
+
+// Cache metrics
+export { CacheMetrics, globalCacheMetrics } from "./cache-metrics";
+export type {
+  CacheMetricsSnapshot,
+  CacheHitMissMetrics,
+  CacheStrategyMetrics,
+  CacheOperationMetrics,
+  CachePerformanceMetrics,
+} from "./cache-metrics";
+
+// Individual strategies (for advanced use cases)
+export { MemoryCacheStrategy } from "./strategies/memory-cache";
+export { SessionCacheStrategy, sessionCache } from "./strategies/session-cache";
+export type { CacheOptions } from "./strategies/memory-cache";
+
+// ========================================
+// LEGACY CACHE IMPLEMENTATIONS
+// ========================================
+
+// Core cache implementations (legacy)
 export { memoryCache, MemoryCache } from "./memory-cache";
 export {
   tieredCache,
@@ -14,7 +44,7 @@ export {
   TieredCache,
 } from "./tiered-cache";
 
-// Default export
+// Default export (legacy)
 export { TieredCache as default } from "./tiered-cache";
 
 // Testing utilities
@@ -72,7 +102,7 @@ export function getCacheTTL(
   }
 }
 
-// Cache metrics aggregator
+// Cache metrics aggregator (legacy compatibility)
 export async function getAllCacheMetrics() {
   const { memoryCache } = await import("./memory-cache");
   const { tieredCache, imageCache, descriptionCache, qaCache, phrasesCache } =

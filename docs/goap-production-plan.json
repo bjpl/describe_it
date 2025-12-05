@@ -1,0 +1,867 @@
+{
+  "metadata": {
+    "created_at": "2025-12-04",
+    "planner": "GOAP Specialist Agent",
+    "project": "describe-it",
+    "goal": "Production-Ready Transformation",
+    "methodology": "Goal-Oriented Action Planning (GOAP)",
+    "version": "1.0.0"
+  },
+
+  "world_states": {
+    "current": {
+      "type_safety": false,
+      "has_repository_layer": false,
+      "has_service_layer": false,
+      "zustand_implemented": true,
+      "auth_simplified": false,
+      "tests_realistic": false,
+      "api_routes_modular": false,
+      "type_files_consolidated": false,
+      "error_handling_comprehensive": false,
+      "caching_strategy_implemented": false,
+      "performance_optimized": false,
+      "documentation_complete": false,
+      "code_quality_score": 6.5,
+      "test_quality_score": 6.5,
+      "architecture_score": 7.2,
+      "overall_score": 6.7
+    },
+
+    "goal": {
+      "type_safety": true,
+      "has_repository_layer": true,
+      "has_service_layer": true,
+      "zustand_implemented": true,
+      "auth_simplified": true,
+      "tests_realistic": true,
+      "api_routes_modular": true,
+      "type_files_consolidated": true,
+      "error_handling_comprehensive": true,
+      "caching_strategy_implemented": true,
+      "performance_optimized": true,
+      "documentation_complete": true,
+      "code_quality_score": 9.0,
+      "test_quality_score": 9.0,
+      "architecture_score": 9.0,
+      "overall_score": 9.0
+    }
+  },
+
+  "actions": [
+    {
+      "id": "A1",
+      "name": "Consolidate Type System",
+      "description": "Merge duplicate type definitions, create single source of truth for each type, organize into clear domain modules",
+      "category": "Foundation",
+      "priority": "CRITICAL",
+      "preconditions": {
+        "zustand_implemented": true
+      },
+      "effects": {
+        "type_files_consolidated": true,
+        "type_safety": 0.4,
+        "code_quality_score": 7.0
+      },
+      "cost_hours": 8,
+      "complexity": "medium",
+      "agent_type": "system-architect",
+      "deliverables": [
+        "Unified type definitions in /src/types/domain/",
+        "Deprecation notices for legacy types",
+        "Type migration guide",
+        "Updated imports across codebase"
+      ],
+      "validation": [
+        "npm run typecheck passes",
+        "No duplicate type definitions",
+        "All imports resolve correctly",
+        "Type coverage > 95%"
+      ]
+    },
+
+    {
+      "id": "A2",
+      "name": "Create Repository Layer",
+      "description": "Implement data access layer with repositories for User, Vocabulary, Session, Progress, Image domains",
+      "category": "Architecture",
+      "priority": "CRITICAL",
+      "preconditions": {
+        "type_files_consolidated": true
+      },
+      "effects": {
+        "has_repository_layer": true,
+        "architecture_score": 8.0,
+        "code_quality_score": 7.5
+      },
+      "cost_hours": 12,
+      "complexity": "high",
+      "agent_type": "backend-dev",
+      "deliverables": [
+        "/src/repositories/UserRepository.ts",
+        "/src/repositories/VocabularyRepository.ts",
+        "/src/repositories/SessionRepository.ts",
+        "/src/repositories/ProgressRepository.ts",
+        "/src/repositories/ImageRepository.ts",
+        "/src/repositories/BaseRepository.ts (abstract)",
+        "Repository interfaces with clear contracts"
+      ],
+      "validation": [
+        "Each repository has unit tests",
+        "CRUD operations implemented",
+        "Error handling consistent",
+        "Connection pooling configured"
+      ]
+    },
+
+    {
+      "id": "A3",
+      "name": "Create Service Layer",
+      "description": "Implement business logic layer separating concerns from API routes and data access",
+      "category": "Architecture",
+      "priority": "CRITICAL",
+      "preconditions": {
+        "has_repository_layer": true
+      },
+      "effects": {
+        "has_service_layer": true,
+        "architecture_score": 8.5,
+        "code_quality_score": 8.0
+      },
+      "cost_hours": 16,
+      "complexity": "high",
+      "agent_type": "backend-dev",
+      "deliverables": [
+        "/src/services/AuthService.ts",
+        "/src/services/VocabularyService.ts",
+        "/src/services/DescriptionService.ts",
+        "/src/services/QAService.ts",
+        "/src/services/ExportService.ts",
+        "/src/services/CacheService.ts",
+        "Service interfaces and abstractions"
+      ],
+      "validation": [
+        "Business logic separated from routes",
+        "Services use repositories exclusively",
+        "Transaction handling implemented",
+        "Service tests with mocked repositories"
+      ]
+    },
+
+    {
+      "id": "A4",
+      "name": "Modularize API Routes",
+      "description": "Refactor monolithic API routes into small, focused handlers using service layer",
+      "category": "Refactoring",
+      "priority": "HIGH",
+      "preconditions": {
+        "has_service_layer": true
+      },
+      "effects": {
+        "api_routes_modular": true,
+        "code_quality_score": 8.3,
+        "architecture_score": 8.8
+      },
+      "cost_hours": 10,
+      "complexity": "medium",
+      "agent_type": "coder",
+      "deliverables": [
+        "Refactored /src/app/api/ routes",
+        "Route handlers < 50 lines each",
+        "Consistent error handling middleware",
+        "Request validation middleware",
+        "Response formatting middleware"
+      ],
+      "validation": [
+        "Each route has integration test",
+        "No business logic in routes",
+        "Consistent API response format",
+        "OpenAPI spec updated"
+      ]
+    },
+
+    {
+      "id": "A5",
+      "name": "Implement Comprehensive Error Handling",
+      "description": "Create error hierarchy, error handlers, logging, and user-friendly error responses",
+      "category": "Infrastructure",
+      "priority": "HIGH",
+      "preconditions": {
+        "has_service_layer": true
+      },
+      "effects": {
+        "error_handling_comprehensive": true,
+        "code_quality_score": 8.5,
+        "architecture_score": 9.0
+      },
+      "cost_hours": 8,
+      "complexity": "medium",
+      "agent_type": "backend-dev",
+      "deliverables": [
+        "/src/lib/errors/AppError.ts (base class)",
+        "/src/lib/errors/ValidationError.ts",
+        "/src/lib/errors/AuthenticationError.ts",
+        "/src/lib/errors/DatabaseError.ts",
+        "/src/lib/errors/ExternalAPIError.ts",
+        "/src/middleware/errorHandler.ts",
+        "Structured error logging with Winston"
+      ],
+      "validation": [
+        "All errors extend base AppError",
+        "Error codes standardized",
+        "Sensitive data not exposed",
+        "Errors logged with context"
+      ]
+    },
+
+    {
+      "id": "A6",
+      "name": "Implement Advanced Caching Strategy",
+      "description": "Multi-tier caching with memory cache, Redis, and CDN integration",
+      "category": "Performance",
+      "priority": "HIGH",
+      "preconditions": {
+        "has_service_layer": true,
+        "api_routes_modular": true
+      },
+      "effects": {
+        "caching_strategy_implemented": true,
+        "performance_optimized": 0.6,
+        "architecture_score": 9.0
+      },
+      "cost_hours": 10,
+      "complexity": "high",
+      "agent_type": "backend-dev",
+      "deliverables": [
+        "/src/lib/cache/CacheManager.ts",
+        "/src/lib/cache/adapters/MemoryCacheAdapter.ts",
+        "/src/lib/cache/adapters/RedisCacheAdapter.ts",
+        "/src/lib/cache/strategies/LRUStrategy.ts",
+        "Cache invalidation patterns",
+        "Cache warming for critical data"
+      ],
+      "validation": [
+        "Cache hit rate > 70% in production",
+        "TTL configured per data type",
+        "Cache invalidation tested",
+        "Fallback to DB on cache miss"
+      ]
+    },
+
+    {
+      "id": "A7",
+      "name": "Simplify Authentication Flow",
+      "description": "Remove redundant auth checks, consolidate auth logic, improve session management",
+      "category": "Refactoring",
+      "priority": "HIGH",
+      "preconditions": {
+        "has_service_layer": true
+      },
+      "effects": {
+        "auth_simplified": true,
+        "code_quality_score": 8.7,
+        "test_quality_score": 7.5
+      },
+      "cost_hours": 6,
+      "complexity": "medium",
+      "agent_type": "backend-dev",
+      "deliverables": [
+        "/src/services/AuthService.ts (consolidated)",
+        "/src/middleware/authMiddleware.ts",
+        "Single auth check pattern",
+        "Simplified session management",
+        "Auth documentation"
+      ],
+      "validation": [
+        "Auth checks in one place",
+        "Session management simplified",
+        "Auth tests comprehensive",
+        "No auth logic in components"
+      ]
+    },
+
+    {
+      "id": "A8",
+      "name": "Implement Type-Safe API Client",
+      "description": "Create fully typed API client with runtime validation and error handling",
+      "category": "Foundation",
+      "priority": "HIGH",
+      "preconditions": {
+        "type_files_consolidated": true,
+        "api_routes_modular": true
+      },
+      "effects": {
+        "type_safety": 0.8,
+        "code_quality_score": 8.8,
+        "test_quality_score": 8.0
+      },
+      "cost_hours": 8,
+      "complexity": "medium",
+      "agent_type": "coder",
+      "deliverables": [
+        "/src/lib/api/TypedApiClient.ts",
+        "Zod schemas for all API requests/responses",
+        "Request/response type inference",
+        "Automatic retry logic",
+        "Request/response interceptors"
+      ],
+      "validation": [
+        "All API calls type-safe",
+        "Runtime validation with Zod",
+        "No 'any' types in client",
+        "Comprehensive error types"
+      ]
+    },
+
+    {
+      "id": "A9",
+      "name": "Write Realistic Integration Tests",
+      "description": "Replace mocked tests with real database/API integration tests using test containers",
+      "category": "Testing",
+      "priority": "HIGH",
+      "preconditions": {
+        "has_repository_layer": true,
+        "has_service_layer": true
+      },
+      "effects": {
+        "tests_realistic": true,
+        "test_quality_score": 8.5,
+        "code_quality_score": 8.9
+      },
+      "cost_hours": 12,
+      "complexity": "medium",
+      "agent_type": "tester",
+      "deliverables": [
+        "Integration tests for all repositories",
+        "Integration tests for all services",
+        "E2E tests for critical user flows",
+        "Test database setup/teardown",
+        "Test data factories"
+      ],
+      "validation": [
+        "Integration tests use real DB",
+        "Tests isolated (no shared state)",
+        "Tests run in CI/CD",
+        "Coverage > 80% for services"
+      ]
+    },
+
+    {
+      "id": "A10",
+      "name": "Optimize Performance Bottlenecks",
+      "description": "Profile application, optimize database queries, implement lazy loading, optimize bundle size",
+      "category": "Performance",
+      "priority": "MEDIUM",
+      "preconditions": {
+        "caching_strategy_implemented": true,
+        "has_repository_layer": true
+      },
+      "effects": {
+        "performance_optimized": 1.0,
+        "overall_score": 8.5
+      },
+      "cost_hours": 10,
+      "complexity": "high",
+      "agent_type": "perf-analyzer",
+      "deliverables": [
+        "Database query optimization",
+        "N+1 query elimination",
+        "Code splitting implementation",
+        "Image optimization pipeline",
+        "Performance monitoring setup"
+      ],
+      "validation": [
+        "Page load time < 2s",
+        "API response time < 200ms (p95)",
+        "Bundle size < 500KB",
+        "Database queries optimized"
+      ]
+    },
+
+    {
+      "id": "A11",
+      "name": "Complete Full Type Safety",
+      "description": "Eliminate all 'any' types, add strict null checks, enable strict mode",
+      "category": "Foundation",
+      "priority": "MEDIUM",
+      "preconditions": {
+        "type_files_consolidated": true,
+        "api_routes_modular": true
+      },
+      "effects": {
+        "type_safety": 1.0,
+        "code_quality_score": 9.0,
+        "overall_score": 8.7
+      },
+      "cost_hours": 6,
+      "complexity": "medium",
+      "agent_type": "coder",
+      "deliverables": [
+        "Zero 'any' types in codebase",
+        "Strict null checks enabled",
+        "TypeScript strict mode enabled",
+        "Type guards for runtime validation"
+      ],
+      "validation": [
+        "npm run typecheck passes strict mode",
+        "No @ts-ignore comments",
+        "Type coverage 100%",
+        "All external libs typed"
+      ]
+    },
+
+    {
+      "id": "A12",
+      "name": "Create Production Documentation",
+      "description": "Architecture docs, API docs, deployment guides, runbooks, troubleshooting guides",
+      "category": "Documentation",
+      "priority": "MEDIUM",
+      "preconditions": {
+        "has_service_layer": true,
+        "api_routes_modular": true,
+        "auth_simplified": true
+      },
+      "effects": {
+        "documentation_complete": true,
+        "overall_score": 9.0
+      },
+      "cost_hours": 8,
+      "complexity": "low",
+      "agent_type": "api-docs",
+      "deliverables": [
+        "/docs/architecture/system-overview.md",
+        "/docs/architecture/data-flow.md",
+        "/docs/api/openapi-spec.yaml",
+        "/docs/deployment/production-checklist.md",
+        "/docs/operations/runbook.md",
+        "/docs/development/contributing.md"
+      ],
+      "validation": [
+        "All architecture patterns documented",
+        "API fully documented (OpenAPI)",
+        "Deployment steps validated",
+        "Troubleshooting guide comprehensive"
+      ]
+    },
+
+    {
+      "id": "A13",
+      "name": "Implement Service Layer Tests",
+      "description": "Comprehensive unit tests for all service layer business logic with mocked repositories",
+      "category": "Testing",
+      "priority": "HIGH",
+      "preconditions": {
+        "has_service_layer": true
+      },
+      "effects": {
+        "test_quality_score": 7.8,
+        "code_quality_score": 8.6
+      },
+      "cost_hours": 8,
+      "complexity": "medium",
+      "agent_type": "tester",
+      "deliverables": [
+        "Unit tests for all services",
+        "Mocked repository implementations",
+        "Test coverage > 90% for services",
+        "Edge case testing"
+      ],
+      "validation": [
+        "All service methods tested",
+        "Mock repositories used",
+        "Coverage > 90%",
+        "Tests run fast (< 5s total)"
+      ]
+    },
+
+    {
+      "id": "A14",
+      "name": "Implement Repository Layer Tests",
+      "description": "Integration tests for repository layer with test database",
+      "category": "Testing",
+      "priority": "HIGH",
+      "preconditions": {
+        "has_repository_layer": true
+      },
+      "effects": {
+        "test_quality_score": 8.2,
+        "code_quality_score": 8.4
+      },
+      "cost_hours": 8,
+      "complexity": "medium",
+      "agent_type": "tester",
+      "deliverables": [
+        "Integration tests for all repositories",
+        "Test database setup",
+        "Test data seeders",
+        "Transaction rollback after tests"
+      ],
+      "validation": [
+        "All CRUD operations tested",
+        "Tests use real database",
+        "No test pollution",
+        "Coverage > 85% for repositories"
+      ]
+    },
+
+    {
+      "id": "A15",
+      "name": "Implement E2E Critical Path Tests",
+      "description": "End-to-end tests for critical user journeys using Playwright",
+      "category": "Testing",
+      "priority": "MEDIUM",
+      "preconditions": {
+        "tests_realistic": true,
+        "api_routes_modular": true
+      },
+      "effects": {
+        "test_quality_score": 9.0,
+        "overall_score": 8.9
+      },
+      "cost_hours": 10,
+      "complexity": "medium",
+      "agent_type": "tester",
+      "deliverables": [
+        "E2E test: User registration to first vocabulary save",
+        "E2E test: Image search to description generation",
+        "E2E test: Complete learning session",
+        "E2E test: Export workflow",
+        "Visual regression tests"
+      ],
+      "validation": [
+        "Critical paths covered",
+        "Tests run in CI/CD",
+        "Screenshots on failure",
+        "Tests reliable (no flakiness)"
+      ]
+    }
+  ],
+
+  "action_graph": {
+    "description": "Dependency graph showing prerequisite relationships between actions",
+    "nodes": [
+      "A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13", "A14", "A15"
+    ],
+    "edges": [
+      {"from": "A1", "to": "A2", "reason": "Repository layer needs consolidated types"},
+      {"from": "A2", "to": "A3", "reason": "Service layer depends on repositories"},
+      {"from": "A3", "to": "A4", "reason": "API routes use services"},
+      {"from": "A3", "to": "A5", "reason": "Error handling spans services"},
+      {"from": "A3", "to": "A6", "reason": "Caching integrated into services"},
+      {"from": "A3", "to": "A7", "reason": "Auth service consolidates auth logic"},
+      {"from": "A1", "to": "A8", "reason": "API client needs type definitions"},
+      {"from": "A4", "to": "A8", "reason": "API client calls modular routes"},
+      {"from": "A2", "to": "A9", "reason": "Integration tests need repositories"},
+      {"from": "A3", "to": "A9", "reason": "Integration tests need services"},
+      {"from": "A6", "to": "A10", "reason": "Performance optimization builds on caching"},
+      {"from": "A2", "to": "A10", "reason": "Performance optimization needs repository layer"},
+      {"from": "A1", "to": "A11", "reason": "Type safety needs consolidated types"},
+      {"from": "A4", "to": "A11", "reason": "Type safety covers modular routes"},
+      {"from": "A3", "to": "A12", "reason": "Documentation describes services"},
+      {"from": "A4", "to": "A12", "reason": "Documentation covers API routes"},
+      {"from": "A7", "to": "A12", "reason": "Documentation explains auth flow"},
+      {"from": "A3", "to": "A13", "reason": "Service tests need services"},
+      {"from": "A2", "to": "A14", "reason": "Repository tests need repositories"},
+      {"from": "A9", "to": "A15", "reason": "E2E tests build on integration tests"},
+      {"from": "A4", "to": "A15", "reason": "E2E tests use modular API routes"}
+    ]
+  },
+
+  "execution_plan": {
+    "description": "Optimal execution sequence using A* pathfinding through the action graph",
+
+    "parallel_groups": [
+      {
+        "phase": 1,
+        "name": "Foundation",
+        "description": "Establish type system and data access foundation",
+        "sequential_actions": ["A1", "A2", "A3"],
+        "duration_hours": 36,
+        "rationale": "These must be sequential as each depends on the previous"
+      },
+      {
+        "phase": 2,
+        "name": "Parallel Infrastructure",
+        "description": "Build supporting infrastructure in parallel",
+        "parallel_actions": [
+          {
+            "group": "API Layer",
+            "actions": ["A4", "A8"],
+            "duration_hours": 18
+          },
+          {
+            "group": "Cross-cutting Concerns",
+            "actions": ["A5", "A7"],
+            "duration_hours": 14
+          },
+          {
+            "group": "Repository Testing",
+            "actions": ["A14"],
+            "duration_hours": 8
+          }
+        ],
+        "duration_hours": 18,
+        "rationale": "These can run concurrently as they have minimal interdependencies"
+      },
+      {
+        "phase": 3,
+        "name": "Performance & Services",
+        "description": "Optimize performance and test services",
+        "parallel_actions": [
+          {
+            "group": "Performance",
+            "actions": ["A6", "A10"],
+            "duration_hours": 20
+          },
+          {
+            "group": "Service Testing",
+            "actions": ["A13"],
+            "duration_hours": 8
+          }
+        ],
+        "duration_hours": 20,
+        "rationale": "Performance work and service testing can proceed independently"
+      },
+      {
+        "phase": 4,
+        "name": "Integration & Quality",
+        "description": "Complete integration testing and quality improvements",
+        "parallel_actions": [
+          {
+            "group": "Testing",
+            "actions": ["A9", "A15"],
+            "duration_hours": 22
+          },
+          {
+            "group": "Type Safety",
+            "actions": ["A11"],
+            "duration_hours": 6
+          }
+        ],
+        "duration_hours": 22,
+        "rationale": "Final testing and type safety can proceed in parallel"
+      },
+      {
+        "phase": 5,
+        "name": "Documentation & Finalization",
+        "description": "Complete documentation and final polish",
+        "sequential_actions": ["A12"],
+        "duration_hours": 8,
+        "rationale": "Documentation should come last to capture final state"
+      }
+    ],
+
+    "critical_path": {
+      "description": "Longest dependency chain determining minimum project duration",
+      "path": ["A1", "A2", "A3", "A4", "A9", "A15"],
+      "total_hours": 58,
+      "total_days": 7.25,
+      "breakdown": [
+        {"action": "A1", "hours": 8, "cumulative": 8},
+        {"action": "A2", "hours": 12, "cumulative": 20},
+        {"action": "A3", "hours": 16, "cumulative": 36},
+        {"action": "A4", "hours": 10, "cumulative": 46},
+        {"action": "A9", "hours": 12, "cumulative": 58},
+        {"action": "A15", "hours": 10, "cumulative": 68}
+      ]
+    },
+
+    "total_effort": {
+      "sequential_hours": 142,
+      "parallel_hours": 104,
+      "critical_path_hours": 68,
+      "estimated_calendar_days": 14,
+      "team_size_recommended": 3,
+      "rationale": "With 3 developers working in parallel, estimated 2 weeks to completion"
+    }
+  },
+
+  "milestones": {
+    "M1": {
+      "name": "Foundation Complete",
+      "actions_completed": ["A1", "A2", "A3"],
+      "world_state": {
+        "type_files_consolidated": true,
+        "has_repository_layer": true,
+        "has_service_layer": true,
+        "code_quality_score": 7.5,
+        "architecture_score": 8.5
+      },
+      "validation": [
+        "Type system unified",
+        "All data access through repositories",
+        "Business logic in services",
+        "Clean separation of concerns"
+      ]
+    },
+
+    "M2": {
+      "name": "Infrastructure Complete",
+      "actions_completed": ["A1", "A2", "A3", "A4", "A5", "A7", "A8", "A14"],
+      "world_state": {
+        "api_routes_modular": true,
+        "auth_simplified": true,
+        "error_handling_comprehensive": true,
+        "type_safety": 0.8,
+        "code_quality_score": 8.5,
+        "test_quality_score": 8.0
+      },
+      "validation": [
+        "API routes clean and focused",
+        "Auth flow simplified",
+        "Error handling consistent",
+        "Repository tests passing"
+      ]
+    },
+
+    "M3": {
+      "name": "Performance Optimized",
+      "actions_completed": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A10", "A13", "A14"],
+      "world_state": {
+        "caching_strategy_implemented": true,
+        "performance_optimized": true,
+        "code_quality_score": 8.8,
+        "test_quality_score": 8.5,
+        "architecture_score": 9.0
+      },
+      "validation": [
+        "Caching working effectively",
+        "Performance metrics met",
+        "Service tests comprehensive",
+        "No performance bottlenecks"
+      ]
+    },
+
+    "M4": {
+      "name": "Production Ready",
+      "actions_completed": ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "A13", "A14", "A15"],
+      "world_state": {
+        "type_safety": true,
+        "has_repository_layer": true,
+        "has_service_layer": true,
+        "zustand_implemented": true,
+        "auth_simplified": true,
+        "tests_realistic": true,
+        "api_routes_modular": true,
+        "type_files_consolidated": true,
+        "error_handling_comprehensive": true,
+        "caching_strategy_implemented": true,
+        "performance_optimized": true,
+        "documentation_complete": true,
+        "code_quality_score": 9.0,
+        "test_quality_score": 9.0,
+        "architecture_score": 9.0,
+        "overall_score": 9.0
+      },
+      "validation": [
+        "All tests passing",
+        "Type safety complete",
+        "Documentation comprehensive",
+        "Production checklist complete"
+      ]
+    }
+  },
+
+  "agent_requirements": {
+    "system-architect": {
+      "count": 1,
+      "actions": ["A1"],
+      "skills": ["TypeScript", "System Design", "Type Systems", "Refactoring"]
+    },
+    "backend-dev": {
+      "count": 2,
+      "actions": ["A2", "A3", "A5", "A6", "A7"],
+      "skills": ["Node.js", "Database Design", "API Design", "Caching", "Authentication"]
+    },
+    "coder": {
+      "count": 1,
+      "actions": ["A4", "A8", "A11"],
+      "skills": ["TypeScript", "React", "API Integration", "Type Safety"]
+    },
+    "tester": {
+      "count": 1,
+      "actions": ["A9", "A13", "A14", "A15"],
+      "skills": ["Vitest", "Playwright", "Integration Testing", "E2E Testing"]
+    },
+    "perf-analyzer": {
+      "count": 1,
+      "actions": ["A10"],
+      "skills": ["Performance Profiling", "Query Optimization", "Bundle Analysis"]
+    },
+    "api-docs": {
+      "count": 1,
+      "actions": ["A12"],
+      "skills": ["Technical Writing", "OpenAPI", "Architecture Documentation"]
+    }
+  },
+
+  "risk_assessment": {
+    "high_risk_actions": [
+      {
+        "action": "A2",
+        "risk": "Database schema changes may require migrations",
+        "mitigation": "Create comprehensive migration scripts, test rollback procedures"
+      },
+      {
+        "action": "A3",
+        "risk": "Service layer refactoring may introduce regressions",
+        "mitigation": "Comprehensive testing, gradual migration, feature flags"
+      },
+      {
+        "action": "A10",
+        "risk": "Performance optimizations may introduce bugs",
+        "mitigation": "Performance regression tests, gradual rollout, monitoring"
+      }
+    ],
+
+    "dependencies_external": [
+      {
+        "dependency": "Supabase",
+        "actions_affected": ["A2", "A9", "A14"],
+        "risk": "Supabase API changes or downtime",
+        "mitigation": "Version locking, fallback strategies, local dev environment"
+      },
+      {
+        "dependency": "Anthropic Claude API",
+        "actions_affected": ["A4", "A8", "A9"],
+        "risk": "API rate limits or changes",
+        "mitigation": "Rate limiting, caching, mock API for tests"
+      }
+    ]
+  },
+
+  "success_criteria": {
+    "quantitative": {
+      "type_coverage": "> 95%",
+      "test_coverage": "> 85%",
+      "performance_p95": "< 200ms API response time",
+      "bundle_size": "< 500KB",
+      "error_rate": "< 0.1%",
+      "cache_hit_rate": "> 70%"
+    },
+
+    "qualitative": {
+      "code_maintainability": "All files < 500 lines",
+      "separation_of_concerns": "Clear layered architecture",
+      "type_safety": "Zero 'any' types, strict mode enabled",
+      "documentation": "Comprehensive API and architecture docs",
+      "testing": "Realistic integration and E2E tests"
+    }
+  },
+
+  "monitoring_plan": {
+    "during_execution": [
+      "Daily standup to review progress",
+      "Blockers identified and resolved",
+      "Code reviews for each action",
+      "Continuous integration running all tests"
+    ],
+
+    "post_execution": [
+      "Performance monitoring in production",
+      "Error tracking and alerting",
+      "User feedback collection",
+      "Technical debt tracking"
+    ]
+  }
+}

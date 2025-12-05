@@ -1,7 +1,7 @@
 "use client";
 
 import { memo, useCallback, useState } from "react";
-import { Download, Settings, Info, BarChart3 } from "lucide-react";
+import { Download, Settings, Info, BarChart3, Upload } from "lucide-react";
 import {
   exportSession,
   exportAllData,
@@ -38,6 +38,7 @@ export const AppHeader = memo<AppHeaderProps>(function AppHeader({
 }) {
   const [showReportModal, setShowReportModal] = useState(false);
   const [showExportModal, setShowExportModal] = useState(false);
+  const [showImportModal, setShowImportModal] = useState(false);
 
   const handleExportClick = useCallback(() => {
     if (!canExport) return;
@@ -161,6 +162,13 @@ export const AppHeader = memo<AppHeaderProps>(function AppHeader({
               <BarChart3 className="h-5 w-5" />
             </button>
             <button
+              onClick={() => setShowImportModal(true)}
+              className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+              title="Import vocabulary and session data"
+            >
+              <Upload className="h-5 w-5" />
+            </button>
+            <button
               onClick={handleExportClick}
               disabled={!canExport}
               className="p-2 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -202,6 +210,42 @@ export const AppHeader = memo<AppHeaderProps>(function AppHeader({
         onClose={() => setShowExportModal(false)}
         {...getExportData()}
       />
+
+      {/* Import Modal - Placeholder for now */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Import Data
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-4">
+              Import vocabulary and session data from CSV, JSON, or PDF files.
+            </p>
+            <input
+              type="file"
+              accept=".csv,.json,.pdf"
+              className="mb-4 w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg"
+            />
+            <div className="flex justify-end space-x-2">
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="px-4 py-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // TODO: Implement import functionality
+                  setShowImportModal(false);
+                }}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Import
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </header>
   );
 });
