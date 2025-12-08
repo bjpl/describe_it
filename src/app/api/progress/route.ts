@@ -1,27 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { withBasicAuth } from "@/lib/middleware/withAuth";
-import type { AuthenticatedRequest } from "@/lib/middleware/auth";
-import { DatabaseService } from "@/lib/supabase";
-import { z } from "zod";
-import { apiLogger } from "@/lib/logger";
-import { asLogContext } from "@/lib/utils/typeGuards";
+import { NextRequest, NextResponse } from 'next/server';
+import { withBasicAuth } from '@/lib/middleware/withAuth';
+import type { AuthenticatedRequest } from '@/lib/middleware/auth';
+import { DatabaseService } from '@/lib/supabase';
+import { z } from 'zod';
+import { apiLogger } from '@/lib/logger';
+import { asLogContext } from '@/lib/utils/typeGuards';
+import {
+  getLearningProgressQuerySchema,
+  updateLearningProgressRequestSchema,
+  type GetLearningProgressQuery,
+  type UpdateLearningProgressRequest,
+  type GetLearningProgressResponse,
+  type UpdateLearningProgressResponse,
+} from '@/core/schemas/progress.schema';
 
-// Validation schemas
-const updateProgressSchema = z.object({
-  vocabulary_item_id: z.string().uuid(),
-  mastery_level: z.number().min(0).max(1).optional(),
-  times_reviewed: z.number().int().min(0).optional(),
-  correct_count: z.number().int().min(0).optional(),
-  incorrect_count: z.number().int().min(0).optional(),
-  last_review_score: z.number().min(0).max(100).optional(),
-});
+// Use type-safe schemas from core/schemas
+const querySchema = getLearningProgressQuerySchema;
+const updateProgressSchema = updateLearningProgressRequestSchema;
 
-const querySchema = z.object({
-  limit: z.coerce.number().int().min(1).max(100).optional().default(50),
-  offset: z.coerce.number().int().min(0).optional().default(0),
-});
-
-export const runtime = "nodejs";
+export const runtime = 'nodejs';
 
 /**
  * GET /api/progress - Get user learning progress
@@ -31,18 +28,20 @@ async function handleGetProgress(request: AuthenticatedRequest) {
   const userId = request.user?.id;
 
   if (!userId) {
-    return NextResponse.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
   }
 
   try {
     const { searchParams } = new URL(request.url);
-    const { limit, offset } = querySchema.parse({
-      limit: searchParams.get("limit"),
-      offset: searchParams.get("offset"),
+
+    // Parse and validate query parameters with type-safe schema
+    const validatedQuery: GetLearningProgressQuery = querySchema.parse({
+      limit: searchParams.get('limit'),
+      offset: searchParams.get('offset'),
+      vocabulary_item_id: searchParams.get('vocabulary_item_id'),
     });
+
+    const { limit, offset } = validatedQuery;
 
     const progress = await DatabaseService.getLearningProgress(userId, limit);
 
@@ -51,29 +50,41 @@ async function handleGetProgress(request: AuthenticatedRequest) {
 
     const responseTime = performance.now() - startTime;
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: paginatedProgress,
-        pagination: {
-          total: progress.length,
-          offset,
-          limit,
-          hasMore: offset + limit < progress.length,
-        },
-        metadata: {
-          responseTime: `${responseTime.toFixed(2)}ms`,
-          timestamp: new Date().toISOString(),
-          userId,
-        },
+    // Type-safe response
+    const response: GetLearningProgressResponse = {
+      success: true,
+      data: paginatedProgress.map(item => ({
+        id: item.id,
+        userId: item.user_id,
+        vocabularyItemId: item.vocabulary_item_id,
+        masteryLevel: item.mastery_level || 0,
+        timesReviewed: item.times_reviewed || 0,
+        timesCorrect: item.times_correct || 0,
+        timesIncorrect: (item.times_reviewed || 0) - (item.times_correct || 0),
+        lastReviewed: item.last_reviewed || null,
+        lastReviewScore: item.last_review_score || null,
+        createdAt: item.created_at || new Date().toISOString(),
+        updatedAt: item.updated_at || new Date().toISOString(),
+      })),
+      pagination: {
+        total: progress.length,
+        offset,
+        limit,
+        hasMore: offset + limit < progress.length,
       },
-      {
-        headers: {
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
-          "Cache-Control": "private, max-age=60",
-        },
-      }
-    );
+      metadata: {
+        responseTime: `${responseTime.toFixed(2)}ms`,
+        timestamp: new Date().toISOString(),
+        userId,
+      },
+    };
+
+    return NextResponse.json(response, {
+      headers: {
+        'X-Response-Time': `${responseTime.toFixed(2)}ms`,
+        'Cache-Control': 'private, max-age=60',
+      },
+    });
   } catch (error) {
     const responseTime = performance.now() - startTime;
 
@@ -81,31 +92,31 @@ async function handleGetProgress(request: AuthenticatedRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid query parameters",
+          error: 'Invalid query parameters',
           details: error.errors,
         },
         {
           status: 400,
           headers: {
-            "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+            'X-Response-Time': `${responseTime.toFixed(2)}ms`,
           },
         }
       );
     }
 
-    apiLogger.error("Failed to get learning progress:", asLogContext(error));
+    apiLogger.error('Failed to get learning progress:', asLogContext(error));
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to retrieve learning progress",
-        message: "An error occurred. Please try again.",
+        error: 'Failed to retrieve learning progress',
+        message: 'An error occurred. Please try again.',
       },
       {
         status: 500,
         headers: {
-          "Retry-After": "30",
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+          'Retry-After': '30',
+          'X-Response-Time': `${responseTime.toFixed(2)}ms`,
         },
       }
     );
@@ -120,15 +131,14 @@ async function handleUpdateProgress(request: AuthenticatedRequest) {
   const userId = request.user?.id;
 
   if (!userId) {
-    return NextResponse.json(
-      { success: false, error: "Authentication required" },
-      { status: 401 }
-    );
+    return NextResponse.json({ success: false, error: 'Authentication required' }, { status: 401 });
   }
 
   try {
     const body = await request.json();
-    const validatedData = updateProgressSchema.parse(body);
+
+    // Parse and validate request with type-safe schema
+    const validatedData: UpdateLearningProgressRequest = updateProgressSchema.parse(body);
 
     const updatedProgress = await DatabaseService.updateLearningProgress(
       userId,
@@ -142,28 +152,41 @@ async function handleUpdateProgress(request: AuthenticatedRequest) {
     );
 
     if (!updatedProgress) {
-      throw new Error("Failed to update learning progress");
+      throw new Error('Failed to update learning progress');
     }
 
     const responseTime = performance.now() - startTime;
 
-    return NextResponse.json(
-      {
-        success: true,
-        data: updatedProgress,
-        metadata: {
-          responseTime: `${responseTime.toFixed(2)}ms`,
-          timestamp: new Date().toISOString(),
-          userId,
-        },
+    // Type-safe response
+    const response: UpdateLearningProgressResponse = {
+      success: true,
+      data: {
+        id: updatedProgress.id,
+        userId: updatedProgress.user_id,
+        vocabularyItemId: updatedProgress.vocabulary_item_id,
+        masteryLevel: updatedProgress.mastery_level || 0,
+        timesReviewed: updatedProgress.times_reviewed || 0,
+        timesCorrect: updatedProgress.times_correct || 0,
+        timesIncorrect:
+          (updatedProgress.times_reviewed || 0) - (updatedProgress.times_correct || 0),
+        lastReviewed: updatedProgress.last_reviewed || null,
+        lastReviewScore: updatedProgress.last_review_score || null,
+        createdAt: updatedProgress.created_at || new Date().toISOString(),
+        updatedAt: updatedProgress.updated_at || new Date().toISOString(),
       },
-      {
-        status: 200,
-        headers: {
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
-        },
-      }
-    );
+      metadata: {
+        responseTime: `${responseTime.toFixed(2)}ms`,
+        timestamp: new Date().toISOString(),
+        userId,
+      },
+    };
+
+    return NextResponse.json(response, {
+      status: 200,
+      headers: {
+        'X-Response-Time': `${responseTime.toFixed(2)}ms`,
+      },
+    });
   } catch (error) {
     const responseTime = performance.now() - startTime;
 
@@ -171,31 +194,31 @@ async function handleUpdateProgress(request: AuthenticatedRequest) {
       return NextResponse.json(
         {
           success: false,
-          error: "Invalid request parameters",
+          error: 'Invalid request parameters',
           details: error.errors,
         },
         {
           status: 400,
           headers: {
-            "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+            'X-Response-Time': `${responseTime.toFixed(2)}ms`,
           },
         }
       );
     }
 
-    apiLogger.error("Failed to update learning progress:", asLogContext(error));
+    apiLogger.error('Failed to update learning progress:', asLogContext(error));
 
     return NextResponse.json(
       {
         success: false,
-        error: "Failed to update learning progress",
-        message: "An error occurred. Please try again.",
+        error: 'Failed to update learning progress',
+        message: 'An error occurred. Please try again.',
       },
       {
         status: 500,
         headers: {
-          "Retry-After": "30",
-          "X-Response-Time": `${responseTime.toFixed(2)}ms`,
+          'Retry-After': '30',
+          'X-Response-Time': `${responseTime.toFixed(2)}ms`,
         },
       }
     );
@@ -204,9 +227,9 @@ async function handleUpdateProgress(request: AuthenticatedRequest) {
 
 // Export authenticated handlers
 export const GET = withBasicAuth(handleGetProgress, {
-  requiredFeatures: ["vocabulary_save"],
+  requiredFeatures: ['vocabulary_save'],
 });
 
 export const POST = withBasicAuth(handleUpdateProgress, {
-  requiredFeatures: ["vocabulary_save"],
+  requiredFeatures: ['vocabulary_save'],
 });

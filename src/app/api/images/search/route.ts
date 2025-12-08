@@ -8,6 +8,11 @@ import { z } from 'zod';
 import { getCorsHeaders, createCorsPreflightResponse, validateCorsRequest } from '@/lib/utils/cors';
 import { apiLogger } from '@/lib/logger';
 import { asLogContext } from '@/lib/utils/typeGuards';
+import {
+  imageSearchRequestSchema,
+  type ImageSearchRequest,
+  type ImageSearchResponse,
+} from '@/core/schemas/images.schema';
 
 // Enhanced security configuration
 const ALLOWED_METHODS = ['GET', 'HEAD', 'OPTIONS'] as const;
@@ -33,34 +38,14 @@ const cache = new Map<string, { data: any; timestamp: number; etag: string }>();
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 const MAX_CACHE_SIZE = 100;
 
-// Supported Unsplash color values
-const UNSPLASH_COLORS = [
-  'black_and_white',
-  'black',
-  'white',
-  'yellow',
-  'orange',
-  'red',
-  'purple',
-  'magenta',
-  'green',
-  'teal',
-  'blue',
-] as const;
+// Use type-safe schema from core/schemas
+// Keep legacy searchSchema for backward compatibility, but prefer imageSearchRequestSchema
+const searchSchema = imageSearchRequestSchema;
 
-type UnsplashColor = (typeof UNSPLASH_COLORS)[number];
-
-const searchSchema = z.object({
-  query: z.string().min(1).max(100),
-  page: z.coerce.number().int().min(1).default(1),
-  per_page: z.coerce.number().int().min(1).max(30).default(20),
-  orientation: z.enum(['landscape', 'portrait', 'squarish']).optional(),
-  color: z.enum(UNSPLASH_COLORS).optional(),
-  orderBy: z.enum(['relevant', 'latest', 'oldest', 'popular']).optional(),
-});
+type SearchParams = ImageSearchRequest;
 
 // Generate cache key
-function getCacheKey(params: z.infer<typeof searchSchema>): string {
+function getCacheKey(params: SearchParams): string {
   return safeStringify(params);
 }
 
@@ -291,7 +276,9 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     // Remove the api_key from params before parsing
     delete searchParams.api_key;
     apiLogger.info('[API] Search params:', searchParams);
-    const params = searchSchema.parse(searchParams);
+
+    // Parse and validate with type-safe schema
+    const params: ImageSearchRequest = searchSchema.parse(searchParams);
 
     const cacheKey = getCacheKey(params);
     const now = Date.now();
@@ -314,12 +301,12 @@ async function handleImageSearch(request: AuthenticatedRequest) {
       }
 
       // Transform cached data to match expected interface
-      const transformedCached = {
+      const transformedCached: ImageSearchResponse = {
         images: cached.data.results || cached.data.images || [],
         totalPages: cached.data.totalPages || 1,
-        currentPage: params.page,
+        currentPage: params.page || 1,
         total: cached.data.total || 0,
-        hasNextPage: params.page < (cached.data.totalPages || 1),
+        hasNextPage: (params.page || 1) < (cached.data.totalPages || 1),
       };
 
       const corsHeaders = getCorsHeaders(request.headers.get('origin'));
@@ -396,13 +383,13 @@ async function handleImageSearch(request: AuthenticatedRequest) {
     // Clean old cache entries
     cleanCache();
 
-    // Transform results to match expected interface
-    const transformedResults = {
+    // Transform results to match expected interface (type-safe)
+    const transformedResults: ImageSearchResponse = {
       images: results.images || [],
       totalPages: results.totalPages || 1,
-      currentPage: params.page,
+      currentPage: params.page || 1,
       total: results.total || 0,
-      hasNextPage: params.page < (results.totalPages || 1),
+      hasNextPage: (params.page || 1) < (results.totalPages || 1),
     };
 
     const corsHeaders = getCorsHeaders(request.headers.get('origin'));
