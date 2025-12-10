@@ -2,7 +2,7 @@
 # Security-hardened with non-root user and minimal attack surface
 
 # ===== BUILD STAGE =====
-FROM node:20.11.0-alpine AS base
+FROM node:25.2.1-alpine AS base
 
 # Install security updates and build dependencies
 RUN apk update && apk upgrade && \
@@ -62,7 +62,7 @@ COPY --from=builder /app .
 RUN trivy fs --exit-code 1 --severity HIGH,CRITICAL --no-progress /app
 
 # ===== PRODUCTION STAGE =====
-FROM node:20.11.0-alpine AS production
+FROM node:25.2.1-alpine AS production
 
 # Install security updates and runtime dependencies only
 RUN apk update && apk upgrade && \
