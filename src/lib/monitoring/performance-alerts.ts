@@ -76,7 +76,7 @@ function sendAlert(alert: PerformanceAlert): void {
   // Send to Sentry
   if (alert.severity === 'critical' || alert.severity === 'error') {
     Sentry.captureMessage(alert.message, {
-      level: alert.severity,
+      level: alert.severity === 'critical' ? 'error' : 'error',
       tags: {
         type: alert.type,
         performance_alert: 'true',
@@ -89,7 +89,7 @@ function sendAlert(alert: PerformanceAlert): void {
   Sentry.addBreadcrumb({
     category: 'performance',
     message: alert.message,
-    level: alert.severity,
+    level: alert.severity === 'critical' ? 'error' : alert.severity,
     data: alert.metadata,
   });
 }
@@ -128,7 +128,7 @@ export function monitorApiResponse(endpoint: string, duration: number, statusCod
 
   // Track in Sentry performance monitoring
   Sentry.metrics.distribution('api.response.duration', duration, {
-    tags: {
+    attributes: {
       endpoint,
       status: statusCode.toString(),
     },
@@ -169,7 +169,7 @@ export function monitorDatabaseQuery(query: string, duration: number, rowCount?:
   }
 
   Sentry.metrics.distribution('db.query.duration', duration, {
-    tags: {
+    attributes: {
       query_type: query.split(' ')[0], // SELECT, INSERT, etc.
     },
     unit: 'millisecond',
@@ -257,7 +257,7 @@ export function monitorCacheHitRate(
   }
 
   Sentry.metrics.gauge('cache.hit.rate', hitRate, {
-    tags: { source },
+    attributes: { source },
     unit: 'ratio',
   });
 }
@@ -304,7 +304,7 @@ export function monitorErrorRate(
   }
 
   Sentry.metrics.gauge('error.rate', errorRate, {
-    tags: endpoint ? { endpoint } : {},
+    attributes: endpoint ? { endpoint } : {},
     unit: 'ratio',
   });
 }

@@ -91,7 +91,7 @@ export class DescriptionsApi extends BaseApiClient {
    * List descriptions with filtering and pagination
    */
   async list(params?: DescriptionListParams): Promise<Result<PaginatedResponse<Description>>> {
-    const queryString = params ? buildQueryString(params) : '';
+    const queryString = params ? buildQueryString(params as Record<string, unknown>) : '';
     return this.request<PaginatedResponse<Description>>(
       `${API_ENDPOINTS.descriptions.list}${queryString}`
     );

@@ -30,8 +30,9 @@ export const runtime = "nodejs";
  */
 async function handleGetItem(
   request: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const startTime = performance.now();
   const userId = request.user?.id;
 
@@ -55,7 +56,7 @@ async function handleGetItem(
         *,
         vocabulary_lists!inner(created_by, is_active)
       `)
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -130,8 +131,9 @@ async function handleGetItem(
  */
 async function handleUpdateItem(
   request: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const startTime = performance.now();
   const userId = request.user?.id;
 
@@ -157,7 +159,7 @@ async function handleUpdateItem(
         id,
         vocabulary_lists!inner(created_by)
       `)
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (fetchError || !existingItem) {
@@ -182,7 +184,7 @@ async function handleUpdateItem(
       .from("vocabulary_items")
       // @ts-ignore - Supabase type inference issue with partial updates
       .update(validatedData)
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -258,8 +260,9 @@ async function handleUpdateItem(
  */
 async function handleDeleteItem(
   request: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const startTime = performance.now();
   const userId = request.user?.id;
 
@@ -282,7 +285,7 @@ async function handleDeleteItem(
         id,
         vocabulary_lists!inner(created_by)
       `)
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (fetchError || !existingItem) {
@@ -304,7 +307,7 @@ async function handleDeleteItem(
     const { error } = await supabaseAdmin
       .from("vocabulary_items")
       .delete()
-      .eq("id", params.id);
+      .eq("id", id);
 
     if (error) {
       throw error;

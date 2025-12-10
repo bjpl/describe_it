@@ -77,8 +77,8 @@ export function useOptimizedQuery<T>(
   });
 
   const isMountedRef = useRef(true);
-  const refetchTimerRef = useRef<NodeJS.Timeout>();
-  const abortControllerRef = useRef<AbortController>();
+  const refetchTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const abortControllerRef = useRef<AbortController | undefined>(undefined);
 
   // Check if data is stale
   const isStale = Date.now() - state.lastFetchTime > staleTime;
@@ -202,6 +202,7 @@ export function useOptimizedQuery<T>(
   }, [queryKey]);
 
   // Initial fetch
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (enabled) {
       fetchData(false);
@@ -209,6 +210,7 @@ export function useOptimizedQuery<T>(
   }, [enabled, queryKey]); // Intentionally limited deps
 
   // Setup refetch interval
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!refetchInterval || !enabled) return;
 
@@ -224,6 +226,7 @@ export function useOptimizedQuery<T>(
   }, [refetchInterval, enabled]); // Intentionally limited deps
 
   // Refetch on window focus
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!refetchOnWindowFocus || !enabled) return;
 

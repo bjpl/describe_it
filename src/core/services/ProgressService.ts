@@ -9,12 +9,13 @@ import { apiLogger } from '@/lib/logger';
 import { asLogContext } from '@/lib/utils/typeGuards';
 import type {
   ProgressEvent,
+  ProgressEventType,
   UserProgress,
   SessionProgress,
   DailyProgress,
   Goal,
   GoalCollection,
-} from '../types/entities';
+} from '../types/progress';
 
 export interface ProgressEventData {
   vocabularyId?: string;
@@ -66,7 +67,7 @@ export class ProgressService {
    */
   async trackEvent(
     userId: string,
-    eventType: string,
+    eventType: ProgressEventType,
     eventData: ProgressEventData,
     sessionId?: string,
     timestamp?: string
@@ -109,7 +110,7 @@ export class ProgressService {
    */
   private async updateUserProgress(
     userId: string,
-    eventType: string,
+    eventType: ProgressEventType,
     eventData: ProgressEventData,
     timestamp: string
   ): Promise<void> {
@@ -192,7 +193,7 @@ export class ProgressService {
    */
   private async updateSessionProgress(
     sessionId: string,
-    eventType: string,
+    eventType: ProgressEventType,
     eventData: ProgressEventData,
     timestamp: string
   ): Promise<void> {
@@ -261,7 +262,7 @@ export class ProgressService {
   private async updateDailyAggregation(
     userId: string,
     timestamp: string,
-    eventType: string,
+    eventType: ProgressEventType,
     eventData: ProgressEventData
   ): Promise<void> {
     const dateKey = timestamp.split('T')[0];
@@ -309,7 +310,7 @@ export class ProgressService {
    */
   private async checkGoalProgress(
     userId: string,
-    eventType: string,
+    eventType: ProgressEventType,
     eventData: ProgressEventData
   ): Promise<void> {
     const goalsKey = `${this.userPrefix(userId)}:goals`;
@@ -372,7 +373,7 @@ export class ProgressService {
    */
   private checkAchievements(
     progress: UserProgress,
-    eventType: string,
+    eventType: ProgressEventType,
     eventData: ProgressEventData
   ): void {
     const achievements = [
@@ -432,12 +433,13 @@ export class ProgressService {
   /**
    * Get user progress with optional aggregation
    */
-  async getProgress(userId: string, filters: ProgressFilters = {}) {
+  async getProgress(userId: string, filters?: Omit<ProgressFilters, 'userId'>) {
     const progressKey = `${this.userPrefix(userId)}:summary`;
     const progress = (await descriptionCache.get(progressKey)) || {};
 
-    if (filters.aggregation) {
-      const aggregatedData = await this.getAggregatedProgress(userId, filters);
+    if (filters?.aggregation) {
+      const fullFilters: ProgressFilters = { ...filters, userId };
+      const aggregatedData = await this.getAggregatedProgress(userId, fullFilters);
       return { ...progress, aggregated: aggregatedData };
     }
 

@@ -8,10 +8,10 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import { BaseRepository } from './BaseRepository';
 import type {
   VocabularyItem,
-  VocabularyItemInsert,
-  VocabularyItemUpdate,
   ApiResponse,
   DifficultyLevel,
+  VocabularyItemInsert,
+  VocabularyItemUpdate,
 } from '../types';
 
 export interface VocabularySearchFilters {
@@ -109,8 +109,9 @@ export class VocabularyRepository extends BaseRepository<
       return {
         success: true,
         data: (data as VocabularyItem[]) || [],
-        error: null,
+        error: undefined,
         metadata: {
+          timestamp: new Date().toISOString(),
           pagination: {
             total: count || 0,
             page: 1,
@@ -163,7 +164,7 @@ export class VocabularyRepository extends BaseRepository<
       return {
         success: true,
         data: (data as VocabularyItem[]) || [],
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -230,7 +231,7 @@ export class VocabularyRepository extends BaseRepository<
       return {
         success: true,
         data: stats,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);

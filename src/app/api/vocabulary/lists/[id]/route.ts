@@ -24,9 +24,10 @@ export const runtime = "nodejs";
  */
 async function handleGetList(
   request: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const startTime = performance.now();
+  const { id } = await params;
   const userId = request.user?.id;
 
   if (!userId) {
@@ -44,7 +45,7 @@ async function handleGetList(
     const { data: list, error } = await supabaseAdmin
       .from("vocabulary_lists")
       .select("*")
-      .eq("id", params.id)
+      .eq("id", id)
       .single();
 
     if (error) {
@@ -104,9 +105,10 @@ async function handleGetList(
  */
 async function handleUpdateList(
   request: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const startTime = performance.now();
+  const { id } = await params;
   const userId = request.user?.id;
 
   if (!userId) {
@@ -130,7 +132,7 @@ async function handleUpdateList(
       .from("vocabulary_lists")
       // @ts-ignore - Supabase type inference issue with partial updates
       .update(validatedData)
-      .eq("id", params.id)
+      .eq("id", id)
       .select()
       .single();
 
@@ -206,9 +208,10 @@ async function handleUpdateList(
  */
 async function handleDeleteList(
   request: AuthenticatedRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const startTime = performance.now();
+  const { id } = await params;
   const userId = request.user?.id;
 
   if (!userId) {
@@ -226,7 +229,7 @@ async function handleDeleteList(
     const { error } = await supabaseAdmin
       .from("vocabulary_lists")
       .delete()
-      .eq("id", params.id);
+      .eq("id", id);
 
     if (error) {
       throw error;

@@ -103,7 +103,7 @@ export class ExternalServiceError extends ApplicationError {
     public service: string,
     details?: unknown
   ) {
-    super(message, ErrorCodes.EXTERNAL_SERVICE_ERROR, 502, { service, ...details });
+    super(message, ErrorCodes.EXTERNAL_SERVICE_ERROR, 502, { service, details });
     this.name = 'ExternalServiceError';
   }
 }
@@ -318,7 +318,7 @@ export function sanitizeErrorMessage(message: string): string {
     /\/[a-z0-9_-]+\/[a-z0-9_-]+\//gi, // file paths
   ];
 
-  let sanitized = message;
+  const sanitized = message;
   for (const pattern of patterns) {
     if (pattern.test(sanitized)) {
       return 'An error occurred while processing your request';

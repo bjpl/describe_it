@@ -88,7 +88,7 @@ export class VocabularyApi extends BaseApiClient {
    * List vocabulary items with filtering and pagination
    */
   async list(params?: VocabularyListParams): Promise<Result<PaginatedResponse<VocabularyItem>>> {
-    const queryString = params ? buildQueryString(params) : '';
+    const queryString = params ? buildQueryString(params as Record<string, unknown>) : '';
     return this.request<PaginatedResponse<VocabularyItem>>(
       `${API_ENDPOINTS.vocabulary.list}${queryString}`
     );
@@ -134,7 +134,7 @@ export class VocabularyApi extends BaseApiClient {
    * Search vocabulary items
    */
   async search(params: VocabularySearchParams): Promise<Result<VocabularyItem[]>> {
-    const queryString = buildQueryString(params);
+    const queryString = buildQueryString(params as unknown as Record<string, unknown>);
     return this.request<VocabularyItem[]>(
       `${API_ENDPOINTS.vocabulary.search}${queryString}`
     );

@@ -79,7 +79,7 @@ export class DescriptionRepository extends BaseRepository<
       return {
         success: true,
         data: data as Description | null,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -187,7 +187,7 @@ export class DescriptionRepository extends BaseRepository<
       return {
         success: true,
         data: stats,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);

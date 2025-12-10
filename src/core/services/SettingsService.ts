@@ -7,7 +7,69 @@
 import { descriptionCache } from '@/lib/cache';
 import { apiLogger } from '@/lib/logger';
 import { asLogContext } from '@/lib/utils/typeGuards';
-import type { UserSettings, SettingsMetadata } from '../types/entities';
+import type { SettingsMetadata } from '../types/entities';
+
+// Internal nested settings structure used by SettingsService
+// This differs from the flat UserSettings in the database
+export interface UserSettings {
+  language?: {
+    primary: string;
+    secondary: string;
+    learningDirection?: string;
+  };
+  difficulty?: {
+    preferred: string;
+    adaptive: boolean;
+    autoAdjust: boolean;
+  };
+  content?: {
+    style: string;
+    maxPhrases: number;
+    maxQuestions: number;
+    includeTranslations: boolean;
+    includeExamples: boolean;
+    includeContext: boolean;
+    questionTypes: string[];
+  };
+  interface?: {
+    theme: string;
+    fontSize: string;
+    animations: boolean;
+    soundEffects: boolean;
+    compactMode: boolean;
+    showProgress: boolean;
+  };
+  session?: {
+    autoSave: boolean;
+    sessionTimeout: number;
+    reminderIntervals: number[];
+    goalTracking: boolean;
+    streakTracking: boolean;
+    achievementNotifications: boolean;
+  };
+  privacy?: {
+    saveProgress: boolean;
+    saveVocabulary: boolean;
+    analytics: boolean;
+    shareProgress: boolean;
+    dataRetention: number;
+  };
+  export?: {
+    defaultFormat: string;
+    includeMetadata: boolean;
+    includeProgress: boolean;
+    autoExportInterval: string;
+  };
+  advanced?: {
+    cacheEnabled: boolean;
+    preloadContent: boolean;
+    debugMode: boolean;
+    experimentalFeatures: boolean;
+    apiTimeout: number;
+    maxRetries: number;
+  };
+  [key: string]: any; // Allow dynamic sections
+}
 
 export interface SettingsData {
   userId: string;
@@ -108,11 +170,11 @@ export class SettingsService {
     const timestamp = new Date().toISOString();
 
     // Get existing settings to merge
-    const existingSettings = (await this.getSettings(userId)) || {};
+    const existingSettings = (await this.getSettings(userId)) ?? null;
 
     // Deep merge settings
     const mergedSettings = this.deepMerge(
-      existingSettings.settings || this.defaultSettings,
+      existingSettings?.settings ?? this.defaultSettings,
       settings
     );
 
@@ -126,7 +188,7 @@ export class SettingsService {
         lastUpdated: timestamp,
         source: metadata?.source || 'web',
       },
-      createdAt: existingSettings.createdAt || timestamp,
+      createdAt: existingSettings?.createdAt ?? timestamp,
       updatedAt: timestamp,
     };
 

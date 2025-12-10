@@ -8,34 +8,38 @@
 # ==============================================
 # STAGE 1: Dependencies
 # ==============================================
-FROM node:20.11.0-alpine AS deps
+FROM node:20-alpine AS deps
 
 # Install security updates and required system dependencies
 RUN apk update && apk upgrade && \
     apk add --no-cache \
     libc6-compat \
+    python3 \
+    make \
+    g++ \
     curl \
     && rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package.json package-lock.json* ./
 
 # Install dependencies with frozen lockfile for reproducibility
 # Separate production and development dependencies for better caching
-RUN npm ci --frozen-lockfile && \
+RUN npm ci --omit=dev && \
     npm cache clean --force
 
 # ==============================================
 # STAGE 2: Builder
 # ==============================================
-FROM node:20.11.0-alpine AS builder
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-# Copy dependencies from deps stage
-COPY --from=deps /app/node_modules ./node_modules
+# Copy package files and install all dependencies (including dev)
+COPY package.json package-lock.json* ./
+RUN npm ci && npm cache clean --force
 
 # Copy application source
 COPY . .
@@ -45,13 +49,24 @@ ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     SKIP_ENV_VALIDATION=true
 
+# Build arguments for optional build-time configuration
+ARG SENTRY_ORG
+ARG SENTRY_PROJECT
+ARG NEXT_PUBLIC_SUPABASE_URL
+ARG NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+ENV SENTRY_ORG=${SENTRY_ORG}
+ENV SENTRY_PROJECT=${SENTRY_PROJECT}
+ENV NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+ENV NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+
 # Build Next.js application with standalone output
 RUN npm run build
 
 # ==============================================
 # STAGE 3: Production Runtime
 # ==============================================
-FROM node:20.11.0-alpine AS runner
+FROM node:20-alpine AS runner
 
 # Install security updates, dumb-init for proper signal handling, and sharp dependencies
 RUN apk update && apk upgrade && \
@@ -69,8 +84,8 @@ RUN apk update && apk upgrade && \
 WORKDIR /app
 
 # Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001 -G nodejs
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs -G nodejs
 
 # Set production environment
 ENV NODE_ENV=production \
@@ -78,10 +93,12 @@ ENV NODE_ENV=production \
     PORT=3000 \
     HOSTNAME="0.0.0.0"
 
+# Copy public assets with correct ownership
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
 # Copy standalone output from builder
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
 
 # Copy package.json for version info
 COPY --from=builder --chown=nextjs:nodejs /app/package.json ./package.json

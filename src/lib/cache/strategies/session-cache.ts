@@ -101,7 +101,7 @@ export class SessionCacheStrategy<T = any> {
     entry.lastAccessed = now;
     session.lastActivity = now;
 
-    return entry.data as V;
+    return entry.data as unknown as V;
   }
 
   /**

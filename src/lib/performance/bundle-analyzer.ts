@@ -362,8 +362,8 @@ export function createLazyComponent<P extends object>(
   fallback?: React.ReactNode
 ) {
   const LazyComponent = React.lazy(async () => {
-    const module = await importFn();
-    return 'default' in module ? module : { default: module as React.ComponentType<P> };
+    const moduleImport = await importFn();
+    return 'default' in moduleImport ? moduleImport : { default: moduleImport as React.ComponentType<P> };
   });
 
   return function LazyWrapper(props: P) {
@@ -393,6 +393,3 @@ export function preloadComponent(
 export function isCodeSplittingSupported(): boolean {
   return typeof React.lazy === 'function';
 }
-
-// Need to import React for JSX
-import React from 'react';

@@ -1,84 +1,107 @@
 version: 2
+
 updates:
-  # Enable version updates for npm
+  # ============================================================================
+  # NPM DEPENDENCIES
+  # ============================================================================
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "02:00"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     reviewers:
-      - "brand" # Replace with actual GitHub username
+      - "brand"
     assignees:
-      - "brand" # Replace with actual GitHub username
-    target-branch: "develop"
+      - "brand"
     commit-message:
-      prefix: "chore"
-      prefix-development: "chore"
+      prefix: "chore(deps)"
       include: "scope"
     labels:
       - "dependencies"
       - "automated"
+    # Allow all dependency types
     allow:
       - dependency-type: "direct"
       - dependency-type: "indirect"
-    ignore:
-      - dependency-name: "*"
-        update-types: ["version-update:semver-major"]
-    # Security updates override ignore rules
-    enable-beta-ecosystems: true
-    vulnerabilities-only: false
-    # Auto-merge minor and patch updates for trusted dependencies
-    automerged-updates:
-      - match:
-          update-type: "security"
-      - match:
-          dependency-type: "development"
-          update-type: "semver:patch"
-      - match:
-          dependency-type: "development"
-          update-type: "semver:minor"
+    # Group related dependencies together
     groups:
-      testing:
-        patterns:
-          - "@testing-library/*"
-          - "jest"
-          - "vitest"
-          - "playwright"
-          - "@playwright/*"
-      ui:
+      # React and Next.js core
+      react:
         patterns:
           - "react"
           - "react-dom"
           - "@types/react"
           - "@types/react-dom"
           - "next"
+      # Testing frameworks
+      testing:
+        patterns:
+          - "@testing-library/*"
+          - "vitest"
+          - "@vitest/*"
+          - "playwright"
+          - "@playwright/*"
+          - "jest"
+          - "msw"
+      # TypeScript and type definitions
+      typescript:
+        patterns:
+          - "typescript"
+          - "@types/*"
+      # Linting and formatting
       dev-tools:
         patterns:
           - "eslint"
+          - "eslint-*"
+          - "@eslint/*"
           - "prettier"
-          - "typescript"
-          - "@types/*"
-      build-tools:
+          - "@typescript-eslint/*"
+      # Build tools
+      build:
         patterns:
           - "webpack"
-          - "babel"
-          - "@babel/*"
           - "postcss"
           - "tailwindcss"
+          - "autoprefixer"
+      # UI components
+      ui:
+        patterns:
+          - "@radix-ui/*"
+          - "lucide-react"
+          - "framer-motion"
+      # Database and backend
+      backend:
+        patterns:
+          - "@supabase/*"
+          - "supabase-*"
+      # Monitoring and analytics
+      monitoring:
+        patterns:
+          - "@sentry/*"
+          - "sentry-*"
+    # Auto-merge patch updates for non-critical dependencies
+    # Note: GitHub requires branch protection rules for auto-merge
+    ignore:
+      # Ignore major version updates (require manual review)
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
 
-  # Enable version updates for GitHub Actions
+  # ============================================================================
+  # GITHUB ACTIONS
+  # ============================================================================
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "weekly"
+      interval: "monthly"
       day: "monday"
       time: "02:00"
+    open-pull-requests-limit: 5
     reviewers:
-      - "your-username" # Replace with actual GitHub username
+      - "brand"
     assignees:
-      - "your-username" # Replace with actual GitHub username
+      - "brand"
     commit-message:
       prefix: "ci"
       include: "scope"
@@ -86,17 +109,20 @@ updates:
       - "github-actions"
       - "automated"
 
-  # Enable version updates for Docker
+  # ============================================================================
+  # DOCKER
+  # ============================================================================
   - package-ecosystem: "docker"
-    directory: "/"
+    directory: "/config/docker"
     schedule:
       interval: "weekly"
       day: "monday"
       time: "02:00"
+    open-pull-requests-limit: 5
     reviewers:
-      - "your-username" # Replace with actual GitHub username
+      - "brand"
     assignees:
-      - "your-username" # Replace with actual GitHub username
+      - "brand"
     commit-message:
       prefix: "docker"
       include: "scope"

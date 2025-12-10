@@ -16,16 +16,16 @@ describe-it is a Spanish language learning platform that has achieved production
 
 ## Quick Reference
 
-| Metric | Status | Score/Value |
-|--------|--------|-------------|
-| **Overall Readiness** | ✅ Production Ready | 8.5/10 |
-| **Code Quality** | ✅ Good | 8.0/10 |
-| **Test Coverage** | ✅ Comprehensive | 226+ unit tests |
-| **Type Safety** | ⚠️ In Progress | 43% complete (24/56 routes) |
-| **Performance** | ✅ Optimized | < 200ms p95 |
-| **Security** | ✅ Hardened | Enterprise-grade |
-| **Documentation** | ✅ Comprehensive | Complete |
-| **Deployment** | ✅ Live | Vercel + Supabase |
+| Metric                | Status              | Score/Value                 |
+| --------------------- | ------------------- | --------------------------- |
+| **Overall Readiness** | ✅ Production Ready | 8.5/10                      |
+| **Code Quality**      | ✅ Good             | 8.0/10                      |
+| **Test Coverage**     | ✅ Comprehensive    | 226+ unit tests             |
+| **Type Safety**       | ⚠️ In Progress      | 43% complete (24/56 routes) |
+| **Performance**       | ✅ Optimized        | < 200ms p95                 |
+| **Security**          | ✅ Hardened         | Enterprise-grade            |
+| **Documentation**     | ✅ Comprehensive    | Complete                    |
+| **Deployment**        | ✅ Live             | Vercel + Supabase           |
 
 ---
 
@@ -55,6 +55,7 @@ The project followed a systematic Goal-Oriented Action Planning (GOAP) methodolo
 ### Completed Phases (Phases 1-4)
 
 #### Phase 1: Foundation (Days 1-3) ✅ COMPLETE
+
 - **A1**: Consolidate Type System (8h) - System Architect
   - Status: ✅ Complete
   - Deliverable: Unified type definitions in `src/core/schemas/`
@@ -71,6 +72,7 @@ The project followed a systematic Goal-Oriented Action Planning (GOAP) methodolo
   - Result: Reusable service components with dependency injection
 
 #### Phase 2: Infrastructure (Days 4-5) ✅ COMPLETE
+
 - **A4**: Modularize API Routes (10h) - Coder
   - Status: ✅ Complete
   - Deliverable: 56 documented API routes across 26 endpoint groups
@@ -97,6 +99,7 @@ The project followed a systematic Goal-Oriented Action Planning (GOAP) methodolo
   - Result: Comprehensive repository test coverage
 
 #### Phase 3: Performance (Days 6-8) ✅ COMPLETE
+
 - **A6**: Advanced Caching (10h) - Backend Dev
   - Status: ✅ Complete
   - Deliverable: Multi-layer caching strategy
@@ -113,6 +116,7 @@ The project followed a systematic Goal-Oriented Action Planning (GOAP) methodolo
   - Result: Fast, isolated service layer validation
 
 #### Phase 4: Quality (Days 9-11) ✅ COMPLETE
+
 - **A9**: Realistic Integration Tests (12h) - Tester
   - Status: ✅ Complete
   - Deliverable: New test infrastructure in `tests/integration/` and `tests/shared/`
@@ -131,6 +135,7 @@ The project followed a systematic Goal-Oriented Action Planning (GOAP) methodolo
 ### Phase 5: Documentation (Days 12-13)
 
 #### Remaining Action
+
 - **A12**: Production Documentation (8h) - Tech Writer
   - Status: 🔄 IN PROGRESS (this document)
   - Deliverable: PRODUCTION_READINESS.md with deployment guides
@@ -138,16 +143,17 @@ The project followed a systematic Goal-Oriented Action Planning (GOAP) methodolo
 
 ### GOAP Milestones Achievement
 
-| Milestone | Target Date | Status | Score | Key Deliverables |
-|-----------|-------------|--------|-------|------------------|
-| **M1: Foundation** | Day 3 | ✅ Complete | 7.5/10 | Types unified, Repository layer, Service layer |
-| **M2: Infrastructure** | Day 5 | ✅ Complete | 8.5/10 | API routes modular, Auth simplified, Error handling |
-| **M3: Performance** | Day 11 | ✅ Complete | 8.7/10 | Caching working, Performance targets met, Tests comprehensive |
-| **M4: Production** | Day 14 | 🔄 In Progress | 8.5/10 | 93% complete, documentation in progress |
+| Milestone              | Target Date | Status         | Score  | Key Deliverables                                              |
+| ---------------------- | ----------- | -------------- | ------ | ------------------------------------------------------------- |
+| **M1: Foundation**     | Day 3       | ✅ Complete    | 7.5/10 | Types unified, Repository layer, Service layer                |
+| **M2: Infrastructure** | Day 5       | ✅ Complete    | 8.5/10 | API routes modular, Auth simplified, Error handling           |
+| **M3: Performance**    | Day 11      | ✅ Complete    | 8.7/10 | Caching working, Performance targets met, Tests comprehensive |
+| **M4: Production**     | Day 14      | 🔄 In Progress | 8.5/10 | 93% complete, documentation in progress                       |
 
 ### GOAP Success Metrics
 
 **Quantitative Goals:**
+
 - ✅ Type coverage: 43% → Target 95% (in progress)
 - ✅ Test coverage: 226+ tests → Target 85% coverage
 - ✅ API response (p95): < 200ms → Target < 200ms
@@ -155,6 +161,7 @@ The project followed a systematic Goal-Oriented Action Planning (GOAP) methodolo
 - ✅ Cache hit rate: 70%+ → Target > 70%
 
 **Qualitative Goals:**
+
 - ✅ Clean layered architecture (Routes → Services → Repositories → Database)
 - ✅ Maintainable code (files < 500 lines)
 - ✅ Comprehensive documentation
@@ -181,6 +188,7 @@ For detailed information about the GOAP implementation:
 **Test Coverage:** Comprehensive coverage across all application layers
 
 **Test Frameworks:**
+
 - **Vitest**: Unit and integration testing
 - **Playwright**: End-to-end testing
 - **React Testing Library**: Component testing
@@ -211,6 +219,7 @@ tests/
 ### Test Categories
 
 #### Unit Tests (226+ tests)
+
 - **API Routes**: Comprehensive coverage of 56 API endpoints
   - Auth endpoints (login, register, logout, session)
   - Image search and description generation
@@ -237,6 +246,7 @@ tests/
   - Error handling
 
 #### Integration Tests (New Infrastructure - Phase 4)
+
 - **Real Database Tests**: Supabase PostgreSQL integration
   - Repository layer validation
   - Transaction handling
@@ -253,6 +263,7 @@ tests/
   - Error propagation
 
 #### E2E Tests (Playwright POM - Phase 4)
+
 - **Critical User Journeys**:
   - User registration and authentication
   - Image search and selection
@@ -336,7 +347,9 @@ The application provides a comprehensive REST API with full documentation in Ope
 3. **Auth** (`/api/auth/`)
    - User authentication (JWT + OAuth2)
    - Session management
-   - Password reset
+   - Password reset (`/api/auth/reset-password`) - NEW
+   - Email verification (`/api/auth/verify-email`) - NEW
+   - Password update (`/api/auth/update-password`) - NEW
    - Token refresh
 
 4. **Cache** (`/api/cache/`)
@@ -450,15 +463,18 @@ The application provides a comprehensive REST API with full documentation in Ope
 ### API Documentation Formats
 
 #### OpenAPI Specification
+
 - **Location**: `docs/api/openapi.yaml` (auto-generated)
 - **Version**: OpenAPI 3.0
 - **Includes**: All endpoints, request/response schemas, authentication flows
 
 #### Postman Collection
+
 - **Location**: `docs/api/postman-collection.json`
 - **Features**: Pre-configured requests, environment variables, test scripts
 
 #### Markdown Documentation
+
 - **Location**: `docs/api/api-documentation.md`
 - **Content**: Comprehensive API reference with examples
 
@@ -467,6 +483,7 @@ The application provides a comprehensive REST API with full documentation in Ope
 **Primary Method**: JWT Bearer Tokens (Supabase Auth)
 
 **OAuth2 Providers**:
+
 - Google OAuth2
 - GitHub OAuth2
 
@@ -498,6 +515,7 @@ The application provides a comprehensive REST API with full documentation in Ope
 ### Technology Stack
 
 **Frontend:**
+
 - **Framework**: Next.js 15.5 (App Router)
 - **UI Library**: React 19
 - **Language**: TypeScript 5.9 (strict mode)
@@ -508,6 +526,7 @@ The application provides a comprehensive REST API with full documentation in Ope
 - **Animations**: Framer Motion 12.23
 
 **Backend:**
+
 - **Runtime**: Node.js 20.11+
 - **Database**: Supabase (PostgreSQL 15)
 - **Authentication**: Supabase Auth (JWT + OAuth2)
@@ -515,16 +534,19 @@ The application provides a comprehensive REST API with full documentation in Ope
 - **Storage**: Vercel Blob Storage
 
 **AI Integration:**
+
 - **AI Provider**: Anthropic Claude (SDK 0.70.1)
 - **Model**: Claude Opus 4.5 / Sonnet 4.5
 - **Features**: Image analysis, description generation, Q&A
 
 **External Services:**
+
 - **Image Search**: Unsplash API
 - **Monitoring**: Sentry 10.26.0
 - **Analytics**: Custom implementation
 
 **Development Tools:**
+
 - **Testing**: Vitest 3.2.4, Playwright 1.55.1
 - **Linting**: ESLint 9.39.1, Prettier 3.1.1
 - **CI/CD**: GitHub Actions, Vercel
@@ -595,6 +617,7 @@ Client (React Component)
 4. **Database Cache**: PostgreSQL query cache
 
 **Cache Invalidation:**
+
 - Time-based expiration (TTL)
 - Event-based invalidation
 - Manual cache busting via API
@@ -645,6 +668,7 @@ Client (React Component)
 7. **Query Optimization**: Indexed queries, N+1 prevention
 
 **Performance Targets** (all achieved):
+
 - First Contentful Paint (FCP): < 1.5s
 - Largest Contentful Paint (LCP): < 2.5s
 - Time to Interactive (TTI): < 3.5s
@@ -659,6 +683,7 @@ Client (React Component)
 **Goal**: Eliminate all `any` types and achieve 100% TypeScript strict mode compliance
 
 **Progress Tracking**:
+
 - ✅ **Completed**: 24 routes fully typed with Zod schemas
 - 🔄 **In Progress**: 32 routes still using `any` type (57% remaining)
 - 📊 **Total 'any' Usage**: 174 instances across API routes
@@ -668,6 +693,7 @@ Client (React Component)
 #### Zod Schema Coverage
 
 **Implemented Schemas** (Phase 1 - A1):
+
 - ✅ `src/core/schemas/analytics.schema.ts` (8.5 KB)
 - ✅ `src/core/schemas/auth.schema.ts` (5.2 KB)
 - ✅ `src/core/schemas/images.schema.ts` (7.0 KB)
@@ -676,6 +702,7 @@ Client (React Component)
 - ✅ `src/core/schemas/index.ts` (exports)
 
 **Schema Features**:
+
 - Request validation
 - Response validation
 - Type inference for TypeScript
@@ -709,6 +736,7 @@ Client (React Component)
 ### Type Safety Validation
 
 **TypeScript Configuration** (`tsconfig.json`):
+
 ```json
 {
   "compilerOptions": {
@@ -725,6 +753,7 @@ Client (React Component)
 ```
 
 **Type Check Command**:
+
 ```bash
 npm run typecheck  # Must pass with zero errors
 ```
@@ -754,18 +783,30 @@ describe-it implements comprehensive security measures across all application la
 **Authentication Provider**: Supabase Auth
 
 **Supported Methods**:
+
 - Email/Password with verification
 - OAuth2 (Google, GitHub)
 - Magic link (passwordless)
 - JWT-based sessions
 
+**Auth Endpoints (Complete)**:
+
+- `POST /api/auth/signup` - User registration
+- `POST /api/auth/signin` - User login
+- `POST /api/auth/reset-password` - Password reset request
+- `GET/POST /api/auth/verify-email` - Email verification
+- `POST /api/auth/update-password` - Password update with token
+- `PUT /api/auth/update-password` - Change password (authenticated)
+
 **Session Management**:
+
 - HttpOnly cookies for token storage
 - Automatic token refresh
 - Secure session invalidation
 - Multi-device session tracking
 
 **Authorization**:
+
 - Role-based access control (RBAC)
 - Row-Level Security (RLS) in database
 - API route protection
@@ -774,18 +815,21 @@ describe-it implements comprehensive security measures across all application la
 ### Data Security
 
 **Encryption**:
+
 - ✅ TLS 1.3 for data in transit
 - ✅ AES-256 encryption at rest (Supabase)
 - ✅ Encrypted backups
 - ✅ Secure credential storage (environment variables)
 
 **Database Security**:
+
 - ✅ Row-Level Security (RLS) policies on all tables
 - ✅ Prepared statements (SQL injection prevention)
 - ✅ Connection pooling with authentication
 - ✅ Database audit logging
 
 **Secrets Management**:
+
 - Environment variables (`.env.local`, Vercel)
 - No secrets in codebase
 - Automated secret rotation (planned)
@@ -794,24 +838,28 @@ describe-it implements comprehensive security measures across all application la
 ### Application Security
 
 **Input Validation**:
+
 - ✅ Zod schema validation on all API routes
 - ✅ Request sanitization (XSS prevention)
 - ✅ File upload validation (type, size, content)
 - ✅ URL validation and sanitization
 
 **Output Encoding**:
+
 - ✅ Automatic HTML escaping (React)
 - ✅ Content Security Policy (CSP)
 - ✅ JSON response sanitization
 - ✅ Safe rendering of user-generated content
 
 **Rate Limiting**:
+
 - ✅ Per-user rate limits (5000 req/hour)
 - ✅ Per-IP rate limits (burst protection)
 - ✅ API endpoint-specific limits
 - ✅ DDoS protection (Vercel)
 
 **Security Headers**:
+
 ```
 X-Frame-Options: DENY
 X-Content-Type-Options: nosniff
@@ -825,12 +873,14 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 ### Network Security
 
 **CORS Configuration**:
+
 - Strict origin allowlist
 - Credentials support for authenticated requests
 - Pre-flight request handling
 - Domain-specific configurations
 
 **API Security**:
+
 - HTTPS-only endpoints
 - API key authentication (admin)
 - Request signing (planned)
@@ -839,18 +889,21 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 ### Monitoring & Incident Response
 
 **Security Monitoring**:
+
 - ✅ Sentry error tracking (automatic alerting)
 - ✅ Failed authentication attempt tracking
 - ✅ Suspicious activity detection
 - ✅ Real-time security alerts
 
 **Audit Logging**:
+
 - User actions logged
 - Admin operations audited
 - Database changes tracked
 - Security events recorded
 
 **Incident Response**:
+
 - Automated incident detection
 - Alert escalation procedures
 - Security incident playbooks
@@ -859,18 +912,21 @@ Permissions-Policy: geolocation=(), microphone=(), camera=()
 ### Compliance & Best Practices
 
 **Compliance**:
+
 - GDPR-ready (data export, deletion)
 - OWASP Top 10 coverage
 - PCI DSS guidelines (no card storage)
 - SOC 2 considerations
 
 **Security Testing**:
+
 - Automated security scanning
 - Dependency vulnerability checks
 - Penetration testing (planned)
 - Security code reviews
 
 **Security Documentation**:
+
 - `docs/security/SECURITY_OVERVIEW.md`
 - `docs/security/AUTH_IMPLEMENTATION.md`
 - `docs/security/RLS_POLICIES.md`
@@ -893,18 +949,19 @@ describe-it meets or exceeds all performance targets through comprehensive optim
 
 ### Core Web Vitals (Production)
 
-| Metric | Target | Actual | Status |
-|--------|--------|--------|--------|
-| **Largest Contentful Paint (LCP)** | < 2.5s | 1.8s | ✅ Excellent |
-| **First Input Delay (FID)** | < 100ms | 45ms | ✅ Excellent |
-| **Cumulative Layout Shift (CLS)** | < 0.1 | 0.05 | ✅ Excellent |
-| **Time to First Byte (TTFB)** | < 600ms | 320ms | ✅ Excellent |
-| **First Contentful Paint (FCP)** | < 1.8s | 1.2s | ✅ Excellent |
-| **Time to Interactive (TTI)** | < 3.5s | 2.4s | ✅ Excellent |
+| Metric                             | Target  | Actual | Status       |
+| ---------------------------------- | ------- | ------ | ------------ |
+| **Largest Contentful Paint (LCP)** | < 2.5s  | 1.8s   | ✅ Excellent |
+| **First Input Delay (FID)**        | < 100ms | 45ms   | ✅ Excellent |
+| **Cumulative Layout Shift (CLS)**  | < 0.1   | 0.05   | ✅ Excellent |
+| **Time to First Byte (TTFB)**      | < 600ms | 320ms  | ✅ Excellent |
+| **First Contentful Paint (FCP)**   | < 1.8s  | 1.2s   | ✅ Excellent |
+| **Time to Interactive (TTI)**      | < 3.5s  | 2.4s   | ✅ Excellent |
 
 ### API Performance
 
 **Response Times (p95):**
+
 - GET endpoints: 120ms average (target: < 200ms) ✅
 - POST endpoints: 180ms average (target: < 200ms) ✅
 - AI description generation: 2.5s (Claude API latency) ⚠️
@@ -912,6 +969,7 @@ describe-it meets or exceeds all performance targets through comprehensive optim
 - Database queries: 15ms average ✅
 
 **Throughput:**
+
 - Requests per second: 500+ (tested)
 - Concurrent users: 200+ (tested)
 - Database connections: Pool of 20
@@ -919,11 +977,13 @@ describe-it meets or exceeds all performance targets through comprehensive optim
 ### Bundle Size Optimization
 
 **Production Bundle**:
+
 - Initial JS: 245 KB (gzipped) ✅ Target: < 500KB
 - CSS: 32 KB (gzipped)
 - Total: 277 KB (gzipped)
 
 **Code Splitting**:
+
 - Route-based splitting: ✅ Implemented
 - Dynamic imports: ✅ Used for heavy components
 - Lazy loading: ✅ Images and non-critical components
@@ -931,12 +991,14 @@ describe-it meets or exceeds all performance targets through comprehensive optim
 ### Caching Performance
 
 **Cache Hit Rates**:
+
 - Browser cache: 85%+ ✅
 - CDN cache (Vercel Edge): 78%+ ✅
 - Application cache (Redis): 72%+ ✅ Target: > 70%
 - Database query cache: 65%+
 
 **Cache Effectiveness**:
+
 - Cache-enabled endpoints: 42/56 routes (75%)
 - Average cache TTL: 5 minutes
 - Cache invalidation: Event-based + TTL
@@ -944,12 +1006,14 @@ describe-it meets or exceeds all performance targets through comprehensive optim
 ### Database Performance
 
 **Query Optimization**:
+
 - Indexed columns: All foreign keys and frequently queried fields
 - N+1 queries eliminated: ✅ Using batch loading
 - Connection pooling: ✅ 20-connection pool
 - Query timeout: 5 seconds
 
 **Database Metrics**:
+
 - Average query time: 15ms
 - Slow query threshold: 100ms
 - Connection reuse: 95%+
@@ -958,12 +1022,14 @@ describe-it meets or exceeds all performance targets through comprehensive optim
 ### Image Optimization
 
 **Next.js Image Component**:
+
 - Automatic format conversion (WebP, AVIF)
 - Responsive image sizing
 - Lazy loading with placeholder
 - CDN delivery via Vercel
 
 **Image Performance**:
+
 - Average image load time: 450ms
 - Image format: WebP (90% support)
 - Image caching: 7-day browser cache
@@ -972,18 +1038,21 @@ describe-it meets or exceeds all performance targets through comprehensive optim
 ### Performance Monitoring
 
 **Real-time Monitoring**:
+
 - Web Vitals tracking: ✅ All metrics logged
 - API response time tracking: ✅ Per-endpoint
 - Error rate monitoring: ✅ Sentry integration
 - Resource utilization: ✅ CPU, Memory, Network
 
 **Performance Testing**:
+
 - Load testing: ✅ 200+ concurrent users
 - Stress testing: ✅ 500+ requests/second
 - Endurance testing: ✅ 24-hour stability
 - Performance regression tests: 🔄 Planned
 
 **Performance Commands**:
+
 ```bash
 npm run test:perf           # Run performance tests
 npm run perf:benchmark      # Benchmark critical paths
@@ -1035,6 +1104,7 @@ External APIs (Anthropic Claude, Unsplash)
 ### Infrastructure Components
 
 **Frontend Hosting**: Vercel
+
 - Global CDN (300+ locations)
 - Automatic HTTPS/TLS
 - Edge caching
@@ -1042,6 +1112,7 @@ External APIs (Anthropic Claude, Unsplash)
 - Zero-downtime deployments
 
 **Database**: Supabase
+
 - Managed PostgreSQL 15
 - Connection pooling (PgBouncer)
 - Automatic backups (daily)
@@ -1049,18 +1120,21 @@ External APIs (Anthropic Claude, Unsplash)
 - Global replication (optional)
 
 **Caching**: Vercel KV (Redis)
+
 - In-memory caching
 - Automatic failover
 - Data persistence
 - Global replication
 
 **Storage**: Vercel Blob Storage
+
 - File uploads
 - Image storage
 - CDN delivery
 - Automatic versioning
 
 **Monitoring**: Sentry
+
 - Error tracking
 - Performance monitoring
 - Release tracking
@@ -1069,18 +1143,21 @@ External APIs (Anthropic Claude, Unsplash)
 ### Deployment Workflow
 
 **Continuous Deployment**:
+
 1. Push to GitHub `main` branch
 2. Vercel automatically builds and deploys
 3. Preview deployments for pull requests
 4. Production deployment on merge
 
 **Deployment Stages**:
+
 - **Development**: Local environment (`npm run dev`)
 - **Preview**: Vercel preview deployments (PR-specific URLs)
 - **Staging**: Staging branch deployment (planned)
 - **Production**: Main branch deployment (https://describe-it.vercel.app)
 
 **Deployment Scripts**:
+
 ```bash
 npm run build               # Build for production
 npm run start               # Start production server
@@ -1091,6 +1168,7 @@ npm run deploy:docker       # Deploy with Docker
 ### Environment Configuration
 
 **Environment Variables** (56 total):
+
 - `NEXT_PUBLIC_SUPABASE_URL` - Supabase project URL
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY` - Supabase public key
 - `SUPABASE_SERVICE_ROLE_KEY` - Supabase admin key (server-only)
@@ -1101,6 +1179,7 @@ npm run deploy:docker       # Deploy with Docker
 - `NODE_ENV` - Environment (production, development)
 
 **Environment Validation**:
+
 ```bash
 npm run validate:env        # Validate all required env vars
 npm run validate:env:prod   # Validate production env vars
@@ -1109,17 +1188,20 @@ npm run validate:env:prod   # Validate production env vars
 ### Docker Support
 
 **Docker Compose** (local deployment):
+
 - Production-like environment
 - Multi-container orchestration
 - Redis cache included
 - PostgreSQL database (optional)
 
 **Docker Files**:
+
 - `config/docker/Dockerfile` - Production image
 - `config/docker/docker-compose.yml` - Production compose
 - `config/docker/docker-compose.dev.yml` - Development compose
 
 **Docker Commands**:
+
 ```bash
 npm run deploy:docker       # Deploy with Docker Compose
 npm run deploy:docker:dev   # Deploy in dev mode
@@ -1128,11 +1210,13 @@ npm run deploy:docker:dev   # Deploy in dev mode
 ### Health Monitoring
 
 **Health Check Endpoints**:
+
 - `/api/health` - Comprehensive health check
 - `/api/status` - Simple status check
 - `/healthz` - Kubernetes-style health probe
 
 **Health Check Response**:
+
 ```json
 {
   "status": "healthy",
@@ -1148,6 +1232,7 @@ npm run deploy:docker:dev   # Deploy in dev mode
 ```
 
 **Monitoring Commands**:
+
 ```bash
 npm run health              # Check application health
 curl -f https://describe-it.vercel.app/api/health
@@ -1156,12 +1241,14 @@ curl -f https://describe-it.vercel.app/api/health
 ### Backup & Recovery
 
 **Database Backups**:
+
 - Automated daily backups (Supabase)
 - Point-in-time recovery (PITR) - 7 days
 - Manual backups on-demand
 - Backup retention: 30 days
 
 **Disaster Recovery**:
+
 - RTO (Recovery Time Objective): < 1 hour
 - RPO (Recovery Point Objective): < 1 hour
 - Automatic failover (Supabase)
@@ -1170,15 +1257,18 @@ curl -f https://describe-it.vercel.app/api/health
 ### Scaling Strategy
 
 **Horizontal Scaling**:
+
 - Vercel serverless functions (automatic)
 - Database connection pooling (20 connections)
 - Redis cache replication (Vercel KV)
 
 **Vertical Scaling**:
+
 - Supabase database upgrades (on-demand)
 - Vercel compute tier upgrades (if needed)
 
 **Current Capacity**:
+
 - Concurrent users: 200+ (tested)
 - Requests per second: 500+ (tested)
 - Database connections: 20 (pooled)
@@ -1186,6 +1276,7 @@ curl -f https://describe-it.vercel.app/api/health
 ### Deployment Checklist
 
 **Pre-deployment**:
+
 - ✅ All tests passing (`npm run test`)
 - ✅ Type checking passing (`npm run typecheck`)
 - ✅ Linting passing (`npm run lint`)
@@ -1194,6 +1285,7 @@ curl -f https://describe-it.vercel.app/api/health
 - ✅ Database migrations applied
 
 **Post-deployment**:
+
 - ✅ Health check passing (`/api/health`)
 - ✅ Smoke tests passing (`npm run test:smoke`)
 - ✅ Error monitoring active (Sentry)
@@ -1258,17 +1350,20 @@ curl -f https://describe-it.vercel.app/api/health
 ### Technical Debt
 
 **High Priority** (Address in next sprint):
+
 - Complete type safety migration (32 routes remaining)
 - Add E2E tests to CI/CD pipeline
 - Expand performance regression test suite
 
 **Medium Priority** (Address in Q1 2026):
+
 - Refactor large components (> 500 lines)
 - Add automated secret rotation
 - Implement 2FA support
 - Add streaming response support for AI generation
 
 **Low Priority** (Address as needed):
+
 - Migrate to React Server Components (Next.js 15 feature)
 - Add internationalization (i18n) framework
 - Implement advanced analytics dashboard
@@ -1417,6 +1512,7 @@ curl -f https://describe-it.vercel.app/api/health
 ### For Developers
 
 #### Prerequisites
+
 - Node.js 20.11+ and npm 10.0+
 - Git
 - Supabase account
@@ -1426,23 +1522,27 @@ curl -f https://describe-it.vercel.app/api/health
 #### Setup Steps
 
 1. **Clone Repository**
+
    ```bash
    git clone https://github.com/bjpl/describe_it.git
    cd describe_it
    ```
 
 2. **Install Dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Configure Environment Variables**
+
    ```bash
    cp docs/setup/.env.local.example .env.local
    # Edit .env.local with your API keys
    ```
 
 4. **Run Database Migrations**
+
    ```bash
    npm run db:deploy
    npm run db:verify
@@ -1497,6 +1597,7 @@ npm run clean               # Clean build artifacts
 #### Production Deployment (Vercel)
 
 1. **Push to GitHub**
+
    ```bash
    git push origin main
    ```
@@ -1519,6 +1620,7 @@ npm run clean               # Clean build artifacts
 #### Docker Deployment (Local/Self-Hosted)
 
 1. **Build Docker Image**
+
    ```bash
    npm run deploy:docker
    ```
@@ -1527,6 +1629,7 @@ npm run clean               # Clean build artifacts
    - Edit `config/docker/.env` with your keys
 
 3. **Start Services**
+
    ```bash
    docker-compose -f config/docker/docker-compose.yml up -d
    ```
@@ -1541,6 +1644,7 @@ npm run clean               # Clean build artifacts
 #### Application Overview
 
 **What It Does**:
+
 - Spanish language learning through visual content
 - AI-powered image descriptions in 5 distinct styles
 - Interactive Q&A for comprehension practice
@@ -1548,6 +1652,7 @@ npm run clean               # Clean build artifacts
 - Progress tracking and session exports
 
 **Current Status**:
+
 - ✅ Live in production: https://describe-it.vercel.app
 - ✅ 226+ tests passing
 - ✅ 56 API endpoints documented
@@ -1555,6 +1660,7 @@ npm run clean               # Clean build artifacts
 - ⚠️ Type safety 43% complete (in progress)
 
 **Next Steps**:
+
 - Complete type safety migration (Q1 2026)
 - Add CI/CD for E2E tests
 - Expand to more languages (Q2 2026)
@@ -1576,6 +1682,7 @@ npm run clean               # Clean build artifacts
 Use this checklist to verify production readiness status:
 
 #### Automated Checks ✅
+
 - [x] `npm run typecheck` passes (TypeScript compilation succeeds)
 - [x] `npm run test` passes (226+ tests passing, 0 failures)
 - [x] `npm run build` succeeds (production build completes)
@@ -1583,6 +1690,7 @@ Use this checklist to verify production readiness status:
 - [x] Bundle size < 500KB (277 KB gzipped) ✅
 
 #### Performance Checks ✅
+
 - [x] API response time < 200ms p95 (120-180ms actual)
 - [x] Page load time < 2s (1.8s LCP)
 - [x] Cache hit rate > 70% (72%+ Redis, 78%+ CDN)
@@ -1590,6 +1698,7 @@ Use this checklist to verify production readiness status:
 - [x] Core Web Vitals all green (LCP 1.8s, FID 45ms, CLS 0.05)
 
 #### Code Quality Checks 🔄
+
 - [ ] Zero `any` types in codebase (43% complete - 24/56 routes)
 - [x] All files < 500 lines (modular architecture)
 - [x] No `@ts-ignore` comments (clean codebase)
@@ -1597,6 +1706,7 @@ Use this checklist to verify production readiness status:
 - [x] Consistent code style (Prettier + ESLint)
 
 #### Testing Checks ✅
+
 - [x] Integration tests with real database (tests/integration/)
 - [x] E2E tests for critical user flows (tests/e2e/pages/)
 - [x] Service unit tests with mocked repos (tests/unit/)
@@ -1604,6 +1714,7 @@ Use this checklist to verify production readiness status:
 - [x] Test coverage > 85% (226+ tests)
 
 #### Security Checks ✅
+
 - [x] Authentication implemented (Supabase Auth + JWT)
 - [x] Authorization working (RLS policies, RBAC)
 - [x] Input validation (Zod schemas)
@@ -1614,6 +1725,7 @@ Use this checklist to verify production readiness status:
 - [x] Error monitoring active (Sentry)
 
 #### Documentation Checks ✅
+
 - [x] Architecture overview complete (docs/architecture/)
 - [x] API documentation complete (docs/api/)
 - [x] OpenAPI specification generated (docs/api/openapi.yaml)
@@ -1623,6 +1735,7 @@ Use this checklist to verify production readiness status:
 - [x] PRODUCTION_READINESS.md complete (this document) 🔄
 
 #### Deployment Checks ✅
+
 - [x] Production deployment successful (https://describe-it.vercel.app)
 - [x] Health checks passing (/api/health returns 200)
 - [x] Database migrations applied (Supabase)
@@ -1633,6 +1746,7 @@ Use this checklist to verify production readiness status:
 - [x] CDN configured (Vercel Edge Network)
 
 #### Operational Checks ✅
+
 - [x] Error tracking configured (Sentry)
 - [x] Performance monitoring active (Web Vitals)
 - [x] Logging configured (Winston)
@@ -1646,6 +1760,7 @@ Use this checklist to verify production readiness status:
 **Overall Assessment**: PRODUCTION READY with documented caveats
 
 **Strengths**:
+
 - Comprehensive testing infrastructure (226+ tests)
 - Enterprise-grade security (9.0/10)
 - Excellent performance (< 200ms API, 1.8s LCP)
@@ -1654,6 +1769,7 @@ Use this checklist to verify production readiness status:
 - Clean architecture with clear separation of concerns
 
 **Areas for Improvement**:
+
 - Complete type safety migration (43% → 100%)
 - Integrate E2E tests into CI/CD
 - Expand performance testing scenarios
@@ -1678,6 +1794,7 @@ While type safety migration is still in progress (43% complete), the application
 **Current Status**: ✅ PRODUCTION READY (8.5/10)
 
 **Next Steps**:
+
 1. Complete type safety migration (Phase 4 - A11 continuation)
 2. Integrate E2E tests into CI/CD pipeline
 3. Expand performance testing and monitoring
@@ -1688,6 +1805,7 @@ While type safety migration is still in progress (43% complete), the application
 ## Additional Resources
 
 ### Documentation
+
 - [README.md](../README.md) - Project overview and quick start
 - [GOAP-EXECUTION-README.md](GOAP-EXECUTION-README.md) - GOAP implementation summary
 - [GOAP-INDEX.md](GOAP-INDEX.md) - Complete GOAP documentation index
@@ -1698,6 +1816,7 @@ While type safety migration is still in progress (43% complete), the application
 - [Troubleshooting](guides/troubleshooting.md) - Common issues and solutions
 
 ### External Links
+
 - **Live Application**: https://describe-it.vercel.app
 - **GitHub Repository**: https://github.com/bjpl/describe_it
 - **Supabase Dashboard**: https://app.supabase.com
@@ -1705,14 +1824,15 @@ While type safety migration is still in progress (43% complete), the application
 - **Sentry Dashboard**: https://sentry.io
 
 ### Support
+
 - **Issues**: https://github.com/bjpl/describe_it/issues
 - **Discussions**: https://github.com/bjpl/describe_it/discussions
 - **Email**: support@describe-it.app (if configured)
 
 ---
 
-**Document Version**: 1.0.0
-**Last Updated**: December 8, 2025
+**Document Version**: 1.1.0
+**Last Updated**: December 9, 2025
 **Next Review**: January 8, 2026
 
 **Prepared By**: OpenAPI Documentation Specialist (Claude Agent SDK)
@@ -1721,4 +1841,4 @@ While type safety migration is still in progress (43% complete), the application
 
 ---
 
-*This document is part of the GOAP Action Plan (Action A12: Production Documentation)*
+_This document is part of the GOAP Action Plan (Action A12: Production Documentation)_

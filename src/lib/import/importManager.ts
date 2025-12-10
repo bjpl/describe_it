@@ -173,15 +173,13 @@ export async function importFromCSV(
 
         // Convert to VocabularyExportItem
         const vocabItem: VocabularyExportItem = {
-          spanish: item.spanish_text || '',
-          english: item.english_translation || '',
+          phrase: item.spanish_text || '',
+          translation: item.english_translation || '',
+          definition: item.definition || item.english_translation || '',
           category: item.category || 'general',
           difficulty: (item.difficulty || 'beginner') as any,
           partOfSpeech: item.part_of_speech || 'noun',
-          context: {
-            spanish: item.context_sentence_spanish || '',
-            english: item.context_sentence_english || '',
-          },
+          context: item.context_sentence_spanish || item.context_sentence_english || '',
           dateAdded: item.created_at || new Date().toISOString(),
         };
 
@@ -265,15 +263,13 @@ export async function importFromAnki(
       }
 
       const vocabItem: VocabularyExportItem = {
-        spanish: parts[0].trim(),
-        english: parts[1].trim(),
+        phrase: parts[0].trim(),
+        translation: parts[1].trim(),
+        definition: parts[1].trim(),
         category: parts[2] ? parts[2].trim() : 'general',
         difficulty: 'beginner',
         partOfSpeech: 'noun',
-        context: {
-          spanish: '',
-          english: '',
-        },
+        context: '',
         dateAdded: new Date().toISOString(),
       };
 
@@ -330,7 +326,7 @@ export function validateImportedData(data: ImportedData): {
 
   if (data.vocabulary) {
     data.vocabulary.forEach((item, index) => {
-      if (!item.spanish || !item.english) {
+      if (!item.phrase || !item.translation) {
         errors.push(`Vocabulary item ${index + 1}: Missing required fields`);
       }
     });
@@ -338,7 +334,7 @@ export function validateImportedData(data: ImportedData): {
 
   if (data.descriptions) {
     data.descriptions.forEach((item, index) => {
-      if (!item.spanish || !item.english) {
+      if (!item.content) {
         errors.push(`Description item ${index + 1}: Missing required fields`);
       }
     });

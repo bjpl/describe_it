@@ -24,7 +24,7 @@ export interface DeferOptions {
 export function useDeferredValue<T>(value: T, options: DeferOptions = {}): T {
   const { timeout = 100, priority = 'low' } = options;
   const [deferredValue, setDeferredValue] = useState(value);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     // Clear existing timeout
@@ -57,28 +57,12 @@ export function useDeferredValue<T>(value: T, options: DeferOptions = {}): T {
 
 /**
  * Hook to create a transition for expensive state updates
- * Wrapper around React 18's useTransition with fallback
+ * Wrapper around React 18's useTransition
  */
 export function useTransitionWrapper() {
-  // Try to use React 18's useTransition if available
-  try {
-    const [isPending, startTransition] = useTransition();
-    return { isPending, startTransition };
-  } catch {
-    // Fallback for React 17 or earlier
-    const [isPending, setIsPending] = useState(false);
-
-    const startTransition = (callback: () => void) => {
-      setIsPending(true);
-      // Use setTimeout to defer the update
-      setTimeout(() => {
-        callback();
-        setIsPending(false);
-      }, 0);
-    };
-
-    return { isPending, startTransition };
-  }
+  // React 18's useTransition is always available
+  const [isPending, startTransition] = useTransition();
+  return { isPending, startTransition };
 }
 
 /**
@@ -86,7 +70,7 @@ export function useTransitionWrapper() {
  */
 export function useDebouncedValue<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState(value);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const mountedRef = useRef(true);
 
   useEffect(() => {
@@ -124,7 +108,7 @@ export function useDebouncedValue<T>(value: T, delay: number): T {
 export function useThrottledValue<T>(value: T, interval: number): T {
   const [throttledValue, setThrottledValue] = useState(value);
   const lastUpdateRef = useRef(Date.now());
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     const now = Date.now();
@@ -168,7 +152,7 @@ export function useDeferredComputation<T>(
   const { timeout = 100 } = options;
   const [value, setValue] = useState<T>();
   const [isPending, setIsPending] = useState(true);
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
     setIsPending(true);

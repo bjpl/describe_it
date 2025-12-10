@@ -6,13 +6,15 @@
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { ApiResponse, PaginationRequest, PaginationMeta } from '../types';
+import type { ApiResponse, PaginationRequest, PaginationMeta, ApiMetadata } from '../types';
 
 export interface QueryOptions extends PaginationRequest {
   select?: string;
   filters?: Record<string, any>;
   order_by?: string;
   order?: 'asc' | 'desc';
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
 }
 
 export interface RepositoryConfig {
@@ -48,7 +50,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       if (error) {
         return {
           success: false,
-          data: null,
+          data: undefined,
           error: {
             code: error.code || 'DATABASE_ERROR',
             message: error.message,
@@ -62,7 +64,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       return {
         success: true,
         data: data as TEntity,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -105,7 +107,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       return {
         success: true,
         data: (data as TEntity[]) || [],
-        error: null,
+        error: undefined,
         metadata: this.buildMetadata(count || 0, options),
       };
     } catch (error: any) {
@@ -131,7 +133,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       return {
         success: true,
         data: result as TEntity,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -155,7 +157,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       return {
         success: true,
         data: (data as TEntity[]) || [],
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -181,7 +183,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       return {
         success: true,
         data: result as TEntity,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -201,7 +203,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       if (error) {
         return {
           success: false,
-          data: null,
+          data: undefined,
           error: {
             code: error.code || 'DELETE_ERROR',
             message: error.message,
@@ -214,7 +216,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       return {
         success: true,
         data: true,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -247,7 +249,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
       return {
         success: true,
         data: count || 0,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -265,17 +267,14 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
   /**
    * Build pagination metadata
    */
-  protected buildMetadata(totalCount: number, options: QueryOptions): { pagination?: PaginationMeta } {
-    if (!options.limit) {
-      return {};
-    }
-
+  protected buildMetadata(totalCount: number, options: QueryOptions): ApiMetadata {
     const page = options.page || 1;
-    const limit = options.limit;
+    const limit = options.limit || 50;
     const offset = options.offset || (page - 1) * limit;
     const pages = Math.ceil(totalCount / limit);
 
     return {
+      timestamp: new Date().toISOString(),
       pagination: {
         total: totalCount,
         page,
@@ -293,7 +292,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
   protected handleDatabaseError(error: any): ApiResponse<any> {
     return {
       success: false,
-      data: null,
+      data: undefined,
       error: {
         code: error.code || 'DATABASE_ERROR',
         message: error.message || 'Database operation failed',
@@ -310,7 +309,7 @@ export abstract class BaseRepository<TEntity, TInsert = Partial<TEntity>, TUpdat
   protected handleError(error: any): ApiResponse<any> {
     return {
       success: false,
-      data: null,
+      data: undefined,
       error: {
         code: 'INTERNAL_ERROR',
         message: error.message || 'An unexpected error occurred',

@@ -68,7 +68,7 @@ export class MemoryCacheStrategy<T = any> {
     entry.accessCount++;
     entry.lastAccessed = now;
 
-    return entry.data as V;
+    return entry.data as unknown as V;
   }
 
   /**

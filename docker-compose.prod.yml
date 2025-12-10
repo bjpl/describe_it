@@ -1,14 +1,14 @@
 # ==============================================
-# Docker Compose - Development Environment
+# Docker Compose - Production Environment
 # Describe It Next.js Application
 # ==============================================
-# For local development with hot reload and debugging
+# For production deployment with optimizations and monitoring
 
 version: '3.9'
 
 services:
   # ==============================================
-  # Next.js Application (Development)
+  # Next.js Application (Production)
   # ==============================================
   app:
     build:
@@ -19,24 +19,16 @@ services:
         SENTRY_PROJECT: ${SENTRY_PROJECT}
         NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL}
         NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}
-    container_name: describe-it-dev
-    restart: unless-stopped
+    image: describe-it:latest
+    container_name: describe-it-prod
+    restart: always
     ports:
       - "3000:3000"
     environment:
       # Core configuration
-      - NODE_ENV=development
+      - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0
-
-      # Redis connection
-      - REDIS_URL=redis://redis:6379
-      - ENABLE_REDIS_CACHE=true
-
-      # Development features
-      - DEBUG_ENDPOINT_ENABLED=true
-      - ENABLE_PERFORMANCE_MONITORING=true
-      - LOG_LEVEL=debug
 
       # Supabase configuration
       - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
@@ -44,20 +36,17 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - DATABASE_URL=${DATABASE_URL}
 
+      # Authentication
+      - NEXTAUTH_URL=${NEXTAUTH_URL}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+
       # API Keys
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+
+      # Unsplash API
       - NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=${NEXT_PUBLIC_UNSPLASH_ACCESS_KEY}
       - UNSPLASH_SECRET_KEY=${UNSPLASH_SECRET_KEY}
-
-      # Authentication
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
-
-      # Security keys
-      - API_SECRET_KEY=${API_SECRET_KEY}
-      - JWT_SECRET=${JWT_SECRET}
-      - SESSION_SECRET=${SESSION_SECRET}
 
       # Sentry monitoring
       - SENTRY_ORG=${SENTRY_ORG}
@@ -74,6 +63,11 @@ services:
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
       - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-60000}
 
+      # Redis (optional)
+      - REDIS_URL=${REDIS_URL}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN}
+
       # Vercel Blob storage (optional)
       - BLOB_READ_WRITE_TOKEN=${BLOB_READ_WRITE_TOKEN}
 
@@ -83,23 +77,13 @@ services:
       - KV_REST_API_TOKEN=${KV_REST_API_TOKEN}
       - KV_REST_API_READ_ONLY_TOKEN=${KV_REST_API_READ_ONLY_TOKEN}
 
-    env_file:
-      - .env.local
-
-    volumes:
-      # Mount source code for hot reload
-      - .:/app
-      - /app/node_modules
-      - /app/.next
-      # Logs
-      - ./logs:/app/logs
-
-    depends_on:
-      redis:
-        condition: service_healthy
+      # Security keys
+      - API_SECRET_KEY=${API_SECRET_KEY}
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
 
     networks:
-      - dev-network
+      - prod-network
 
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
@@ -108,57 +92,22 @@ services:
       retries: 3
       start_period: 60s
 
-  # ==============================================
-  # Redis Cache
-  # ==============================================
-  redis:
-    image: redis:7.2-alpine
-    container_name: describe-it-redis-dev
-    restart: unless-stopped
-    ports:
-      - "6379:6379"
-    command: >
-      redis-server
-      --appendonly yes
-      --appendfsync everysec
-      --maxmemory 256mb
-      --maxmemory-policy allkeys-lru
-      --save 900 1
-      --save 300 10
-      --save 60 10000
-    volumes:
-      - redis-data:/data
-    networks:
-      - dev-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
 
-  # ==============================================
-  # Redis Commander (Optional - Redis GUI)
-  # ==============================================
-  redis-commander:
-    image: rediscommander/redis-commander:latest
-    container_name: describe-it-redis-commander
-    restart: unless-stopped
-    environment:
-      - REDIS_HOSTS=local:redis:6379
-    ports:
-      - "8081:8081"
-    depends_on:
-      - redis
-    networks:
-      - dev-network
-    profiles:
-      - tools
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 networks:
-  dev-network:
+  prod-network:
     driver: bridge
-    name: describe-it-dev-network
-
-volumes:
-  redis-data:
-    driver: local
+    name: describe-it-prod-network

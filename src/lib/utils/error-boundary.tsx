@@ -182,11 +182,15 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
 export function createErrorBoundary(
   defaultProps: Partial<ErrorBoundaryProps> = {}
 ): React.FC<Pick<ErrorBoundaryProps, 'children'>> {
-  return ({ children }) => (
+  const BoundaryComponent = ({ children }: Pick<ErrorBoundaryProps, 'children'>) => (
     <ErrorBoundary {...defaultProps}>
       {children}
     </ErrorBoundary>
   );
+
+  BoundaryComponent.displayName = 'CreatedErrorBoundary';
+
+  return BoundaryComponent;
 }
 
 /**

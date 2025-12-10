@@ -34,7 +34,7 @@ export interface VocabularyFilters {
   tags?: string[];
   limit?: number;
   offset?: number;
-  sortBy?: 'phrase' | 'difficulty' | 'createdAt' | 'masteryLevel';
+  sortBy?: 'phrase' | 'difficulty' | 'createdAt' | 'updatedAt' | 'masteryLevel';
   sortOrder?: 'asc' | 'desc';
 }
 

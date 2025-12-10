@@ -97,7 +97,7 @@ export class SessionsApi extends BaseApiClient {
    * List sessions with filtering and pagination
    */
   async list(params?: SessionListParams): Promise<Result<PaginatedResponse<SessionEntity>>> {
-    const queryString = params ? buildQueryString(params) : '';
+    const queryString = params ? buildQueryString(params as Record<string, unknown>) : '';
     return this.request<PaginatedResponse<SessionEntity>>(
       `${API_ENDPOINTS.sessions.list}${queryString}`
     );
@@ -153,7 +153,7 @@ export class SessionsApi extends BaseApiClient {
    * Get active sessions for a user
    */
   async getActiveSessions(userId: string): Promise<Result<SessionEntity[]>> {
-    const queryString = buildQueryString({ user_id: userId });
+    const queryString = buildQueryString({ user_id: userId } as Record<string, unknown>);
     return this.request<SessionEntity[]>(
       `${API_ENDPOINTS.sessions.active}${queryString}`
     );
@@ -163,7 +163,7 @@ export class SessionsApi extends BaseApiClient {
    * Get session statistics for a user
    */
   async getStats(userId: string): Promise<Result<SessionStats>> {
-    const queryString = buildQueryString({ user_id: userId });
+    const queryString = buildQueryString({ user_id: userId } as Record<string, unknown>);
     return this.request<SessionStats>(
       `${API_ENDPOINTS.progress.stats}${queryString}`
     );

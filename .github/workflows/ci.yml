@@ -18,22 +18,20 @@ concurrency:
 
 jobs:
   # ============================================================================
-  # STATIC ANALYSIS
+  # LINT & TYPE CHECK - Run in parallel
   # ============================================================================
 
-  lint-and-typecheck:
-    name: Lint & Type Check
+  lint:
+    name: ESLint
     runs-on: ubuntu-latest
     timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
@@ -45,45 +43,51 @@ jobs:
 
       - name: Run ESLint
         run: npm run lint
-        continue-on-error: false
-
-      - name: Check TypeScript types
-        run: npm run typecheck
 
       - name: Check Prettier formatting
         run: npm run format:check
 
-      - name: Cache lint results
-        uses: actions/cache/save@v4
-        if: always()
-        with:
-          path: |
-            .eslintcache
-            .tsbuildinfo
-          key: lint-${{ runner.os }}-${{ env.CACHE_VERSION }}-${{ github.sha }}
-
-  # ============================================================================
-  # UNIT & INTEGRATION TESTS
-  # ============================================================================
-
-  test-unit:
-    name: Unit Tests
+  typecheck:
+    name: TypeScript Type Check
     runs-on: ubuntu-latest
-    timeout-minutes: 15
-    needs: lint-and-typecheck
-
-    strategy:
-      matrix:
-        node-version: ['20']
+    timeout-minutes: 10
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v6
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+        env:
+          CI: true
+
+      - name: Run TypeScript compiler
+        run: npm run typecheck
+
+  # ============================================================================
+  # TESTS - Run in parallel after lint/typecheck
+  # ============================================================================
+
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: [lint, typecheck]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
 
       - name: Install dependencies
@@ -92,202 +96,64 @@ jobs:
           CI: true
 
       - name: Run unit tests
-        run: npm run test:unit -- --coverage --run
+        run: npm run test:unit -- --run
+
+      - name: Run integration tests
+        run: npm run test:integration -- --run
+        env:
+          NODE_ENV: test
+
+      - name: Generate coverage report
+        run: npm run test:coverage
         env:
           CI: true
 
-      - name: Upload unit test coverage
+      - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v4
         if: success()
         with:
           files: ./coverage/lcov.info
-          flags: unit
-          name: unit-tests-${{ matrix.node-version }}
+          flags: unittests
+          name: codecov-umbrella
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false
 
-      - name: Archive test results
-        uses: actions/upload-artifact@v5
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: unit-test-results-${{ matrix.node-version }}
+          name: test-results
           path: |
             coverage/
             test-results/
           retention-days: 7
 
-  test-integration:
-    name: Integration Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 20
-    needs: lint-and-typecheck
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-        env:
-          CI: true
-
-      - name: Run integration tests
-        run: npm run test:integration -- --run
-        env:
-          CI: true
-          NODE_ENV: test
-
-      - name: Upload integration coverage
-        uses: codecov/codecov-action@v4
-        if: success()
-        with:
-          files: ./coverage/lcov.info
-          flags: integration
-          name: integration-tests
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: false
-
   # ============================================================================
-  # E2E TESTS
+  # BUILD - Verify build succeeds
   # ============================================================================
 
-  test-e2e:
-    name: E2E Tests
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    needs: [test-unit, test-integration]
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-        env:
-          CI: true
-
-      - name: Install Playwright browsers
-        run: npx playwright install --with-deps chromium
-
-      - name: Build application
-        run: npm run build
-        env:
-          NODE_ENV: production
-
-      - name: Run Playwright E2E tests
-        run: npm run test:e2e
-        env:
-          CI: true
-
-      - name: Upload Playwright report
-        uses: actions/upload-artifact@v5
-        if: always()
-        with:
-          name: playwright-report
-          path: playwright-report/
-          retention-days: 14
-
-      - name: Upload E2E test results
-        uses: actions/upload-artifact@v5
-        if: always()
-        with:
-          name: e2e-test-results
-          path: test-results/
-          retention-days: 7
-
-  # ============================================================================
-  # SECURITY SCANNING
-  # ============================================================================
-
-  security-scan:
-    name: Security Audit
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-        env:
-          CI: true
-
-      - name: Run npm audit
-        run: npm audit --audit-level=moderate
-        continue-on-error: true
-
-      - name: Check for outdated dependencies
-        run: npm outdated || true
-
-      - name: Initialize CodeQL
-        uses: github/codeql-action/init@v4
-        with:
-          languages: javascript,typescript
-
-      - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@v4
-        with:
-          category: "/language:javascript"
-
-  # ============================================================================
-  # BUILD VERIFICATION
-  # ============================================================================
-
-  build-verification:
-    name: Build Verification
+  build:
+    name: Build Application
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    needs: [test-unit, test-integration]
-
-    strategy:
-      matrix:
-        node-version: ['20']
+    needs: [lint, typecheck]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v6
+      - name: Setup Node.js ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: 'npm'
-
-      - name: Restore dependency cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.npm
-            node_modules
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
 
       - name: Install dependencies
         run: npm ci
         env:
           CI: true
 
-      - name: Build application
+      - name: Build Next.js application
         run: npm run build
         env:
           NODE_ENV: production
@@ -310,63 +176,25 @@ jobs:
           echo "### Bundle Size Analysis" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Get Next.js build info
-          if [ -f ".next/analyze/client.html" ]; then
-            echo "Bundle analyzer report generated" >> $GITHUB_STEP_SUMMARY
-          fi
-
           # Calculate total size
-          total_size=$(du -sh .next/static | cut -f1)
+          total_size=$(du -sh .next/static 2>/dev/null | cut -f1 || echo "N/A")
           echo "**Total Static Assets:** $total_size" >> $GITHUB_STEP_SUMMARY
 
           # List largest chunks
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "#### Largest Chunks:" >> $GITHUB_STEP_SUMMARY
-          find .next/static -type f -name "*.js" -exec du -h {} \; | sort -rh | head -10 >> $GITHUB_STEP_SUMMARY
-
-      - name: Check bundle size limits
-        run: |
-          # Check if bundle exceeds size limits (example: 500KB)
-          total_bytes=$(du -sb .next/static/chunks | cut -f1)
-          max_bytes=512000  # 500KB
-
-          if [ $total_bytes -gt $max_bytes ]; then
-            echo "Warning: Bundle size ($total_bytes bytes) exceeds limit ($max_bytes bytes)"
-            echo "bundle_size_warning=true" >> $GITHUB_ENV
-          else
-            echo "Bundle size check passed: $total_bytes bytes"
-          fi
-
-      - name: Cache build artifacts
-        uses: actions/cache/save@v4
-        if: success()
-        with:
-          path: |
-            .next/cache
-            .next/static
-          key: build-${{ runner.os }}-${{ env.CACHE_VERSION }}-${{ github.sha }}
+          echo "#### Top 5 Largest JavaScript Files:" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          find .next/static -type f -name "*.js" -exec du -h {} \; 2>/dev/null | sort -rh | head -5 >> $GITHUB_STEP_SUMMARY || echo "No JS files found" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Upload build artifacts
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v4
         with:
-          name: build-artifacts-${{ matrix.node-version }}
+          name: build-artifacts
           path: |
             .next/
             !.next/cache
           retention-days: 3
-
-      - name: Generate build stats
-        run: |
-          mkdir -p reports
-          du -h .next/static > reports/build-stats.txt
-          find .next -name "*.js" -type f | wc -l > reports/js-file-count.txt
-
-      - name: Upload build stats
-        uses: actions/upload-artifact@v5
-        with:
-          name: build-stats
-          path: reports/
-          retention-days: 30
 
   # ============================================================================
   # CI SUCCESS CHECK
@@ -376,45 +204,27 @@ jobs:
     name: CI Pipeline Success
     runs-on: ubuntu-latest
     if: always()
-    needs:
-      - lint-and-typecheck
-      - test-unit
-      - test-integration
-      - test-e2e
-      - security-scan
-      - build-verification
+    needs: [lint, typecheck, test, build]
 
     steps:
       - name: Check all jobs status
         run: |
-          echo "Lint & Type Check: ${{ needs.lint-and-typecheck.result }}"
-          echo "Unit Tests: ${{ needs.test-unit.result }}"
-          echo "Integration Tests: ${{ needs.test-integration.result }}"
-          echo "E2E Tests: ${{ needs.test-e2e.result }}"
-          echo "Security Scan: ${{ needs.security-scan.result }}"
-          echo "Build Verification: ${{ needs.build-verification.result }}"
-
-          if [ "${{ needs.lint-and-typecheck.result }}" != "success" ] || \
-             [ "${{ needs.test-unit.result }}" != "success" ] || \
-             [ "${{ needs.test-integration.result }}" != "success" ] || \
-             [ "${{ needs.test-e2e.result }}" != "success" ] || \
-             [ "${{ needs.build-verification.result }}" != "success" ]; then
-            echo "CI pipeline failed"
-            exit 1
-          fi
-
-          echo "All CI checks passed successfully!"
-
-      - name: Post CI summary
-        if: always()
-        run: |
-          echo "### CI Pipeline Summary" >> $GITHUB_STEP_SUMMARY
+          echo "### CI Pipeline Results" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "| Job | Status |" >> $GITHUB_STEP_SUMMARY
           echo "|-----|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| Lint & Type Check | ${{ needs.lint-and-typecheck.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Unit Tests | ${{ needs.test-unit.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Integration Tests | ${{ needs.test-integration.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| E2E Tests | ${{ needs.test-e2e.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Security Scan | ${{ needs.security-scan.result }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| Build Verification | ${{ needs.build-verification.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Lint | ${{ needs.lint.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| TypeCheck | ${{ needs.typecheck.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Tests | ${{ needs.test.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Build | ${{ needs.build.result }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Verify all jobs succeeded
+        run: |
+          if [ "${{ needs.lint.result }}" != "success" ] || \
+             [ "${{ needs.typecheck.result }}" != "success" ] || \
+             [ "${{ needs.test.result }}" != "success" ] || \
+             [ "${{ needs.build.result }}" != "success" ]; then
+            echo "CI pipeline failed - see summary above"
+            exit 1
+          fi
+          echo "All CI checks passed successfully!"

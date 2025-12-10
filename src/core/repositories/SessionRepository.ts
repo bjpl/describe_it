@@ -67,7 +67,7 @@ export class SessionRepository extends BaseRepository<
       return {
         success: true,
         data: data as Session | null,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);
@@ -100,15 +100,13 @@ export class SessionRepository extends BaseRepository<
     id: string,
     data: {
       score?: number;
-      accuracy?: number;
-      time_spent?: number;
       session_data?: any;
     }
   ): Promise<ApiResponse<Session>> {
     const updates: SessionUpdate = {
       ...data,
       status: 'completed',
-      completed_at: new Date().toISOString(),
+      ended_at: new Date().toISOString(),
     };
 
     return this.update(id, updates);
@@ -120,7 +118,7 @@ export class SessionRepository extends BaseRepository<
   async abandonSession(id: string): Promise<ApiResponse<Session>> {
     return this.update(id, {
       status: 'abandoned',
-      completed_at: new Date().toISOString(),
+      ended_at: new Date().toISOString(),
     });
   }
 
@@ -136,8 +134,7 @@ export class SessionRepository extends BaseRepository<
     completed_sessions: number;
     by_type: Record<SessionType, number>;
     average_score: number;
-    average_accuracy: number;
-    total_time_spent: number;
+    total_duration: number;
   }>> {
     try {
       let query = this.supabase
@@ -172,40 +169,32 @@ export class SessionRepository extends BaseRepository<
           writing: 0,
         } as Record<SessionType, number>,
         average_score: 0,
-        average_accuracy: 0,
-        total_time_spent: 0,
+        total_duration: 0,
       };
 
       let totalScore = 0;
       let scoredCount = 0;
-      let totalAccuracy = 0;
-      let accuracyCount = 0;
 
       sessions.forEach(session => {
-        stats.by_type[session.session_type]++;
+        const sessionType = session.session_type as SessionType;
+        stats.by_type[sessionType]++;
 
         if (session.score !== undefined && session.score !== null) {
           totalScore += session.score;
           scoredCount++;
         }
 
-        if (session.accuracy !== undefined && session.accuracy !== null) {
-          totalAccuracy += session.accuracy;
-          accuracyCount++;
-        }
-
-        if (session.time_spent) {
-          stats.total_time_spent += session.time_spent;
+        if (session.duration_seconds) {
+          stats.total_duration += session.duration_seconds;
         }
       });
 
       stats.average_score = scoredCount > 0 ? totalScore / scoredCount : 0;
-      stats.average_accuracy = accuracyCount > 0 ? totalAccuracy / accuracyCount : 0;
 
       return {
         success: true,
         data: stats,
-        error: null,
+        error: undefined,
       };
     } catch (error: any) {
       return this.handleError(error);

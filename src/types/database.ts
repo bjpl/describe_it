@@ -30,6 +30,7 @@ export interface UserProgress {
   times_reviewed: number;
   times_correct: number;
   last_reviewed: string;
+  last_review_score?: number | null;
   next_review_date: string;
   created_at: string;
   updated_at: string;

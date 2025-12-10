@@ -80,7 +80,7 @@ export interface User extends BaseEntity {
   last_active_at?: string;
 }
 
-export interface UserSettings extends BaseEntity {
+export interface UserSettingsEntity extends BaseEntity {
   user_id: string;
   language_level: DifficultyLevel;
   daily_goal: number;
@@ -192,4 +192,48 @@ export interface VocabularyList extends BaseEntity {
   item_count: number;
 }
 
-// More entity definitions...
+// ============================================================================
+// SESSION ENTITY
+// ============================================================================
+
+export interface Session extends BaseEntity {
+  user_id: string;
+  session_type: SessionType;
+  status: SessionStatus;
+  started_at: string;
+  ended_at?: string;
+  duration_seconds?: number;
+  total_events?: number;
+  correct_answers?: number;
+  incorrect_answers?: number;
+  vocabulary_learned?: number;
+  phrases_learned?: number;
+  score?: number;
+  metadata?: Record<string, any>;
+}
+
+export type SessionInsert = Omit<Session, 'id' | 'created_at' | 'updated_at'>;
+export type SessionUpdate = Partial<SessionInsert>;
+
+// ============================================================================
+// CRUD TYPE HELPERS
+// ============================================================================
+
+export type DescriptionInsert = Omit<Description, 'id' | 'created_at' | 'updated_at'>;
+export type DescriptionUpdate = Partial<DescriptionInsert>;
+
+export type VocabularyItemInsert = Omit<VocabularyItem, 'id' | 'created_at' | 'updated_at'>;
+export type VocabularyItemUpdate = Partial<VocabularyItemInsert>;
+
+export type VocabularyListInsert = Omit<VocabularyList, 'id' | 'created_at' | 'updated_at'>;
+export type VocabularyListUpdate = Partial<VocabularyListInsert>;
+
+// ============================================================================
+// SETTINGS METADATA (for SettingsService)
+// ============================================================================
+
+export interface SettingsMetadata {
+  version: string;
+  source: string;
+  timestamp?: string;
+}

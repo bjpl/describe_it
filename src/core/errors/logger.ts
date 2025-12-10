@@ -159,6 +159,8 @@ class ErrorLogger {
    * Writes formatted log to console (development)
    */
   private writeToConsole(entry: LogEntry): void {
+    /* eslint-disable no-console, custom-rules/require-logger */
+    // Console usage is valid here since this IS the logger implementation
     const color = this.getLevelColor(entry.level);
     const reset = '\x1b[0m';
 
@@ -184,13 +186,17 @@ class ErrorLogger {
     }
 
     console.error('---');
+    /* eslint-enable no-console, custom-rules/require-logger */
   }
 
   /**
    * Writes JSON log (production)
    */
   private writeToJson(entry: LogEntry): void {
+    /* eslint-disable no-console, custom-rules/require-logger */
+    // Console usage is valid here since this IS the logger implementation
     console.error(JSON.stringify(entry));
+    /* eslint-enable no-console, custom-rules/require-logger */
   }
 
   /**

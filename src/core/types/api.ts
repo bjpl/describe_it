@@ -5,6 +5,21 @@
  */
 
 // ============================================================================
+// SERVICE RESULT WRAPPER
+// ============================================================================
+
+/**
+ * Generic service result wrapper for service layer operations
+ * Used by services to return consistent result objects
+ */
+export interface ServiceResult<T = unknown> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  code?: string;
+}
+
+// ============================================================================
 // API RESPONSE WRAPPER
 // ============================================================================
 
@@ -31,6 +46,7 @@ export interface ApiMetadata {
   version?: string;
   duration_ms?: number;
   rate_limit?: RateLimitInfo;
+  pagination?: PaginationMeta;
 }
 
 export interface RateLimitInfo {
@@ -58,11 +74,29 @@ export interface PaginationInfo {
   has_previous: boolean;
 }
 
+export interface PaginationMeta {
+  total: number;
+  page: number;
+  limit: number;
+  pages: number;
+  has_more: boolean;
+  offset: number;
+}
+
 export interface PaginationRequest {
   page?: number;
   limit?: number;
   offset?: number;
   cursor?: string;
+}
+
+export interface QueryOptions extends PaginationRequest {
+  select?: string;
+  filters?: Record<string, any>;
+  order_by?: string;
+  order?: 'asc' | 'desc';
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
 }
 
 // ============================================================================

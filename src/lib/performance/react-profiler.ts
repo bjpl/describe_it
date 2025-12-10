@@ -302,7 +302,7 @@ export function useComponentProfiler(componentName: string, budget?: Partial<Per
  * Hook to track why a component re-rendered
  */
 export function useWhyDidYouUpdate(name: string, props: Record<string, unknown>) {
-  const previousProps = useRef<Record<string, unknown>>();
+  const previousProps = useRef<Record<string, unknown> | undefined>(undefined);
 
   useEffect(() => {
     if (previousProps.current) {
@@ -335,6 +335,7 @@ export function useMeasureComputation<T>(
   computation: () => T,
   deps: React.DependencyList
 ): T {
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   return useMemo(() => {
     const start = performance.now();
     const result = computation();
@@ -343,7 +344,7 @@ export function useMeasureComputation<T>(
     if (duration > 10) { // Log if computation takes > 10ms
       logger.warn('Expensive computation detected', {
         name,
-        duration: `${duration.toFixed(2)}ms`,
+        duration: duration,
       });
     }
 
@@ -358,7 +359,7 @@ export function useDebounceCallback<T extends (...args: never[]) => void>(
   callback: T,
   delay: number
 ): T {
-  const timeoutRef = useRef<NodeJS.Timeout>();
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const callbackRef = useRef(callback);
 
   useEffect(() => {

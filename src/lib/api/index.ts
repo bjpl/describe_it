@@ -295,7 +295,7 @@ export type {
   GenerateDescriptionDTO,
   CreateDescriptionDTO,
   UpdateDescriptionDTO,
-  GeneratedDescription,
+  GeneratedDescription as GeneratedDescriptionDTO,
 } from './descriptions';
 
 export { SessionsApi } from './sessions';

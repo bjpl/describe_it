@@ -10,6 +10,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { queryOptimizer } from './query-optimizer';
 import { reactProfiler } from './react-profiler';
 import { bundleAnalyzer } from './bundle-analyzer';
+import { logger } from '@/lib/logger';
 
 interface PerformanceData {
   queries: ReturnType<typeof queryOptimizer.getPerformanceStats>;
@@ -269,7 +270,7 @@ export function PerformanceDashboard() {
             <button
               onClick={() => {
                 const report = reactProfiler.generateReport();
-                console.log('Performance Report:', report);
+                logger.info('Performance Report:', { report });
                 alert('Report logged to console');
               }}
               className="px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-sm flex-1"

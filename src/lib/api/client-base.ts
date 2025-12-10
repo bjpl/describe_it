@@ -262,7 +262,7 @@ export class BaseApiClient {
       let data = await this.parseResponseBody<T>(response);
 
       for (const interceptor of this.responseInterceptors) {
-        data = await interceptor(response, data);
+        data = await interceptor(response, data) as Awaited<T>;
       }
 
       return ok(data);

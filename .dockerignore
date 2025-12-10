@@ -118,8 +118,6 @@ temp/
 # Development files
 .env.example
 .env.sample
-scripts/
-config/
 
 # Testing configs
 playwright.config.ts
@@ -132,15 +130,22 @@ lighthouserc.js
 prometheus.yml
 
 # Reports
-*.json
-*.html
-*.txt
 api-test-report.json
 web-vitals.json
 build.log
+performance-results.json
+lighthouse-results
 
 # Misc
 .todo
 .vscode-test
 *.backup
 *~
+
+# Keep necessary files
+!package.json
+!package-lock.json
+!next.config.mjs
+!tsconfig.json
+!tailwind.config.ts
+!postcss.config.js
