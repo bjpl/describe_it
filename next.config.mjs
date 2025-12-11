@@ -53,9 +53,9 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
 
-  // ESLint - temporarily ignore warnings for deployment (warnings are non-critical)
+  // ESLint - enforced during builds
   eslint: {
-    ignoreDuringBuilds: true,
+    ignoreDuringBuilds: false,
   },
 
   // HTTP headers for security and performance

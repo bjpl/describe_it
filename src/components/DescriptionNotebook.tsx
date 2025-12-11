@@ -186,6 +186,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- onDescriptionUpdate is intentionally omitted to prevent re-renders when parent callback changes
     [image, onGenerateDescription]
   );
 
