@@ -1,4 +1,4 @@
-import { AppSettings } from "@/lib/settings/settingsManager";
+import { AppSettings } from '@/lib/settings/settingsManager';
 
 export interface BaseSettingsProps {
   settings: AppSettings;
@@ -15,10 +15,15 @@ export interface GeneralSettingsProps extends BaseSettingsProps {
 
 export interface AppearanceSettingsProps extends BaseSettingsProps {}
 
+/**
+ * PrivacySettingsProps - Now only for Language settings
+ * API key configuration has been moved to ApiKeysSection
+ */
 export interface PrivacySettingsProps extends BaseSettingsProps {
-  apiKeyValidation: { unsplash: boolean; openai: boolean } | null;
-  validating: boolean;
-  onValidateAPIKeys: () => void;
+  // Legacy props kept for backwards compatibility but optional
+  apiKeyValidation?: { unsplash: boolean; openai: boolean } | null;
+  validating?: boolean;
+  onValidateAPIKeys?: () => void;
 }
 
 export interface ExportSettingsProps extends BaseSettingsProps {
@@ -33,16 +38,16 @@ export interface ExportSettingsProps extends BaseSettingsProps {
 export interface NotificationSettingsProps extends BaseSettingsProps {}
 
 export type TabType =
-  | "general"
-  | "apikeys"
-  | "api"
-  | "language"
-  | "study"
-  | "theme"
-  | "accessibility"
-  | "privacy"
-  | "cache"
-  | "backup";
+  | 'general'
+  | 'apikeys'
+  | 'api'
+  | 'language'
+  | 'study'
+  | 'theme'
+  | 'accessibility'
+  | 'privacy'
+  | 'cache'
+  | 'backup';
 
 export interface Tab {
   id: TabType;

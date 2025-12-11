@@ -1,10 +1,7 @@
-"use client";
+'use client';
 
-import { memo, useCallback, useState, useEffect, useRef } from "react";
-import {
-  settingsManager,
-  type AppSettings,
-} from "@/lib/settings/settingsManager";
+import { memo, useCallback, useState, useEffect, useRef } from 'react';
+import { settingsManager, type AppSettings } from '@/lib/settings/settingsManager';
 import {
   GeneralSettings,
   AppearanceSettings,
@@ -13,8 +10,8 @@ import {
   NotificationSettings,
   type TabType,
   type Tab,
-} from "./Settings";
-import { ApiKeysSection } from "./Settings/ApiKeysSection";
+} from './Settings';
+import { ApiKeysSection } from './Settings/ApiKeysSection';
 import { logger } from '@/lib/logger';
 
 interface SettingsModalProps {
@@ -22,6 +19,7 @@ interface SettingsModalProps {
   darkMode: boolean;
   onClose: () => void;
   onToggleDarkMode: () => void;
+  defaultTab?: TabType;
 }
 
 export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
@@ -29,11 +27,17 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
   darkMode,
   onClose,
   onToggleDarkMode,
+  defaultTab = 'general',
 }) {
-  const [settings, setSettings] = useState<AppSettings>(
-    settingsManager.getSettings(),
-  );
-  const [activeTab, setActiveTab] = useState<TabType>("general");
+  const [settings, setSettings] = useState<AppSettings>(settingsManager.getSettings());
+  const [activeTab, setActiveTab] = useState<TabType>(defaultTab);
+
+  // Update activeTab when defaultTab changes (e.g., when modal reopens)
+  useEffect(() => {
+    if (isOpen) {
+      setActiveTab(defaultTab);
+    }
+  }, [isOpen, defaultTab]);
   const [apiKeyValidation, setApiKeyValidation] = useState<{
     unsplash: boolean;
     openai: boolean;
@@ -61,17 +65,14 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
         onClose();
       }
     },
-    [onClose],
+    [onClose]
   );
 
   const handleSettingChange = useCallback(
-    <K extends keyof AppSettings>(
-      section: K,
-      updates: Partial<AppSettings[K]>,
-    ) => {
+    <K extends keyof AppSettings>(section: K, updates: Partial<AppSettings[K]>) => {
       settingsManager.updateSection(section, updates);
     },
-    [],
+    []
   );
 
   const validateAPIKeys = useCallback(async () => {
@@ -80,7 +81,7 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
       const results = await settingsManager.validateAPIKeys();
       setApiKeyValidation(results);
     } catch (error) {
-      logger.error("API validation failed:", error);
+      logger.error('API validation failed:', error);
       setApiKeyValidation({ unsplash: false, openai: false });
     } finally {
       setValidating(false);
@@ -89,9 +90,7 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
 
   const clearCache = useCallback(() => {
     if (
-      confirm(
-        "Are you sure you want to clear the cache? This will remove stored images and data.",
-      )
+      confirm('Are you sure you want to clear the cache? This will remove stored images and data.')
     ) {
       settingsManager.clearCache();
       setCacheSize(0);
@@ -99,50 +98,43 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
   }, []);
 
   const exportSettings = useCallback(() => {
-    const includeAPIKeys = confirm(
-      "Include API keys in export? (Not recommended for sharing)",
-    );
+    const includeAPIKeys = confirm('Include API keys in export? (Not recommended for sharing)');
     const data = settingsManager.exportSettings(includeAPIKeys);
-    const blob = new Blob([data], { type: "application/json" });
+    const blob = new Blob([data], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = `describe-it-settings-${new Date().toISOString().split("T")[0]}.json`;
+    a.download = `describe-it-settings-${new Date().toISOString().split('T')[0]}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
   }, []);
 
-  const importSettings = useCallback(
-    (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      if (!file) return;
+  const importSettings = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const data = e.target?.result as string;
-          const success = settingsManager.importSettings(data);
-          if (success) {
-            alert("Settings imported successfully!");
-          } else {
-            alert("Failed to import settings. Please check the file format.");
-          }
-        } catch (error) {
-          alert("Failed to read settings file.");
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const data = e.target?.result as string;
+        const success = settingsManager.importSettings(data);
+        if (success) {
+          alert('Settings imported successfully!');
+        } else {
+          alert('Failed to import settings. Please check the file format.');
         }
-      };
-      reader.readAsText(file);
-    },
-    [],
-  );
+      } catch (error) {
+        alert('Failed to read settings file.');
+      }
+    };
+    reader.readAsText(file);
+  }, []);
 
   const resetSettings = useCallback(() => {
     if (
-      confirm(
-        "Are you sure you want to reset all settings to defaults? This cannot be undone.",
-      )
+      confirm('Are you sure you want to reset all settings to defaults? This cannot be undone.')
     ) {
       settingsManager.resetSettings();
     }
@@ -151,18 +143,18 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
   if (!isOpen) return null;
 
   const tabs: Tab[] = [
-    { id: "general", label: "General", icon: "⚙️" },
-    { id: "apikeys", label: "API Keys", icon: "🔑" },
-    { id: "theme", label: "Appearance", icon: "🎨" },
-    { id: "study", label: "Study & Notifications", icon: "📚" },
-    { id: "privacy", label: "Privacy", icon: "🔒" },
-    { id: "cache", label: "Data & Export", icon: "💾" },
+    { id: 'general', label: 'General', icon: '⚙️' },
+    { id: 'apikeys', label: 'API Keys', icon: '🔑' },
+    { id: 'theme', label: 'Appearance', icon: '🎨' },
+    { id: 'study', label: 'Study & Notifications', icon: '📚' },
+    { id: 'privacy', label: 'Language', icon: '🌐' },
+    { id: 'cache', label: 'Data & Export', icon: '💾' },
   ];
 
   // Map legacy tab names to new component structure
   const getTabContent = () => {
     switch (activeTab) {
-      case "general":
+      case 'general':
         return (
           <GeneralSettings
             settings={settings}
@@ -171,37 +163,19 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
             onSettingChange={handleSettingChange}
           />
         );
-      case "apikeys":
+      case 'apikeys':
         return <ApiKeysSection />;
-      case "privacy":
-      case "api": // Legacy support
-      case "language": // Legacy support
-        return (
-          <PrivacySettings
-            settings={settings}
-            apiKeyValidation={apiKeyValidation}
-            validating={validating}
-            onSettingChange={handleSettingChange}
-            onValidateAPIKeys={validateAPIKeys}
-          />
-        );
-      case "theme":
-      case "accessibility": // Legacy support - combined into appearance
-        return (
-          <AppearanceSettings
-            settings={settings}
-            onSettingChange={handleSettingChange}
-          />
-        );
-      case "study":
-        return (
-          <NotificationSettings
-            settings={settings}
-            onSettingChange={handleSettingChange}
-          />
-        );
-      case "cache":
-      case "backup": // Legacy support - combined into export
+      case 'privacy':
+      case 'api': // Legacy support
+      case 'language': // Legacy support
+        return <PrivacySettings settings={settings} onSettingChange={handleSettingChange} />;
+      case 'theme':
+      case 'accessibility': // Legacy support - combined into appearance
+        return <AppearanceSettings settings={settings} onSettingChange={handleSettingChange} />;
+      case 'study':
+        return <NotificationSettings settings={settings} onSettingChange={handleSettingChange} />;
+      case 'cache':
+      case 'backup': // Legacy support - combined into export
         return (
           <ExportSettings
             settings={settings}
@@ -221,28 +195,26 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className='fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50'
       onClick={handleOverlayClick}
     >
-      <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="flex flex-1 min-h-0">
+      <div className='bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden'>
+        <div className='flex flex-1 min-h-0'>
           {/* Sidebar */}
-          <div className="w-64 bg-gray-50 dark:bg-gray-900 p-4 overflow-y-auto flex-shrink-0">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-              Settings
-            </h2>
-            <nav className="space-y-1">
-              {tabs.map((tab) => (
+          <div className='w-64 bg-gray-50 dark:bg-gray-900 p-4 overflow-y-auto flex-shrink-0'>
+            <h2 className='text-xl font-bold mb-4 text-gray-900 dark:text-gray-100'>Settings</h2>
+            <nav className='space-y-1'>
+              {tabs.map(tab => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                     activeTab === tab.id
-                      ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                      : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                      ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                   }`}
                 >
-                  <span className="mr-3">{tab.icon}</span>
+                  <span className='mr-3'>{tab.icon}</span>
                   {tab.label}
                 </button>
               ))}
@@ -250,14 +222,14 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 overflow-y-auto p-6">
+          <div className='flex-1 overflow-y-auto p-6'>
             {getTabContent()}
 
             {/* Footer */}
-            <div className="flex justify-end pt-6 border-t border-gray-200 dark:border-gray-600 mt-6">
+            <div className='flex justify-end pt-6 border-t border-gray-200 dark:border-gray-600 mt-6'>
               <button
                 onClick={onClose}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className='px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2'
               >
                 Close
               </button>
@@ -269,4 +241,4 @@ export const SettingsModal = memo<SettingsModalProps>(function SettingsModal({
   );
 });
 
-SettingsModal.displayName = "SettingsModal";
+SettingsModal.displayName = 'SettingsModal';
