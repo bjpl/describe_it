@@ -1,5 +1,8 @@
 # Describe It API Documentation
 
+**Last Updated:** December 11, 2025
+**Status:** Production Ready
+
 ## Overview
 
 The Describe It API provides comprehensive language learning functionality through image-based content generation. This RESTful API enables image search, AI-powered description generation, interactive Q&A creation, phrase extraction, vocabulary management, progress tracking, and multi-format data export.
@@ -37,14 +40,15 @@ All services gracefully fallback to demo mode when API keys are unavailable.
 
 ## Rate Limiting
 
-| Endpoint Type | Rate Limit | Window |
-|---------------|------------|---------|
-| Image Search | 50 requests | 1 hour |
-| AI Generation | 100 requests | 1 hour |
-| Export | 10 requests | 1 hour |
-| General | 1000 requests | 1 hour |
+| Endpoint Type | Rate Limit    | Window |
+| ------------- | ------------- | ------ |
+| Image Search  | 50 requests   | 1 hour |
+| AI Generation | 100 requests  | 1 hour |
+| Export        | 10 requests   | 1 hour |
+| General       | 1000 requests | 1 hour |
 
 Rate limit headers are included in responses:
+
 - `X-Rate-Limit-Remaining`
 - `Retry-After` (when limited)
 
@@ -55,7 +59,9 @@ All API responses follow a consistent structure:
 ```json
 {
   "success": true,
-  "data": { /* response data */ },
+  "data": {
+    /* response data */
+  },
   "metadata": {
     "responseTime": "125.45ms",
     "timestamp": "2024-01-01T12:00:00Z",
@@ -89,6 +95,7 @@ Search for images using the Unsplash API or curated demo images.
 **Endpoint:** `GET /images/search`
 
 **Parameters:**
+
 - `query` (required) - Search term (1-100 characters)
 - `page` (optional) - Page number (default: 1)
 - `per_page` (optional) - Results per page (1-30, default: 20)
@@ -98,11 +105,13 @@ Search for images using the Unsplash API or curated demo images.
 - `api_key` (optional) - Your Unsplash access key
 
 **Example Request:**
+
 ```bash
 GET /api/images/search?query=mountain%20landscape&page=1&per_page=10&orientation=landscape
 ```
 
 **Example Response:**
+
 ```json
 {
   "images": [
@@ -133,6 +142,7 @@ GET /api/images/search?query=mountain%20landscape&page=1&per_page=10&orientation
 ```
 
 **Headers:**
+
 - `X-Cache: HIT|MISS|STALE-ERROR|ERROR-FALLBACK`
 - `X-Demo-Mode: true|false`
 - `ETag: "cache-identifier"`
@@ -145,6 +155,7 @@ Generate AI-powered descriptions in multiple languages and styles.
 **Endpoint:** `POST /descriptions/generate`
 
 **Request Body:**
+
 ```json
 {
   "imageUrl": "https://images.unsplash.com/photo-123",
@@ -155,6 +166,7 @@ Generate AI-powered descriptions in multiple languages and styles.
 ```
 
 **Styles:**
+
 - `narrativo` - Storytelling approach
 - `poetico` - Poetic and artistic
 - `academico` - Educational and formal
@@ -162,6 +174,7 @@ Generate AI-powered descriptions in multiple languages and styles.
 - `infantil` - Child-appropriate language
 
 **Example Response:**
+
 ```json
 {
   "success": true,
@@ -192,6 +205,7 @@ Generate AI-powered descriptions in multiple languages and styles.
 ```
 
 **Security Features:**
+
 - Request size validation (50KB limit)
 - Security header validation
 - Rate limiting protection
@@ -204,6 +218,7 @@ Generate question and answer pairs from descriptions for interactive learning.
 **Endpoint:** `POST /qa/generate`
 
 **Request Body:**
+
 ```json
 {
   "description": "Una hermosa montaña con nieve en la cima y árboles verdes en la base.",
@@ -213,11 +228,13 @@ Generate question and answer pairs from descriptions for interactive learning.
 ```
 
 **Parameters:**
+
 - `description` (required) - Text to generate Q&A from (min 10 chars)
 - `language` (optional) - `es` or `en` (default: `es`)
 - `count` (optional) - Number of Q&A pairs (1-10, default: 5)
 
 **Example Response:**
+
 ```json
 {
   "questions": [
@@ -248,6 +265,7 @@ Generate question and answer pairs from descriptions for interactive learning.
 ```
 
 **Question Types:**
+
 - `comprehension` - Understanding questions
 - `detail` - Specific detail questions
 - `inference` - Inferential questions
@@ -260,6 +278,7 @@ Extract and categorize key phrases with definitions and context.
 **Endpoint:** `POST /phrases/extract`
 
 **Request Body:**
+
 ```json
 {
   "imageUrl": "https://images.unsplash.com/photo-123",
@@ -272,6 +291,7 @@ Extract and categorize key phrases with definitions and context.
 ```
 
 **Parameters:**
+
 - `imageUrl` (required) - Associated image URL
 - `descriptionText` (required) - Text to extract from (min 10 chars)
 - `style` (optional) - Description style (default: `conversacional`)
@@ -280,13 +300,15 @@ Extract and categorize key phrases with definitions and context.
 - `categories` (optional) - Specific categories to extract
 
 **Categories:**
+
 - `sustantivos` - Nouns
-- `verbos` - Verbs  
+- `verbos` - Verbs
 - `adjetivos` - Adjectives
 - `adverbios` - Adverbs
 - `frasesClaves` - Key phrases
 
 **Example Response:**
+
 ```json
 {
   "phrases": [
@@ -342,6 +364,7 @@ Save and retrieve vocabulary items with intelligent categorization.
 **Endpoint:** `POST /vocabulary/save`
 
 **Single Item:**
+
 ```json
 {
   "userId": "user123",
@@ -366,6 +389,7 @@ Save and retrieve vocabulary items with intelligent categorization.
 ```
 
 **Bulk Save:**
+
 ```json
 {
   "userId": "user123",
@@ -392,6 +416,7 @@ Save and retrieve vocabulary items with intelligent categorization.
 **Endpoint:** `GET /vocabulary/save`
 
 **Parameters:**
+
 - `userId` (optional) - User identifier (default: "anonymous")
 - `collectionName` (optional) - Filter by collection
 - `category` (optional) - Filter by category
@@ -403,6 +428,7 @@ Save and retrieve vocabulary items with intelligent categorization.
 - `sortOrder` (optional) - `asc` or `desc` (default: `desc`)
 
 **Example Response:**
+
 ```json
 {
   "success": true,
@@ -455,6 +481,7 @@ Track learning progress with detailed analytics and achievements.
 **Endpoint:** `POST /progress/track`
 
 **Request Body:**
+
 ```json
 {
   "userId": "user123",
@@ -475,6 +502,7 @@ Track learning progress with detailed analytics and achievements.
 ```
 
 **Event Types:**
+
 - `vocabulary_learned` - New vocabulary acquired
 - `vocabulary_reviewed` - Vocabulary reviewed
 - `vocabulary_mastered` - Vocabulary mastered
@@ -491,6 +519,7 @@ Track learning progress with detailed analytics and achievements.
 **Endpoint:** `GET /progress/track`
 
 **Parameters:**
+
 - `userId` (optional) - User identifier
 - `sessionId` (optional) - Specific session
 - `eventType` (optional) - Filter by event types
@@ -498,6 +527,7 @@ Track learning progress with detailed analytics and achievements.
 - `dateFrom` / `dateTo` (optional) - Date range
 
 **Example Response:**
+
 ```json
 {
   "success": true,
@@ -551,6 +581,7 @@ Manage comprehensive user preferences and configuration.
 **Endpoint:** `POST /settings/save`
 
 **Request Body:**
+
 ```json
 {
   "userId": "user123",
@@ -592,6 +623,7 @@ Manage comprehensive user preferences and configuration.
 **Endpoint:** `GET /settings/save`
 
 **Parameters:**
+
 - `userId` (optional) - User identifier
 - `section` (optional) - Specific section only
 - `includeDefaults` (optional) - Include default values (default: true)
@@ -601,6 +633,7 @@ Manage comprehensive user preferences and configuration.
 **Endpoint:** `DELETE /settings/save`
 
 **Parameters:**
+
 - `userId` (required) - User identifier
 - `section` (optional) - Specific sections to reset
 
@@ -611,6 +644,7 @@ Export user data in multiple formats for backup and integration.
 **Endpoint:** `POST /export/generate`
 
 **Request Body:**
+
 ```json
 {
   "userId": "user123",
@@ -635,6 +669,7 @@ Export user data in multiple formats for backup and integration.
 ```
 
 **Export Types:**
+
 - `json` - JSON format for programmatic use
 - `csv` - CSV for spreadsheet applications
 - `txt` - Plain text format
@@ -643,6 +678,7 @@ Export user data in multiple formats for backup and integration.
 - `quizlet` - Quizlet import format
 
 **Content Types:**
+
 - `vocabulary` - Vocabulary items only
 - `phrases` - Extracted phrases only
 - `qa` - Question and answer pairs
@@ -650,6 +686,7 @@ Export user data in multiple formats for backup and integration.
 - `all` - All content types
 
 **Example Response:**
+
 ```json
 {
   "success": true,
@@ -670,6 +707,7 @@ Export user data in multiple formats for backup and integration.
 ```
 
 **Download Export:**
+
 ```bash
 GET /api/export/generate?filename=export_123.json&format=attachment
 ```
@@ -683,9 +721,11 @@ Monitor system health and service status.
 **Endpoint:** `GET /health`
 
 **Parameters:**
+
 - `detailed` (optional) - Perform comprehensive checks (default: false)
 
 **Example Response:**
+
 ```json
 {
   "status": "ok",
@@ -752,6 +792,7 @@ The API uses standard HTTP status codes and provides detailed error information:
 ### Error Response Examples
 
 **Validation Error (400):**
+
 ```json
 {
   "success": false,
@@ -769,6 +810,7 @@ The API uses standard HTTP status codes and provides detailed error information:
 ```
 
 **Rate Limit Error (429):**
+
 ```json
 {
   "success": false,
@@ -780,11 +822,14 @@ The API uses standard HTTP status codes and provides detailed error information:
 ```
 
 **Server Error with Fallback (500):**
+
 ```json
 {
   "success": true,
   "data": {
-    "images": [/* fallback demo images */]
+    "images": [
+      /* fallback demo images */
+    ]
   },
   "metadata": {
     "fallback": true,
@@ -814,13 +859,13 @@ The API implements intelligent caching to improve performance and reduce externa
 
 ### Cache TTL
 
-| Content Type | Memory TTL | Session TTL | KV TTL |
-|--------------|------------|-------------|---------|
-| Image Search | 5 minutes | 15 minutes | 1 hour |
-| Descriptions | 1 hour | 2 hours | 24 hours |
-| Vocabulary | 1 hour | 30 minutes | 30 days |
-| Settings | 2 hours | 1 hour | 1 year |
-| Progress | 5 minutes | 30 minutes | 90 days |
+| Content Type | Memory TTL | Session TTL | KV TTL   |
+| ------------ | ---------- | ----------- | -------- |
+| Image Search | 5 minutes  | 15 minutes  | 1 hour   |
+| Descriptions | 1 hour     | 2 hours     | 24 hours |
+| Vocabulary   | 1 hour     | 30 minutes  | 30 days  |
+| Settings     | 2 hours    | 1 hour      | 1 year   |
+| Progress     | 5 minutes  | 30 minutes  | 90 days  |
 
 ## CORS Support
 
@@ -844,6 +889,7 @@ The API supports Cross-Origin Resource Sharing (CORS) with comprehensive securit
 ### Security Headers
 
 All responses include security headers:
+
 - `X-Content-Type-Options: nosniff`
 - `X-Frame-Options: DENY`
 - `X-XSS-Protection: 1; mode=block`
@@ -908,20 +954,20 @@ import { ApiClient } from '@/lib/api/client';
 
 const client = new ApiClient({
   baseUrl: 'https://describe-it.vercel.app/api',
-  apiKey: 'your-api-key' // optional
+  apiKey: 'your-api-key', // optional
 });
 
 // Search images
 const images = await client.searchImages({
   query: 'mountain landscape',
   page: 1,
-  per_page: 10
+  per_page: 10,
 });
 
 // Generate descriptions
 const descriptions = await client.generateDescriptions({
   imageUrl: 'https://example.com/image.jpg',
-  style: 'conversacional'
+  style: 'conversacional',
 });
 
 // Save vocabulary
@@ -929,8 +975,8 @@ const saved = await client.saveVocabulary({
   userId: 'user123',
   vocabulary: {
     phrase: 'montaña',
-    definition: 'A large natural elevation'
-  }
+    definition: 'A large natural elevation',
+  },
 });
 ```
 
