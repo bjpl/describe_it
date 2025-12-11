@@ -27,7 +27,6 @@ export const log = {
    * @param message - Log message
    * @param args - Additional data to log
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug: (message: string, ...args: unknown[]): void => {
     const context: LogContext = args.length > 0 ? { data: args } : {};
     logger.debug(message, context);

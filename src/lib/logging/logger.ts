@@ -37,9 +37,7 @@ class SimpleLogger {
 
   error(message: string, error?: Error | unknown, meta?: Record<string, unknown>) {
     const errorMessage = error instanceof Error ? error.message : error ? String(error) : undefined;
-    console.error(
-      this.formatMessage('error', message, { ...meta, error: errorMessage })
-    );
+    console.error(this.formatMessage('error', message, { ...meta, error: errorMessage }));
   }
 
   warn(message: string, meta?: Record<string, unknown>) {
@@ -73,7 +71,6 @@ class SimpleLogger {
 }
 
 // Server-side Winston logger
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 let winstonLogger: ReturnType<typeof import('winston').createLogger> | null = null;
 
 if (typeof window === 'undefined') {
@@ -97,7 +94,9 @@ if (typeof window === 'undefined') {
     const devFormat = winston.format.combine(
       winston.format.colorize({ all: true }),
       winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-      winston.format.printf((info: Record<string, unknown>) => `${info.timestamp} ${info.level}: ${info.message}`)
+      winston.format.printf(
+        (info: Record<string, unknown>) => `${info.timestamp} ${info.level}: ${info.message}`
+      )
     );
 
     // Define format for production
@@ -137,7 +136,6 @@ if (typeof window === 'undefined') {
  */
 export class Logger {
   private context: string;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private logger: ReturnType<typeof import('winston').createLogger> | SimpleLogger;
   private requestMeta: Record<string, unknown> = {};
 
@@ -158,15 +156,16 @@ export class Logger {
    * Log an error
    */
   error(message: string, error?: Error | unknown, meta?: Record<string, unknown>) {
-    const errorDetails = error instanceof Error
-      ? {
-          message: error.message,
-          stack: error.stack,
-          name: error.name,
-        }
-      : error
-        ? { message: String(error) }
-        : undefined;
+    const errorDetails =
+      error instanceof Error
+        ? {
+            message: error.message,
+            stack: error.stack,
+            name: error.name,
+          }
+        : error
+          ? { message: String(error) }
+          : undefined;
 
     const logData = {
       context: this.context,

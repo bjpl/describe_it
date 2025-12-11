@@ -50,9 +50,13 @@ export interface ErrorCategory {
   stack?: string;
 }
 
+// Winston logger interface for type safety
+interface WinstonLike {
+  log(level: string, message: string, meta?: Record<string, unknown>): void;
+}
+
 // Winston logger instance (server-side only)
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let winstonLogger: any = null;
+let winstonLogger: WinstonLike | null = null;
 
 // Detect Edge Runtime - EdgeRuntime is a global in edge runtime
 declare const EdgeRuntime: string | undefined;
@@ -98,8 +102,7 @@ if (typeof window === 'undefined' && !isEdgeRuntime) {
     );
 
     // Create transports based on environment
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const logTransports: any[] = [];
+    const logTransports: unknown[] = [];
 
     // Console transport (all environments except test)
     // NOTE: File transports removed - Vercel serverless has read-only filesystem

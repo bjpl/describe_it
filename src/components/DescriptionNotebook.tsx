@@ -1,66 +1,71 @@
-// @ts-nocheck
-"use client";
+'use client';
 
-import React, { useState, useCallback, useMemo, memo } from "react";
-import { AnimatePresence } from "framer-motion";
-import { MotionDiv, MotionButton, MotionSpan, MotionP, MotionH1, MotionH2, MotionH3, MotionSection, MotionHeader } from "@/components/ui/MotionComponents";
-import { Loader2, RefreshCw, Copy, Check, Save } from "lucide-react";
+import React, { useState, useCallback, useMemo, memo } from 'react';
+import { AnimatePresence } from 'framer-motion';
 import {
-  DescriptionStyle,
-  StyleDescription,
-  LanguageVisibility,
-  UnsplashImage,
-} from "@/types";
-import { StyleSelector } from "./StyleSelector";
-import { LanguageToggles } from "./LanguageToggles";
-import { safeParse, safeStringify, safeParseLocalStorage, safeSetLocalStorage } from "@/lib/utils/json-safe";
+  MotionDiv,
+  MotionButton,
+  MotionSpan,
+  MotionP,
+  MotionH1,
+  MotionH2,
+  MotionH3,
+  MotionSection,
+  MotionHeader,
+} from '@/components/ui/MotionComponents';
+import { Loader2, RefreshCw, Copy, Check, Save } from 'lucide-react';
+import { DescriptionStyle, StyleDescription, LanguageVisibility, UnsplashImage } from '@/types';
+import { StyleSelector } from './StyleSelector';
+import { LanguageToggles } from './LanguageToggles';
+import {
+  safeParse,
+  safeStringify,
+  safeParseLocalStorage,
+  safeSetLocalStorage,
+} from '@/lib/utils/json-safe';
 import { logger } from '@/lib/logger';
 import {
   performanceProfiler,
   useRenderCount,
   shallowCompare,
-} from "@/lib/utils/performance-helpers";
+} from '@/lib/utils/performance-helpers';
 
 interface DescriptionNotebookProps {
   image: UnsplashImage | null;
   onGenerateDescription?: (style: DescriptionStyle) => Promise<void>;
-  onDescriptionUpdate?: (
-    style: DescriptionStyle,
-    english: string,
-    spanish: string,
-  ) => void;
+  onDescriptionUpdate?: (style: DescriptionStyle, english: string, spanish: string) => void;
   className?: string;
 }
 
 const INITIAL_DESCRIPTIONS: Record<DescriptionStyle, StyleDescription> = {
   narrativo: {
-    style: "narrativo",
-    english: "",
-    spanish: "",
+    style: 'narrativo',
+    english: '',
+    spanish: '',
     isLoading: false,
   },
   poetico: {
-    style: "poetico",
-    english: "",
-    spanish: "",
+    style: 'poetico',
+    english: '',
+    spanish: '',
     isLoading: false,
   },
   academico: {
-    style: "academico",
-    english: "",
-    spanish: "",
+    style: 'academico',
+    english: '',
+    spanish: '',
     isLoading: false,
   },
   conversacional: {
-    style: "conversacional",
-    english: "",
-    spanish: "",
+    style: 'conversacional',
+    english: '',
+    spanish: '',
     isLoading: false,
   },
   infantil: {
-    style: "infantil",
-    english: "",
-    spanish: "",
+    style: 'infantil',
+    english: '',
+    spanish: '',
     isLoading: false,
   },
 };
@@ -69,26 +74,24 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
   image,
   onGenerateDescription,
   onDescriptionUpdate,
-  className = "",
+  className = '',
 }) => {
-  const [activeStyle, setActiveStyle] =
-    useState<DescriptionStyle>("conversacional");
+  const [activeStyle, setActiveStyle] = useState<DescriptionStyle>('conversacional');
   const [descriptions, setDescriptions] = useState(INITIAL_DESCRIPTIONS);
 
   // Performance monitoring
-  const renderCount = useRenderCount("DescriptionNotebook");
+  const renderCount = useRenderCount('DescriptionNotebook');
 
   React.useEffect(() => {
-    performanceProfiler.startMark("DescriptionNotebook-render");
+    performanceProfiler.startMark('DescriptionNotebook-render');
     return () => {
-      performanceProfiler.endMark("DescriptionNotebook-render");
+      performanceProfiler.endMark('DescriptionNotebook-render');
     };
   });
-  const [languageVisibility, setLanguageVisibility] =
-    useState<LanguageVisibility>({
-      showEnglish: true,
-      showSpanish: true,
-    });
+  const [languageVisibility, setLanguageVisibility] = useState<LanguageVisibility>({
+    showEnglish: true,
+    showSpanish: true,
+  });
   const [copiedText, setCopiedText] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<{
@@ -97,10 +100,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
   }>({ message: '', type: null });
 
   // Memoize expensive computations - MOVED BEFORE USAGE
-  const activeDescription = useMemo(
-    () => descriptions[activeStyle],
-    [descriptions, activeStyle],
-  );
+  const activeDescription = useMemo(() => descriptions[activeStyle], [descriptions, activeStyle]);
 
   const handleStyleSelect = useCallback((style: DescriptionStyle) => {
     setActiveStyle(style);
@@ -110,7 +110,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
     async (style: DescriptionStyle) => {
       if (!image || !onGenerateDescription) return;
 
-      setDescriptions((prev) => ({
+      setDescriptions(prev => ({
         ...prev,
         [style]: { ...prev[style], isLoading: true, error: undefined },
       }));
@@ -118,23 +118,23 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
       try {
         // Simulate API calls - replace with actual API calls
         const [englishRes, spanishRes] = await Promise.all([
-          fetch("/api/descriptions/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+          fetch('/api/descriptions/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: safeStringify({
               imageUrl: image.urls?.regular || image.urls.small,
               style,
-              language: "en",
+              language: 'en',
               maxLength: 200,
             }),
           }),
-          fetch("/api/descriptions/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
+          fetch('/api/descriptions/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: safeStringify({
               imageUrl: image.urls?.regular || image.urls.small,
               style,
-              language: "es",
+              language: 'es',
               maxLength: 200,
             }),
           }),
@@ -150,7 +150,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
           spanishData.data?.text ||
           `Esta imagen muestra elementos visuales interesantes en un estilo ${style}.`;
 
-        setDescriptions((prev) => ({
+        setDescriptions(prev => ({
           ...prev,
           [style]: {
             ...prev[style],
@@ -165,18 +165,18 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
           onDescriptionUpdate(style, englishText, spanishText);
         }
       } catch (error) {
-        logger.error("Generation error:", error);
+        logger.error('Generation error:', error);
         const fallbackEnglish = `This is a beautiful image described in ${style} style.`;
         const fallbackSpanish = `Esta es una imagen hermosa descrita en estilo ${style}.`;
 
-        setDescriptions((prev) => ({
+        setDescriptions(prev => ({
           ...prev,
           [style]: {
             ...prev[style],
             english: fallbackEnglish,
             spanish: fallbackSpanish,
             isLoading: false,
-            error: "Failed to generate description",
+            error: 'Failed to generate description',
           },
         }));
 
@@ -186,7 +186,7 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
         }
       }
     },
-    [image, onGenerateDescription],
+    [image, onGenerateDescription]
   );
 
   const handleCopyText = useCallback(
@@ -196,10 +196,10 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
         setCopiedText(`${activeStyle}-${type}`);
         setTimeout(() => setCopiedText(null), 2000);
       } catch (error) {
-        logger.error("Failed to copy text:", error);
+        logger.error('Failed to copy text:', error);
       }
     },
-    [activeStyle],
+    [activeStyle]
   );
 
   const handleSaveDescription = useCallback(async () => {
@@ -259,8 +259,8 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
   return (
     <div className={`space-y-6 ${className}`}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+      <div className='flex items-center justify-between'>
+        <h2 className='text-2xl font-bold text-gray-900 dark:text-white'>
           Cuaderno de Descripciones
         </h2>
         <LanguageToggles
@@ -278,40 +278,36 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
 
       {/* Action Buttons */}
       {hasImage && (
-        <div className="flex justify-center gap-4">
+        <div className='flex justify-center gap-4'>
           <MotionButton
             onClick={() => handleGenerateDescription(activeStyle)}
             disabled={activeDescription.isLoading}
-            className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors shadow-lg"
+            className='px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors shadow-lg'
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             {activeDescription.isLoading ? (
-              <Loader2 className="h-5 w-5 animate-spin" />
+              <Loader2 className='h-5 w-5 animate-spin' />
             ) : (
-              <RefreshCw className="h-5 w-5" />
+              <RefreshCw className='h-5 w-5' />
             )}
-            <span>
-              {activeDescription.isLoading
-                ? "Generando..."
-                : "Generar Descripción"}
-            </span>
+            <span>{activeDescription.isLoading ? 'Generando...' : 'Generar Descripción'}</span>
           </MotionButton>
 
           {(activeDescription.english || activeDescription.spanish) && (
             <MotionButton
               onClick={handleSaveDescription}
               disabled={isSaving || activeDescription.isLoading}
-              className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors shadow-lg"
+              className='px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2 transition-colors shadow-lg'
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
               {isSaving ? (
-                <Loader2 className="h-5 w-5 animate-spin" />
+                <Loader2 className='h-5 w-5 animate-spin' />
               ) : (
-                <Save className="h-5 w-5" />
+                <Save className='h-5 w-5' />
               )}
-              <span>{isSaving ? "Guardando..." : "Guardar"}</span>
+              <span>{isSaving ? 'Guardando...' : 'Guardar'}</span>
             </MotionButton>
           )}
         </div>
@@ -337,16 +333,15 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
 
       {/* Description Display */}
       {hasImage && (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+        <div className='bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden'>
           {/* Tab Header */}
-          <div className="border-b border-gray-200 dark:border-gray-700 p-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Estilo:{" "}
-                {activeStyle.charAt(0).toUpperCase() + activeStyle.slice(1)}
+          <div className='border-b border-gray-200 dark:border-gray-700 p-4'>
+            <div className='flex items-center justify-between'>
+              <h3 className='text-lg font-semibold text-gray-900 dark:text-white'>
+                Estilo: {activeStyle.charAt(0).toUpperCase() + activeStyle.slice(1)}
               </h3>
               {activeDescription.error && (
-                <span className="text-sm text-red-600 dark:text-red-400">
+                <span className='text-sm text-red-600 dark:text-red-400'>
                   ⚠️ {activeDescription.error}
                 </span>
               )}
@@ -354,99 +349,87 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
           </div>
 
           {/* Content */}
-          <div className="p-6 space-y-6">
-            <AnimatePresence mode="wait">
+          <div className='p-6 space-y-6'>
+            <AnimatePresence mode='wait'>
               {activeDescription.isLoading ? (
                 <MotionDiv
-                  key="loading"
+                  key='loading'
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="flex items-center justify-center py-12"
+                  className='flex items-center justify-center py-12'
                 >
-                  <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-                  <span className="ml-3 text-gray-600 dark:text-gray-400">
+                  <Loader2 className='h-8 w-8 animate-spin text-blue-600' />
+                  <span className='ml-3 text-gray-600 dark:text-gray-400'>
                     Generando descripción en estilo {activeStyle}...
                   </span>
                 </MotionDiv>
               ) : (
                 <MotionDiv
-                  key="content"
+                  key='content'
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -20 }}
-                  className="space-y-4"
+                  className='space-y-4'
                 >
                   {/* English Description */}
-                  {languageVisibility.showEnglish &&
-                    activeDescription.english && (
-                      <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-blue-900 dark:text-blue-300">
-                            English Description
-                          </h4>
-                          <MotionButton
-                            onClick={() =>
-                              handleCopyText(
-                                activeDescription.english,
-                                "english",
-                              )
-                            }
-                            className="p-1 hover:bg-blue-100 dark:hover:bg-blue-800 rounded transition-colors"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            {copiedText === `${activeStyle}-english` ? (
-                              <Check className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <Copy className="h-4 w-4 text-blue-600" />
-                            )}
-                          </MotionButton>
-                        </div>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {activeDescription.english}
-                        </p>
+                  {languageVisibility.showEnglish && activeDescription.english && (
+                    <div className='p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg'>
+                      <div className='flex items-center justify-between mb-2'>
+                        <h4 className='font-semibold text-blue-900 dark:text-blue-300'>
+                          English Description
+                        </h4>
+                        <MotionButton
+                          onClick={() => handleCopyText(activeDescription.english, 'english')}
+                          className='p-1 hover:bg-blue-100 dark:hover:bg-blue-800 rounded transition-colors'
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          {copiedText === `${activeStyle}-english` ? (
+                            <Check className='h-4 w-4 text-green-600' />
+                          ) : (
+                            <Copy className='h-4 w-4 text-blue-600' />
+                          )}
+                        </MotionButton>
                       </div>
-                    )}
+                      <p className='text-gray-700 dark:text-gray-300 leading-relaxed'>
+                        {activeDescription.english}
+                      </p>
+                    </div>
+                  )}
 
                   {/* Spanish Description */}
-                  {languageVisibility.showSpanish &&
-                    activeDescription.spanish && (
-                      <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
-                        <div className="flex items-center justify-between mb-2">
-                          <h4 className="font-semibold text-green-900 dark:text-green-300">
-                            Descripción en Español
-                          </h4>
-                          <MotionButton
-                            onClick={() =>
-                              handleCopyText(
-                                activeDescription.spanish,
-                                "spanish",
-                              )
-                            }
-                            className="p-1 hover:bg-green-100 dark:hover:bg-green-800 rounded transition-colors"
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
-                          >
-                            {copiedText === `${activeStyle}-spanish` ? (
-                              <Check className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <Copy className="h-4 w-4 text-green-600" />
-                            )}
-                          </MotionButton>
-                        </div>
-                        <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
-                          {activeDescription.spanish}
-                        </p>
+                  {languageVisibility.showSpanish && activeDescription.spanish && (
+                    <div className='p-4 bg-green-50 dark:bg-green-900/20 rounded-lg'>
+                      <div className='flex items-center justify-between mb-2'>
+                        <h4 className='font-semibold text-green-900 dark:text-green-300'>
+                          Descripción en Español
+                        </h4>
+                        <MotionButton
+                          onClick={() => handleCopyText(activeDescription.spanish, 'spanish')}
+                          className='p-1 hover:bg-green-100 dark:hover:bg-green-800 rounded transition-colors'
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          {copiedText === `${activeStyle}-spanish` ? (
+                            <Check className='h-4 w-4 text-green-600' />
+                          ) : (
+                            <Copy className='h-4 w-4 text-green-600' />
+                          )}
+                        </MotionButton>
                       </div>
-                    )}
+                      <p className='text-gray-700 dark:text-gray-300 leading-relaxed'>
+                        {activeDescription.spanish}
+                      </p>
+                    </div>
+                  )}
 
                   {/* No content state */}
                   {!activeDescription.english && !activeDescription.spanish && (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    <div className='text-center py-8 text-gray-500 dark:text-gray-400'>
                       <p>
-                        Haz clic en &quot;Generar Descripción&quot; para crear contenido
-                        en estilo {activeStyle}
+                        Haz clic en &quot;Generar Descripción&quot; para crear contenido en estilo{' '}
+                        {activeStyle}
                       </p>
                     </div>
                   )}
@@ -459,14 +442,14 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
 
       {/* No image state */}
       {!hasImage && (
-        <div className="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-xl">
-          <div className="text-6xl mb-4">📝</div>
-          <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+        <div className='text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-xl'>
+          <div className='text-6xl mb-4'>📝</div>
+          <h3 className='text-xl font-semibold text-gray-900 dark:text-white mb-2'>
             Cuaderno de Descripciones
           </h3>
-          <p className="text-gray-600 dark:text-gray-400 max-w-md mx-auto">
-            Selecciona una imagen para generar descripciones en diferentes
-            estilos: narrativo, poético, académico, conversacional e infantil.
+          <p className='text-gray-600 dark:text-gray-400 max-w-md mx-auto'>
+            Selecciona una imagen para generar descripciones en diferentes estilos: narrativo,
+            poético, académico, conversacional e infantil.
           </p>
         </div>
       )}
@@ -475,17 +458,14 @@ const DescriptionNotebookBase: React.FC<DescriptionNotebookProps> = ({
 };
 
 // Memoized component with custom comparison
-export const DescriptionNotebook = memo(
-  DescriptionNotebookBase,
-  (prevProps, nextProps) => {
-    // Custom comparison for better performance
-    return (
-      prevProps.image?.id === nextProps.image?.id &&
-      prevProps.className === nextProps.className &&
-      prevProps.onGenerateDescription === nextProps.onGenerateDescription &&
-      prevProps.onDescriptionUpdate === nextProps.onDescriptionUpdate
-    );
-  },
-);
+export const DescriptionNotebook = memo(DescriptionNotebookBase, (prevProps, nextProps) => {
+  // Custom comparison for better performance
+  return (
+    prevProps.image?.id === nextProps.image?.id &&
+    prevProps.className === nextProps.className &&
+    prevProps.onGenerateDescription === nextProps.onGenerateDescription &&
+    prevProps.onDescriptionUpdate === nextProps.onDescriptionUpdate
+  );
+});
 
 DescriptionNotebook.displayName = 'DescriptionNotebook';

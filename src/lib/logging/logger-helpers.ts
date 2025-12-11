@@ -67,7 +67,6 @@ export function createComponentLogger(componentName: string) {
  *   { component: 'UserService' }
  * );
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function withLogging<T extends (...args: unknown[]) => unknown>(
   fn: T,
   fnName: string,
@@ -90,13 +89,13 @@ export function withLogging<T extends (...args: unknown[]) => unknown>(
       // Handle promises
       if (result instanceof Promise) {
         return result
-          .then((value) => {
+          .then(value => {
             const duration = Date.now() - startTime;
             logger.performance(fnName, duration, callContext);
             logger.debug(`Exiting ${fnName}`, { ...callContext, success: true });
             return value;
           })
-          .catch((error) => {
+          .catch(error => {
             const duration = Date.now() - startTime;
             logger.error(`Error in ${fnName}`, error, {
               ...callContext,
