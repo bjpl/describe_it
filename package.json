@@ -80,7 +80,7 @@
     "lighthouse:ci": "npm run lighthouse -- --ci"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.70.1",
+    "@anthropic-ai/sdk": "^0.71.2",
     "@radix-ui/react-dialog": "^1.0.5",
     "@radix-ui/react-dropdown-menu": "^2.0.6",
     "@sentry/cli": "^2.58.2",
